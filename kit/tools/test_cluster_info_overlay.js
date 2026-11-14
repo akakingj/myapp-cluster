@@ -312,9 +312,10 @@ class FakeCR extends EventEmitter {
     // outside it and still on the glass; the two far apart
     check('the arrows: left of the middle, the right one at the HUD\'s right edge, its sign still on the glass', () => {
         const lar = cr.layers.get(refs.left);
-        assert(lar.x + lar.w <= 400 && rar.x >= 560, 'left ' + lar.x + ', right ' + rar.x);
-        // inside a G21's glass (its test pattern's frame, x 120..680), 8 px from its right edge as Redline's directions
-        assert(rsg.x + rsg.w === 672, 'the right sign ends at ' + (rsg.x + rsg.w));
+        assert(lar.x + lar.w <= 400 && rar.x >= 500, 'left ' + lar.x + ', right ' + rar.x);
+        // inside what the driver sees of a G21's glass as the head moves (bimmer-lab's x 120..605), 4 px from its right edge
+        assert(rsg.x + rsg.w === 601, 'the right sign ends at ' + (rsg.x + rsg.w));
+        assert(rar.x - (lar.x + lar.w) >= 150, 'the two arrows well apart: ' + (rar.x - (lar.x + lar.w)) + ' px');
         assert(lsg.x >= 120 && lar.y >= 120 && rsg.y >= 120 && rsg.y + rsg.h <= 360, 'all on a G21\'s glass');
         assert(lsg.x + lsg.w <= lar.x, 'the left sign outside the left arrow');
         assert(rar.y === lar.y, 'one height');

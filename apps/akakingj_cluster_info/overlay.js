@@ -41,10 +41,13 @@ const HUD_MAX_PCT = 85;           // the HUD map's widest (waze-on-cluster hud_w
 // in the middle the two read as almost the same place)
 const LCW_W = 34, LCW_GAP = 6;
 // the glass a G21 (and G20) shows whole: its HUD test pattern's 120 px frame, x 120..680 and y 120..360 (photos,
-// 2026-11-09; Redline's GLASS in idrive7-apps apps/redline/hud.js). The right arrow's lane change sign ends 8 px inside its
-// right edge, where Redline's own directions end on the same glass (its NAV_RIGHT, 672)
-const G21_GLASS = { x: 120, y: 120, w: 560, h: 240 }, G21_INSET = 8;
-const ARROW = { w: 30, h: 24, y: 146, left: 349, right: G21_GLASS.x + G21_GLASS.w - G21_INSET - LCW_W - LCW_GAP - 30 };   // the cluster's proportions (5:4)
+// 2026-11-09; Redline's GLASS in idrive7-apps apps/redline/hud.js). Its right part goes out of sight when the driver's
+// head moves: the part seen measured from car photos by bimmer-lab (github.com/bimmer-lab/apps shared/visible.js,
+// MIT; Redline's HUD_WINDOW), x 120..605, moving with the eye height. The right arrow's lane change sign ends 4 px inside
+// that (x 601), the arrow beside it at x 531; the left arrow stays at x 349 (2026-11-15)
+const G21_GLASS = { x: 120, y: 120, w: 560, h: 240 };
+const HUD_SEEN = { x: 120, y: 100, w: 485, h: 278 }, SEEN_INSET = 4;
+const ARROW = { w: 30, h: 24, y: 146, left: 349, right: HUD_SEEN.x + HUD_SEEN.w - SEEN_INSET - LCW_W - LCW_GAP - 30 };   // the cluster's proportions (5:4)
 const INDICATOR_GREEN = '#22d046';   // the cluster's indicator green
 // the lane change warning beside the arrows: outside each arrow, while the car says one is beside or coming up behind on
 // that side (turn signal or not), this car in yellow and the other's bonnet in red behind it, outward
@@ -608,4 +611,4 @@ function startOverlay(ctx, lv, opts) {
     };
 }
 
-module.exports = { G21_GLASS, startOverlay, mapRect, badgeRect, drawBadge, drawArrow, changed, parseStatus, underStrip, ARROW, LCW };
+module.exports = { G21_GLASS, HUD_SEEN, startOverlay, mapRect, badgeRect, drawBadge, drawArrow, changed, parseStatus, underStrip, ARROW, LCW };
