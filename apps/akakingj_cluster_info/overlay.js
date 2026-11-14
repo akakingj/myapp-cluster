@@ -40,7 +40,11 @@ const HUD_MAX_PCT = 85;           // the HUD map's widest (waze-on-cluster hud_w
 // at the right of what the HUD shows, its lane change sign outside it still on the glass (2026-11-14: side by side
 // in the middle the two read as almost the same place)
 const LCW_W = 34, LCW_GAP = 6;
-const ARROW = { w: 30, h: 24, y: 146, left: 349, right: HUD_VISIBLE_RIGHT - HUD_RIGHT_GAP - LCW_W - LCW_GAP - 30 };   // the cluster's proportions (5:4)
+// the glass a G21 (and G20) shows whole: its HUD test pattern's 120 px frame, x 120..680 and y 120..360 (photos,
+// 2026-11-09; Redline's GLASS in idrive7-apps apps/redline/hud.js). The right arrow's lane change sign ends 8 px inside its
+// right edge, where Redline's own directions end on the same glass (its NAV_RIGHT, 672)
+const G21_GLASS = { x: 120, y: 120, w: 560, h: 240 }, G21_INSET = 8;
+const ARROW = { w: 30, h: 24, y: 146, left: 349, right: G21_GLASS.x + G21_GLASS.w - G21_INSET - LCW_W - LCW_GAP - 30 };   // the cluster's proportions (5:4)
 const INDICATOR_GREEN = '#22d046';   // the cluster's indicator green
 // the lane change warning beside the arrows: outside each arrow, while the car says one is beside or coming up behind on
 // that side (turn signal or not), this car in yellow and the other's bonnet in red behind it, outward
@@ -604,4 +608,4 @@ function startOverlay(ctx, lv, opts) {
     };
 }
 
-module.exports = { startOverlay, mapRect, badgeRect, drawBadge, drawArrow, changed, parseStatus, underStrip, ARROW, LCW };
+module.exports = { G21_GLASS, startOverlay, mapRect, badgeRect, drawBadge, drawArrow, changed, parseStatus, underStrip, ARROW, LCW };
