@@ -18,10 +18,14 @@ process.env.WOC_STATUS = path.join(tmp, 'woc', 'status.json');
 fs.mkdirSync(path.dirname(process.env.WOC_STATUS));
 fs.writeFileSync(process.env.WOC_STATUS, JSON.stringify({ state: 'showing', target: 'map', hud_width_pct: 0 }));
 
-let app = null;
+let app = null, panelSrc = null;
 const load = Module._load;
 Module._load = function (req, parent, isMain) {
     if (req === './kit/mgu') return { run(a) { app = a; } };
+    if (req === './overlay') {
+        const real = load.call(this, path.join(ROOT, 'apps', 'akakingj_cluster_info', 'overlay.js'), parent, isMain);
+        return Object.assign({}, real, { startOverlay: (c, src) => { panelSrc = src; return real.startOverlay(c, src); } });
+    }
     if (req.startsWith('./kit/')) return load.call(this, path.join(KIT, req.slice(6)), parent, isMain);
     return load.call(this, req, parent, isMain);
 };
@@ -88,6 +92,15 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     await sleep(400);
     await loops.MAIN();
     check('the page draws without errors', () => assert(!warns.some((w) => /TypeError|ReferenceError|is not a function/.test(w)), warns.join(' | ')));
+    // (2026-11-15) the engine's values (here rpm) as bright as the oil's: they went through the temperatures' colours
+    // and came out dim grey beside a white oil
+    handlers.statusEngineSpeed2 && handlers.statusEngineSpeed2({ actualValueRPMEngineCrankshaft: 2500 * 4 });
+    S.slot1 = 'rpm'; S.slot3 = 'oil';
+    check('the engine\'s values as bright as the oil\'s', () => {
+        const t = themes.theme('m_tricolour'), ex = panelSrc.extras(t), rpm = ex.find((e) => e.label === 'RPM'), oil = ex.find((e) => e.label === 'OIL');
+        assert(rpm && oil && rpm.text === '2500' && rpm.col === t.text && oil.col === t.text, JSON.stringify(ex));
+    });
+    S.slot1 = 'power';
 
     // the panel goes: the provider stops and removes its file
     fs.writeFileSync(process.env.WOC_STATUS, JSON.stringify({ state: 'idle', target: 'map', hud_width_pct: 0 }));

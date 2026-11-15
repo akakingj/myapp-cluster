@@ -200,7 +200,10 @@ mgu.run({
             extras(t) {
                 return chosen().map((k) => {
                     const v = valueNow(k);
-                    return { slot: slots().indexOf(k), label: (v && v.label) || VALUES[k].label, text: v ? (G.isNum(v.c) ? temp(v.c) : v.text || '--') : '--', col: k === 'soc' ? (v ? t.text : t.dim) : tempCol(t, k, v && v.c) };
+                    // (the engine's values - boost, rpm, torque - have no temperature: plain text while they come, as bright
+                    // as the oil's; through tempCol they were dim grey beside a white oil, 2026-11-15)
+                    const col = k === 'soc' || VALUES[k].engine ? (v ? t.text : t.dim) : tempCol(t, k, v && v.c);
+                    return { slot: slots().indexOf(k), label: (v && v.label) || VALUES[k].label, text: v ? (G.isNum(v.c) ? temp(v.c) : v.text || '--') : '--', col: col };
                 });
             },
             /** The kW meter's slot (0-2 among the slots in use; values with a lower slot go before it). */
