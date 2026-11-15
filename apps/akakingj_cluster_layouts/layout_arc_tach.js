@@ -186,7 +186,7 @@ function tachAlone(o, cx, cy, R, withGear) {
 
 module.exports = {
     id: 'arc_tach',
-    title: 'Arc tach',
+    title: 'JDM 1',
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
     // (its own fuel gauge, the right dial - unless Small gauge in the tach puts another reading there: then the strip's)

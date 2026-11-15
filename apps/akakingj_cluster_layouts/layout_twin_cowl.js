@@ -147,7 +147,7 @@ function display(o, X, Y, W, H, strip) {
 
 module.exports = {
     id: 'twin_cowl',
-    title: 'Twin cowl',
+    title: 'GM',
     // (its own fuel gauge, the cowl's right one - unless Small gauge in the speedometer puts another reading there)
     stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
     palette: pal,

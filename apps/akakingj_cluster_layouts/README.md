@@ -4,7 +4,7 @@
 
 Custom layouts for the whole instrument cluster of a BMW with iDrive 7 (MGU), **drawn by the cluster
 itself**. Ten layouts, in the page's order: 90's, 20's, ID6 M, ID7 M and ID8 M (the last two after bimmer-lab's M
-and Sport), Arc tach, Twin cowl, Track, Pulse and GT3 (after bimmer-lab's), each in comfort, sport and efficient
+and Sport), JDM 1, GM, Track, Pulse and GT3 (after bimmer-lab's), each in comfort, sport and efficient
 colours (following the selector's S / M
 programme, or chosen), each with three centres: the **readings**, **Waze** or the **stock** centre content.
 
@@ -26,10 +26,10 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 
 0.30.0 took out Digital round, Modern wide and Digital dash (a layout saved as one of them becomes 20's, Pulse and
 Track), renamed Retro, Analog sport, Classic M, M and Sport to 90's, 20's, ID6 M, ID7 M and ID8 M, and put the
-layouts in that order.
+layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM.
 
 ```
-+---------------------------+  Arc tach                      Showing on the cluster
++---------------------------+  JDM 1                         Showing on the cluster
 |                           |  Layout                     live · 88 km/h · 3200 rpm
 |  the layout, large        |  [ Main readout: Boost  ]  [ Readout 1: Intake air ]
 |  (its demo picture)       |  [ Readout 2: Gearbox   ]  [ Speedometer gauge      ]
@@ -45,7 +45,7 @@ layouts in that order.
   or ECO PRO with a layout set for that mode (Settings > Layout in Sport / in ECO PRO) the tap changes that one.
   **Stock** turns the layout off: the stock cluster back.
 - **The readouts:** the places the layout has for Settings' readouts (main readout, readouts 1 and 2 in the time's
-  and outside temperature's places with the car's own strip, ID6 M's and Twin cowl's bottom line, the small gauges
+  and outside temperature's places with the car's own strip, ID6 M's and GM's bottom line, the small gauges
   in the speedometer and the tach), only those that show on this car with these settings (`layouts.js` SLOTS, which
   `tools/test_slots.js` checks against what each layout draws). A tap lists the values: one set there is that
   layout's alone (Settings > slotsBy, a bar on its left), *Same as in Settings* follows the Settings' value again,

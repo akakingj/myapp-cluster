@@ -2429,8 +2429,7 @@
   "Always on the HUD": "HUD에 항상 표시",
   "Amber zone below the red zone (ID7 M, ID8 M)": "레드 존 아래 주황 구간 (ID7 M, ID8 M)",
   "Arc gauge": "아크 게이지",
-  "Arc tach": "Arc tach",
-  "Arc tach: the gear in the arc (the layout's own strip)": "Arc tach: 아크 안 기어 표시 (레이아웃 자체 하단 띠)",
+  "JDM 1: the gear in the arc (the layout's own strip)": "JDM 1: 아크 안 기어 표시 (레이아웃 자체 하단 띠)",
   "Arizona (no DST)": "애리조나 (서머타임 없음)",
   "Arm 0-60 timer": "0-60 타이머 준비",
   "Atlantic": "대서양",
@@ -2589,7 +2588,6 @@
   "Top of the map": "지도 위쪽",
   "Track": "트랙",
   "Turn signal arrows on the HUD": "HUD에 방향지시등 화살표",
-  "Twin cowl": "Twin cowl",
   "UK / Ireland / Portugal": "영국 / 아일랜드 / 포르투갈",
   "US Central": "미국 중부",
   "US Eastern": "미국 동부",
@@ -2663,5 +2661,7 @@
   "90's": "90's",
   "ID6 M": "ID6 M",
   "ID7 M": "ID7 M",
-  "ID8 M": "ID8 M"
+  "ID8 M": "ID8 M",
+  "JDM 1": "JDM 1",
+  "GM": "GM"
 }

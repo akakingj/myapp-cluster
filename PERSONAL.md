@@ -48,7 +48,7 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
   time and outside temperature were over the car's own bottom strip) and the line under the digital speed: intake
   air, gearbox oil (TRANS), oil, coolant, boost, engine power, torque, throttle, accelerator pedal, timing, the gear
   (GEAR D4 / S3 / M2, P R N), or Nothing (each of them, under the speed too).
-  Arc tach: the gear in the arc (the layout's own strip) on or off; not shown twice when the gear is the readout
+  JDM 1 (Arc tach until 0.30.1): the gear in the arc (the layout's own strip) on or off; not shown twice when the gear is the readout
   under the speed.
   Classic M: Centre readout: bottom line (the coolant by default). Short names where
   the box is narrow (IAT 31°, TRANS 78°, BST 14.5, HP 211).
@@ -85,13 +85,13 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
   read twice a round while shown and kept 8 s (a round can take 3 s or more while driving). The car's
   `AcceleratorPedal` signal is not used (its scaling unconfirmed). Check against Live Data.
 - Centre: engine power and the accelerator pedal for the custom pages' slots.
-- Layout 'Twin cowl' (an original design after the idea of a twin-dial cluster with a raised centre cowl): the tach
+- Layout 'GM' (Twin cowl until 0.30.1; an original design after the idea of a twin-dial cluster with a raised centre cowl): the tach
   left and the speedometer right, each with a ring of ice-blue light inside its scale and a red needle; between them
   a chrome arch over two small round gauges (the coolant C - H and the fuel E - F; Settings > Small gauge in the tach /
   in the speedometer pick others) and a pale grey display with dark figures: the speed, the gear (not over the car's
   strip), the fuel range (over the strip: Centre readout: bottom line), the time and the outside temperature (over
   the strip: Readout 1 / 2). An M car: the dials swapped (the tach under the M boxes), no arch on the full screen.
-- Layout 'Arc tach' (an original design after the idea of a three-ring sports-car cluster): three round dials under
+- Layout 'JDM 1' (Arc tach until 0.30.1; an original design after the idea of a three-ring sports-car cluster): three round dials under
   chrome rings, the tach in the middle in front, a smaller dial either side tucked behind it (each side ring ends where
   it goes behind the tach's). The tach: a needle round numerals, the red zone along its ring (lower while the oil is
   cold), the main readout above the hub, the digital speed bottom right, the gear bottom left (Arc tach: the gear in
