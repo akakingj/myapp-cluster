@@ -290,61 +290,37 @@ class FakeCR extends EventEmitter {
     check('the claim gone stale: the arrows back', () => assert(ov.arrows().shown));
     check('and the status says free', () => assert.strictEqual(ov.status().hud, 'free'));
 
-    /* the lane change warning: outside the arrow, this car and the other's bonnet, while the car says so (turn signal or not) */
-    let lw = null;
-    lv.laneChange = () => lw;
-    ind = 'off'; t += 1300; ov._arrowTick(); ov._lcwTick();
-    check('no warning: no sign', () => assert(!ov.lcw().refs.left && !ov.lcw().refs.right));
-    lw = { left: true, right: false }; t += 10; ov._lcwTick();
-    const lsg = cr.layers.get(ov.lcw().refs.left);
-    check('a car on the left: the left sign on, outside the left arrow, on the HUD, no turn signal needed', () => {
-        assert(lsg.target === 'hud' && lsg.visible && lsg.opacity === 1);
-        assert(lsg.x + lsg.w <= cr.layers.get(refs.left).x, 'outside the arrow');
-        assert(!ov.lcw().shown.right);
-    });
-    const n1 = cr.log.length;
-    ind = 'left'; ov._arrowTick(); ov._lcwTick(); t += 400; ov._arrowTick(); ov._lcwTick();
-    check('turn signal toward it: the sign as it was, nothing sent for it', () => assert(lsg.visible && lsg.opacity === 1 && !cr.log.slice(n1).some((e) => e[0] === 'set' && e[1] === ov.lcw().refs.left)));
-    lw = { left: false, right: true }; t += 10; ov._lcwTick();
-    const rsg = cr.layers.get(ov.lcw().refs.right), rar = cr.layers.get(refs.right);
-    check('the car now on the right: left off, right on, outside the right arrow', () => assert(!lsg.visible && rsg.visible && rsg.x >= rar.x + rar.w));
-    // (2026-11-15) where Redline puts its own with its rev counter off: near the top of what a G20 shows (y 104, not 76:
-    // the arrows at 86 lost their top on the car), the signs at 200 and 566..600, the arrows at 240 and 530
-    check('the arrows and signs at Redline\'s place: the top of a G20\'s glass, far apart', () => {
-        const lar = cr.layers.get(refs.left);
-        assert(lsg.x === 200 && lar.x === 240 && rar.x === 530 && rsg.x === 566, 'x ' + [lsg.x, lar.x, rar.x, rsg.x].join(' '));
-        assert(lsg.y === 104 && rsg.y === 104 && lar.y === 114 && rar.y === 114, 'y ' + [lsg.y, lar.y].join(' '));
-        assert(rsg.x + rsg.w === 600, 'the right sign ends at ' + (rsg.x + rsg.w));
+    // (2026-11-15) where Redline puts its own with its rev counter off: near the top of what a G20 shows (y 114, not 86:
+    // the arrows at 86 lost their top on the car), at 240 and 530; no lane change warning (1.6.24: the service isn't there)
+    ind = 'left'; t += 1300; ov._arrowTick(); t += 10; ov._arrowTick();
+    const lar = cr.layers.get(refs.left), rar = cr.layers.get(refs.right);
+    check('the arrows at Redline\'s place: near the top of a G20\'s glass, far apart', () => {
+        assert(lar.x === 240 && rar.x === 530 && lar.y === 114 && rar.y === 114, [lar.x, rar.x, lar.y].join(' '));
         assert(rar.x - (lar.x + lar.w) >= 150, 'the two arrows well apart: ' + (rar.x - (lar.x + lar.w)) + ' px');
-        assert(lsg.x >= 124 && lsg.y >= 72 && rsg.x + rsg.w <= 676 && rsg.y + rsg.h <= 221, 'all in a G20\'s well-seen part');
-        assert(lsg.x + lsg.w <= lar.x, 'the left sign outside the left arrow');
-        assert(rar.y === lar.y, 'one height');
+        assert(lar.y >= 100 && rar.x + rar.w <= 676, 'in what a G20 shows');
     });
-    lw = null; t += 10; ov._lcwTick();
-    check('the warning gone: no sign', () => assert(!lsg.visible && !rsg.visible));
-    lw = { left: true, right: true }; settings.v.blindSpot = 'off'; t += 10; ov._lcwTick();
-    check('setting off: no sign', () => assert(!lsg.visible && !rsg.visible));
-    settings.v.blindSpot = 'on'; settings.v.show = 'off'; ind = 'left'; t += 10; ov._arrowTick(); ov._lcwTick();
-    t += 1300; ov._arrowTick();
-    check('Show the panel Off: no sign and no arrows either (one switch)', () => assert(!lsg.visible && !rsg.visible && !ov.arrows().shown));
+    check('no lane change warning (1.6.24): no signs, no setting', () => assert(!ov.lcw && !require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'overlay.js')).LCW
+        && !JSON.parse(fs.readFileSync(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'app.json'), 'utf8')).settings.some((x) => x.key === 'blindSpot')));
+    settings.v.show = 'off'; t += 10; ov._arrowTick(); t += 1300; ov._arrowTick();
+    check('Show the panel Off: no arrows either (one switch)', () => assert(!ov.arrows().shown));
     settings.v.show = 'map';
-    // (2026-11-15) the panel at the top of an 85 % HUD map with the kW and two values reaches the signals' place: they go
+    // (2026-11-15) the panel at the top of an 85 % HUD map with the kW and two values reaches the arrows' place: they go
     // just under it, and back when it goes
-    lw = { left: true, right: false }; ind = 'left';
+    ind = 'left';
     write({ state: 'showing', target: 'hud', hud_width_pct: 85 });
     await step();
     settings.v.place = 'top'; kw = 20; extras = [{ label: 'OIL', text: '88°' }, { label: 'COOL', text: '90°' }]; t += 300; ov._tick();
-    t += 10; ov._arrowTick(); ov._lcwTick();
+    t += 10; ov._arrowTick();
     const badge = [...cr.layers.values()].find((l) => l.target === 'hud' && l.z === 10 && l.visible);
-    const larT = cr.layers.get(ov.arrows().refs.left), lsgT = cr.layers.get(ov.lcw().refs.left);
-    check('a wide map\'s panel at the top: the signals just under it, still on a G20\'s well-seen part', () => {
+    const larT = cr.layers.get(ov.arrows().refs.left);
+    check('a wide map\'s panel at the top: the arrows just under it, still in what a G20 shows', () => {
         assert(badge, 'the panel on the HUD');
-        assert(larT.y >= badge.y + badge.h && lsgT.y >= badge.y + badge.h, 'arrow ' + larT.y + ', sign ' + lsgT.y + ', panel ends ' + (badge.y + badge.h));
-        assert(lsgT.y + lsgT.h <= 221, 'sign ends ' + (lsgT.y + lsgT.h));
+        assert(larT.y >= badge.y + badge.h, 'arrow ' + larT.y + ', panel ends ' + (badge.y + badge.h));
+        assert(larT.y + larT.h <= 221, 'arrow ends ' + (larT.y + larT.h));
     });
     settings.v.place = 'bottom'; t += 300; ov._tick(); t += 10; ov._arrowTick();
-    check('the panel back at the bottom: the signals back at the top', () => assert(larT.y === 114 && lsgT.y === 104, larT.y + ' / ' + lsgT.y));
-    lw = null; ind = 'off'; kw = null; extras = [];
+    check('the panel back at the bottom: the arrows back at the top', () => assert(larT.y === 114, String(larT.y)));
+    ind = 'off'; kw = null; extras = [];
     ov.stop();
 
     if (process.argv[2]) {
