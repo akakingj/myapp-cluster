@@ -106,7 +106,8 @@ Round dials after the M cars' analog clusters of the mid 2010s, an original draw
 two big dials, each with a thin white ring round its top, open at the bottom, a dark band with white marks and large
 numerals, a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of its
 top end, amber from Settings > Amber zone below the red zone and red from the red line (both lower while the oil is
-cold, as the red zone); the gear under the tach in a white arc; a small fuel gauge (0, 1/2, 1) left of the
+cold, as the red zone); the gear under the tach in a white arc; the speed in figures with its unit under the speedometer's hub; no
+readouts beside the dials (the car's strip shows the time, temperature and ranges); a small fuel gauge (0, 1/2, 1) left of the
 speedometer and a small engine oil gauge (70-170 °C, 160-340 °F, red from Too hot) right of the tach, either of which
 Settings > Speedometer gauge / Tach gauge (or the page) can give another reading.
 

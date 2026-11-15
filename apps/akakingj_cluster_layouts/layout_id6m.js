@@ -36,8 +36,9 @@ function speedo(o, cx, cy, R) {
             colors: roundColours, max: s.max, sweep: true, value: (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0),
         },
         C.text('speedUnit', cx - R * 0.3, cy - Math.round(R * 0.3), R * 0.6, Math.max(14, Math.round(R * 0.075)), C.speedUnit(o), white, { tracking: 0.04 }),
-        // the speed in figures too, in the dark disc under the hub
-        C.text('speedDigits', cx - R * 0.3, cy + Math.round(R * 0.2), R * 0.6, Math.round(R * 0.15), (d) => C.speedText(o, d), white),
+        // the speed in figures too, in the dark disc under the hub, its unit beside it ('88 km/h')
+        C.text('speedDigits', cx - R * 0.42, cy + Math.round(R * 0.2), R * 0.44, Math.round(R * 0.15), (d) => C.speedText(o, d), white, { align: 1 }),
+        C.text('speedDigitsUnit', cx + R * 0.05, cy + Math.round(R * 0.2 + R * 0.15 * 0.36), R * 0.4, Math.round(R * 0.09), C.speedUnit(o), white, { align: 0 }),
         // the M tricolour (bimmer-lab's stripes, as ID7 M's and Old M's)
         { key: 'mStripes', kind: 'mdash', x: Math.round(cx - 42), y: Math.round(cy + R * 0.62), w: 84, h: 34, z: 5, params: { u_part: [4], u_off: [Math.round(cx - 42), Math.round(cy + R * 0.62)], u_mark: [Math.round(cx - 36), Math.round(cy + R * 0.62) + 4, 1.2] }, colors: (t) => ({ red: t.red }) },
     ];
@@ -103,25 +104,13 @@ function small(o, which, cx, cy, R) {
     }].concat(marks, under);
 }
 
-/** The column right of the KOMBI's dark box: the fuel range, the electric range (the boost), the main readout. */
-function column(o, RX, my) {
-    const RW = 216, y = my || 506;
-    return [
-        ...C.reading('fuel', RX, 292, RW, 44, (d) => C.distText(o, d.frange), 'FUEL RANGE', white, lbl),
-        ...C.reading('elec', RX, 400, RW, 44, C.focus.range(o), C.focus.rangeLabel(o), C.engineFocus(o) ? white : elecTxt, lbl),
-        C.text('kwNow', RX, y, RW, 44, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
-        C.text('kwNowLbl', RX, y + 56, RW, 18, C.focus.powerLabel(o), lbl, { tracking: 0.1 }),
-    ];
-}
-
 module.exports = {
     id: 'id6m',
     title: 'ID6 M',
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
     stripGear: true,     // (the gear's white arc is part of the tach: kept over the car's own strip)
-    // (its own fuel gauge: the strip's fuel bar only with another reading there)
-    stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
+    ownStripGauges: true,   // (its own fuel gauge; no bars over the car's strip, which shows the ranges)
 
     /*
      * Built round what the glass and the KOMBI keep (layout_common; tools/clearance.js): the camera's cowl between
@@ -144,24 +133,18 @@ module.exports = {
         }
         if (C.strip(o) && o.centre !== 'stock') {
             // the car's own strip: the two dials either side of the middle under the camera's cowl, the small gauges
-            // at their outer feet; readouts 1 and 2 (the time's and temperature's places) left, the main readout right
+            // at their outer feet; no readouts beside them (the strip shows the time, temperature and ranges)
             return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 655, 372, 250), tach(o, 1265, 372, 250, true),
-                small(o, 'speed', 303, 535, 100), small(o, 'rpm', 1617, 535, 100), [
-                    C.text('clock', 16, 300, 180, 32, C.clock, white),
-                    C.text('outside', 16, 356, 180, 32, (d) => C.outsideText(o, d.outside), white),
-                ], column(o, 1724, 330));
+                small(o, 'speed', 303, 535, 100), small(o, 'rpm', 1617, 535, 100));
         }
         // the layout's own strip: the speedometer left, the tach left of the KOMBI's dark box, the oil gauge under
-        // the box, the column right of it; with the stock centre the tach small between that and the box
+        // the box, no readouts beside them; with the stock centre the tach small between that and the box
         const stock = o.centre === 'stock';
         const list = stock
             ? [C.flat('bg', 0, 0, 566, 720, 'bg'), C.flat('bgR', 1104, 0, 816, 720, 'bg')].concat(speedo(o, 300, 380, 240), small(o, 'speed', 84, 590, 80),
                 tach(o, 1256, 380, 148, true), small(o, 'rpm', 1402, 548, 72))
             : [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 480, 380, 250), small(o, 'speed', 128, 543, 95),
                 tach(o, 1110, 380, 250, true), small(o, 'rpm', 1462, 556, 95));
-        return list.concat([
-            C.text('clock', stock ? 190 : 250, 652, 220, 34, C.clock, white, { align: 0 }),
-            C.text('outside', 1410, 112, 220, 36, (d) => C.outsideText(o, d.outside), white, { align: 0 }),
-        ], column(o, 1672));
+        return list;
     },
 };

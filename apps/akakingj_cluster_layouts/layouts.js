@@ -189,6 +189,7 @@ const byId = (id) => LAYOUTS.find((l) => l.id === id) || LAYOUTS[0];
  */
 const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm', 'leftDial'];
 const ALWAYS = () => true, ENGINE = (o) => C0.engineFocus(o), STRIP = (o) => stripOn(o), ENGINE_STRIP = (o) => ENGINE(o) && STRIP(o);
+const MAPFORM = (o) => o.centre === 'map' || (STRIP(o) && o.centre === 'stock');
 const DIALS = { gaugeSpeed: ALWAYS, gaugeRpm: ALWAYS }, STRIP2 = { infoA: ENGINE_STRIP, infoB: ENGINE_STRIP };
 const SLOTS = {
     analog_sport: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
@@ -197,7 +198,8 @@ const SLOTS = {
     pulse: { infoMain: ENGINE },
     gt3: {}, m: {}, sport: {},
     classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE }, DIALS),
-    id6m: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
+    // (no readouts beside its dials; with the map, readouts 1 and 2 above it over the car's strip)
+    id6m: Object.assign({ infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o) }, DIALS),
     // (its own strip's middle: the main readout; a plug-in's, with the cluster's strip, its battery's power)
     arc_tach: Object.assign({ infoMain: (o) => ENGINE(o) || !STRIP(o) }, DIALS, STRIP2),
     // (its left dial: the G meter, a speedometer, the tyres or the temperatures; not with the map or the stock centre)
