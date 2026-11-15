@@ -89,14 +89,14 @@ mgu.run({
         const slot = (k, id) => slotValue((x) => settings.get(x), itemOf, id || layout.id, k);
         const options = () => ({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
-            powerUnit: settings.get('powerUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), arcGear: settings.get('arcGear'), gScale: settings.get('gScale'), gFlipLat: settings.get('gFlipLat'), gFlipLong: settings.get('gFlipLong'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'),
+            powerUnit: settings.get('powerUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), gFlipLat: settings.get('gFlipLat'), gFlipLong: settings.get('gFlipLong'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'),
             amberRpm: settings.get('amberRpm'), shiftBefore: settings.get('shiftBefore'), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
             redline: Number(settings.get('redline')) || 7000, rpmMax: Number(settings.get('rpmMax')) || 8000,
-            cluster: settings.get('cluster') === 'm' ? 'm' : 'standard',
-            bottomStrip: settings.get('bottomStrip') === 'layout' ? 'layout' : 'stock',   // the KOMBI's strip under y 660 (layouts.js)
-            boxBezel: settings.get('boxBezel') === 'on',   // (off: the box sits on the plain background)
+            // (always the car's own bottom strip since 0.34.0: Bottom strip, Cluster: M car and Frame behind the gear box
+            // are gone with the full-screen form; layouts.js holds them so)
+            cluster: 'standard', bottomStrip: 'stock', boxBezel: false,
             vehicle: D.vehicle().vehicle,      // set, or found from the car (Auto)
         });
         /** Live: demo data on, or the car's signals answer (a parked car sends nothing new for minutes, so a
@@ -113,14 +113,9 @@ mgu.run({
         // (Settings > Layout, or the one set for the drive mode now: Layout in Sport / in ECO PRO, layouts.layoutFor)
         const layoutNow = () => byId(layoutFor((k) => settings.get(k), data()));
         let layout = byId(settings.get('layout'));
-        /* the colours now: the layout's palette for the look, with pure black behind everything unless the
-         * Background setting says tinted. The KOMBI leaves a black box where its own gear readout sits while a
-         * layout covers the panel; on black (backgrounds and dial faces) it doesn't show. */
-        const BLACK = { bg: '#000000', bgTop: '#000000', bgBottom: '#000000', face0: '#000000', face1: '#000000' };
-        const themeNow = () => {
-            const t = layout.palette(look());
-            return settings.get('background') === 'tinted' ? t : Object.assign({}, t, BLACK);
-        };
+        /* the colours now: the layout's palette for the look, as designed (Settings > Background: Pure black, which hid
+         * the KOMBI's dark box in the full-screen form, went with it in 0.34.0: over the car's strip there is no box) */
+        const themeNow = () => layout.palette(look());
         const look = () => lookNow(settings.get('look'), data());
         /* the renderer target: the panel (slot 0x203), where the HMI's own cluster screen goes down and the
          * KOMBI shows its fallback gear box */
@@ -166,9 +161,9 @@ mgu.run({
             }
         }, 500);
         settings.onChange((k) => {
-            if (k === 'look' || k === 'background') return cluster.recolour();
+            if (k === 'look') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'boxBezel', 'cluster', 'bottomStrip', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'arcGear', 'gScale', 'gFlipLat', 'gFlipLong', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'gFlipLat', 'gFlipLong', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */
@@ -203,7 +198,7 @@ mgu.run({
             const d = data(), o = options(), snap = {};
             Object.keys(d).forEach((k) => { const v = d[k]; if (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean') snap[k] = typeof v === 'number' ? Math.round(v * 100) / 100 : v; });
             return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''), [
-                ['settings', JSON.stringify({ layout: settings.get('layout'), centre: o.centre, look: settings.get('look'), background: settings.get('background'), show: settings.get('show') })],
+                ['settings', JSON.stringify({ layout: settings.get('layout'), centre: o.centre, look: settings.get('look'), show: settings.get('show') })],
                 ['engine', JSON.stringify(cluster.status())],
                 ['cluster renderer status', squeeze(cluster.rendererStatus() || '(no answer yet)', full)],
                 ['data now', JSON.stringify(snap)],
@@ -298,7 +293,7 @@ mgu.run({
             const st = cluster.status(), d = data(), o = options(), now = layoutNow(), on = showing();
             const sel = on ? now.id : 'stock', shownId = on ? now.id : settings.get(modeKey());
             // (the pictures as the layouts look with the bottom strip set: the car's own, or the layout's full screen)
-            const strip = o.bottomStrip === 'stock', bigKey = shownId + (strip ? ':strip' : '');
+            const strip = true, bigKey = shownId + ':strip';   // (the pictures with the car's own strip: the only form since 0.34.0)
             const acc = t.sel || t.accent || '#3d8bff';
             // the large picture: the layout the drive mode uses now (on or not)
             const BX = 24, BY = 14;

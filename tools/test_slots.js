@@ -34,8 +34,8 @@ function drawn(id, o) {
     return JSON.stringify(L.byId(id).pieces(o).map((p) => [p.key, p.kind, p.x, p.y, p.w, p.h, typeof p.text === 'function' ? call(p.text, D, {}) : p.text,
         p.value ? call(p.value, D) : '', p.dyn ? JSON.stringify(call(p.dyn, D, {})) : '', p.visible ? call(p.visible, D) : '', JSON.stringify(p.params || {})]));
 }
-const base = Object.assign({}, def, { redline: 7000, rpmMax: 8000, centre: 'info', cluster: 'standard', boxBezel: false, speedUnit: 'kmh', tempUnit: 'c' });
-const KINDS = [['ice', 'layout'], ['phev', 'layout'], ['ice', 'stock'], ['phev', 'stock']];
+const base = Object.assign({}, def, { redline: 7000, rpmMax: 8000, centre: 'info', speedUnit: 'kmh', tempUnit: 'c' });
+const KINDS = [['ice', 'stock'], ['phev', 'stock']];   // (the car's own strip: the only form since 0.34.0)
 
 check('every layout has its readout places listed', () => L.LAYOUTS.forEach((l) => assert(l.id in L.SLOTS, l.id)));
 L.LAYOUTS.forEach((l) => {
@@ -69,12 +69,12 @@ check('slotsBy: a hidden object setting, empty by default', () => {
     assert(s && s.type === 'object' && s.hidden === true && JSON.stringify(s.default) === '{}');
 });
 
-check('previews.wad: a 600 x 225 picture of every layout, with its own bottom strip and with the car\'s', () => {
+check('previews.wad: a 600 x 225 picture of every layout, with the car\'s strip', () => {
     const b = fs.readFileSync(path.join(APP, 'previews.wad'));
     assert.strictEqual(b.slice(0, 4).toString(), 'LPV1');
     const hl = b.readUInt32LE(4), head = JSON.parse(b.slice(8, 8 + hl).toString()), data = 8 + hl;
     assert(head.w === 600 && head.h === 225);
-    L.LAYOUTS.forEach((l) => [0, 1].forEach((strip) => {
+    L.LAYOUTS.forEach((l) => [1].forEach((strip) => {
         const e = head.list.find((x) => x.id === l.id && x.strip === strip);
         assert(e, 'no picture of ' + l.id + (strip ? ' with the car\'s strip' : ''));
         const px = zlib.inflateSync(b.slice(data + e.off, data + e.off + e.len));

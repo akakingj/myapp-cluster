@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.33.1",
+  "version": "0.34.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -360,57 +360,6 @@
       "section": "Display"
     },
     {
-      "key": "background",
-      "label": "Background",
-      "type": "choice",
-      "default": "black",
-      "options": [
-        [
-          "black",
-          "Pure black (hides the cluster's gear box)"
-        ],
-        [
-          "tinted",
-          "Tinted, as designed"
-        ]
-      ],
-      "section": "Display"
-    },
-    {
-      "key": "cluster",
-      "label": "Cluster",
-      "type": "choice",
-      "default": "standard",
-      "options": [
-        [
-          "standard",
-          "Standard (X5 and other G models)"
-        ],
-        [
-          "m",
-          "M car: two more boxes in the middle, readings moved round them"
-        ]
-      ],
-      "section": "Display"
-    },
-    {
-      "key": "bottomStrip",
-      "label": "Bottom strip",
-      "type": "choice",
-      "default": "stock",
-      "options": [
-        [
-          "stock",
-          "The car's own (ranges, drive mode and gear from the car; the dials centred above it)"
-        ],
-        [
-          "layout",
-          "The layout's (full screen)"
-        ]
-      ],
-      "section": "Display"
-    },
-    {
       "key": "centre",
       "label": "Centre of the cluster",
       "type": "choice",
@@ -427,23 +376,6 @@
         [
           "stock",
           "Stock (the stock centre content)"
-        ]
-      ],
-      "section": "Display"
-    },
-    {
-      "key": "boxBezel",
-      "label": "Frame behind the gear box",
-      "type": "choice",
-      "default": "off",
-      "options": [
-        [
-          "off",
-          "Off: the box blends into the black background"
-        ],
-        [
-          "on",
-          "On: a grey frame round the box"
         ]
       ],
       "section": "Display"
@@ -706,23 +638,6 @@
         [
           "gear",
           "Gear (D / S / M and its number)"
-        ]
-      ],
-      "section": "Readouts and gauges"
-    },
-    {
-      "key": "arcGear",
-      "label": "JDM 1: the gear in the arc (the layout's own strip)",
-      "type": "choice",
-      "default": "on",
-      "options": [
-        [
-          "on",
-          "On"
-        ],
-        [
-          "off",
-          "Off"
         ]
       ],
       "section": "Readouts and gauges"

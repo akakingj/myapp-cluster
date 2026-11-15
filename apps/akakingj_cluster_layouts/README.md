@@ -26,7 +26,9 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 
 0.30.0 took out Digital round, Modern wide and Digital dash (a layout saved as one of them becomes 20's, Pulse and
 Track), renamed Retro, Analog sport, Classic M, M and Sport to 90's, 20's, ID6 M, ID7 M and ID8 M, and put the
-layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.31.0 added JDM 2 after JDM 1; 0.33.0 renamed ID6 M (the E9x-style dials) to Old M and added a new ID6 M after it.
+layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.31.0 added JDM 2 after JDM 1; 0.33.0
+renamed ID6 M (the E9x-style dials) to Old M and added a new ID6 M after it; 0.34.0 keeps the car's own bottom strip
+always (the full-screen form is gone: below).
 
 ```
 +---------------------------+  JDM 1                         Showing on the cluster
@@ -34,13 +36,12 @@ layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.
 |  the layout, large        |  [ Main readout: Boost  ]  [ Readout 1: Intake air ]
 |  (its demo picture)       |  [ Readout 2: Gearbox   ]  [ Speedometer gauge      ]
 +---------------------------+  [ Tach gauge           ]
- <  [card] [card] [card] [card] [card] [card]  >          (13 layouts and Stock)
+ <  [card] [card] [card] [card] [card] [card]  >          (12 layouts and Stock)
 ```
 
 - **The cards:** every layout's picture (made beforehand with demo readings for a petrol car, km/h, °C:
-  `previews.wad`, from `python3 tools/make_previews.py`, which draws each with `tools/preview.js`), as it looks with
-  Settings > Bottom strip as set (0.29.1: with the car's own strip, the default, the layout above it and a grey
-  stand-in for the strip the car draws; with the layout's, full screen), six a row, the
+  `previews.wad`, from `python3 tools/make_previews.py`, which draws each with `tools/preview.js`), as it looks over
+  the car's own strip (the layout above it and a grey stand-in for the strip the car draws), six a row, the
   arrows for more. A tap shows that layout on the cluster at once (Show on the cluster turned on with it); in Sport
   or ECO PRO with a layout set for that mode (Settings > Layout in Sport / in ECO PRO) the tap changes that one.
   **Stock** turns the layout off: the stock cluster back.
@@ -94,7 +95,7 @@ The round dials of BMW's M cars of the late 2000s, drawn after a photo of an E92
 a ring of cool white-blue light round each scale (open across the bottom), white bars, dots and numerals (one scale:
 mph or km/h, as set; km/h to 260, numbered every 20), thin glowing red needles over dark hubs, the fuel gauge across the speedometer's foot
 and the oil temperature across the tach's, and one amber LCD between them under the M tricolour: the battery's
-power along the top, the speed in large figures in the middle, the charge along the bottom (and the gear, full screen; the charge is in the display, so the strip's charge bar isn't added). In
+power along the top, the speed in large figures in the middle, the charge along the bottom (the charge is in the display, so the strip's charge bar isn't added). In
 an electric drive the tach reads the battery's power in kW: 0 a quarter round, the ring green below it for
 regeneration. An original drawing.
 
@@ -106,7 +107,7 @@ Round dials after the M cars' analog clusters of the mid 2010s, an original draw
 two big dials, each with a thin white ring round its top, open at the bottom, a dark band with white marks and large
 numerals, a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of its
 top end, amber from Settings > Amber zone below the red zone and red from the red line (both lower while the oil is
-cold, as the red zone); the gear under the tach in a white arc; the speed in figures with its unit under the speedometer's hub; no
+cold, as the red zone); the gear under the tach in a white arc; the speed in figures with its unit at the bottom of the middle, between the dials; no
 readouts beside the dials (the car's strip shows the time, temperature and ranges); a small fuel gauge (0, 1/2, 1) left of the
 speedometer and a small engine oil gauge (70-170 °C, 160-340 °F, red from Too hot) right of the tach, either of which
 Settings > Speedometer gauge / Tach gauge (or the page) can give another reading.
@@ -171,10 +172,9 @@ with the numerals in it, a notched dark rim round it and a dotted line inside it
 crimson and amber, Efficient blue), a glowing needle reaching the band over a chrome ring hub, the digital speed in
 its open lower right; a glossy disc with the gear; two small chrome-ringed gauges, the coolant (C-H) and the fuel
 (E-F), which Settings > Tach gauge / Speedometer gauge (or the page) can give another reading; the readouts in a column
-at the right. On a plug-in hybrid in an electric mode the tach's band reads the battery's power, its regeneration
-part green. With the layout's own strip the fuel gauge sits below the KOMBI's dark box and the background is black
-with Background: Pure black (the box shows then); with the map the tach stands left of it and the disc and gauges
-right of it; with the stock centre the tach takes the G meter's place. Its parts are one shader (`shaders.js` JDM_FS).
+at the right (readouts 1 and 2 in the time's and temperature's places, the main readout). On a plug-in hybrid in an electric mode the tach's band reads the battery's power, its regeneration
+part green. With the map (or the stock centre) the tach stands left of it and the disc and gauges right of it. Its
+parts are one shader (`shaders.js` JDM_FS).
 
 ![JDM 2](../../docs/jdm2.png)
 
@@ -263,34 +263,18 @@ the renderer's, this app's and Cluster Centre's logs) as QR codes, three to a pa
 text back together. The full logs go to a file on any USB stick plugged into the car
 (`cluster-logs/cluster-logs-<time>.txt`) and to the app's data folder.
 
-**Background: pure black** (the default; Settings > Background): backgrounds and dial faces black, so the
-KOMBI's black box where its own gear readout sits blends in. *Tinted* is the layouts as designed.
-
-**The dark box right of centre** while a layout is up is the KOMBI's own: the stock gear readout's place,
-left empty when the panel covers it (the gear letter moves to the bottom bar). The layouts keep their
-readings out of it. The renderer's slot report (Signals, page 2) shows what the KOMBI has up there. A gear letter drawn into the
-box doesn't show on the car (only its top edge peeks out): the box sits above the panel, so nothing an app
-draws can fill it. By default the layouts leave plain black round it, so the box's black window
-disappears into the background; Settings > Frame behind the gear box puts a grey frame round it instead.
-
-**M cars** (Settings > Cluster > M car): an M car's KOMBI leaves two more dark boxes in the middle of the
-panel while a layout is up, over whatever is drawn there. With the setting on, each layout moves its readings
-round them: Track moves its gear card and right tiles below them, Pulse moves its speed up and its row below them,
-and the panel between the dials narrows. The rev counters of 20's and 90's are too big to move out of the middle, so the boxes still sit on their
-faces. The boxes' places were measured from one photo of a car (`layout_common.M_BOXES`, to within about 10 px):
-a straight-on photo would tighten them. With Bottom strip
-set to the car's own (the default) the KOMBI leaves no boxes, so every layout keeps its own places on an M car too.
-
-**Bottom strip** (Settings > Bottom strip > The car's own, the default): the layout ends at y 646, so the KOMBI's own
-strip along the bottom shows below it (the fuel range, the time, the street, the drive mode and gear, the outside
-temperature and the electric range, and the warning lights; 660 just touched the top of its drive mode), and the
-black boxes some cars' KOMBIs leave over a full-screen layout go away. Found and tested on cars by thatgrayg22.
-With nothing of the KOMBI's to keep clear of, each layout takes its centred form there: the round dials of 20's and
-90's stand either side of the middle again as first drawn, sized to end above the strip; the side columns of Track
-balance either side of the middle. The layouts' own fuel and electric range numbers are left out (the strip shows both), and with the
-readings in the centre a fuel gauge sits above the strip's fuel range (bottom left) and a charge gauge above its
-electric range (bottom right), bars with no numbers. With the stock centre the layout takes the same form as with Waze, its window left clear for the car's own centre
-content. `tools/preview.js --strip` shows it.
+**The car's own bottom strip, always** (since 0.34.0): the layout ends at y 646, so the KOMBI's own strip along the
+bottom shows below it (the fuel range, the time, the street, the drive mode and gear, the outside temperature and the
+electric range, and the warning lights; 660 just touched the top of its drive mode). Found and tested on cars by
+thatgrayg22. Over the strip the KOMBI leaves none of the dark boxes it puts over a full-screen layout (its gear
+readout's place right of centre, the eDrive box, an M car's two in the middle), so every layout stands in its full,
+centred form, as first drawn. The full-screen form, which covered the strip and bent each layout round those boxes,
+is gone, and with it Settings > Bottom strip, Cluster: M car, Frame behind the gear box, Background (Pure black hid
+the gear box; the layouts are now always as designed) and JDM 1: the gear in the arc. The layouts' own fuel and
+electric range numbers are left out (the strip shows both), and where a layout has no fuel or charge gauge of its own
+a fuel bar sits above the strip's fuel range (bottom left) and a charge bar above its electric range (bottom right).
+With the stock centre the layout takes the same form as with Waze, its window left clear for the car's own centre
+content.
 
 ### Nothing asked of a parked car
 

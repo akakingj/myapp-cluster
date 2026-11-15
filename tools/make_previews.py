@@ -6,8 +6,8 @@ as it is, as the fonts; kit/tools/build.py):
 
     'LPV1', u32 header length, header JSON { w, h, list: [{ id, strip, off, len }] }, the data (off from the data's start)
 
-Each layout twice: with its own strip (strip 0, Settings > Bottom strip: the layout's) and with the car's (strip 1, the
-default), the car's strip drawn in as a stand-in (the KOMBI draws the real one: gear, drive mode, ranges, time,
+Each layout with the car's own bottom strip (strip 1: the only form since 0.34.0, the full-screen one gone), the car's
+strip drawn in as a stand-in (the KOMBI draws the real one: gear, drive mode, ranges, time,
 outside temperature) so the picture reads as on the car.
 
 Run again after a layout's look changes:  python3 tools/make_previews.py
@@ -46,7 +46,7 @@ def main():
     tmp = tempfile.mkdtemp(prefix='lpv-')
     blobs, head = [], {'w': PW, 'h': PH, 'list': []}
     off = 0
-    for strip in (0, 1):
+    for strip in (1,):
         for lid in ids:
             png = os.path.join(tmp, '%s_%d.png' % (lid, strip))
             r = subprocess.run(['node', os.path.join(ROOT, 'tools', 'preview.js'), '--layout', lid, '--engine', '--kmh', '--celsius', '--speed', '88',

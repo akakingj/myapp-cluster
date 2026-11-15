@@ -154,33 +154,13 @@ module.exports = {
     gearText: C.gearText,
 
     pieces(o) {
-        const strip = C.strip(o), m = C.mCar(o);
-        // the left and the right dial: the tach left, the speedometer right (an M car: swapped, the tach under its boxes)
-        const L = m ? 'speed' : 'rpm', R = m ? 'rpm' : 'speed';
         if (o.centre === 'map') {
-            // the dials either side of the map (full screen: the right one small, right of the KOMBI's box)
-            const list = C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(dial(o, 'speed', 208, 360, 404));
-            if (strip) return list.concat(dial(o, 'rpm', 1712, 360, 404));
-            return list.concat(dial(o, 'rpm', 1792, 500, 256), [C.text('gear', 1520, 130, 230, 92, C.gearText, white)]);
+            // the dials either side of the map
+            return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(dial(o, 'speed', 208, 360, 404), dial(o, 'rpm', 1712, 360, 404));
         }
-        if (strip && o.centre !== 'stock') {
-            // the car's own bottom strip (the default): the dials either side of the cowl, above the strip; the arch
-            // over their inner edges
-            return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dial(o, L, 470, 336, 560), dial(o, R, 1450, 336, 560),
-                arch(960, 500, 316, 48, 1), small(o, 'rpm', 868, 300, 164), small(o, 'speed', 1052, 300, 164), display(o, 864, 394, 192, 222, true));
-        }
-        // full screen: the dials left of the KOMBI's gear box (with the stock centre: the right one small, between),
-        // the cowl between them; right of the box the ranges
-        const stock = o.centre === 'stock', S = stock ? 520 : 470, cy = 392;
-        const list = [C.flat('bg', 0, 0, stock ? 566 : 1920, 720, 'bg')].concat(stock ? dial(o, 'speed', 300, cy, S) : dial(o, L, 270, cy, S), stock ? dial(o, 'rpm', 1256, cy, 296) : dial(o, R, 1150, cy, S));
-        if (stock) {
-            list.push(C.flat('bgR', 1104, 0, 816, 720, 'bg'));
-            return list;
-        }
-        // (an M car: the small gauges higher, above the left M box, and smaller)
-        const sy = m ? 196 : 345, ss = m ? 112 : 140;
-        // (an M car: no arch - its left box sits where the arch's right half runs)
-        return list.concat(m ? [] : arch(710, 520, 270, 58, 0.9), small(o, 'rpm', 636, sy, ss), small(o, 'speed', 784, sy, ss),
-            display(o, 622, 425, m ? 148 : 176, 195, false), P.ranges(o));
+        // the car's own bottom strip (the default): the dials either side of the cowl, above the strip; the arch
+        // over their inner edges
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dial(o, 'rpm', 470, 336, 560), dial(o, 'speed', 1450, 336, 560),
+            arch(960, 500, 316, 48, 1), small(o, 'rpm', 868, 300, 164), small(o, 'speed', 1052, 300, 164), display(o, 864, 394, 192, 222, true));
     },
 };

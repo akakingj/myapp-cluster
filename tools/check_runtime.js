@@ -15,10 +15,7 @@ const SPEC = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'app.js
 
 const defaults = {};
 SPEC.settings.forEach((s) => { defaults[s.key] = s.default; });
-const asOptions = (s) => Object.assign({}, s, {
-    redline: Number(s.redline), rpmMax: Number(s.rpmMax), boxBezel: s.boxBezel === 'on',
-    cluster: s.cluster === 'm' ? 'm' : 'standard', bottomStrip: s.bottomStrip === 'layout' ? 'layout' : 'stock',
-});
+const asOptions = (s) => Object.assign({}, s, { redline: Number(s.redline), rpmMax: Number(s.rpmMax) });
 
 const full = { speed: 88, rpm: 3400, gear: 4, stage: 'D', engineOn: true, oil: 96, coolant: 90, gearbox: 78, iat: 33, outside: 9, boostActual: 0.9, boostTarget: 1.0,
     torque: 310, enginePower: 110, pedal: 64, throttle: 48, timing: 12.5, hpfp: 220, lpfp: 5.2, fuelPct: 55, frange: 420, mode: 'SPORT', driveMode: 'SPORT', gLong: 0.2, gLat: 0.1,
@@ -40,8 +37,8 @@ READ.forEach((k, i) => SETS.push({ tag: 'readouts ' + k, infoLow: READ[(i + 7) %
 SETS.push({ tag: 'off, fuel', infoA: 'off', infoB: 'off', gaugeSpeed: 'fuel', gaugeRpm: 'auto' });
 // the gear as a readout, and Nothing under the speed and on Classic M's bottom line
 SETS.push({ tag: 'gear everywhere', infoA: 'gear', infoB: 'gear', infoMain: 'gear', infoLow: 'gear' });
-SETS.push({ tag: 'nothing everywhere', infoA: 'off', infoB: 'off', infoMain: 'off', infoLow: 'off', arcGear: 'off' });
-SETS.push({ tag: 'gear under the speed', infoMain: 'gear', arcGear: 'on' });
+SETS.push({ tag: 'nothing everywhere', infoA: 'off', infoB: 'off', infoMain: 'off', infoLow: 'off' });
+SETS.push({ tag: 'gear under the speed', infoMain: 'gear' });
 SETS.push({ tag: 'imperial', speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'lbft', pressUnit: 'kpa', powerUnit: 'kw', gaugeSpeed: 'boost', gaugeRpm: 'gearbox' });
 SETS.push({ tag: 'no cold guard, no amber', coldGuard: 'off', amberRpm: 0, shiftBefore: 0 });
 SETS.push({ tag: 'wide amber, far shift', amberRpm: 2000, shiftBefore: 1000, coldLimit: 3000, warmOil: 100, redline: 5000, rpmMax: 6000 });
@@ -50,9 +47,10 @@ SETS.push({ tag: 'top end', redline: 8000, rpmMax: 9000 });
 // to 5000 with it at 4000, the shift point 800 below
 SETS.push({ tag: 'profile top', redline: 9000, rpmMax: 10000, shiftBefore: 800, coldLimit: 2000 });
 SETS.push({ tag: 'profile bottom', redline: 4000, rpmMax: 5000, shiftBefore: 800, coldLimit: 2000, warmOil: 60 });
-SETS.push({ tag: 'layout strip, map', bottomStrip: 'layout', centre: 'map' });
+SETS.push({ tag: 'map', centre: 'map' });
 SETS.push({ tag: 'stock centre', centre: 'stock' });
-SETS.push({ tag: 'M cluster', cluster: 'm', bottomStrip: 'layout' });
+['speed', 'tyres', 'temps'].forEach((w) => SETS.push({ tag: 'JDM 2 left dial ' + w, leftDial: w }));
+SETS.push({ tag: 'G meter swapped, 1 g', gScale: '1', gFlipLat: 'on', gFlipLong: 'on' });
 SETS.push({ tag: 'plug-in hybrid', vehicle: 'phev' });
 SETS.push({ tag: 'shift warning, no colours', shiftWarn: 'on', tempTone: 'off' });
 SETS.push({ tag: 'shift warning, gauges', shiftWarn: 'on', gaugeSpeed: 'coolant', gaugeRpm: 'gearbox', infoA: 'oil', infoB: 'coolant', infoMain: 'gearbox' });

@@ -38,13 +38,8 @@ const r2 = (v) => (C.isNum(v) ? Math.round(v * 100) / 100 : 0);
 /** Settings > JDM 2: G meter size (g at the meter's outer ring; 1.5 as G Force and Car Vitals). */
 const gScale = (o) => { const v = Number(o && o.gScale); return v >= 0.5 && v <= 3 ? v : 1.5; };
 
-/*
- * The background, its weave continuous across pieces (key bg...: under everything, cut at the car's strip). With
- * Settings > Background: Pure black and the layout's own strip (the KOMBI's dark box shows then) it is black, so
- * the box disappears into it as in the other layouts.
- */
-const back = (o, key, x, y, w, h) => ({ key, kind: 'jdm', x, y, w, h, z: -200, params: { u_mode: [0], u_origin: [x, y] },
-    colors: (t) => Object.assign(jdmColours(t), !C.strip(o) && t.face0 === '#000000' ? { face: '#000000' } : {}) });
+/** The background, its weave continuous across pieces (key bg...: under everything, cut at the car's strip). */
+const back = (o, key, x, y, w, h) => ({ key, kind: 'jdm', x, y, w, h, z: -200, params: { u_mode: [0], u_origin: [x, y] }, colors: jdmColours });
 
 /** The tach at (cx, cy), radius R; the digital speed and its unit in its open lower right. */
 function tach(o, cx, cy, R) {
@@ -228,27 +223,14 @@ module.exports = {
                 C.readingUp('elec', 1100, bot + 2, 300, 30, C.focus.both(o), C.focus.rangeLabel(o), C.engineFocus(o) ? white : elecTxt, lbl),
             );
         }
-        if (C.strip(o) && o.centre !== 'stock') {
-            // the car's own strip: no boxes to keep clear of, so as first drawn: the G meter's window left, the tach
-            // over its edge, the disc above right of the tach, the coolant under it and the fuel right of both; the
-            // readouts the strip leaves (the main readout, readouts 1 and 2 in the time's and temperature's places)
-            // in the column at the right
-            return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 427, 410, 233), tach(o, 900, 387, 259),
-                gearDisc(o, 1287, 262, 100), small(o, 'rpm', 1297, 526, 112), small(o, 'speed', 1500, 404, 110), [
-                    C.text('clock', 1672, 300, 216, 34, C.clock, white),
-                    C.text('outside', 1672, 360, 216, 34, (d) => C.outsideText(o, d.outside), white),
-                ], column(o, 430));
-        }
-        // the layout's own strip: the same, the disc higher and the fuel below the KOMBI's dark box, the outside
-        // temperature above it, the column right of it, the time at the bottom left; with the stock centre the tach
-        // where the G meter was
-        const stock = o.centre === 'stock';
-        const list = stock
-            ? [back(o, 'bg', 0, 0, 566, 720), back(o, 'bgR', 1104, 0, 816, 720)].concat(tach(o, 290, 380, 240))
-            : [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 427, 400, 233), tach(o, 900, 387, 259));
-        return list.concat(gearDisc(o, 1287, 175, 95), small(o, 'rpm', 1297, 540, 105), small(o, 'speed', 1540, 556, 95), [
-            C.text('clock', 40, 652, 240, 34, C.clock, white, { align: 0 }),
-            C.text('outside', 1410, 112, 220, 36, (d) => C.outsideText(o, d.outside), white, { align: 0 }),
-        ], column(o));
+        // the car's own strip: no boxes to keep clear of, so as first drawn: the G meter's window left, the tach
+        // over its edge, the disc above right of the tach, the coolant under it and the fuel right of both; the
+        // readouts the strip leaves (the main readout, readouts 1 and 2 in the time's and temperature's places)
+        // in the column at the right
+        return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 427, 410, 233), tach(o, 900, 387, 259),
+            gearDisc(o, 1287, 262, 100), small(o, 'rpm', 1297, 526, 112), small(o, 'speed', 1500, 404, 110), [
+                C.text('clock', 1672, 300, 216, 34, C.clock, white),
+                C.text('outside', 1672, 360, 216, 34, (d) => C.outsideText(o, d.outside), white),
+            ], column(o, 430));
     },
 };

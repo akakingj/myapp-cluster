@@ -8,7 +8,8 @@
  *                         [--black] [--speed 62] [--rpm 3200] [--gear 4] [--stage D] [--mode S] [--oil 96] [--coolant 90]
  *                         [--celsius] [--mcar] [--strip] [--dap] [--hotOil 125] [--hotCoolant 112] [--hotGearbox 120] [--tempGauge scale]
  *                         [--out preview.png]
- * --mcar: Settings > Cluster M car, with the M KOMBI's two dark boxes drawn over the layout as on the car
+ * --mcar: the M KOMBI's two dark boxes drawn over the layout (as it left them over the full-screen form, gone in 0.34.0:
+ *         the layouts always keep the car's strip now, so --strip changes nothing either)
  */
 const fs = require('fs');
 const path = require('path');

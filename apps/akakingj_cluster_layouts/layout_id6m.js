@@ -2,7 +2,7 @@
 /**
  * layout_id6m.js - "ID6 M": round dials after the M cars' analog clusters of the mid 2010s, an original drawing. Two
  * big dials, each with a thin white ring round its top (open at the bottom), a dark band, white marks and large
- * numerals (the speed in figures too, under the speedometer's hub), a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of
+ * numerals (the speed in figures at the bottom of the middle, between the dials), a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of
  * its top end (amber Settings > Amber zone below the red zone, then red; lower while the oil is cold, as the red zone);
  * the gear under the tach in a white arc; the M tricolour under the speedometer (no lettering); a small fuel gauge
  * left of the speedometer and a small engine oil gauge right of the tach (Settings > Speedometer gauge / Tach gauge,
@@ -36,9 +36,6 @@ function speedo(o, cx, cy, R) {
             colors: roundColours, max: s.max, sweep: true, value: (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0),
         },
         C.text('speedUnit', cx - R * 0.3, cy - Math.round(R * 0.3), R * 0.6, Math.max(14, Math.round(R * 0.075)), C.speedUnit(o), white, { tracking: 0.04 }),
-        // the speed in figures too, in the dark disc under the hub, its unit beside it ('88 km/h')
-        C.text('speedDigits', cx - R * 0.42, cy + Math.round(R * 0.2), R * 0.44, Math.round(R * 0.15), (d) => C.speedText(o, d), white, { align: 1 }),
-        C.text('speedDigitsUnit', cx + R * 0.05, cy + Math.round(R * 0.2 + R * 0.15 * 0.36), R * 0.4, Math.round(R * 0.09), C.speedUnit(o), white, { align: 0 }),
         // the M tricolour (bimmer-lab's stripes, as ID7 M's and Old M's)
         { key: 'mStripes', kind: 'mdash', x: Math.round(cx - 42), y: Math.round(cy + R * 0.62), w: 84, h: 34, z: 5, params: { u_part: [4], u_off: [Math.round(cx - 42), Math.round(cy + R * 0.62)], u_mark: [Math.round(cx - 36), Math.round(cy + R * 0.62) + 4, 1.2] }, colors: (t) => ({ red: t.red }) },
     ];
@@ -120,10 +117,10 @@ module.exports = {
         if (o.centre === 'map') {
             // the speedometer left of the map, the tach right of it (small, below the dark box; with the car's
             // strip as big as the speedometer); the small gauges below their inner sides
-            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h, st = C.strip(o);
+            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h;
             return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(
                 speedo(o, 208, 360, 202), small(o, 'speed', 350, 584, 58),
-                st ? tach(o, 1712, 360, 202, true) : tach(o, 1792, 500, 128, true), st ? small(o, 'rpm', 1570, 584, 58) : small(o, 'rpm', 1600, 175, 56), [
+                tach(o, 1712, 360, 202, true), small(o, 'rpm', 1570, 584, 58), [
                     C.text('clock', 520, top - 76, 200, 34, C.clock, white),
                     C.text('outside', 1200, top - 76, 200, 34, (d) => C.outsideText(o, d.outside), white),
                 ],
@@ -131,20 +128,13 @@ module.exports = {
                 C.readingUp('elec', 1100, bot + 2, 300, 30, C.focus.both(o), C.focus.rangeLabel(o), C.engineFocus(o) ? white : elecTxt, lbl),
             );
         }
-        if (C.strip(o) && o.centre !== 'stock') {
-            // the car's own strip: the two dials either side of the middle under the camera's cowl, the small gauges
-            // at their outer feet; no readouts beside them (the strip shows the time, temperature and ranges)
-            return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 655, 372, 250), tach(o, 1265, 372, 250, true),
-                small(o, 'speed', 303, 535, 100), small(o, 'rpm', 1617, 535, 100));
-        }
-        // the layout's own strip: the speedometer left, the tach left of the KOMBI's dark box, the oil gauge under
-        // the box, no readouts beside them; with the stock centre the tach small between that and the box
-        const stock = o.centre === 'stock';
-        const list = stock
-            ? [C.flat('bg', 0, 0, 566, 720, 'bg'), C.flat('bgR', 1104, 0, 816, 720, 'bg')].concat(speedo(o, 300, 380, 240), small(o, 'speed', 84, 590, 80),
-                tach(o, 1256, 380, 148, true), small(o, 'rpm', 1402, 548, 72))
-            : [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 480, 380, 250), small(o, 'speed', 128, 543, 95),
-                tach(o, 1110, 380, 250, true), small(o, 'rpm', 1462, 556, 95));
-        return list;
+        // the car's own strip: the two dials either side of the middle under the camera's cowl, the small gauges
+        // at their outer feet; no readouts beside them (the strip shows the time, temperature and ranges)
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 655, 372, 250), tach(o, 1265, 372, 250, true),
+            small(o, 'speed', 303, 535, 100), small(o, 'rpm', 1617, 535, 100), [
+                // the speed in figures at the bottom of the middle, between the dials' feet ('88 km/h')
+                C.text('speedDigits', 852, 546, 120, 62, (d) => C.speedText(o, d), white, { align: 1 }),
+                C.text('speedDigitsUnit', 982, 574, 110, 30, C.speedUnit(o), white, { align: 0 }),
+            ]);
     },
 };

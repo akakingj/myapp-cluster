@@ -139,27 +139,11 @@ module.exports = {
     gearText: C.gearText,
 
     pieces(o) {
-        const strip = C.strip(o);
         if (o.centre === 'map') {
-            // the speedometer left of the map, the tach right of it (full screen smaller, right of the KOMBI's box)
-            const list = C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(dial(o, 'speed', 208, 360, 404));
-            if (strip) return list.concat(dial(o, 'rpm', 1712, 360, 404));
-            return list.concat(dial(o, 'rpm', 1792, 500, 256), [C.text('gear', 1520, 130, 230, 92, C.gearText, amber)]);
+            // the speedometer left of the map, the tach right of it
+            return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(dial(o, 'speed', 208, 360, 404), dial(o, 'rpm', 1712, 360, 404));
         }
-        if (strip && o.centre !== 'stock') {
-            // the car's own bottom strip (the default): the two dials either side of the amber display, above the strip
-            return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dial(o, 'speed', 468, 326, 600), dial(o, 'rpm', 1452, 326, 600), display(o, 796, 236, 328, 380, false));
-        }
-        // full screen: the speedometer left, the tach left of the KOMBI's dark box (with the stock centre: small,
-        // between them), the display between; right of the box the electric range and the charge
-        const stock = o.centre === 'stock', S = 520, cy = 392;
-        const list = [C.flat('bg', 0, 0, stock ? 566 : 1920, 720, 'bg')].concat(dial(o, 'speed', 300, cy, S), stock ? dial(o, 'rpm', 1256, cy, 296) : dial(o, 'rpm', 1120, cy, S));
-        if (stock) list.push(C.flat('bgR', 1104, 0, 816, 720, 'bg'));
-        const RX = 1672, RW = 216, elec = (t) => (C.engineFocus(o) ? amber(t) : { color: ['#4ab4ff', 1], glow: ['#4ab4ff', 0.3] });
-        list.push(...C.reading('elec', RX, 330, RW, 44, C.focus.range(o), C.focus.rangeLabel(o), elec, dim),
-            C.text('socRight', RX, 446, RW, 44, C.focus.charge(o), elec));
-        if (stock) return list;
-        // (an M car's KOMBI leaves a box at x 778-1054 from y 274: the display narrower, left of it)
-        return list.concat(C.mCar(o) ? display(o, 584, 214, 186, 420, true) : display(o, 574, 214, 278, 420, true));
+        // the car's own bottom strip (the default): the two dials either side of the amber display, above the strip
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dial(o, 'speed', 468, 326, 600), dial(o, 'rpm', 1452, 326, 600), display(o, 796, 236, 328, 380, false));
     },
 };

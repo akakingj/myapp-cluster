@@ -24,9 +24,9 @@ RKEYS.forEach((k) => variants.push({ infoA: k, infoB: k, infoMain: k, infoLow: k
 ['hp', 'ps', 'kw'].forEach((p) => variants.push({ powerUnit: p, gaugeSpeed: 'power', gaugeRpm: 'power', infoA: 'power', infoB: 'power', infoMain: 'power', tag: 'power in ' + p }));
 ['nm', 'kgm', 'lbft'].forEach((p) => variants.push({ torqueUnit: p, gaugeSpeed: 'torque', gaugeRpm: 'torque', infoA: 'torque', infoB: 'torque', infoMain: 'torque', tag: 'torque in ' + p }));
 variants.push({ tempUnit: 'f', gaugeSpeed: 'gearbox', gaugeRpm: 'oil', tag: 'temperatures in F' });
-// and each in every arrangement: the car's own bottom strip or the layout's, the readings, the map or the stock centre
+// and each in every arrangement over the car's own strip (the only form): the readings, the map or the stock centre
 const MODES = [];
-[['stock', 'info'], ['stock', 'map'], ['stock', 'stock'], ['layout', 'info'], ['layout', 'map'], ['layout', 'stock']].forEach(([bottomStrip, centre]) =>
+[['stock', 'info'], ['stock', 'map'], ['stock', 'stock']].forEach(([bottomStrip, centre]) =>
     variants.forEach((v) => MODES.push(Object.assign({}, v, { bottomStrip, centre, tag: v.tag + ', strip ' + bottomStrip + ', centre ' + centre }))));
 
 const bad = new Map();

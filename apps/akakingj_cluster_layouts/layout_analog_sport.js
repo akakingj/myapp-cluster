@@ -125,47 +125,24 @@ module.exports = {
             // the speedometer left of the map, the tach right of it (small, below the dark box; with the car's
             // strip, as big as the speedometer), each with its satellite gauge below its inner side; the gear and
             // speed in the free corner above the box; the ranges in the strip under the map, above the warning lights
-            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h, st = C.strip(o);
+            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h;
             return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(
                 bigDial(o, 'speed', 208, 404, 360), satellite(o, 'speed', 350, 584, 120),
-                st ? bigDial(o, 'rpm', 1712, 404, 360) : bigDial(o, 'rpm', 1792, 256, 500), st ? satellite(o, 'rpm', 1570, 584, 120) : satellite(o, 'rpm', 1652, 590, 110), [
+                bigDial(o, 'rpm', 1712, 404, 360), satellite(o, 'rpm', 1570, 584, 120), [
                     C.text('clock', 520, top - 76, 200, 34, C.clock, glowText),
                     C.text('outside', 1200, top - 76, 200, 34, (d) => C.outsideText(o, d.outside), glowText),
                     C.text('gear', 1520, 130, 230, 92, C.gearText, gearC),
-                    ...(st ? [] : [C.text('speedDigits', 1520, 224, 230, 32, (d) => C.speedText(o, d) + ' ' + C.speedUnit(o), glowText)]),
                 ],
                 C.readingUp('fuel', 560, bot + 2, 260, 30, (d) => C.distText(o, d.frange), 'FUEL RANGE', glowText, lbl),
                 C.readingUp('elec', 1100, bot + 2, 300, 30, C.focus.both(o), C.focus.rangeLabel(o), C.engineFocus(o) ? glowText : elecTxt, lbl),
             );
         }
-        if (C.strip(o) && o.centre !== 'stock') {
-            // the car's own bottom strip (layout_common.STRIP_Y): no boxes to keep clear of, so the dials stand
-            // centred either side of the display, sized to end above the strip, the satellites at their outer
-            // feet (above the strip's fuel and charge bars: layouts.js); the ranges are the strip's
-            const SS = 600, scy = 328, X = 830, W = 260, Y = 164, H = 440;   // (its top clear of the camera's cowl: a photo of the car)
-            return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(bigDial(o, 'speed', 452, SS, scy), bigDial(o, 'rpm', 1468, SS, scy),
-                satellite(o, 'speed', 160, 510, 160), satellite(o, 'rpm', 1776, 510, 160), centreDisplay(o, X, Y, W, H, gearC, elecTxt, true));
-        }
-        // the speedometer left, its satellite at its outer foot; with the stock centre the tach (small) between
-        // the KOMBI's centre and the dark box, else full size left of the box with the slim display between the
-        // dials; the tach's satellite at its outer foot, below the box; the ranges right of the box
-        const S = 500, L = 312;
-        const stock = o.centre === 'stock', R = stock ? 1256 : 1120, SR = stock ? 296 : S;
-        const list = [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(bigDial(o, 'speed', L, S, CY), satellite(o, 'speed', 78, 564, 146),
-            bigDial(o, 'rpm', R, SR, CY), stock ? satellite(o, 'rpm', 1400, 520, 120) : satellite(o, 'rpm', 1370, 560, 146));
-        if (stock) {
-            list[0] = C.flat('bg', 0, 0, 566, 720, 'bg');
-            list.push(C.flat('bgR', 1104, 0, 816, 720, 'bg'));
-        }
-        // right of the dark box: the ranges and the charge
-        const RX = 1672, RW = 216;
-        list.push(...C.reading('fuel', RX, 292, RW, 44, (d) => C.distText(o, d.frange), 'FUEL RANGE', glowText, lbl),
-            ...C.reading('elec', RX, 400, RW, 44, C.focus.range(o), C.focus.rangeLabel(o), C.engineFocus(o) ? glowText : elecTxt, lbl),
-            C.text('socTxt', RX, 506, RW, 44, C.focus.charge(o), C.engineFocus(o) ? glowText : elecTxt),
-            C.bar('soc', RX + 8, 562, RW - 16, 16, C.focus.bar(o), (t) => ({ track: t.track, fill0: C.engineFocus(o) ? t.accent : t.ev, fill1: C.engineFocus(o) ? t.accent : t.ev, redc: t.red, tip: t.accent, tick: t.dim, num: t.num }), 16));
-        if (stock) return list;
-        // the slim display between the dials (below the camera's cowl, above the warning lights)
-        return list.concat(centreDisplay(o, 590, 140, 256, 470, gearC, elecTxt));
+        // the car's own bottom strip (layout_common.STRIP_Y): no boxes to keep clear of, so the dials stand
+        // centred either side of the display, sized to end above the strip, the satellites at their outer
+        // feet (above the strip's fuel and charge bars: layouts.js); the ranges are the strip's
+        const SS = 600, scy = 328, X = 830, W = 260, Y = 164, H = 440;   // (its top clear of the camera's cowl: a photo of the car)
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(bigDial(o, 'speed', 452, SS, scy), bigDial(o, 'rpm', 1468, SS, scy),
+            satellite(o, 'speed', 160, 510, 160), satellite(o, 'rpm', 1776, 510, 160), centreDisplay(o, X, Y, W, H, gearC, elecTxt, true));
     },
 };
 

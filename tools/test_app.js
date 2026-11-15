@@ -67,8 +67,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     check('the page: the chosen layout\'s picture and a row of cards, each a picture from previews.wad', () => {
         const ids = Array.from(lastPage.images);
         // (the row the Stock card is on, it being chosen while off: Stock alone there, the twelve layouts filling the two
-        // rows before; the pictures with the car's own bottom strip, the default)
-        assert.strictEqual(S.bottomStrip, 'stock');
+        // rows before; the pictures with the car's own bottom strip, the only form)
         assert(ids.indexOf(0x434c0100) >= 0 && !ids.some((i) => i >= 0x434c0200 && i < 0x434c0300), ids.map((i) => i.toString(16)).join(','));
         assert(rec.imageById.get(0x434c0100).w === 600 && rec.imageById.get(0x434c0100).data.length === 600 * 225 * 4);
     });
@@ -77,15 +76,6 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         const ids = Array.from(lastPage.images).filter((i) => i >= 0x434c0200 && i < 0x434c0300);
         assert(ids.length === 6 && ids.indexOf(0x434c0200 + 0x40 + 6) >= 0 && ids.every((i) => i >= 0x434c0200 + 0x40), ids.map((i) => i.toString(16)).join(','));
     });
-    // the layout's own strip set: the cards' pictures without the car's strip
-    S.bottomStrip = 'layout'; changes.forEach((f) => f('bottomStrip', 'layout'));
-    await tgt('cards_next').run(); await tgt('cards_prev').run();
-    check('Bottom strip: the layout\'s: the pictures without the car\'s strip', () => {
-        const ids = Array.from(lastPage.images).filter((i) => i >= 0x434c0200 && i < 0x434c0300);
-        assert(ids.length === 6 && ids.every((i) => i < 0x434c0200 + 0x40), ids.map((i) => i.toString(16)).join(','));
-    });
-    S.bottomStrip = 'stock'; changes.forEach((f) => f('bottomStrip', 'stock'));
-    await tgt('cards_next').run(); await tgt('cards_prev').run();
     // (a petrol car: Arc tach's main readout shows)
     S.vehicle = 'ice'; changes.forEach((f) => f('vehicle', 'ice'));
     await tgt('card_arc_tach').run();

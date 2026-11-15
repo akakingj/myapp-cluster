@@ -198,10 +198,10 @@ module.exports = {
         if (o.centre === 'map') {
             // the tach left of the map, a dial right of it (above the KOMBI's gear box without the car's strip); the
             // readouts above the map, the ranges under it
-            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h, st = C.strip(o);
+            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h;
             return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(
-                tachAlone(o, 196, 390, 176, !st),
-                st ? alone(o, 'rpm', 1712, 390, 168, 1, null) : alone(o, 'rpm', 1792, 520, 110, 1, null), [
+                tachAlone(o, 196, 390, 176, false),
+                alone(o, 'rpm', 1712, 390, 168, 1, null), [
                     C.text('clock', 520, top - 76, 200, 34, C.clock, lit),
                     C.text('outside', 1200, top - 76, 200, 34, (d) => C.outsideText(o, d.outside), lit),
                 ],
@@ -209,22 +209,10 @@ module.exports = {
                 C.readingUp('elec', 1100, bot + 2, 300, 30, C.focus.both(o), C.focus.rangeLabel(o), C.engineFocus(o) ? lit : elecTxt, lbl),
             );
         }
-        if (C.strip(o)) {
-            // over the car's own strip (layout_common.STRIP_Y), which shows the gear and the ranges: the tach centred,
-            // its ring from clear of the camera's cowl to just over the strip, a dial behind it either side. (2026-11-15,
-            // a G20 with the driver camera: the ring's top, at y 125, touched the cowl, lower in the middle than the
-            // G05's NOTCH; now its chrome from y 150, the bottom where it was)
-            return bg.concat(three(o, 960, 399, 233, false, [['speed', 'clock', 176], ['rpm', 'outside', 176]], 72));
-        }
-        if (o.centre === 'stock') {
-            // the KOMBI's own centre between: the tach left, a dial right of it, the ranges right of the box
-            return [C.flat('bg', 0, 0, 566, 720, 'bg'), C.flat('bgR', 1104, 0, 816, 720, 'bg')].concat(
-                tachAlone(o, 270, 392, 230, true), C.mCar(o) ? [] : alone(o, 'rpm', 1256, 392, 136, 1, null), ranges(o));   // (an M car: its second box there)
-        }
-        // the layout's own strip: the three left of the KOMBI's gear box, the ranges right of it (an M car: the tach
-        // left, the dials apart and lower, under the M KOMBI's two boxes)
-        if (C.mCar(o)) return bg.concat(tachAlone(o, 400, 390, 236, true), alone(o, 'speed', 916, 542, 96, -1, 'clock'), alone(o, 'rpm', 1311, 552, 88, 1, 'outside'), ranges(o));
-        // (the tach's chrome from y 150, clear of the camera's cowl as over the car's strip)
-        return bg.concat(three(o, 720, 394, 228, true, [['speed', 'clock', 160], ['rpm', 'outside', 160]], 66), ranges(o));
+        // over the car's own strip (layout_common.STRIP_Y), which shows the gear and the ranges: the tach centred,
+        // its ring from clear of the camera's cowl to just over the strip, a dial behind it either side. (2026-11-15,
+        // a G20 with the driver camera: the ring's top, at y 125, touched the cowl, lower in the middle than the
+        // G05's NOTCH; now its chrome from y 150, the bottom where it was)
+        return bg.concat(three(o, 960, 399, 233, false, [['speed', 'clock', 176], ['rpm', 'outside', 176]], 72));
     },
 };

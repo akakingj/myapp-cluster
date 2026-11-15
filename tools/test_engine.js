@@ -62,14 +62,15 @@ LAYOUTS.forEach((L) => {
         const s = makeScene({ layout: id, data: {} });
         drive(s, 2, () => ({ speed: 50 * 1.609344, rpm: 2500, stage: 'D', gear: 3, oil: 100, coolant: 90 }));
         const t = textsOf(s);
-        // (Sport shows the gear's number alone, as theirs: L.gearNumber)
-        [L.gearNumber ? '3' : 'D3', '50'].forEach((x) => assert(t.indexOf(x) >= 0, x + ' in ' + JSON.stringify(t)));
+        // (Sport shows the gear's number alone, as theirs: L.gearNumber; the car's strip shows the gear, so only the
+        // layouts made round a big gear show it too: L.stripGear)
+        [...(L.stripGear ? [L.gearNumber ? '3' : 'D3'] : []), '50'].forEach((x) => assert(t.indexOf(x) >= 0, x + ' in ' + JSON.stringify(t)));
         const vals = s.engine._pieces().filter((p) => p.value !== null).map((p) => p.value);
         // (on the scale's 160 mph, or a layout's own scale: L._speedFrac; M's and Sport's speed not a value: L.speedGauge)
         assert(L.speedGauge === false || vals.some((v) => Math.abs(v - 50) < 0.3 || Math.abs(v - 50 / 160) < 0.003 || (L._speedFrac && Math.abs(v - L._speedFrac(50)) < 0.003)), 'speed ' + vals);
         s.stop();
     });
-    check(id + ': S on the selector shows S3', () => {
+    if (L.stripGear) check(id + ': S on the selector shows S3', () => {
         const s = makeScene({ layout: id, data: {} });
         drive(s, 1, () => ({ speed: 60, rpm: 4000, stage: 'D', gear: 3, mode: 'S' }));
         assert(textsOf(s).indexOf(L.gearNumber ? '3' : 'S3') >= 0);
@@ -80,7 +81,11 @@ LAYOUTS.forEach((L) => {
         s.engine._tick();
         // (a whole-view backdrop, M's and Sport's, with that area cut see-through: u_hole)
         const cutOut = (l) => /^(mdash|sdash)$/.test(l.kind) && l.params.u_hole && l.params.u_hole[0] <= 820 && l.params.u_hole[0] + l.params.u_hole[2] >= 1100;
-        assert(!s.engine._pieces().some((l) => l.x < 1100 && l.x + l.w > 820 && !cutOut(l)), 'a piece over x 820-1100');
+        // (over the car's strip the stock centre shows in the map's window: the backgrounds round it and the black band
+        // under the layout may span the middle above and below the window, nothing in it)
+        const W = L.mapWindow || require(path.join(APP, 'layout_common')).MAP;
+        const over = s.engine._pieces().filter((l) => l.x < 1100 && l.x + l.w > 820 && l.y < W.y + W.h && l.y + l.h > W.y && !cutOut(l));
+        assert(!over.length, 'a piece over x 820-1100: ' + over.map((l) => l.key).join(' '));
         s.stop();
     });
     check(id + ': map in the centre: nothing over the map window, the readings round it', () => {
@@ -109,35 +114,19 @@ LAYOUTS.forEach((L) => {
 });
 
 /*
- * Every layout is built around what the glass and the KOMBI keep for themselves: the camera's cowl, the dark box
- * the KOMBI leaves where its gear readout was, its eDrive readout's box, the slanted top corners and the warning
- * lights along the bottom. Every piece that draws something (not the backgrounds) stays clear of them; a dial
- * counts as its circle.
+ * Every layout is built around what the glass and the KOMBI keep for themselves over the car's own strip (the only form
+ * since 0.34.0): the camera's cowl, the slanted top corners and the strip itself; every piece that draws something
+ * (not the backgrounds) stays clear of them, at most 60 pieces; a dial counts as its circle.
  */
 const { clashes } = require('./clearance');
-LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + centre + ', ' + vehicle + '): at most 60 pieces, all clear of the cowl, the KOMBI\'s boxes, the corners and the warning lights', () => {
-    const ps = L.pieces({ speedUnit: 'mph', tempUnit: 'f', centre, redline: 7000, rpmMax: 8000, vehicle });
-    assert(ps.length <= 60, ps.length + ' pieces: the renderer draws 64 layers an app');
-    const bad = ps.map((p) => [p.key, clashes(p)]).filter(([, c]) => c.length).map(([k, c]) => k + ' ' + c.join(', '));
-    assert(!bad.length, bad.join('; '));
-}))));
-/* Settings > Cluster: M car: the same, with the M KOMBI's two boxes in the middle; only a rev counter's own face
- * (layouts.M_ON_DIAL) may sit under them, since it can't move out of the middle */
-const { M_ON_DIAL } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
-LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + centre + ', ' + vehicle + ', M car): readings clear of the M KOMBI\'s boxes too', () => {
-    const o = { speedUnit: 'mph', tempUnit: 'f', centre, redline: 7000, rpmMax: 8000, vehicle, cluster: 'm' };
-    const ps = L.pieces(o);
-    assert(ps.length <= 60, ps.length + ' pieces');
-    const bad = ps.map((p) => [p.key, clashes(p, o).filter((c) => !(c === 'in an M box' && M_ON_DIAL.indexOf(p.key) >= 0))]).filter(([, c]) => c.length).map(([k, c]) => k + ' ' + c.join(', '));
-    assert(!bad.length, bad.join('; '));
-}))));
-
-/* Settings > Layout: Bottom strip: the car's own: no background below CUT_Y but the black band, nothing small crossing it, and
- * the same readings clear of the KOMBI's boxes as without it */
+/* the car's own strip: no background below CUT_Y but the black band, nothing small crossing it */
 const { CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
-LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['standard', 'm'].forEach((cluster) => check(L.id + ' (' + centre + ', ' + cluster + ', stock bottom strip): the layout ends at y ' + CUT_Y, () => {
-    const o = { speedUnit: 'mph', tempUnit: 'f', centre, redline: 7000, rpmMax: 8000, vehicle: 'phev', cluster, bottomStrip: 'stock' };
+LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + centre + ', ' + vehicle + '): the layout ends at y ' + CUT_Y + ', at most 60 pieces, clear of the cowl and corners', () => {
+    // (the options as an older save might pass them: the layouts hold the car's strip whatever they say)
+    const o = { speedUnit: 'mph', tempUnit: 'f', centre, redline: 7000, rpmMax: 8000, vehicle, cluster: 'm', bottomStrip: 'layout' };
     const ps = L.pieces(o);
+    Object.assign(o, { cluster: 'standard', bottomStrip: 'stock' });
+    assert(ps.length <= 60, ps.length + ' pieces: the renderer draws 64 layers an app');
     const low = ps.filter((p) => p.y + p.h > CUT_Y && !/^bgBand/.test(p.key) && (/^bg/.test(p.key) || p.kind === 'flat' || p.kind === 'panel' || p.kind === 'flag' || p.h <= 80));
     assert(!low.length, low.map((p) => p.key + ' ' + p.y + '+' + p.h).join(', '));
     // the black band below, to BG_Y, over the stock dials' edges, but not over the strip's drive mode and gear
@@ -145,7 +134,7 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['standard',
     // the band to BG_Y, but over the drive mode and gear only to BG_NOTCH_Y (short of their tops at 660)
     assert(band.length === 3 && band.every((p) => p.y === CUT_Y && (p.x + p.w <= BG_NOTCH[0] || p.x >= BG_NOTCH[1] ? p.y + p.h === BG_Y : p.y + p.h === BG_NOTCH_Y && BG_NOTCH_Y < 660)), JSON.stringify(band.map((p) => [p.x, p.w, p.h])));
     assert(ps.some((p) => /^bg/.test(p.key)), 'a background still');
-    const bad = ps.map((p) => [p.key, clashes(p, o).filter((c) => !(c === 'in an M box' && M_ON_DIAL.indexOf(p.key) >= 0))]).filter(([, c]) => c.length).map(([k, c]) => k + ' ' + c.join(', '));
+    const bad = ps.map((p) => [p.key, clashes(p, o)]).filter(([, c]) => c.length).map(([k, c]) => k + ' ' + c.join(', '));
     assert(!bad.length, bad.join('; '));
 }))));
 

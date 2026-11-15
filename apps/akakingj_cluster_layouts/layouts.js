@@ -4,9 +4,6 @@
  * (the build ships only top-level .js files); list it here and in app.json's "layout" setting (README.md).
  */
 const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_gt3')];
-/* with Settings > Frame behind the gear box on: the bezel behind the KOMBI's gear bracket (layout_common.boxBezel),
- * just above the backgrounds. Off (the default, from the car: the frame read as a stray grey box) the box sits on
- * the layout's own black background and its black window disappears into it */
 const C0 = require('./layout_common');
 /** A readout put in the time's or the outside temperature's place, two side by side: made to hold its widest
  * figures ('TRANS 140°') with a gap to the other (layout_common.fitText). */
@@ -51,57 +48,9 @@ function finish(L, o, list) {
         return p;
     });
 }
-const { boxBezel, MAP, mCar } = C0;
-
 /*
- * Settings > Cluster: M car. An M car's KOMBI leaves two more dark boxes in the middle of the panel
- * (layout_common.M_HOLES, about x 778-1054 and 1208-1415, y 274-426), drawn over the layout. Each layout moves
- * its readings out of them here, by piece key and centre: { x, y, w, h } replaced, dy added, or squeeze: the
- * piece and everything inside it narrowed into a new x span (a card and its texts). The big rev counters of the
- * dial layouts can't move out of the middle: the boxes sit on their faces (tools/clearance.js lists them; test_engine.js allows only those, M_ON_DIAL).
- */
-const M_ON_DIAL = ['rpm', 'rpmUnit', 'rpmArc', 'kwDraw', 'kwRegen', 'kwLbl', 'rpmRim', 'tachR', 'nr2', 'nr4'];
-const M_MOVES = {
-    pulse: {
-        // the speed up between the cowl and the boxes; its unit, the drive mode and the rpm in one row below them
-        info: { speedDigits: { y: 128, h: 146 }, speedUnit: { y: 432, h: 28 }, mode: { x: 200, y: 434, w: 440, h: 26 }, rpmDigits: { y: 430, h: 30 }, gear: { y: 186, h: 230 } },
-    },
-    track: { info: {
-        // the gear card below the boxes, the drive mode above them; the right column's tiles stacked below
-        gearCard: { y: 432, h: 208 }, gear: { y: 438, h: 140 }, rpm: { y: 580, h: 34 }, rpmLbl: { y: 618, h: 16 }, mode: { y: 226, h: 26 },
-        boostCard: { y: 432, h: 100 }, boostLbl: { y: 442 }, boost: { y: 466, h: 55 },
-        powerCard: { y: 542, h: 100 }, powerLbl: { y: 552 }, power: { y: 576, h: 55 },
-    } },
-    // the display between the dials narrowed clear of the left box
-    analog_sport: { info: { lcd: { squeeze: [584, 186] } } },
-    retro: { info: { coolantDial: { dx: -32 }, coolantChC: { dx: -32 }, coolantChH: { dx: -32 } } },
-};
-function mMoves(L, o, list) {
-    const m = (M_MOVES[L.id] || {})[o.centre || 'info'];
-    if (!m) return list;
-    // leave out first ('-key': kind), so a key two pieces share (a bar and its text) moves the one left
-    let out = list.filter((p) => m['-' + p.key] !== p.kind);
-    Object.keys(m).filter((k) => k[0] !== '-').forEach((k) => {
-        const mv = m[k];
-        const p = out.find((q) => q.key === k);
-        if (!p) return;
-        if (mv.squeeze) {
-            const [nx, nw] = mv.squeeze, ox = p.x, ow = p.w, f = nw / ow;
-            out = out.map((q) => (q === p || (q.x >= ox && q.x + q.w <= ox + ow && q.y >= p.y && q.y + q.h <= p.y + p.h && q.kind !== 'bg' && !/^bg/.test(q.key))
-                ? Object.assign({}, q, { x: Math.round(nx + (q.x - ox) * f), w: Math.round(q.w * f) }) : q));
-            return;
-        }
-        const n = Object.assign({}, p);
-        ['x', 'y', 'w', 'h'].forEach((a) => { if (mv[a] !== undefined) n[a] = mv[a]; });
-        if (mv.dy) n.y += mv.dy;
-        if (mv.dx) n.x += mv.dx;
-        out[out.indexOf(p)] = n;
-    });
-    return out;
-}
-
-/*
- * Settings > Bottom strip > The car's own (the default; layout_common.STRIP_Y, found on cars by thatgrayg22): the
+ * Every layout keeps the car's own bottom strip (since 0.34.0 the only way: the full-screen form, which covered the
+ * strip and worked round the KOMBI's dark boxes, is gone; layout_common.STRIP_Y, found on cars by thatgrayg22): the
  * layout ends above the KOMBI's own strip (gear, drive mode, ranges, time, street, outside temperature, warnings),
  * and the KOMBI leaves none of its boxes. Each layout takes its centred places there itself (C.strip(o)); here
  * its range numbers are left out (the strip shows both), the fuel and charge gauges go above the strip's ranges,
@@ -133,13 +82,14 @@ function bottomCut(list) {
 
 LAYOUTS.forEach((L) => {
     const own = L.pieces;
-    L.pieces = (o) => finish(L, o, built(o));
+    // (Settings > Bottom strip, Cluster: M car and Frame behind the gear box are gone: always the car's strip, which
+    // leaves none of the KOMBI's boxes)
+    L.pieces = (o0) => { const o = Object.assign({}, o0 || {}, { bottomStrip: 'stock', cluster: 'standard', boxBezel: false }); return finish(L, o, built(o)); };
     const built = (o) => {
         // over the car's own strip there is no dark box to work round: the stock centre content shows in the
         // map's window, so the layout takes the same form as with the map (its window left clear for it)
         const oo = stripOn(o) && o.centre === 'stock' ? Object.assign({}, o, { centre: 'map' }) : o;
         let list = (own(oo) || []).slice();
-        if (mCar(o)) list = mMoves(L, o, list);
         if (stripOn(o)) {
             list = list.filter((p) => !C0.STRIP_DROP.test(p.key));
             // the strip shows the gear and the drive mode: no second drive mode, and no second gear but in the
@@ -170,13 +120,6 @@ LAYOUTS.forEach((L) => {
             list.splice(i, 0, ...blackBand());
             return list;   // (no frame for the gear box: the KOMBI shows none over the strip)
         }
-        if (!o || o.boxBezel !== true) return list;
-        let i = 0;
-        while (i < list.length && /^bg/.test(list[i].key)) i++;
-        const b = boxBezel();
-        // with the map: from the map's right edge (the map's own picture runs under the bracket's left end)
-        if (o && o.centre === 'map') { const r = b.x + b.w; b.x = MAP.x + MAP.w; b.w = r - b.x; }
-        list.splice(i, 0, b);
         return list;
     };
 });
@@ -224,4 +167,4 @@ function layoutFor(get, d) {
     const k = /SPORT|XTRABOOST/.test(m) ? get('layoutSport') : /ECO|ELECTRIC/.test(m) ? get('layoutEco') : null;
     return k && k !== 'same' && LAYOUTS.some((l) => l.id === k) ? k : get('layout');
 }
-module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotValue, M_MOVES, M_ON_DIAL, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };
+module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotValue, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };

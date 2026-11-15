@@ -89,7 +89,7 @@ module.exports = { clashes };
 if (require.main === module) {
     const { LAYOUTS } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
     let n = 0;
-    LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => [['standard', 'stock'], ['standard', 'layout'], ['m', 'layout']].forEach(([cluster, bottomStrip]) => {
+    LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => [['standard', 'stock']].forEach(([cluster, bottomStrip]) => {
         const o = { speedUnit: 'mph', tempUnit: 'f', centre, redline: 7000, rpmMax: 8000, vehicle, cluster, bottomStrip };
         L.pieces(o).forEach((p) => {
             const c = clashes(p, o);
