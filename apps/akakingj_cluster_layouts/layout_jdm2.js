@@ -12,19 +12,17 @@
  */
 const C = require('./layout_common');
 
+/* one skin in every drive mode (the red tach, as the photo's tuned GT-R): only the gear's disc follows the mode -
+ * blue in comfort and Adaptive, red in a sport mode, teal in ECO PRO and on electricity */
+const BASE = {
+    bg: '#000000', face: '#16171a', bezel: '#dfe2e6', band: '#c3132b', red: '#ff7a1a', tick: '#ffffff', needle: '#ff8a26', dot: '#ff2a2a', disc: '#1d4fe0',
+    text: '#f2f4f6', dim: '#9aa0a8', glow: '#ffffff', accent: '#ff8a26', track: '#1b1c1f', ev: '#4ab4ff', face0: '#0e0f11', face1: '#030303', bezel2: '#3c3f44', minor: '#9aa0a8', num: '#ffffff', hub: '#17181b',
+};
+const DISCS = { comfort: '#1d4fe0', sport: '#c80a1c', efficient: '#0d8a78' };
 const PALETTES = {
-    comfort: {
-        bg: '#000000', face: '#16171a', bezel: '#dfe2e6', band: '#c3132b', red: '#ff7a1a', tick: '#ffffff', needle: '#ff8a26', dot: '#ff2a2a', disc: '#1d4fe0',
-        text: '#f2f4f6', dim: '#9aa0a8', glow: '#ffffff', accent: '#ff8a26', track: '#1b1c1f', ev: '#4ab4ff', face0: '#0e0f11', face1: '#030303', bezel2: '#3c3f44', minor: '#9aa0a8', num: '#ffffff', hub: '#17181b',
-    },
-    sport: {
-        bg: '#000000', face: '#18161a', bezel: '#e4e2e2', band: '#d10a1c', red: '#ffc21a', tick: '#ffffff', needle: '#ffb02a', dot: '#ffc21a', disc: '#a60a18',
-        text: '#ffffff', dim: '#a8a0a0', glow: '#ff5a3a', accent: '#ffb02a', track: '#1f1415', ev: '#4ab4ff', face0: '#100d0e', face1: '#030202', bezel2: '#423c3c', minor: '#a8a0a0', num: '#ffffff', hub: '#1a1617',
-    },
-    efficient: {
-        bg: '#000000', face: '#14171a', bezel: '#dde3e8', band: '#1670c4', red: '#ff3a1e', tick: '#ffffff', needle: '#f4f8ff', dot: '#38d4ff', disc: '#0d8a78',
-        text: '#eef6ff', dim: '#97a4ae', glow: '#6ab8ff', accent: '#38d4ff', track: '#111a20', ev: '#4ab4ff', face0: '#0c0f12', face1: '#030405', bezel2: '#394148', minor: '#97a4ae', num: '#ffffff', hub: '#15181b',
-    },
+    comfort: BASE,
+    sport: Object.assign({}, BASE, { disc: DISCS.sport }),
+    efficient: Object.assign({}, BASE, { disc: DISCS.efficient }),
 };
 const jdmColours = (t) => ({ face: t.face, bezel: t.bezel, band: t.band, red: t.red, tick: t.tick, needle: t.needle, dot: t.dot, disc: t.disc, warn: '#ff2a2a' });
 const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.15] });

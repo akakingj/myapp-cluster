@@ -187,7 +187,8 @@ function tachAlone(o, cx, cy, R, withGear) {
 module.exports = {
     id: 'arc_tach',
     title: 'JDM 1',
-    palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
+    // one look in every drive mode (0.35.4)
+    palette: () => PALETTES.comfort,
     gearText: C.gearText,
     // (its own fuel gauge, the right dial - unless Small gauge in the tach puts another reading there: then the strip's)
     stripFuel: (o) => { const g = C.gaugeOf(o, 'rpm'); return !!g && g.key !== 'fuel'; },

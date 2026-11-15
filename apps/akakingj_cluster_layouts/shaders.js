@@ -1723,9 +1723,10 @@ void main() {
  *   1  the G meter: a big round window in a thin chrome ring, the meter in its middle (0.46 R: an outer and a half
  *      ring, a cross past them, a small ring at the centre), the dot at u_g (screen x, y, of the outer ring)
  *   2  a disc for the gear: a chrome ring round a glossy disc of u_disc
- *   3  the tach: a chrome bezel, a broad band of u_band along the sweep with the numerals in it, a notched dark rim
- *      round its outside, a dotted line inside it (from the red line u_red, below 0 u_regen: a plug-in's regeneration
- *      as E9X), a glowing needle reaching the band, a ring hub
+ *   3  the tach: a chrome bezel, a broad band of u_band along the sweep with the numerals in it (below 0 u_regen: a
+ *      plug-in's regeneration as E9X), a notched dark grey rim round its outside with the red line marked on it in
+ *      u_warn (a line along its outer edge from u_scale.w), a dotted line inside the band, a glowing needle reaching
+ *      the band, a ring hub
  *   4  a small gauge: a chrome ring, marks along u_arc (the hot or empty end's in u_warn from u_scale.w of 100), a
  *      glowing needle with a dark tail, a ring hub
  *   5  the big window as a speedometer: marks round its edge, the numerals inside them (u_scale, u_arc as the tach's),
@@ -1933,7 +1934,7 @@ void main() {
     float b0 = 0.57, b1 = 0.86;                                   /* the band, of R */
     float z = zeroAt();
     float redAt = u_scale.w < mx ? fracOf(u_scale.w) : 2.0;
-    vec3 bc = t >= redAt ? u_red : z > 0.0 && t < z ? u_regen : u_band;
+    vec3 bc = z > 0.0 && t < z ? u_regen : u_band;              /* the band one colour (red) to the end */
     float across = (r - b0) / (b1 - b0);
     vec3 band = bc * (0.72 + 0.4 * smoothstep(0.0, 1.0, across));
     acc = over(acc, band, span(r / px, b0 / px, b1 / px) * inArc);
@@ -1946,7 +1947,10 @@ void main() {
         float sq = neg ? -u_min / 4.0 : u_scale.y * 0.25;
         float kq = floor(v / sq + 0.5) * sq, oq = abs(v - kq) / sc * abs(sw) * DEG * r * R;
         float rim = span(r / px, b1 / px, (b1 + 0.05) / px) * inArc;
-        acc = over(acc, mix(bc * 0.42, vec3(0.02), clamp(R * 0.014 - oq + 0.5, 0.0, 1.0)), rim);
+        acc = over(acc, mix(vec3(0.16, 0.165, 0.18), vec3(0.02), clamp(R * 0.014 - oq + 0.5, 0.0, 1.0)), rim);
+        /* the red line marked on the rim: a bright line along its outer edge from u_scale.w to the end */
+        acc = over(acc, u_warn, span(r / px, (b1 + 0.02) / px, (b1 + 0.05) / px) * inArc * step(redAt, t));
+        acc = over(acc, u_warn, clamp(R * 0.006 - abs(t - redAt) * abs(sw) * DEG * r * R + 0.5, 0.0, 1.0) * span(r / px, b1 / px, (b1 + 0.05) / px) * inArc * step(redAt, 1.0));
         /* the dotted line along the band's inside, every tenth of a step */
         float st = neg ? -u_min / 10.0 : u_scale.y * 0.1;
         float kt = floor(v / st + 0.5) * st, ot = abs(v - kt) / sc * abs(sw) * DEG * r * R;
