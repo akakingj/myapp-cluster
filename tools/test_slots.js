@@ -8,6 +8,10 @@
  *   node tools/test_slots.js
  */
 const assert = require('assert');
+// (the clock held still: a minute ticking over mid-run changed every layout's time and so seemed to change what each
+// setting draws - CI failed so once, at 13:30:00)
+const RealDate = Date, T0 = 1763200000000;
+global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : [T0])); } static now() { return T0; } };
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
