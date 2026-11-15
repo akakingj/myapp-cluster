@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.31.1",
+  "version": "0.32.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -711,6 +711,31 @@
         [
           "off",
           "Off"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "leftDial",
+      "label": "JDM 2: left dial",
+      "type": "choice",
+      "default": "gmeter",
+      "options": [
+        [
+          "gmeter",
+          "G meter"
+        ],
+        [
+          "speed",
+          "Speedometer"
+        ],
+        [
+          "tyres",
+          "Tyre pressures"
+        ],
+        [
+          "temps",
+          "Temperatures: oil, coolant, gearbox, intake"
         ]
       ],
       "section": "Readouts and gauges"

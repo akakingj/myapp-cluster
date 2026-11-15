@@ -2667,5 +2667,10 @@
   "JDM 2": "JDM 2",
   "JDM 2: G meter size": "JDM 2: G미터 크기",
   "JDM 2: G meter, swap left / right": "JDM 2: G미터 좌우 바꾸기",
-  "JDM 2: G meter, brake on top": "JDM 2: G미터 제동을 위로"
+  "JDM 2: G meter, brake on top": "JDM 2: G미터 제동을 위로",
+  "JDM 2: left dial": "JDM 2: 왼쪽 원",
+  "G meter": "G미터",
+  "Speedometer": "속도계",
+  "Tyre pressures": "타이어 공기압",
+  "Temperatures: oil, coolant, gearbox, intake": "온도: 엔진오일, 냉각수, 미션, 흡기"
 }

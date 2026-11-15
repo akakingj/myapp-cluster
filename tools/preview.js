@@ -118,7 +118,7 @@ if (require.main === module) {
     const a = args(process.argv.slice(2));
     const s = makeScene({ layout: a.layout, look: a.look, black: !!a.black, options: { centre: a.centre, speedUnit: a.kmh ? 'kmh' : 'mph', tempUnit: a.celsius ? 'c' : undefined, vehicle: a.engine ? 'ice' : 'phev', cluster: a.mcar ? 'm' : 'standard', bottomStrip: a.strip ? 'stock' : 'layout',
         // (Settings > Too hot, as the Car profile sets them: --hotOil 125 --hotCoolant 112 --hotGearbox 120; --tempGauge scale)
-        hotOil: a.hotOil, hotCoolant: a.hotCoolant, hotGearbox: a.hotGearbox, tempGauge: a.tempGauge || 'ch',
+        hotOil: a.hotOil, hotCoolant: a.hotCoolant, hotGearbox: a.hotGearbox, tempGauge: a.tempGauge || 'ch', leftDial: a.leftDial,
         // (the readouts: --infoA, --infoB, --infoMain, --infoLow: a readout's name, gear or off; --arcGear off)
         infoA: a.infoA, infoB: a.infoB, infoMain: a.infoMain, infoLow: a.infoLow, arcGear: a.arcGear },
         data: { speed: a.speed * (a.kmh ? 1 : 1.609344), rpm: a.rpm, gear: a.gear, stage: a.stage, mode: a.mode, driveMode: a.drive, oil: a.oil, coolant: a.coolant, outside: a.outside, soc: a.soc, kw: a.kw, erange: a.erange, frange: a.frange,

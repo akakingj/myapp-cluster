@@ -187,7 +187,7 @@ const byId = (id) => LAYOUTS.find((l) => l.id === id) || LAYOUTS[0];
  * or diesel car (or the engine's focus); STRIP: only with Settings > Bottom strip: the cluster's own (the time's and
  * outside's places). tools/test_slots.js checks the table against what each layout draws.
  */
-const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm'];
+const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm', 'leftDial'];
 const ALWAYS = () => true, ENGINE = (o) => C0.engineFocus(o), STRIP = (o) => stripOn(o), ENGINE_STRIP = (o) => ENGINE(o) && STRIP(o);
 const DIALS = { gaugeSpeed: ALWAYS, gaugeRpm: ALWAYS }, STRIP2 = { infoA: ENGINE_STRIP, infoB: ENGINE_STRIP };
 const SLOTS = {
@@ -199,7 +199,8 @@ const SLOTS = {
     classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE }, DIALS),
     // (its own strip's middle: the main readout; a plug-in's, with the cluster's strip, its battery's power)
     arc_tach: Object.assign({ infoMain: (o) => ENGINE(o) || !STRIP(o) }, DIALS, STRIP2),
-    jdm2: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
+    // (its left dial: the G meter, a speedometer, the tyres or the temperatures; not with the map or the stock centre)
+    jdm2: Object.assign({ infoMain: ENGINE, leftDial: (o) => (o.centre || 'info') === 'info' }, DIALS, STRIP2),
     twin_cowl: Object.assign({}, DIALS, STRIP2, { infoLow: STRIP }),
 };
 /** The readout places layout id has (all: whatever the car and settings; else those that show with options o). */

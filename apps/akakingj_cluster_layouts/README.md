@@ -147,7 +147,10 @@ goes in the window between the brackets.
 ### JDM 2
 
 An original drawing after the idea of a Japanese grand tourer's digital cluster (no maker's marks or names): a dark
-carbon-weave panel; a big round window on the left with a **G meter** in its middle (the car's own lateral and
+carbon-weave panel; a big round window on the left (Settings > JDM 2: left dial, or set for JDM 2 alone on the page: the **G meter**, the
+default, a **speedometer** with its marks round the edge, the **tyres** - the car from above, each tyre's pressure and
+temperature at its corner, a low one in red - or four **temperatures** - engine oil, coolant, gearbox oil and intake
+air, an arc each, red when too hot) with the G meter (the car's own lateral and
 longitudinal acceleration, read as G Force and Car Vitals read it: each axis's offset learned while the car stands,
 smoothed over about 150 ms; the dot left in a right bend and up while accelerating, as G Force draws it; Settings >
 JDM 2: G meter size, swap left / right, brake on top); over its edge a big tach whose scale is a broad coloured band

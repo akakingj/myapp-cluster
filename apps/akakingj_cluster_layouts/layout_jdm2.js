@@ -86,6 +86,68 @@ function gMeter(o, cx, cy, R) {
     ];
 }
 
+/** A tyre's pressure in Settings > Pressure unit: bar to a tenth, psi and kPa whole (as GT3's). */
+const pressIn = (o, bar) => (C.pressUnitOf(o) === 'bar' ? bar.toFixed(1) : String(Math.round(C.pressUnitOf(o) === 'psi' ? bar * 14.5038 : bar * 100)));
+const TYRES = ['FL', 'FR', 'RL', 'RR'];
+/** each tyre's state for the drawing: 0 no reading, 1 fine, 2 low (under 1.6 bar, or 0.25 bar under the fullest) */
+const tyreStates = (d) => {
+    const p = (d.tyres && d.tyres.p) || {}, have = TYRES.filter((k) => C.isNum(p[k])), top = have.length ? Math.max(...have.map((k) => p[k])) : 0;
+    return TYRES.map((k) => (!C.isNum(p[k]) ? 0 : p[k] < 1.6 || p[k] < top - 0.25 ? 2 : 1));
+};
+/** The four temperatures' places in the window, from the top left clockwise. */
+const TEMPS = ['oil', 'coolant', 'gearbox', 'iat'];
+
+/*
+ * The big round window left of the tach (Settings > JDM 2: left dial, set for JDM 2 on the page): the G meter (the
+ * default), a speedometer, the tyres (pressure and temperature at each corner, the car from above) or four
+ * temperatures (engine oil, coolant, gearbox oil, intake air: an arc each, red when too hot).
+ */
+function leftDial(o, cx, cy, R) {
+    const what = o.leftDial || 'gmeter', base = { x: cx - R, y: cy - R, w: 2 * R, h: 2 * R };
+    const h = Math.max(14, Math.round(R * 0.075));
+    if (what === 'speed') {
+        const s = C.speedScale(o);
+        return [
+            Object.assign({ key: 'speedDial', kind: 'jdm' }, base, {
+                params: { u_mode: [5], u_origin: [cx - R, cy - R], u_scale: [s.max, s.major, s.minor, s.max + 1], u_arc: [145, 415, 0.085, 0] },
+                colors: (t) => Object.assign(jdmColours(t), { needle: '#ff2a1e' }), max: s.max, sweep: true,
+                value: (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0),
+            }),
+            C.text('speedDialUnit', cx - R * 0.3, cy - Math.round(R * 0.36), R * 0.6, h, C.speedUnit(o), lbl, { tracking: 0.06 }),
+        ];
+    }
+    if (what === 'tyres') {
+        const cw = Math.round(R * 0.5), big = Math.round(R * 0.15), small = Math.round(R * 0.085);
+        return [Object.assign({ key: 'tyreDial', kind: 'jdm' }, base, { params: { u_mode: [6], u_origin: [cx - R, cy - R], u_tyre: [0, 0, 0, 0] }, colors: jdmColours, dyn: (d) => ({ u_tyre: tyreStates(d) }) }),
+            C.text('tyreUnit', cx - R * 0.4, cy - Math.round(R * 0.78), R * 0.8, h, 'TYRES ' + C.pressLabel(o).toUpperCase(), lbl, { tracking: 0.1 }),
+        ].concat(...TYRES.map((k, i) => {
+            const left = i % 2 === 0, ty = cy + (i < 2 ? -Math.round(R * 0.3) : Math.round(R * 0.16)), tx = left ? cx - Math.round(R * 0.32) - cw : cx + Math.round(R * 0.32);
+            const col = (t, d) => (tyreStates(d)[i] === 2 ? { color: ['#ff2a2a', 1], glow: ['#ff2a2a', 0.2] } : white(t));
+            return [
+                C.text('tyre' + k, tx, ty, cw, big, (d) => (d.tyres && C.isNum(d.tyres.p[k]) ? pressIn(o, d.tyres.p[k]) : '--'), col, { align: left ? 1 : 0 }),
+                C.text('tyreT' + k, tx, ty + big + 6, cw, small, (d) => (d.tyres && C.isNum(d.tyres.t[k]) ? C.tempText(o, d.tyres.t[k]) : ''), lbl, { align: left ? 1 : 0 }),
+            ];
+        }));
+    }
+    if (what === 'temps') {
+        const gs = TEMPS.map((k) => C.gaugeOf(Object.assign({}, o, { gaugeSpeed: k }), 'speed'));
+        const big = Math.round(R * 0.13), small = Math.round(R * 0.07), w = Math.round(R * 0.62);
+        return [Object.assign({ key: 'tempDial', kind: 'jdm' }, base, {
+            params: { u_mode: [7], u_origin: [cx - R, cy - R], u_t: [0, 0, 0, 0], u_tr: gs.map((g) => Math.min(1.01, Math.round(g.redFrac * 1000) / 1000)) },
+            colors: jdmColours, dyn: (d) => ({ u_t: gs.map((g) => Math.round(g.frac(d) * 200) / 200) }),
+        })].concat(...gs.map((g, i) => {
+            // its figures in the quarter, the name under them
+            const qx = i === 0 || i === 3 ? -1 : 1, qy = i < 2 ? -1 : 1;
+            const x = Math.round(cx + qx * R * 0.36 - w / 2), y = Math.round(cy + qy * R * 0.36 - (big + small + 6) / 2);
+            return [
+                Object.assign(C.text(TEMPS[i] + 'Temp', x, y, w, big, g.txt, white), { tone: TEMPS[i] }),
+                C.text(TEMPS[i] + 'TempLbl', x, y + big + 6, w, small, g.label, lbl, { tracking: 0.1 }),
+            ];
+        }));
+    }
+    return gMeter(o, cx, cy, R);
+}
+
 /** The disc with the gear in it, radius R. */
 const gearDisc = (o, cx, cy, R) => [
     { key: 'gearDisc', kind: 'jdm', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R, params: { u_mode: [2], u_origin: [cx - R, cy - R] }, colors: jdmColours },
@@ -141,7 +203,9 @@ module.exports = {
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
     stripGear: true,    // (the gear's disc is one of its parts: kept over the car's own strip)
-    speedGauge: false,  // (the speed in figures only, in the tach)
+    speedGauge: false,  // (the speed in figures in the tach; a speedometer only with Settings > JDM 2: left dial)
+    // the engine unit's readings its left dial shows (the temperatures: the intake air and the gearbox oil)
+    needs: (o) => (o && o.leftDial === 'temps' ? ['iat', 'gearbox'] : []),
     // (its own fuel gauge: the strip's fuel bar only with another reading there)
     stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
 
@@ -169,7 +233,7 @@ module.exports = {
             // over its edge, the disc above right of the tach, the coolant under it and the fuel right of both; the
             // readouts the strip leaves (the main readout, readouts 1 and 2 in the time's and temperature's places)
             // in the column at the right
-            return [back(o, 'bg', 0, 0, 1920, 720)].concat(gMeter(o, 427, 410, 233), tach(o, 900, 387, 259),
+            return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 427, 410, 233), tach(o, 900, 387, 259),
                 gearDisc(o, 1287, 262, 100), small(o, 'rpm', 1297, 526, 112), small(o, 'speed', 1500, 404, 110), [
                     C.text('clock', 1672, 300, 216, 34, C.clock, white),
                     C.text('outside', 1672, 360, 216, 34, (d) => C.outsideText(o, d.outside), white),
@@ -181,7 +245,7 @@ module.exports = {
         const stock = o.centre === 'stock';
         const list = stock
             ? [back(o, 'bg', 0, 0, 566, 720), back(o, 'bgR', 1104, 0, 816, 720)].concat(tach(o, 290, 380, 240))
-            : [back(o, 'bg', 0, 0, 1920, 720)].concat(gMeter(o, 427, 400, 233), tach(o, 900, 387, 259));
+            : [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 427, 400, 233), tach(o, 900, 387, 259));
         return list.concat(gearDisc(o, 1287, 175, 95), small(o, 'rpm', 1297, 540, 105), small(o, 'speed', 1540, 556, 95), [
             C.text('clock', 40, 652, 240, 34, C.clock, white, { align: 0 }),
             C.text('outside', 1410, 112, 220, 36, (d) => C.outsideText(o, d.outside), white, { align: 0 }),

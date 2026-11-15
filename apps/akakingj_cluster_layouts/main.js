@@ -89,7 +89,7 @@ mgu.run({
         const slot = (k, id) => slotValue((x) => settings.get(x), itemOf, id || layout.id, k);
         const options = () => ({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
-            powerUnit: settings.get('powerUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), arcGear: settings.get('arcGear'), gScale: settings.get('gScale'), gFlipLat: settings.get('gFlipLat'), gFlipLong: settings.get('gFlipLong'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'),
+            powerUnit: settings.get('powerUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), arcGear: settings.get('arcGear'), gScale: settings.get('gScale'), gFlipLat: settings.get('gFlipLat'), gFlipLong: settings.get('gFlipLong'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'),
             amberRpm: settings.get('amberRpm'), shiftBefore: settings.get('shiftBefore'), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
@@ -142,7 +142,7 @@ mgu.run({
         let lastVehicle = null, lastModeGear = null, modeWant = null, modeAt = 0;
         // the engine-unit readings the layout shows, read fast while it shows
         setInterval(() => {
-            if (showing()) D.want((layout.needs || []).concat(require('./layout_common').focus.needs(options())));
+            if (showing()) D.want((typeof layout.needs === 'function' ? layout.needs(options()) : layout.needs || []).concat(require('./layout_common').focus.needs(options())));
             // Cluster Centre steps aside while a layout shows
             if (cluster.status().shown) presence.mark('layouts', { centre: options().centre });
             // the Waze centre: Waze on cluster draws its map over the layout, filling the window (map_window.js): the
@@ -168,7 +168,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look' || k === 'background') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'boxBezel', 'cluster', 'bottomStrip', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'arcGear', 'gScale', 'gFlipLat', 'gFlipLong', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'boxBezel', 'cluster', 'bottomStrip', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'arcGear', 'gScale', 'gFlipLat', 'gFlipLong', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */

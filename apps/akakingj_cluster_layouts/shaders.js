@@ -1728,6 +1728,12 @@ void main() {
  *      as E9X), a glowing needle reaching the band, a ring hub
  *   4  a small gauge: a chrome ring, marks along u_arc (the hot or empty end's in u_warn from u_scale.w of 100), a
  *      glowing needle with a dark tail, a ring hub
+ *   5  the big window as a speedometer: marks round its edge, the numerals inside them (u_scale, u_arc as the tach's),
+ *      a long needle in u_warn, a ring hub
+ *   6  the big window with the tyres: the car from above, each tyre lit by u_tyre (FL, FR, RL, RR: 0 no reading,
+ *      1 fine, 2 low)
+ *   7  the big window with four temperatures: an arc in each quarter (from the top left, clockwise) filled to u_t,
+ *      red from u_tr
  *   u_scale, u_arc (start, end, numeral height of R), u_min, u_zero, u_regen, u_value: as E9X_FS
  */
 const JDM_FS = `#version 100
@@ -1752,6 +1758,9 @@ uniform vec3 u_needle;
 uniform vec3 u_dot;
 uniform vec3 u_disc;
 uniform vec3 u_warn;
+uniform vec4 u_tyre;
+uniform vec4 u_t;
+uniform vec4 u_tr;
 varying vec2 v_uv;
 float angOf(vec2 d, float am) { float a = atan(d.x, -d.y) / DEG; if (a < am - 180.0) a += 360.0; if (a > am + 180.0) a -= 360.0; return a; }
 vec2 dirOf(float a) { return vec2(sin(a * DEG), -cos(a * DEG)); }
@@ -1801,6 +1810,21 @@ vec4 hub(vec4 acc, vec2 d, float r, float px, float ri, float ro) {
     acc = over(acc, vec3(0.015), clamp((ri - r) / px + 0.5, 0.0, 1.0));
     return acc;
 }
+/* one of the temperatures' arcs: centred at angle am, 64 degrees long, filled clockwise to f, red from fr */
+vec4 tempArc(vec4 acc, vec2 d, float r, float px, float R, float am, float f, float fr) {
+    float a = angOf(d, am), t = (a - am + 32.0) / 64.0;
+    float on = span(r / px, 0.76 / px, 0.86 / px) * clamp(t * 64.0 * DEG * r * R + 0.5, 0.0, 1.0) * clamp((1.0 - t) * 64.0 * DEG * r * R + 0.5, 0.0, 1.0);
+    vec3 c = t >= fr ? u_warn : u_tick;
+    acc = over(acc, vec3(0.13), on);
+    acc = over(acc, c * (0.8 + 0.2 * smoothstep(0.76, 0.86, r)), on * clamp((f - t) * 64.0 * DEG * r * R + 0.5, 0.0, 1.0));
+    /* its ends' marks */
+    float e = min(abs(t), abs(1.0 - t)) * 64.0 * DEG * r * R;
+    acc = over(acc, u_tick * 0.6, clamp(1.2 - e, 0.0, 1.0) * span(r / px, 0.72 / px, 0.9 / px));
+    return acc;
+}
+/* a box (centre c, half size b, corner k): < 0 inside */
+float boxD(vec2 p, vec2 b, float k) { vec2 q = abs(p) - b + k; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - k; }
+vec3 tyreCol(float st) { return st > 1.5 ? u_warn : st > 0.5 ? u_tick : vec3(0.3); }
 void main() {
     vec2 p = v_uv * u_size;
     if (u_mode < 0.5) {
@@ -1816,9 +1840,9 @@ void main() {
     float r = length(d) / R;
     vec4 acc = vec4(0.0);
     if (r > 1.0 + 1.5 / R) { gl_FragColor = acc; return; }
-    float bw = u_mode < 1.5 ? 0.028 : u_mode < 2.5 ? 0.06 : u_mode < 3.5 ? 0.07 : 0.1;    /* the bezel's width, of R */
+    float bw = u_mode < 1.5 || u_mode > 4.5 ? 0.028 : u_mode < 2.5 ? 0.06 : u_mode < 3.5 ? 0.07 : 0.1;    /* the bezel's width, of R */
     /* the face: the weave, darker towards the rim; the bezel round it with a dark seam inside */
-    acc = over(acc, carbon(p + u_origin) * (u_mode > 3.5 ? 0.55 : 0.75) * (1.0 - 0.35 * smoothstep(0.5, 1.0, r)), clamp((1.0 - bw - r) / px + 0.5, 0.0, 1.0));
+    acc = over(acc, carbon(p + u_origin) * (u_mode > 3.5 && u_mode < 4.5 ? 0.55 : 0.75) * (1.0 - 0.35 * smoothstep(0.5, 1.0, r)), clamp((1.0 - bw - r) / px + 0.5, 0.0, 1.0));
     acc = over(acc, chrome(d), span(r / px, (1.0 - bw) / px, 1.0 / px));
     acc = over(acc, vec3(0.0), span(r / px, (1.0 - bw - 0.012) / px, (1.0 - bw) / px) * 0.85);
     if (u_mode < 1.5) {
@@ -1847,9 +1871,51 @@ void main() {
         gl_FragColor = acc;
         return;
     }
+    if (u_mode > 5.5 && u_mode < 6.5) {
+        /* the tyres: the car from above (front up), its four tyres lit as their pressures are */
+        vec2 q = d / R;
+        float body = boxD(q, vec2(0.17, 0.36), 0.1);
+        acc = over(acc, vec3(0.06), clamp(-body / px + 0.5, 0.0, 1.0));
+        acc = over(acc, u_bezel * 0.55, clamp(1.6 - abs(body) / px, 0.0, 1.0));
+        float glass = min(boxD(q - vec2(0.0, -0.12), vec2(0.12, 0.05), 0.03), boxD(q - vec2(0.0, 0.2), vec2(0.11, 0.035), 0.03));
+        acc = over(acc, u_bezel * 0.3, clamp(-glass / px + 0.5, 0.0, 1.0));
+        vec2 tb = vec2(0.045, 0.085);
+        acc = over(acc, tyreCol(u_tyre.x), clamp(-boxD(q - vec2(-0.22, -0.22), tb, 0.02) / px + 0.5, 0.0, 1.0));
+        acc = over(acc, tyreCol(u_tyre.y), clamp(-boxD(q - vec2(0.22, -0.22), tb, 0.02) / px + 0.5, 0.0, 1.0));
+        acc = over(acc, tyreCol(u_tyre.z), clamp(-boxD(q - vec2(-0.22, 0.24), tb, 0.02) / px + 0.5, 0.0, 1.0));
+        acc = over(acc, tyreCol(u_tyre.w), clamp(-boxD(q - vec2(0.22, 0.24), tb, 0.02) / px + 0.5, 0.0, 1.0));
+        gl_FragColor = acc;
+        return;
+    }
+    if (u_mode > 6.5) {
+        /* four temperatures: an arc in each quarter, a cross between them */
+        acc = over(acc, u_tick * 0.25, max(span(d.x, -0.8, 0.8), span(d.y, -0.8, 0.8)) * step(r, 0.62) * step(0.3, r));
+        acc = tempArc(acc, d, r, px, R, -45.0, u_t.x, u_tr.x);
+        acc = tempArc(acc, d, r, px, R, 45.0, u_t.y, u_tr.y);
+        acc = tempArc(acc, d, r, px, R, 135.0, u_t.z, u_tr.z);
+        acc = tempArc(acc, d, r, px, R, 225.0, u_t.w, u_tr.w);
+        gl_FragColor = acc;
+        return;
+    }
     float a0 = u_arc.x, a1 = u_arc.y, sw = a1 - a0;
     float ang = angOf(d, (a0 + a1) * 0.5), t = (ang - a0) / sw;
     float inArc = clamp(t * abs(sw) * DEG * r * R + 0.5, 0.0, 1.0) * clamp((1.0 - t) * abs(sw) * DEG * r * R + 0.5, 0.0, 1.0);
+    if (u_mode > 4.5) {
+        /* the speedometer: marks round the edge (the major ones long), the numerals inside, a long red needle */
+        float mx5 = u_scale.x;
+        float v5 = t * mx5, k5 = floor(v5 / u_scale.z + 0.5) * u_scale.z, o5 = abs(v5 - k5) / mx5 * abs(sw) * DEG * r * R;
+        bool maj = abs(mod(k5 + 0.001, u_scale.y)) < 0.01;
+        if (k5 >= -0.001 && k5 <= mx5 + 0.001) acc = over(acc, maj ? u_tick : u_tick * 0.6, clamp(R * (maj ? 0.011 : 0.007) - o5 + 0.5, 0.0, 1.0) * span(r / px, (maj ? 0.84 : 0.88) / px, 0.955 / px));
+        float kn5 = clamp(floor(v5 / u_scale.y + 0.5) * u_scale.y, 0.0, floor(mx5 / u_scale.y + 0.001) * u_scale.y);
+        if (t > -0.06 && t < 1.06) {
+            vec2 cn = c + dirOf(a0 + sw * kn5 / mx5) * R * 0.74;
+            acc = over(acc, u_tick, numeral(p, cn, u_arc.z * R, kn5));
+        }
+        acc = needle(acc, p, c, a0 + sw * clamp(u_value / mx5, -0.01, 1.01), R * 0.1, R * 0.86, R * 0.2, R * 0.024);
+        acc = hub(acc, d, r, px, 0.07, 0.1);
+        gl_FragColor = acc;
+        return;
+    }
     if (u_mode > 3.5) {
         /* a small gauge: majors at the ends and the middle, quarters between, the warning end in u_warn */
         float k4 = floor(t * 8.0 + 0.5) / 8.0, ok4 = abs(t - k4) * abs(sw) * DEG * r * R;
