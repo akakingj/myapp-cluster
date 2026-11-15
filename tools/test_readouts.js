@@ -196,7 +196,7 @@ check('temperature gauges as the car\'s (C-H, the default): the needle in the mi
     assert.strictEqual(C.chOf(o({ tempGauge: 'scale' }), 'oil'), null);
     assert.strictEqual(C.chOf(o(), 'boost'), null);
     const L = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'layouts.js'));
-    ['analog_sport', 'digital_round', 'retro', 'classic'].forEach((id) => {
+    ['analog_sport', 'retro', 'classic'].forEach((id) => {
         const keys = L.byId(id).pieces(o({ bottomStrip: 'stock', centre: 'info', gaugeSpeed: 'coolant', gaugeRpm: 'oil' })).map((p) => p.key);
         assert(keys.some((k) => /ChH$|Sub2$/.test(k)), id + ': ' + keys.join(','));
     });

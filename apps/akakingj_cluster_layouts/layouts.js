@@ -3,7 +3,7 @@
  * layouts.js - the layouts this app offers, by id. A layout is one file, layout_<id>.js, next to this one
  * (the build ships only top-level .js files); list it here and in app.json's "layout" setting (README.md).
  */
-const LAYOUTS = [require('./layout_analog_sport'), require('./layout_digital_round'), require('./layout_modern_wide'), require('./layout_digital_dash'), require('./layout_retro'), require('./layout_track'), require('./layout_pulse'), require('./layout_gt3'), require('./layout_m'), require('./layout_sport'), require('./layout_classic'), require('./layout_arc_tach'), require('./layout_twin_cowl')];
+const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_gt3')];
 /* with Settings > Frame behind the gear box on: the bezel behind the KOMBI's gear bracket (layout_common.boxBezel),
  * just above the backgrounds. Off (the default, from the car: the frame read as a stray grey box) the box sits on
  * the layout's own black background and its black window disappears into it */
@@ -26,6 +26,7 @@ function finish(L, o, list) {
     if (!o || !C0.engineFocus(o)) return list;
     const strip = stripOn(o);
     const readingOf = (p) => {
+        if (p.tone) return p.tone;   // (a piece naming its own temperature: 20's coolant figures)
         if (strip && p.key === 'clock') return o.infoA || 'iat';
         if (strip && p.key === 'outside') return o.infoB || 'gearbox';
         if (MAIN_KEYS.indexOf(p.key) >= 0) return o.infoMain || 'torque';
@@ -56,12 +57,10 @@ const { boxBezel, MAP, mCar } = C0;
  * Settings > Cluster: M car. An M car's KOMBI leaves two more dark boxes in the middle of the panel
  * (layout_common.M_HOLES, about x 778-1054 and 1208-1415, y 274-426), drawn over the layout. Each layout moves
  * its readings out of them here, by piece key and centre: { x, y, w, h } replaced, dy added, or squeeze: the
- * piece and everything inside it narrowed into a new x span (a card and its texts). Digital dash does its own
- * (slim tiles, layout_digital_dash.js). The big rev counters of the dial layouts can't move out of the middle:
- * the boxes sit on their faces (tools/clearance.js lists them; test_engine.js allows only those, M_ON_DIAL).
+ * piece and everything inside it narrowed into a new x span (a card and its texts). The big rev counters of the
+ * dial layouts can't move out of the middle: the boxes sit on their faces (tools/clearance.js lists them; test_engine.js allows only those, M_ON_DIAL).
  */
 const M_ON_DIAL = ['rpm', 'rpmUnit', 'rpmArc', 'kwDraw', 'kwRegen', 'kwLbl', 'rpmRim', 'tachR', 'nr2', 'nr4'];
-const shiftAll = (keys, dy) => keys.reduce((m, k) => { m[k] = { dy }; return m; }, {});
 const M_MOVES = {
     pulse: {
         // the speed up between the cowl and the boxes; its unit, the drive mode and the rpm in one row below them
@@ -73,22 +72,8 @@ const M_MOVES = {
         boostCard: { y: 432, h: 100 }, boostLbl: { y: 442 }, boost: { y: 466, h: 55 },
         powerCard: { y: 542, h: 100 }, powerLbl: { y: 552 }, power: { y: 576, h: 55 },
     } },
-    modern_wide: {
-        // the centre column's readings under the boxes (the charge bar left out: no room), the gear below the right box
-        info: { fuel: { y: 432 }, fuelLbl: { y: 482 }, elec: { y: 432 }, elecLbl: { y: 482 }, soc: { y: 508 }, socLbl: { y: 549 }, kw: { y: 508 }, kwLbl: { y: 549 },
-            oil: { y: 578, h: 36 }, oilLbl: { y: 619, h: 18 }, coolant: { y: 578, h: 36 }, coolantLbl: { y: 619, h: 18 },
-            gear: { y: 432, h: 120 }, rpmDigits: { y: 556 }, '-soc': 'band' },
-        stock: { gear: { y: 432, h: 120 }, rpmDigits: { y: 556 } },
-    },
-    digital_dash: {
-        // with the stock centre: the left column a little narrower, the right column's last two below the box
-        stock: Object.assign(shiftAll(['oil', 'coolant', 'gearbox'].reduce((a, id) => a.concat(['c_' + id + 'V', 'c_' + id + 'L']), []), 0),
-            ['oil', 'coolant', 'gearbox'].reduce((m, id) => { m['c_' + id + 'V'] = { w: 290 }; m['c_' + id + 'L'] = { w: 290 }; return m; }, {}),
-            shiftAll(['c_railI', 'c_railV', 'c_railL', 'c_battI', 'c_battV', 'c_battL'], 110), shiftAll(['c_boostI', 'c_boostV', 'c_boostL'], 110)),
-    },
     // the display between the dials narrowed clear of the left box
     analog_sport: { info: { lcd: { squeeze: [584, 186] } } },
-    digital_round: { info: { card: { squeeze: [584, 186] } } },
     retro: { info: { coolantDial: { dx: -32 }, coolantChC: { dx: -32 }, coolantChH: { dx: -32 } } },
 };
 function mMoves(L, o, list) {
@@ -158,7 +143,7 @@ LAYOUTS.forEach((L) => {
         if (stripOn(o)) {
             list = list.filter((p) => !C0.STRIP_DROP.test(p.key));
             // the strip shows the gear and the drive mode: no second drive mode, and no second gear but in the
-            // layouts made round a big gear (L.stripGear: Track, Pulse, Digital dash); the others fill its place
+            // layouts made round a big gear (L.stripGear: Track, Pulse); the others fill its place
             list = list.filter((p) => !/^(sel[PRND]?|mode|selChip)$/.test(p.key) && (L.stripGear || !/^(gear|gearCard|gearChip)$/.test(p.key)));
             // the strip shows the time and the outside temperature: their places get the battery's temperature
             // (intake air on a petrol or diesel car) and the gearbox oil's
@@ -207,9 +192,6 @@ const ALWAYS = () => true, ENGINE = (o) => C0.engineFocus(o), STRIP = (o) => str
 const DIALS = { gaugeSpeed: ALWAYS, gaugeRpm: ALWAYS }, STRIP2 = { infoA: ENGINE_STRIP, infoB: ENGINE_STRIP };
 const SLOTS = {
     analog_sport: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
-    digital_round: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
-    modern_wide: { infoMain: ENGINE, infoA: ENGINE_STRIP },
-    digital_dash: { infoMain: ENGINE },
     retro: Object.assign({}, DIALS, STRIP2),
     track: Object.assign({}, STRIP2),
     pulse: { infoMain: ENGINE },

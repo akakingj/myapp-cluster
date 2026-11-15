@@ -30,7 +30,7 @@ function drawn(id, o) {
     return JSON.stringify(L.byId(id).pieces(o).map((p) => [p.key, p.kind, p.x, p.y, p.w, p.h, typeof p.text === 'function' ? call(p.text, D, {}) : p.text,
         p.value ? call(p.value, D) : '', p.dyn ? JSON.stringify(call(p.dyn, D, {})) : '', p.visible ? call(p.visible, D) : '', JSON.stringify(p.params || {})]));
 }
-const base = Object.assign({}, def, { redline: 7000, rpmMax: 8000, centre: 'info', cluster: 'standard', boxClear: false, boxBezel: false, speedUnit: 'kmh', tempUnit: 'c' });
+const base = Object.assign({}, def, { redline: 7000, rpmMax: 8000, centre: 'info', cluster: 'standard', boxBezel: false, speedUnit: 'kmh', tempUnit: 'c' });
 const KINDS = [['ice', 'layout'], ['phev', 'layout'], ['ice', 'stock'], ['phev', 'stock']];
 
 check('every layout has its readout places listed', () => L.LAYOUTS.forEach((l) => assert(l.id in L.SLOTS, l.id)));

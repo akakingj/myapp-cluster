@@ -255,7 +255,7 @@ check('a switch of layout never leaves the target empty, to another glyph family
     const { byId } = require(path.join(APP, 'layouts'));
     const { FakeClient } = require('./scene');
     // bold -> wide (Sport) -> orb (M) -> bold, and the same family as a control
-    for (const [from, to] of [['analog_sport', 'sport'], ['sport', 'm'], ['m', 'analog_sport'], ['analog_sport', 'retro'], ['digital_dash', 'gt3']]) {
+    for (const [from, to] of [['analog_sport', 'sport'], ['sport', 'm'], ['m', 'analog_sport'], ['analog_sport', 'retro'], ['track', 'gt3']]) {
         const client = new FakeClient();
         let L = byId(from), watching = false, fewest = Infinity;
         const shownNow = () => Array.from(client.layers.values()).filter((l) => l.kind === 'effect' && l.opts.visible !== false).length;

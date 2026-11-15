@@ -17,10 +17,10 @@ const keys = (layout, set) => {
     return k;
 };
 let n = 0;
-[['arc_tach', 'gaugeRpm'], ['twin_cowl', 'gaugeSpeed']].forEach(([id, setting]) => {
+[['arc_tach', 'gaugeRpm'], ['twin_cowl', 'gaugeSpeed'], ['analog_sport', 'gaugeSpeed']].forEach(([id, setting]) => {
     assert(keys(id, {}).indexOf('stripFuel') < 0, id + ': its own fuel gauge, no strip bar'); n++;
     assert(keys(id, { [setting]: 'fuel' }).indexOf('stripFuel') < 0, id + ': the fuel picked there, no strip bar'); n++;
     assert(keys(id, { [setting]: 'boost' }).indexOf('stripFuel') >= 0, id + ': another reading there, the strip bar back'); n++;
 });
-assert(keys('analog_sport', {}).indexOf('stripFuel') >= 0, 'a layout without its own: the strip bar'); n++;
+assert(keys('track', {}).indexOf('stripFuel') >= 0, 'a layout without its own: the strip bar'); n++;
 console.log(n + ' passed');

@@ -1,87 +1,117 @@
 'use strict';
 /**
- * layout_analog_sport.js - "Analog sport": two deep analog dials with satin metal bezels and warm backlit
- * markings, small coolant and oil dials set into them, and a slim display between them with the time and
- * outside temperature, the gear, the digital speed, the fuel and electric ranges and the battery's charge.
- * Built around the KOMBI's dark box (the tach left of it, the ranges right of it). With the map in the centre
- * the speedometer is left of it and a small tach right of it. An original design.
+ * layout_analog_sport.js - "20's": a classic sports-saloon pair of round dials. Black faces with crisp white
+ * markings and numerals, bright chrome rings, slim white needles over dark hubs and a short red zone on the tach,
+ * a small coolant gauge set into the foot of the tach, and two small satellite gauges tucked against the dials'
+ * outer edges (the fuel by the speedometer, the oil by the tach; Settings > Speedometer gauge / Tach gauge put
+ * another reading in either). A slim display between the dials with the time and outside temperature, the gear, the
+ * digital speed and the main readout. Built around the KOMBI's dark box (the tach left of it, the ranges right of
+ * it). With the map in the centre the speedometer is left of it and the tach right of it. An original design
+ * after the look of the 2010s' analog clusters, not a copy of any one.
  */
 const C = require('./layout_common');
 
-const CY = 362;
+const CY = 380;
 const PALETTES = {
     comfort: {
-        bg: '#000000', face0: '#17130f', face1: '#060504', bezel: '#d9d4cc', bezel2: '#3a3733', tick: '#fff1e0', minor: '#a88e72',
-        num: '#ffb066', glow: '#ff7a1a', red: '#ff3a1a', needle: '#ff4a1c', hub: '#141210', accent: '#ff7a1a',
-        lcdTop: '#0c0907', lcdBottom: '#050403', lcdEdge: '#3a3128', text: '#ffb066', dim: '#bfad9b', track: '#1c140c', ev: '#4ab4ff',
+        bg: '#000000', face0: '#121314', face1: '#030303', bezel: '#eef0f2', bezel2: '#4a4d52', tick: '#ffffff', minor: '#a4a8ad',
+        num: '#f4f5f6', glow: '#d8e2ec', red: '#f0301c', needle: '#f6f6f4', hub: '#1b1c1e', accent: '#ff8a2a',
+        lcdTop: '#0b0b0c', lcdBottom: '#040404', lcdEdge: '#3c3f44', text: '#f2f3f4', dim: '#9ea3a9', track: '#1a1b1d', ev: '#4ab4ff',
     },
     sport: {
-        bg: '#000000', face0: '#1a0f0e', face1: '#070404', bezel: '#e0d6d4', bezel2: '#3d3333', tick: '#ffffff', minor: '#b07a72',
-        num: '#ff7a5c', glow: '#ff2a1a', red: '#ff2414', needle: '#ff2414', hub: '#161010', accent: '#ff2a1a',
-        lcdTop: '#0f0706', lcdBottom: '#060303', lcdEdge: '#4a2a26', text: '#ff7a5c', dim: '#bf9b96', track: '#1f0c0a', ev: '#4ab4ff',
+        bg: '#000000', face0: '#141213', face1: '#040303', bezel: '#f0eeee', bezel2: '#4d4848', tick: '#ffffff', minor: '#b0a4a4',
+        num: '#ffffff', glow: '#ff6a4a', red: '#ff2414', needle: '#ff4a26', hub: '#1c1a1a', accent: '#ff3a1a',
+        lcdTop: '#0d0a0a', lcdBottom: '#050303', lcdEdge: '#4a3330', text: '#ffffff', dim: '#b0a2a0', track: '#1f1312', ev: '#4ab4ff',
     },
     efficient: {
-        bg: '#000000', face0: '#0e1418', face1: '#040608', bezel: '#d0d8dc', bezel2: '#2f3639', tick: '#eaf6ff', minor: '#6f8a99',
-        num: '#9fdcff', glow: '#2a9fff', red: '#ff3a1a', needle: '#ff6a1c', hub: '#101416', accent: '#2a9fff',
-        lcdTop: '#070b0e', lcdBottom: '#030506', lcdEdge: '#24323a', text: '#9fdcff', dim: '#9dadb6', track: '#0a141a', ev: '#4ab4ff',
+        bg: '#000000', face0: '#0f1316', face1: '#030405', bezel: '#e8eef2', bezel2: '#454d53', tick: '#f2f9ff', minor: '#8fa0ab',
+        num: '#eef7ff', glow: '#6ab8ff', red: '#f0301c', needle: '#f2f8ff', hub: '#191c1f', accent: '#3aa0ff',
+        lcdTop: '#090c0e', lcdBottom: '#030405', lcdEdge: '#33404a', text: '#e6f3ff', dim: '#97a6b0', track: '#111a20', ev: '#4ab4ff',
     },
 };
 const dialColours = (t) => ({ face0: t.face0, face1: t.face1, bezel: t.bezel, bezel2: t.bezel2, tick: t.tick, minor: t.minor, num: t.num, red: t.red, needle: t.needle, hub: t.hub, accent: t.accent, glow: t.glow });
-const glowText = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.6] });
-const lbl = (t) => ({ color: [t.dim, 1], glow: [t.glow, 0.4] });
+const glowText = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.25] });
+const lbl = (t) => ({ color: [t.dim, 1], glow: [t.glow, 0.15] });
+const white = (t) => ({ color: [t.num, 1], glow: [t.glow, 0.2] });
 
-/*
- * The tach's power meter (a plug-in hybrid's eDrive scale): an inner arc across the top of the tach, zero at
- * twelve o'clock; right of it the power drawn from the battery (blue, to 100 kW), left of it charging and
- * recuperation (green, to 60 kW), one degree a kW. Read with the engine off above all: the rpm needle rests
- * then and the tach's unit reads the power.
- */
 const kwNow = (d) => (C.isNum(d.kw) ? d.kw : 0);
 const powerTxt = (t, d) => ({ color: [kwNow(d) < -0.3 ? t.regen || '#3ddc84' : t.ev, 1], glow: [t.ev, 0.2] });
 
-/** A big dial and the small temperature dial set into it, sized `size`, centred at cx. */
-function dialSet(o, which, cx, size, cy) {
-    cy = cy === undefined ? CY : cy;
-    const k = size / 640, s = which === 'speed' ? C.speedScale(o) : C.rpmScale(o);
-    const red = which === 'speed' ? s.max + 1 : s.red;
-    // km/h: 14 numerals, most of three figures (mph: 9); at mph's size 100-160 ran together, so smaller and further out
-    const dense = which === 'speed' && o.speedUnit === 'kmh';
-    const sub = Math.round(176 * k), subDy = Math.round(168 * k), ks = sub / 640;
-    const temp = which === 'speed' ? 'coolant' : 'oil', tempRed = C.hotAt(o, temp);
-    // Settings > Speedometer gauge / Tach gauge: another reading in the small dial (its scale 0..100 here)
-    const g = C.gaugeOf(o, which);
-    // (a temperature as the car's own: C to H, warm in the middle; Settings > Temperature gauges)
-    const tk = g ? g.key : temp, ch = C.chOf(o, tk);
-    const extra = which === 'rpm' && !C.engineFocus(o) ? C.powerMeter(cx, size, cy, lbl, o) : [];   // (Show: Engine: no power meter)
-    return extra.concat([
+/*
+ * A big dial, sized `size`, centred at (cx, cy): the speedometer plain; the tach with the coolant gauge in its foot
+ * (its figures, or C and H as the car's own) and, on a plug-in hybrid, the power meter (layout_common.powerMeter).
+ */
+function bigDial(o, which, cx, size, cy) {
+    const k = size / 640, speed = which === 'speed', s = speed ? C.speedScale(o) : C.rpmScale(o);
+    const red = speed ? s.max + 1 : s.red;
+    // km/h: 14 numerals, most of three figures (mph: 9): smaller and further out
+    const dense = speed && o.speedUnit === 'kmh';
+    const extra = !speed && !C.engineFocus(o) ? C.powerMeter(cx, size, cy, lbl, o) : [];   // (Show: Engine: no power meter)
+    const list = extra.concat([
         {
             key: which, kind: 'dial', x: cx - size / 2, y: cy - size / 2, w: size, h: size,
-            params: { u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 32 : 44) * k + 2), (dense ? 230 : 220) * k], u_needle_dim: [283 * k, 50 * k, 17 * k, 5], u_look: [0.9, 0.85, 0, 0], u_look2: [Math.round(16 * k), k, 0.85, 1] },
+            params: { u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 34 : 48) * k + 2), (dense ? 226 : 214) * k], u_needle_dim: [290 * k, 56 * k, 14 * k, 4], u_look: [0.22, 1, 0, 0], u_look2: [Math.round(20 * k), k, 0.9, 1] },
             colors: dialColours, max: s.max, sweep: true,
             // the tach reads the battery's power in an electric eDrive mode (layout_common.electric)
-            value: which === 'speed' ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : C.tachValue(o), range: which === 'speed' ? undefined : C.tachRange(o, s),
-            dyn: which === 'speed' ? undefined : C.tachDyn(o, s, red),
+            value: speed ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : C.tachValue(o), range: speed ? undefined : C.tachRange(o, s),
+            dyn: speed ? undefined : C.tachDyn(o, s, red),
         },
+        // the unit (the tach's: with the engine off the battery's power, which the power meter reads)
+        C.text(which + 'Unit', cx - 120, cy + Math.round(speed ? 96 * k : 62 * k), 240, Math.round(22 * k), speed ? C.speedUnit(o)
+            : (d) => (C.electric(o, d) ? C.kwText(d) : 'x1000 rpm'), speed ? lbl : (t, d) => (C.electric(o, d) ? powerTxt(t, d) : lbl(t)), { tracking: 0.08 }),
+    ]);
+    if (speed) return list;
+    // the coolant gauge in the tach's foot
+    const sub = Math.round(170 * k), subDy = Math.round(176 * k), ks = sub / 640, ch = C.chOf(o, 'coolant'), scy = cy + subDy;
+    return list.concat([
         {
-            key: temp + 'Dial', kind: 'dial', x: cx - sub / 2, y: cy + subDy - sub / 2, w: sub, h: sub, z: 5,
-            params: { u_scale: [100, 50, 12.5, ch ? C.chRed(o, ch) * 100 : g ? Math.min(101, g.redFrac * 100) : tempRed - 40], u_arc: [-120, 120, 0, 0], u_needle_dim: [62 * sub / 176, 14 * sub / 176, 6, 2.5], u_look: [0.7, 0.85, 0, 0], u_look2: [Math.max(4, Math.round(7 * sub / 176)), ks, 0.6, 0.6] },
-            colors: dialColours, value: ch ? (d) => C.chFrac(ch, d[ch]) * 100 : g ? (d) => g.frac(d) * 100 : (d) => (C.isNum(d[temp]) ? Math.max(0, d[temp] - 40) : 0), max: 100, sweep: true,
+            key: 'coolantDial', kind: 'dial', x: cx - sub / 2, y: scy - sub / 2, w: sub, h: sub, z: 5,
+            params: { u_scale: [100, 50, 12.5, ch ? C.chRed(o, ch) * 100 : C.hotAt(o, 'coolant') - 40], u_arc: [-120, 120, 0, 0], u_needle_dim: [60 * sub / 170, 14 * sub / 170, 5, 2], u_look: [0.2, 1, 0, 0], u_look2: [Math.max(4, Math.round(8 * sub / 170)), ks, 0.6, 0.6] },
+            colors: dialColours, value: ch ? (d) => C.chFrac(ch, d.coolant) * 100 : (d) => (C.isNum(d.coolant) ? Math.max(0, d.coolant - 40) : 0), max: 100, sweep: true,
         },
-        // the tach's unit, or with the engine off the battery's power (the power meter below reads it)
-        C.text(which + 'Unit', cx - 120, cy + Math.round(50 * k), 240, Math.round(20 * k), which === 'speed' ? C.speedUnit(o)
-            : (d) => (C.electric(o, d) ? C.kwText(d) : 'x1000 rpm'), which === 'speed' ? lbl : (t, d) => (C.electric(o, d) ? powerTxt(t, d) : lbl(t)), { tracking: 0.08 }),
-        C.text(temp + 'Lbl', cx - 60, cy + subDy + Math.round(26 * k), 120, Math.max(11, Math.round(14 * k)), g ? g.label : temp === 'oil' ? 'OIL' : 'COOLANT', lbl, { tracking: 0.16 }),
-    ].concat(ch ? C.chMarks(temp + 'Ch', cx, cy + subDy, sub * 0.35, -116, 116, Math.max(12, Math.round(17 * k)), glowText) : [
-        // its reading in figures, just under the small dial
-        C.text(temp + 'Num', cx - 70, cy + subDy + sub / 2 + Math.round(4 * k), 140, Math.round(26 * k), g ? g.txt : (d) => C.tempText(o, d[temp]), glowText),
-    ]));
+        C.text('coolantLbl', cx - 60, scy + Math.round(24 * k), 120, Math.max(11, Math.round(13 * k)), 'COOLANT', lbl, { tracking: 0.16 }),
+    ], ch ? C.chMarks('coolantCh', cx, scy, sub * 0.35, -116, 116, Math.max(12, Math.round(16 * k)), white) : [
+        Object.assign(C.text('coolantFig', cx - 70, scy + sub / 2 + Math.round(2 * k), 140, Math.round(24 * k), (d) => C.tempText(o, d.coolant), glowText), { tone: 'coolant' }),
+    ]);
+}
+
+/*
+ * A small satellite gauge, size across at (cx, cy), tucked against a big dial's edge: by the speedometer the fuel,
+ * by the tach the oil (or what Settings > Speedometer gauge / Tach gauge puts there). Its name under the hub, its
+ * figures under that (a temperature as the car's own: C and H at its ends, no figures); the fuel E and F.
+ */
+function satellite(o, which, cx, cy, size) {
+    const g = C.gaugeOf(o, which), own = which === 'speed' ? 'fuel' : 'oil', key = g ? g.key : own;
+    const ch = C.chOf(o, key), ks = size / 640, r = size / 2, fuel = key === 'fuel';
+    const gg = g || C.gaugeOf(Object.assign({}, o, which === 'speed' ? { gaugeSpeed: own } : { gaugeRpm: own }), which);
+    const id = which === 'speed' ? 'fuelSat' : 'oilSat';
+    const fig = which === 'speed' ? 'speedSubNum' : 'oilNum';
+    const out = [
+        {
+            key: id, kind: 'dial', x: cx - r, y: cy - r, w: size, h: size, z: 6,
+            params: { u_scale: [100, 50, 12.5, ch ? C.chRed(o, ch) * 100 : Math.min(101, gg.redFrac * 100)], u_arc: [-120, 120, 0, 0], u_needle_dim: [r * 0.74, r * 0.18, 5, 2], u_look: [0.2, 1, 0, 0], u_look2: [Math.max(5, Math.round(size * 0.055)), ks, 0.6, 0.7] },
+            colors: dialColours, value: ch ? (d) => C.chFrac(ch, d[ch]) * 100 : (d) => gg.frac(d) * 100, max: 100, sweep: true,
+        },
+        C.text(id + 'Lbl', cx - r, cy + Math.round(r * 0.2), size, Math.max(11, Math.round(r * 0.16)), gg.label, lbl, { tracking: 0.14 }),
+    ];
+    const ends = Math.max(12, Math.round(r * 0.2));
+    if (ch) return out.concat(C.chMarks(id + 'Ch', cx, cy, r * 0.62, -116, 116, ends, white));
+    if (fuel) {
+        const pos = (a) => [cx + Math.sin(a * Math.PI / 180) * r * 0.6, cy - Math.cos(a * Math.PI / 180) * r * 0.6];
+        const [ex, ey] = pos(-116), [fx, fy] = pos(116), w = Math.round(ends * 1.6);
+        out.push(C.text(id + 'E', Math.round(ex - w / 2), Math.round(ey - ends / 2), w, ends, 'E', (t) => ({ color: [t.red, 1], glow: [t.red, 0.2] })),
+            C.text(id + 'F', Math.round(fx - w / 2), Math.round(fy - ends / 2), w, ends, 'F', white));
+    }
+    return out.concat(C.text(fig, cx - r, cy + Math.round(r * 0.42), size, Math.max(12, Math.round(r * 0.22)), gg.txt, glowText));
 }
 
 module.exports = {
     id: 'analog_sport',
-    title: 'Analog sport',
+    title: "20's",
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
+    // (its own fuel gauge by the speedometer: the strip's fuel bar only with another reading there)
+    stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
 
     /*
      * Built around what the glass and the KOMBI keep (layout_common: the camera's cowl, the dark box where the
@@ -89,18 +119,20 @@ module.exports = {
      * by tools/clearance.js): the tach sits left of the dark box, never under it.
      */
     pieces(o) {
-        const gearC = (t, d) => ({ color: [C.gearText(d) === 'R' ? t.red : t.text, 1], glow: [t.glow, 0.5] });
+        const gearC = (t, d) => ({ color: [C.gearText(d) === 'R' ? t.red : t.text, 1], glow: [t.glow, 0.25] });
         const elecTxt = (t) => ({ color: [t.ev, 1], glow: [t.ev, 0.3] });
         if (o.centre === 'map') {
-            // the speedometer left of the map; a small tach right of the map and the dark box; the gear and speed
-            // in the free corner above the box; the ranges in the strip under the map, above the warning lights
-            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h;
+            // the speedometer left of the map, the tach right of it (small, below the dark box; with the car's
+            // strip, as big as the speedometer), each with its satellite gauge below its inner side; the gear and
+            // speed in the free corner above the box; the ranges in the strip under the map, above the warning lights
+            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h, st = C.strip(o);
             return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(
-                dialSet(o, 'speed', 208, 404, 360), C.strip(o) ? dialSet(o, 'rpm', 1712, 404, 360) : dialSet(o, 'rpm', 1792, 256, 500), [
+                bigDial(o, 'speed', 208, 404, 360), satellite(o, 'speed', 350, 584, 120),
+                st ? bigDial(o, 'rpm', 1712, 404, 360) : bigDial(o, 'rpm', 1792, 256, 500), st ? satellite(o, 'rpm', 1570, 584, 120) : satellite(o, 'rpm', 1652, 590, 110), [
                     C.text('clock', 520, top - 76, 200, 34, C.clock, glowText),
                     C.text('outside', 1200, top - 76, 200, 34, (d) => C.outsideText(o, d.outside), glowText),
                     C.text('gear', 1520, 130, 230, 92, C.gearText, gearC),
-                    ...(C.strip(o) ? [] : [C.text('speedDigits', 1520, 224, 230, 32, (d) => C.speedText(o, d) + ' ' + C.speedUnit(o), glowText)]),
+                    ...(st ? [] : [C.text('speedDigits', 1520, 224, 230, 32, (d) => C.speedText(o, d) + ' ' + C.speedUnit(o), glowText)]),
                 ],
                 C.readingUp('fuel', 560, bot + 2, 260, 30, (d) => C.distText(o, d.frange), 'FUEL RANGE', glowText, lbl),
                 C.readingUp('elec', 1100, bot + 2, 300, 30, C.focus.both(o), C.focus.rangeLabel(o), C.engineFocus(o) ? glowText : elecTxt, lbl),
@@ -108,16 +140,19 @@ module.exports = {
         }
         if (C.strip(o) && o.centre !== 'stock') {
             // the car's own bottom strip (layout_common.STRIP_Y): no boxes to keep clear of, so the dials stand
-            // centred either side of the display as first drawn, sized to end above the strip; the ranges are
-            // the strip's, the fuel and charge gauges above them (layouts.js)
+            // centred either side of the display, sized to end above the strip, the satellites at their outer
+            // feet (above the strip's fuel and charge bars: layouts.js); the ranges are the strip's
             const SS = 600, scy = 328, X = 830, W = 260, Y = 164, H = 440;   // (its top clear of the camera's cowl: a photo of the car)
-            return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dialSet(o, 'speed', 452, SS, scy), dialSet(o, 'rpm', 1468, SS, scy), centreDisplay(o, X, Y, W, H, gearC, elecTxt, true));
+            return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(bigDial(o, 'speed', 452, SS, scy), bigDial(o, 'rpm', 1468, SS, scy),
+                satellite(o, 'speed', 160, 510, 160), satellite(o, 'rpm', 1776, 510, 160), centreDisplay(o, X, Y, W, H, gearC, elecTxt, true));
         }
-        // the speedometer left; with the stock centre the tach between it and the dark box, else full size left
-        // of the box with the slim display between the dials; the ranges right of the box
-        const S = 520, cy = 392, L = 300;
+        // the speedometer left, its satellite at its outer foot; with the stock centre the tach (small) between
+        // the KOMBI's centre and the dark box, else full size left of the box with the slim display between the
+        // dials; the tach's satellite at its outer foot, below the box; the ranges right of the box
+        const S = 500, L = 312;
         const stock = o.centre === 'stock', R = stock ? 1256 : 1120, SR = stock ? 296 : S;
-        const list = [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dialSet(o, 'speed', L, S, cy), dialSet(o, 'rpm', R, SR, cy));
+        const list = [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(bigDial(o, 'speed', L, S, CY), satellite(o, 'speed', 78, 564, 146),
+            bigDial(o, 'rpm', R, SR, CY), stock ? satellite(o, 'rpm', 1400, 520, 120) : satellite(o, 'rpm', 1370, 560, 146));
         if (stock) {
             list[0] = C.flat('bg', 0, 0, 566, 720, 'bg');
             list.push(C.flat('bgR', 1104, 0, 816, 720, 'bg'));
@@ -127,10 +162,10 @@ module.exports = {
         list.push(...C.reading('fuel', RX, 292, RW, 44, (d) => C.distText(o, d.frange), 'FUEL RANGE', glowText, lbl),
             ...C.reading('elec', RX, 400, RW, 44, C.focus.range(o), C.focus.rangeLabel(o), C.engineFocus(o) ? glowText : elecTxt, lbl),
             C.text('socTxt', RX, 506, RW, 44, C.focus.charge(o), C.engineFocus(o) ? glowText : elecTxt),
-            C.bar('soc', RX + 8, 562, RW - 16, 16, C.focus.bar(o), (t) => ({ track: t.track, fill0: C.engineFocus(o) ? t.accent : t.ev, fill1: C.engineFocus(o) ? t.accent : t.ev, redc: t.red, tip: t.glow, tick: t.dim, num: t.num }), 16));
+            C.bar('soc', RX + 8, 562, RW - 16, 16, C.focus.bar(o), (t) => ({ track: t.track, fill0: C.engineFocus(o) ? t.accent : t.ev, fill1: C.engineFocus(o) ? t.accent : t.ev, redc: t.red, tip: t.accent, tick: t.dim, num: t.num }), 16));
         if (stock) return list;
         // the slim display between the dials (below the camera's cowl, above the warning lights)
-        return list.concat(centreDisplay(o, 574, 140, 278, 470, gearC, elecTxt));
+        return list.concat(centreDisplay(o, 590, 140, 256, 470, gearC, elecTxt));
     },
 };
 

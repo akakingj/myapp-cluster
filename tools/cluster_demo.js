@@ -79,7 +79,7 @@ function startLayouts(set) {
     const o = {
         speedUnit: set.speedUnit, tempUnit: set.tempUnit, torqueUnit: set.torqueUnit, pressUnit: set.pressUnit,
         centre: set.centre === 'pages' ? 'map' : set.centre, redline: num(set, 'redline', 7000), rpmMax: num(set, 'rpmMax', 8000),
-        boxClear: set.boxClear === 'on', cluster: set.cluster === 'm' ? 'm' : 'standard',
+        cluster: set.cluster === 'm' ? 'm' : 'standard',
         bottomStrip: set.bottomStrip === 'layout' ? 'layout' : 'stock', boxBezel: set.boxBezel === 'on', vehicle: vehicleOf(set),
         tankLitres: num(set, 'tankLitres', 69),
         powerUnit: set.powerUnit, infoA: set.infoA, infoB: set.infoB, infoMain: set.infoMain, infoLow: set.infoLow, gaugeSpeed: set.gaugeSpeed, gaugeRpm: set.gaugeRpm, tempGauge: set.tempGauge, tempTone: set.tempTone, shiftWarn: set.shiftWarn, amberRpm: set.amberRpm, shiftBefore: set.shiftBefore, coldGuard: set.coldGuard, coldLimit: set.coldLimit, warmOil: set.warmOil,

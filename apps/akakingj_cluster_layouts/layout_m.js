@@ -113,7 +113,7 @@ function gauge(T, key, x, y, w, g) {
 
 module.exports = {
     id: 'm',
-    title: 'M',
+    title: 'ID7 M',
     font: 'orb',
     stripGear: true,    // (the gear is its centre: kept over the car's own strip)
     stripFuel: false,   // (its own fuel bar)

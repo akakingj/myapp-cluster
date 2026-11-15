@@ -33,7 +33,7 @@ const SUB = [232, 128];        // the small gauges' sweep round their pivot (emp
 function dial(o, which, cx, cy, size) {
     const R = size / 2, k = size / 600, kmh = o.speedUnit === 'kmh', rs = C.rpmScale(o);
     const speed = which === 'speed';
-    const sc = speed ? (kmh ? [330, 30, 10, 5] : [200, 20, 10, 5]) : [rs.max, 1, 1, 0.5];
+    const sc = speed ? (kmh ? [260, 20, 10, 5] : [200, 20, 10, 5]) : [rs.max, 1, 1, 0.5];   // (km/h to 260: numbered every 20)
     const red = speed ? sc[0] + 1 : rs.red;
     /* the tach in an electric drive (layout_common.electric): the battery's power, as the other layouts' power gauges:
      * 0 a quarter round, regeneration below it (the ring green) to the battery's limit, the power drawn above it to
@@ -49,7 +49,7 @@ function dial(o, which, cx, cy, size) {
     const out = [{
         key: which, kind: 'e9x', x: cx - R, y: cy - R, w: size, h: size,
         params: {
-            u_scale: sc, u_arc: [A0, A1, red, speed ? (kmh ? 0.105 : 0.122) : 0.14],
+            u_scale: sc, u_arc: [A0, A1, red, speed ? (kmh ? 0.098 : 0.122) : 0.14],
             u_sub: [SUB[0], SUB[1], 2, 2], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB,
         },
         colors: (t) => ({ face: t.face, ring: t.ring, ring2: t.ring2, bezel: t.bezel, tick: t.tick, needle: t.needle, red: t.red }),
@@ -132,7 +132,7 @@ function display(o, X, Y, W, H, gear) {
 
 module.exports = {
     id: 'classic',
-    title: 'Classic M',
+    title: 'ID6 M',
     stripFuel: false,   // (its own fuel gauge, in the speedometer)
     ownStripGauges: true,   // (the charge in its amber display: none of the strip's bars)
     palette: pal,

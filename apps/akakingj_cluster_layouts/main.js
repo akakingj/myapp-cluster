@@ -65,13 +65,15 @@ mgu.run({
         clockNow();
         settings.onChange((k) => { if (k === 'timeZone' || k === 'clock') clockNow(); });
         // Three pods and Freedom are gone (akakingj's build): a layout saved as either is Arc tach now
-        ['layout', 'layoutSport', 'layoutEco'].forEach((k) => { if (settings.get(k) === 'three_pods' || settings.get(k) === 'freedom') settings.set(k, 'arc_tach'); });
+        // layouts taken out: a saved one moves to the nearest kept (0.30.0: Digital round, Modern wide and Digital dash)
+        const GONE = { three_pods: 'arc_tach', freedom: 'arc_tach', digital_round: 'analog_sport', modern_wide: 'pulse', digital_dash: 'track' };
+        ['layout', 'layoutSport', 'layoutEco'].forEach((k) => { if (GONE[settings.get(k)]) settings.set(k, GONE[settings.get(k)]); });
         const showing = () => settings.get('show') === 'on';
         // every reading (data.js, shared with Cluster Centre): the car's signals, the engine unit over UDS for
         // what a layout needs (layout.needs), eDrive Live's charge and power while shown
         const D = startData(ctx, { shown: showing, tyres: true });
         const car = D.car;
-        // the driving assistant (dap.js), for the layouts that show it (layout.dap: Modern wide's road, Sport's
+        // the driving assistant (dap.js), for the layouts that show it (layout.dap: ID8 M's
         // cruise control): subscribed once one is first shown
         let dap = null;
         const dapWanted = () => showing() && !!byId(settings.get('layout')).dap;
@@ -92,7 +94,6 @@ mgu.run({
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
             redline: Number(settings.get('redline')) || 7000, rpmMax: Number(settings.get('rpmMax')) || 8000,
-            boxClear: settings.get('boxClear') === 'on',
             cluster: settings.get('cluster') === 'm' ? 'm' : 'standard',
             bottomStrip: settings.get('bottomStrip') === 'layout' ? 'layout' : 'stock',   // the KOMBI's strip under y 660 (layouts.js)
             boxBezel: settings.get('boxBezel') === 'on',   // (off: the box sits on the plain background)
@@ -167,7 +168,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look' || k === 'background') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'boxClear', 'boxBezel', 'cluster', 'bottomStrip', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'arcGear', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'boxBezel', 'cluster', 'bottomStrip', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'arcGear', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */
@@ -207,7 +208,7 @@ mgu.run({
                 ['cluster renderer status', squeeze(cluster.rendererStatus() || '(no answer yet)', full)],
                 ['data now', JSON.stringify(snap)],
                 ['raw signals', JSON.stringify(D.status().raw || {})],
-                ['driving assistant (Modern wide, Sport)', dap ? JSON.stringify(dap.status()) + '\nnow ' + JSON.stringify(dap.state()) : 'not started (Modern wide or Sport not shown yet)'],
+                ['driving assistant (ID8 M)', dap ? JSON.stringify(dap.status()) + '\nnow ' + JSON.stringify(dap.state()) : 'not started (ID8 M not shown yet)'],
                 ['vehicle', (() => { const v = D.vehicle(); return v.vehicle + ' (' + v.how + ': ' + v.why + ')'; })()],
                 ['data status', JSON.stringify(Object.assign({}, D.status(), { raw: undefined }))],
                 // the kW gauges' sources: each of the car's power signals (how often it came, its last value), its fit to

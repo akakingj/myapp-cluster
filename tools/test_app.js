@@ -69,7 +69,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         // (the row the Stock card is on, it being chosen while off: Twin cowl's picture and Stock's; the pictures with the
         // car's own bottom strip, the default)
         assert.strictEqual(S.bottomStrip, 'stock');
-        assert(ids.indexOf(0x434c0100) >= 0 && ids.indexOf(0x434c0200 + 0x40 + 12) >= 0, ids.map((i) => i.toString(16)).join(','));
+        assert(ids.indexOf(0x434c0100) >= 0 && ids.indexOf(0x434c0200 + 0x40 + 6) >= 0, ids.map((i) => i.toString(16)).join(','));
         assert(rec.imageById.get(0x434c0100).w === 600 && rec.imageById.get(0x434c0100).data.length === 600 * 225 * 4);
     });
     await tgt('cards_prev').run();

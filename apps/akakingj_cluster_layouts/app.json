@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.29.1",
+  "version": "0.30.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -77,25 +77,25 @@
       "_broadcasts": [
         "assistedDrivingViewFunctionInputIbVip"
       ],
-      "_optional": "Modern wide's road: the cruise control's state, set speed and gap"
+      "_optional": "The driving assistant: the cruise control's state, set speed and gap"
     },
     "de.bmw.dass.pad.communication.AssistedDrivingViewLateralFunctionInput": {
       "_broadcasts": [
         "lateralFunctionInputAssistedDrivingView"
       ],
-      "_optional": "Modern wide's road: the steering assist holding the lane"
+      "_optional": "The driving assistant: the steering assist holding the lane"
     },
     "de.bmw.dass.driverassistanceapplications.AssistedDrivingViewLateralCollisionAvoidance": {
       "_broadcasts": [
         "assistedDrivingViewLcaInput"
       ],
-      "_optional": "Modern wide's road: lane departure and lane change warnings"
+      "_optional": "The driving assistant: lane departure and lane change warnings"
     },
     "de.bmw.dass.pad.communication.ObjectListSuAAR": {
       "_broadcasts": [
         "suAARObjectList"
       ],
-      "_optional": "Modern wide's road: the cars ahead and beside"
+      "_optional": "The driving assistant: the cars ahead and beside"
     },
     "de.bmw.infotainment.vehicle.TPMS": {
       "statusTyrePressure": "rs",
@@ -164,24 +164,32 @@
       "default": "analog_sport",
       "options": [
         [
-          "analog_sport",
-          "Analog sport"
-        ],
-        [
-          "digital_round",
-          "Digital round"
-        ],
-        [
-          "modern_wide",
-          "Modern wide"
-        ],
-        [
-          "digital_dash",
-          "Digital dash"
-        ],
-        [
           "retro",
-          "Retro"
+          "90's"
+        ],
+        [
+          "analog_sport",
+          "20's"
+        ],
+        [
+          "classic",
+          "ID6 M"
+        ],
+        [
+          "m",
+          "ID7 M"
+        ],
+        [
+          "sport",
+          "ID8 M"
+        ],
+        [
+          "arc_tach",
+          "Arc tach"
+        ],
+        [
+          "twin_cowl",
+          "Twin cowl"
         ],
         [
           "track",
@@ -194,26 +202,6 @@
         [
           "gt3",
           "GT3"
-        ],
-        [
-          "m",
-          "M"
-        ],
-        [
-          "sport",
-          "Sport"
-        ],
-        [
-          "classic",
-          "Classic M"
-        ],
-        [
-          "arc_tach",
-          "Arc tach"
-        ],
-        [
-          "twin_cowl",
-          "Twin cowl"
         ]
       ]
     },
@@ -252,24 +240,32 @@
           "Same as Layout"
         ],
         [
-          "analog_sport",
-          "Analog sport"
-        ],
-        [
-          "digital_round",
-          "Digital round"
-        ],
-        [
-          "modern_wide",
-          "Modern wide"
-        ],
-        [
-          "digital_dash",
-          "Digital dash"
-        ],
-        [
           "retro",
-          "Retro"
+          "90's"
+        ],
+        [
+          "analog_sport",
+          "20's"
+        ],
+        [
+          "classic",
+          "ID6 M"
+        ],
+        [
+          "m",
+          "ID7 M"
+        ],
+        [
+          "sport",
+          "ID8 M"
+        ],
+        [
+          "arc_tach",
+          "Arc tach"
+        ],
+        [
+          "twin_cowl",
+          "Twin cowl"
         ],
         [
           "track",
@@ -282,26 +278,6 @@
         [
           "gt3",
           "GT3"
-        ],
-        [
-          "m",
-          "M"
-        ],
-        [
-          "sport",
-          "Sport"
-        ],
-        [
-          "classic",
-          "Classic M"
-        ],
-        [
-          "arc_tach",
-          "Arc tach"
-        ],
-        [
-          "twin_cowl",
-          "Twin cowl"
         ]
       ],
       "section": "Display"
@@ -317,24 +293,32 @@
           "Same as Layout"
         ],
         [
-          "analog_sport",
-          "Analog sport"
-        ],
-        [
-          "digital_round",
-          "Digital round"
-        ],
-        [
-          "modern_wide",
-          "Modern wide"
-        ],
-        [
-          "digital_dash",
-          "Digital dash"
-        ],
-        [
           "retro",
-          "Retro"
+          "90's"
+        ],
+        [
+          "analog_sport",
+          "20's"
+        ],
+        [
+          "classic",
+          "ID6 M"
+        ],
+        [
+          "m",
+          "ID7 M"
+        ],
+        [
+          "sport",
+          "ID8 M"
+        ],
+        [
+          "arc_tach",
+          "Arc tach"
+        ],
+        [
+          "twin_cowl",
+          "Twin cowl"
         ],
         [
           "track",
@@ -347,26 +331,6 @@
         [
           "gt3",
           "GT3"
-        ],
-        [
-          "m",
-          "M"
-        ],
-        [
-          "sport",
-          "Sport"
-        ],
-        [
-          "classic",
-          "Classic M"
-        ],
-        [
-          "arc_tach",
-          "Arc tach"
-        ],
-        [
-          "twin_cowl",
-          "Twin cowl"
         ]
       ],
       "section": "Display"
@@ -439,23 +403,6 @@
         [
           "stock",
           "Stock (the stock centre content)"
-        ]
-      ],
-      "section": "Display"
-    },
-    {
-      "key": "boxClear",
-      "label": "Draw around the gear box (Digital dash)",
-      "type": "choice",
-      "default": "off",
-      "options": [
-        [
-          "off",
-          "Off: background under the box"
-        ],
-        [
-          "on",
-          "On: nothing under the box (shows the cluster's frame)"
         ]
       ],
       "section": "Display"
@@ -684,7 +631,7 @@
     },
     {
       "key": "infoLow",
-      "label": "Centre readout: bottom line (Classic M)",
+      "label": "Centre readout: bottom line (ID6 M)",
       "type": "choice",
       "default": "coolant",
       "options": [
@@ -1016,7 +963,7 @@
     },
     {
       "key": "amberRpm",
-      "label": "Amber zone below the red zone (M, Sport)",
+      "label": "Amber zone below the red zone (ID7 M, ID8 M)",
       "type": "number",
       "unit": "rpm",
       "default": 700,
@@ -1927,7 +1874,7 @@
     "comment": "scaling and dme as M Vitals (cauliflowermossgrape/idrive7-apps apps/car_vitals) reads them",
     "dap": {
       "posScale": 0.01,
-      "note": "Modern wide's road (dap.js): metres a unit of an object's x and y in ObjectListSuAAR (not yet seen on a car: check 'dap raw objects' in the log against a car followed at a known distance)"
+      "note": "The driving assistant (dap.js): metres a unit of an object's x and y in ObjectListSuAAR (not yet seen on a car: check 'dap raw objects' in the log against a car followed at a known distance)"
     }
   },
   "requires": {

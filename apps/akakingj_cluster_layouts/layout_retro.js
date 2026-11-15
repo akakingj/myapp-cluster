@@ -104,7 +104,7 @@ function dialSet(o, which, cx, size, cy) {
 
 module.exports = {
     id: 'retro',
-    title: 'Retro',
+    title: "90's",
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
     stripFuel: false,   // (its speedometer has a fuel gauge)

@@ -16,7 +16,7 @@ const SPEC = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'app.js
 const defaults = {};
 SPEC.settings.forEach((s) => { defaults[s.key] = s.default; });
 const asOptions = (s) => Object.assign({}, s, {
-    redline: Number(s.redline), rpmMax: Number(s.rpmMax), boxClear: s.boxClear === 'on', boxBezel: s.boxBezel === 'on',
+    redline: Number(s.redline), rpmMax: Number(s.rpmMax), boxBezel: s.boxBezel === 'on',
     cluster: s.cluster === 'm' ? 'm' : 'standard', bottomStrip: s.bottomStrip === 'layout' ? 'layout' : 'stock',
 });
 

@@ -45,7 +45,7 @@ const WINDOW = { x: 534, y: Y(130), w: 852, h: Y(130 + 460) - Y(130) };
 
 module.exports = {
     id: 'sport',
-    title: 'Sport',
+    title: 'ID8 M',
     font: 'wide',
     stripGear: true,    // (the gear is one of its two big readings: kept over the car's own strip)
     stripFuel: false,   // (its own fuel bar)

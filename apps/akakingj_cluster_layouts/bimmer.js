@@ -42,7 +42,8 @@ function text(fam, key, box, font, txt, colors, align, Y) {
 const role = (k) => (t) => ({ color: [t[k], 1], glow: [t[k], 0] });
 
 /* their SPEED_SCALE: the speed scale's numerals, evenly spaced */
-const SPEED_SCALE = { us: [0, 20, 40, 60, 80, 100, 120, 160, 200], metric: [0, 30, 60, 90, 120, 150, 180, 250, 320] };
+/* (theirs to 320 km/h; ours to 260, the 320i's own top: the last two marks 40 apart instead of 70) */
+const SPEED_SCALE = { us: [0, 20, 40, 60, 80, 100, 120, 160, 200], metric: [0, 30, 60, 90, 120, 150, 180, 220, 260] };
 /** A speed (display unit) as 0..1 along a scale of evenly spaced numerals (theirs: scaleFrac). */
 function scaleFrac(v, marks) {
     if (!(v > 0)) return 0;
