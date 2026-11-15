@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.31.0",
+  "version": "0.31.1",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -711,6 +711,61 @@
         [
           "off",
           "Off"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "gScale",
+      "label": "JDM 2: G meter size",
+      "type": "choice",
+      "default": "1.5",
+      "options": [
+        [
+          "1",
+          "1.0 g"
+        ],
+        [
+          "1.5",
+          "1.5 g"
+        ],
+        [
+          "2",
+          "2.0 g"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "gFlipLat",
+      "label": "JDM 2: G meter, swap left / right",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "on",
+          "On"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "gFlipLong",
+      "label": "JDM 2: G meter, brake on top",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "on",
+          "On"
         ]
       ],
       "section": "Readouts and gauges"

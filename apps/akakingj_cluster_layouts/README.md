@@ -147,15 +147,18 @@ goes in the window between the brackets.
 ### JDM 2
 
 An original drawing after the idea of a Japanese grand tourer's digital cluster (no maker's marks or names): a dark
-carbon-weave panel; a big tach whose scale is a broad coloured band with the numerals in it (red, the shift zone
-orange; Sport crimson and amber, Efficient blue), a slim glowing needle over a chrome ring hub and the digital speed
-in its open lower right; a **G meter** left of it (the car's own lateral and longitudinal acceleration, the dot
-where the car is pushed, rings at 0.5 and 1 g); a glossy disc with the gear; two small chrome-ringed gauges, the
-coolant (C-H) and the fuel (E-F), which Settings > Tach gauge / Speedometer gauge (or the page) can give another
-reading; the ranges and the main readout in the column right of the KOMBI's dark box. On a plug-in hybrid in an
-electric mode the tach's band reads the battery's power, its regeneration part green. With the map the tach stands
-left of it and the disc and gauges right of it; with the stock centre the tach takes the G meter's place. Its parts
-are one shader (`shaders.js` JDM_FS).
+carbon-weave panel; a big round window on the left with a **G meter** in its middle (the car's own lateral and
+longitudinal acceleration, read as G Force and Car Vitals read it: each axis's offset learned while the car stands,
+smoothed over about 150 ms; the dot left in a right bend and up while accelerating, as G Force draws it; Settings >
+JDM 2: G meter size, swap left / right, brake on top); over its edge a big tach whose scale is a broad coloured band
+with the numerals in it, a notched dark rim round it and a dotted line inside it (red, the shift zone orange; Sport
+crimson and amber, Efficient blue), a glowing needle reaching the band over a chrome ring hub, the digital speed in
+its open lower right; a glossy disc with the gear; two small chrome-ringed gauges, the coolant (C-H) and the fuel
+(E-F), which Settings > Tach gauge / Speedometer gauge (or the page) can give another reading; the readouts in a column
+at the right. On a plug-in hybrid in an electric mode the tach's band reads the battery's power, its regeneration
+part green. With the layout's own strip the fuel gauge sits below the KOMBI's dark box and the background is black
+with Background: Pure black (the box shows then); with the map the tach stands left of it and the disc and gauges
+right of it; with the stock centre the tach takes the G meter's place. Its parts are one shader (`shaders.js` JDM_FS).
 
 ![JDM 2](../../docs/jdm2.png)
 

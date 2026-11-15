@@ -2,8 +2,8 @@
 /**
  * layout_jdm2.js - "JDM 2": an original drawing after the idea of a Japanese grand tourer's digital cluster. A dark
  * carbon-weave panel; a big tach whose scale is a broad coloured band with the numerals in it, a slim glowing needle
- * over a chrome ring hub and the digital speed in its open lower right; a G meter left of it (the car's own lateral
- * and longitudinal acceleration, rings at 0.5 and 1 g); a glossy disc with the gear; two small gauges with chrome
+ * over a chrome ring hub and the digital speed in its open lower right; a G meter in a big round window left of it
+ * (the car's own lateral and longitudinal acceleration, as G Force and Car Vitals read it); a glossy disc with the gear; two small gauges with chrome
  * rings, the coolant (C-H) and the fuel (E-F), their marks along the left of each (Settings > Tach gauge /
  * Speedometer gauge, or the page, put another reading in either). The ranges and the main readout in the column right
  * of the KOMBI's dark box. No maker's marks or names. The parts are one shader's (shaders.js JDM_FS, kind 'jdm').
@@ -26,93 +26,102 @@ const PALETTES = {
         text: '#eef6ff', dim: '#97a4ae', glow: '#6ab8ff', accent: '#38d4ff', track: '#111a20', ev: '#4ab4ff', face0: '#0c0f12', face1: '#030405', bezel2: '#394148', minor: '#97a4ae', num: '#ffffff', hub: '#15181b',
     },
 };
-const jdmColours = (t) => ({ face: t.face, bezel: t.bezel, band: t.band, red: t.red, tick: t.tick, needle: t.needle, dot: t.dot, disc: t.disc });
-const dialColours = (t) => ({ face0: t.face0, face1: t.face1, bezel: t.bezel, bezel2: t.bezel2, tick: t.tick, minor: t.minor, num: t.num, red: '#ff2a2a', needle: t.needle, hub: t.hub, accent: t.accent, glow: t.glow });
+const jdmColours = (t) => ({ face: t.face, bezel: t.bezel, band: t.band, red: t.red, tick: t.tick, needle: t.needle, dot: t.dot, disc: t.disc, warn: '#ff2a2a' });
 const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.15] });
 const lbl = (t) => ({ color: [t.dim, 1], glow: [t.glow, 0.1] });
 const redTxt = () => ({ color: ['#ff2a2a', 1], glow: ['#ff2a2a', 0.2] });
 const elecTxt = (t) => ({ color: [t.ev, 1], glow: [t.ev, 0.2] });
 const kwNow = (d) => (C.isNum(d.kw) ? d.kw : 0);
 const powerTxt = (t, d) => ({ color: [kwNow(d) < -0.3 ? '#3ddc84' : t.ev, 1], glow: [t.ev, 0.2] });
-const A0 = -145, A1 = 100;    // the tach's sweep: 0 at about seven o'clock, the top just past three
-const G_MAX = 1;              // g at the G meter's outer ring
+const A0 = -150, A1 = 95;     // the tach's sweep: 0 at about seven o'clock, the top just past three
 const r2 = (v) => (C.isNum(v) ? Math.round(v * 100) / 100 : 0);
+/** Settings > JDM 2: G meter size (g at the meter's outer ring; 1.5 as G Force and Car Vitals). */
+const gScale = (o) => { const v = Number(o && o.gScale); return v >= 0.5 && v <= 3 ? v : 1.5; };
 
-/** The background, its weave continuous across pieces (key bg...: under everything, cut at the car's strip). */
-const back = (key, x, y, w, h) => ({ key, kind: 'jdm', x, y, w, h, z: -200, params: { u_mode: [0], u_origin: [x, y] }, colors: jdmColours });
+/*
+ * The background, its weave continuous across pieces (key bg...: under everything, cut at the car's strip). With
+ * Settings > Background: Pure black and the layout's own strip (the KOMBI's dark box shows then) it is black, so
+ * the box disappears into it as in the other layouts.
+ */
+const back = (o, key, x, y, w, h) => ({ key, kind: 'jdm', x, y, w, h, z: -200, params: { u_mode: [0], u_origin: [x, y] },
+    colors: (t) => Object.assign(jdmColours(t), !C.strip(o) && t.face0 === '#000000' ? { face: '#000000' } : {}) });
 
-/** The tach at (cx, cy), size across; with the digital speed and its unit in its open lower right. */
-function tach(o, cx, cy, size, digits) {
-    const R = size / 2, s = C.rpmScale(o);
-    const list = [
+/** The tach at (cx, cy), radius R; the digital speed and its unit in its open lower right. */
+function tach(o, cx, cy, R) {
+    const size = 2 * R, s = C.rpmScale(o);
+    return [
         {
             key: 'rpm', kind: 'jdm', x: cx - R, y: cy - R, w: size, h: size,
             params: { u_mode: [3], u_origin: [cx - R, cy - R], u_scale: [s.max, s.major, s.minor, s.red], u_arc: [A0, A1, 0.15, 0], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB },
             colors: jdmColours, max: s.max, sweep: true,
             value: C.tachValue(o), range: C.tachRange(o, s), dyn: C.tachDyn(o, s, s.red),
         },
-        // the unit right of the hub, under the band's end (with the engine off the battery's power, which the tach reads then)
-        C.text('rpmUnit', cx + Math.round(R * 0.16), cy + Math.round(R * 0.2), Math.round(R * 0.56), Math.max(14, Math.round(R * 0.075)),
+        // the unit right of the hub, under the band's end (with the engine off the battery's power, the tach reads it then)
+        C.text('rpmUnit', cx + Math.round(R * 0.2), cy + Math.round(R * 0.16), Math.round(R * 0.5), Math.max(14, Math.round(R * 0.07)),
             (d) => (C.electric(o, d) ? C.kwText(d) : 'RPM x1000'), (t, d) => (C.electric(o, d) ? powerTxt(t, d) : redTxt(t)), { tracking: 0.06 }),
+        C.text('speedDigits', cx + Math.round(R * 0.16), cy + Math.round(R * 0.33), Math.round(R * 0.6), Math.round(R * 0.34), (d) => C.speedText(o, d), white),
+        C.text('speedDigitsUnit', cx + Math.round(R * 0.16), cy + Math.round(R * 0.7), Math.round(R * 0.6), Math.max(14, Math.round(R * 0.08)), C.speedUnit(o), white, { tracking: 0.04 }),
     ];
-    if (digits) list.push(
-        C.text('speedDigits', cx + Math.round(R * 0.16), cy + Math.round(R * 0.34), Math.round(R * 0.62), Math.round(R * 0.38), (d) => C.speedText(o, d), white),
-        C.text('speedDigitsUnit', cx + Math.round(R * 0.2), cy + Math.round(R * 0.74), Math.round(R * 0.62), Math.max(14, Math.round(R * 0.085)), C.speedUnit(o), white, { tracking: 0.04 }));
-    return list;
 }
 
-/** The G meter at (cx, cy), size across: its scale's marks at the ends of its cross. */
-function gMeter(o, cx, cy, size) {
-    const R = size / 2, gr = R * 0.62, h = Math.max(14, Math.round(R * 0.075)), w = Math.round(h * 2.6);
-    const mark = (k, x, y) => C.text('gMark' + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, G_MAX.toFixed(1), lbl);
+/*
+ * The G meter in a big round window at (cx, cy), radius R: the meter in its middle, its size's figures at the ends of
+ * its cross. The dot as G Force draws it: left in a right bend (Settings > JDM 2: G meter, swap left / right), up
+ * while accelerating (brake on top: Settings > JDM 2: G meter, brake on top); the car's own acceleration less its
+ * offset at a standstill, smoothed (data.js gLatZ, gLongZ).
+ */
+function gMeter(o, cx, cy, R) {
+    const gr = R * 0.46, h = Math.max(14, Math.round(R * 0.065)), w = Math.round(h * 2.6), max = gScale(o);
+    const sx = o.gFlipLat === 'on' ? 1 : -1, sy = o.gFlipLong === 'on' ? 1 : -1;
+    const fig = max % 0.5 ? max.toFixed(2) : max.toFixed(1);
+    const mark = (k, x, y) => C.text('gMark' + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, fig, white);
+    const gv = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : d[k]);
     return [
         {
-            key: 'gMeter', kind: 'jdm', x: cx - R, y: cy - R, w: size, h: size,
-            params: { u_mode: [1], u_origin: [cx - R, cy - R], u_gmax: [G_MAX], u_g: [0, 0] },
-            // (the dot where the car is pushed: right in a left bend, down while accelerating)
-            colors: jdmColours, dyn: (d) => ({ u_g: [r2(-d.gLat), r2(d.gLong)] }),
+            key: 'gMeter', kind: 'jdm', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R,
+            params: { u_mode: [1], u_origin: [cx - R, cy - R], u_g: [0, 0] },
+            colors: jdmColours, dyn: (d) => ({ u_g: [r2(sx * gv(d, 'gLat') / max), r2(sy * gv(d, 'gLong') / max)] }),
         },
-        mark('T', cx, cy - gr - h * 1.3), mark('B', cx, cy + gr + h * 1.3), mark('L', cx - gr - w * 0.62, cy), mark('R', cx + gr + w * 0.62, cy),
-        C.text('gLbl', cx + Math.round(R * 0.32), cy + Math.round(R * 0.66), Math.round(R * 0.3), h, 'G', lbl),
+        mark('T', cx, cy - gr - h * 1.2), mark('B', cx, cy + gr + h * 1.2), mark('L', cx - gr - w * 0.6, cy), mark('R', cx + gr + w * 0.6, cy),
     ];
 }
 
-/** The disc with the gear in it. */
-const gearDisc = (o, cx, cy, size) => [
-    { key: 'gearDisc', kind: 'jdm', x: cx - size / 2, y: cy - size / 2, w: size, h: size, params: { u_mode: [2], u_origin: [cx - size / 2, cy - size / 2] }, colors: jdmColours },
-    C.text('gear', cx - size * 0.4, cy - size * 0.24, size * 0.8, Math.round(size * 0.48), C.gearText, (t, d) => ({ color: [C.gearText(d) === 'R' ? '#ff4a3a' : '#ffffff', 1], glow: ['#ffffff', 0.15] })),
+/** The disc with the gear in it, radius R. */
+const gearDisc = (o, cx, cy, R) => [
+    { key: 'gearDisc', kind: 'jdm', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R, params: { u_mode: [2], u_origin: [cx - R, cy - R] }, colors: jdmColours },
+    C.text('gear', cx - R * 0.8, cy - R * 0.5, R * 1.6, Math.round(R * 1.0), C.gearText, (t, d) => ({ color: [C.gearText(d) === 'R' ? '#ff4a3a' : '#ffffff', 1], glow: ['#ffffff', 0.12] })),
 ];
 
 /*
- * A small gauge, size across at (cx, cy): its marks along its left (from the bottom up), the needle from the middle,
- * its icon at the right. Own readings: the fuel by the speed's setting (E and F), the coolant by the tach's (C and H,
- * as the car's own unless Settings > Temperature gauges: Scale); another one: its name and figures at the right.
+ * A small gauge at (cx, cy), radius R: its marks along its left from the bottom up, the needle from the middle, its
+ * icon at the right. Own readings: the fuel by the speed's setting (E and F), the coolant by the tach's (C and H, as
+ * the car's own unless Settings > Temperature gauges: Scale); another one: its name and figures at the right.
  */
-function small(o, which, cx, cy, size) {
+function small(o, which, cx, cy, R) {
     const g = C.gaugeOf(o, which), own = which === 'speed' ? 'fuel' : 'coolant', key = g ? g.key : own;
     const gg = g || C.gaugeOf(Object.assign({}, o, which === 'speed' ? { gaugeSpeed: own } : { gaugeRpm: own }), which);
-    const ch = C.chOf(o, key), R = size / 2, id = which === 'speed' ? 'fuelSmall' : 'coolSmall';
-    const lo = key === 'fuel' ? 'E' : ch ? 'C' : null, hi = key === 'fuel' ? 'F' : ch ? 'H' : null;
+    const ch = C.chOf(o, key), id = which === 'speed' ? 'fuelSmall' : 'coolSmall', fuel = key === 'fuel';
+    const lo = fuel ? 'E' : ch ? 'C' : null, hi = fuel ? 'F' : ch ? 'H' : null;
+    // (the warning end: the fuel's empty quarter at the bottom, a temperature's red zone at the top)
+    const warn = fuel ? -1 : ch ? C.chRed(o, ch) * 100 : Math.min(101, gg.redFrac * 100);
     const out = [{
-        key: id, kind: 'dial', x: cx - R, y: cy - R, w: size, h: size, z: 6,
-        params: { u_scale: [100, 50, 12.5, ch ? C.chRed(o, ch) * 100 : Math.min(101, gg.redFrac * 100)], u_arc: [-155, -25, 0, 0], u_needle_dim: [R * 0.66, R * 0.14, 5, 2.5], u_look: [0.2, 1, 0, 0], u_look2: [Math.max(5, Math.round(size * 0.05)), size / 640, 0.6, 0.6] },
-        colors: dialColours, value: ch ? (d) => C.chFrac(ch, d[ch]) * 100 : (d) => gg.frac(d) * 100, max: 100, sweep: true,
+        key: id, kind: 'jdm', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R, z: 6,
+        params: { u_mode: [4], u_origin: [cx - R, cy - R], u_scale: [100, 50, 12.5, fuel ? 101 : warn], u_arc: [-160, -20, 0, 0] },
+        colors: jdmColours, value: ch ? (d) => C.chFrac(ch, d[ch]) * 100 : (d) => gg.frac(d) * 100, max: 100, sweep: true,
     }];
     const h = Math.max(14, Math.round(R * 0.2));
     if (lo) {
-        // the ends' letters above and below the hub, the empty or hot end in red
-        const redLo = key === 'fuel';
-        out.push(C.text(id + 'Lo', cx - h, Math.round(cy + R * 0.5), h * 2, h, lo, redLo ? redTxt : white),
-            C.text(id + 'Hi', cx - h, Math.round(cy - R * 0.5 - h), h * 2, h, hi, redLo ? white : redTxt));
+        out.push(C.text(id + 'Lo', cx - h, Math.round(cy + R * 0.48), h * 2, h, lo, fuel ? redTxt : white),
+            C.text(id + 'Hi', cx - h, Math.round(cy - R * 0.48 - h), h * 2, h, hi, fuel ? white : redTxt));
     }
     if (lo && !g) {
-        out.push({ key: id + 'Icon', kind: 'icon', x: Math.round(cx + R * 0.36), y: Math.round(cy - R * 0.14), w: Math.round(R * 0.3), h: Math.round(R * 0.3), params: { u_icon: [key === 'fuel' ? 4 : 0], u_line: [0] }, colors: (t) => ({ color: [t.dim, 1] }) });
+        out.push({ key: id + 'Icon', kind: 'icon', x: Math.round(cx + R * 0.34), y: Math.round(cy - R * 0.16), w: Math.round(R * 0.32), h: Math.round(R * 0.32), params: { u_icon: [fuel ? 4 : 0], u_line: [0] }, colors: (t) => ({ color: [t.text, 1] }) });
         return out;
     }
     // another reading (or the gauge's own with its figures): its name and figures right of the hub
     const fig = which === 'speed' ? 'speedSubNum' : 'rpmSubNum';
-    return out.concat(C.text(id + 'Lbl', Math.round(cx + R * 0.12), Math.round(cy - R * 0.36), Math.round(R * 0.74), Math.max(11, Math.round(R * 0.14)), gg.label, lbl, { tracking: 0.1 }),
-        Object.assign(C.text(fig, Math.round(cx + R * 0.12), Math.round(cy + R * 0.16), Math.round(R * 0.74), Math.max(12, Math.round(R * 0.2)), gg.txt, white), C.TEMP_TONES[key] ? { tone: key } : {}));
+    return out.concat(C.text(id + 'Lbl', Math.round(cx + R * 0.1), Math.round(cy - R * 0.36), Math.round(R * 0.74), Math.max(11, Math.round(R * 0.14)), gg.label, lbl, { tracking: 0.1 }),
+        Object.assign(C.text(fig, Math.round(cx + R * 0.1), Math.round(cy + R * 0.16), Math.round(R * 0.74), Math.max(12, Math.round(R * 0.2)), gg.txt, white), C.TEMP_TONES[key] ? { tone: key } : {}));
 }
 
 /** The column right of the KOMBI's dark box: the fuel range, the electric range (the boost), the main readout. */
@@ -143,11 +152,11 @@ module.exports = {
      */
     pieces(o) {
         if (o.centre === 'map') {
-            // the tach left of the map; the disc, the small gauges right of it; the time and outside temperature
+            // the tach left of the map; the disc and the small gauges right of it; the time and outside temperature
             // above the map, the ranges under it
             const top = C.MAP.y, bot = C.MAP.y + C.MAP.h;
-            return C.aroundMap().map((r, i) => back('bg' + i, r.x, r.y, r.w, r.h)).concat(
-                tach(o, 208, 360, 404, true), gearDisc(o, 1600, 175, 170), small(o, 'rpm', 1590, 565, 140), small(o, 'speed', 1780, 565, 140), [
+            return C.aroundMap().map((r, i) => back(o, 'bg' + i, r.x, r.y, r.w, r.h)).concat(
+                tach(o, 208, 360, 202), gearDisc(o, 1600, 175, 85), small(o, 'rpm', 1592, 565, 72), small(o, 'speed', 1780, 565, 72), [
                     C.text('clock', 520, top - 76, 200, 34, C.clock, white),
                     C.text('outside', 1200, top - 76, 200, 34, (d) => C.outsideText(o, d.outside), white),
                 ],
@@ -156,24 +165,26 @@ module.exports = {
             );
         }
         if (C.strip(o) && o.centre !== 'stock') {
-            // the car's own strip: no boxes to keep clear of; the G meter and the tach either side of the middle,
-            // sized to end above the strip, the disc and the small gauges right of them; the readouts the strip
-            // leaves (the main readout, readouts 1 and 2 in the time's and temperature's places) in the column
-            return [back('bg', 0, 0, 1920, 720)].concat(gMeter(o, 330, 330, 520), tach(o, 900, 386, 520, true),
-                gearDisc(o, 1300, 200, 190), small(o, 'rpm', 1300, 470, 200), small(o, 'speed', 1540, 470, 200), [
+            // the car's own strip: no boxes to keep clear of, so as first drawn: the G meter's window left, the tach
+            // over its edge, the disc above right of the tach, the coolant under it and the fuel right of both; the
+            // readouts the strip leaves (the main readout, readouts 1 and 2 in the time's and temperature's places)
+            // in the column at the right
+            return [back(o, 'bg', 0, 0, 1920, 720)].concat(gMeter(o, 427, 410, 233), tach(o, 900, 387, 259),
+                gearDisc(o, 1287, 262, 100), small(o, 'rpm', 1297, 526, 112), small(o, 'speed', 1500, 404, 110), [
                     C.text('clock', 1672, 300, 216, 34, C.clock, white),
                     C.text('outside', 1672, 360, 216, 34, (d) => C.outsideText(o, d.outside), white),
                 ], column(o, 430));
         }
-        // the G meter left, the tach in the middle under the cowl, the disc and the coolant between the tach and the
-        // dark box, the fuel below the box, the column right of it; with the stock centre the tach where the G meter was
+        // the layout's own strip: the same, the disc higher and the fuel below the KOMBI's dark box, the outside
+        // temperature above it, the column right of it, the time at the bottom left; with the stock centre the tach
+        // where the G meter was
         const stock = o.centre === 'stock';
         const list = stock
-            ? [back('bg', 0, 0, 566, 720), back('bgR', 1104, 0, 816, 720)].concat(tach(o, 290, 380, 480, true))
-            : [back('bg', 0, 0, 1920, 720)].concat(gMeter(o, 300, 372, 500), tach(o, 880, 386, 516, true));
-        return list.concat(gearDisc(o, 1300, 170, 190), small(o, 'rpm', 1290, 530, 200), small(o, 'speed', 1536, 548, 180), [
-            C.text('clock', 60, 652, 240, 34, C.clock, white, { align: 0 }),
-            C.text('outside', 1430, 100, 220, 36, (d) => C.outsideText(o, d.outside), white, { align: 0 }),
+            ? [back(o, 'bg', 0, 0, 566, 720), back(o, 'bgR', 1104, 0, 816, 720)].concat(tach(o, 290, 380, 240))
+            : [back(o, 'bg', 0, 0, 1920, 720)].concat(gMeter(o, 427, 400, 233), tach(o, 900, 387, 259));
+        return list.concat(gearDisc(o, 1287, 175, 95), small(o, 'rpm', 1297, 540, 105), small(o, 'speed', 1540, 556, 95), [
+            C.text('clock', 40, 652, 240, 34, C.clock, white, { align: 0 }),
+            C.text('outside', 1410, 112, 220, 36, (d) => C.outsideText(o, d.outside), white, { align: 0 }),
         ], column(o));
     },
 };

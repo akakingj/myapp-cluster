@@ -434,6 +434,25 @@ function startData(ctx, opts) {
     /* The battery's power between eDrive Live's readings (kwfuse.js): its readings fitted to the power at the wheels
      * from the car's speed and acceleration, many times a second. Settings > kW: Fast (the default) or Readings only. */
     let lastKwAt = null;
+    /* the G meter's acceleration (JDM 2: gLatZ, gLongZ, g): each axis's offset learned while the car stands and taken
+     * off (as Car Vitals: an owner's car read 0.6-0.7 g idling; parked on a slope, the slope too until the next stop),
+     * then smoothed over about 150 ms (as G Force) */
+    const gz = { gLat: { z: 0, n: 0, s: null }, gLong: { z: 0, n: 0, s: null } };
+    let gStill = 0, gAt = 0;
+    const gZeroed = (o, tNow) => {
+        if (!isNum(o.speed) || o.speed > 0.5) gStill = 0; else if (!gStill) gStill = tNow;
+        const standing = gStill > 0 && tNow - gStill > 2000, dt = gAt ? Math.min(500, Math.max(0, tNow - gAt)) : 0;
+        gAt = tNow;
+        const k = dt > 0 ? 1 - Math.exp(-dt / 150) : 1;
+        ['gLat', 'gLong'].forEach((key) => {
+            const g = o[key], z = gz[key];
+            if (!isNum(g) || Math.abs(g) > 3) return;    // (a road car can't pull 3 g: a bad sample)
+            if (!o.demo && standing && Math.abs(g) <= 1) { z.n = Math.min(z.n + 1, 50); z.z += (g - z.z) / z.n; }
+            const v = g - (o.demo ? 0 : z.z);
+            z.s = z.s === null ? v : z.s + (v - z.s) * k;
+            o[key + 'Z'] = Math.round(z.s * 100) / 100;
+        });
+    };
     const fastKw = () => setting('kwFast') !== 'off';
     let shownFor = 0;
     const vehicleTimer = setInterval(() => {
@@ -503,6 +522,7 @@ function startData(ctx, opts) {
             if (x.startWhy) o.startWhy = x.startWhy;
             // the cruise control: on with a set speed (the head-up display's), off at 0
             if (!d.demo && Date.now() - (x.at.cruiseSet || 0) < 10000) o.cruise = { on: x.cruiseSet > 0 && x.cruiseSet < 250, set: x.cruiseSet > 0 && x.cruiseSet < 250 ? x.cruiseSet : undefined };
+            gZeroed(o, tNow);
             return o;
         },
         /** The page on screen needs these (data keys): read them fast. */
