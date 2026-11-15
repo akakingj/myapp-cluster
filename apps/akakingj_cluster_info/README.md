@@ -15,6 +15,10 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   both (then on the cluster), and the HUD map's size and position as set there.
   Shown only while the map is (or, on the HUD, while there is something to show), so it never holds the
   cluster or HUD on its own.
+- **Turn signals and lane change warning on the HUD:** a small green arrow each side and, outside it, a sign while
+  the car's driving assistant says a car is beside or coming up behind. At the top of what a G20 shows (the signs at
+  x 200 and 566, the arrows at 240 and 530, y 76 / 86 of the HUD's 800x480), the place Redline (idrive7-apps, 2.0.57)
+  gives its own when its rev counter is off; while Redline holds the HUD, Cluster Info's step aside and Redline's show.
 - **Its page** shows the panel as it is now, larger, and whether each source works (turn signals, day / night,
   driver profile, the apps providing, the cluster renderer, the Waze map).
 

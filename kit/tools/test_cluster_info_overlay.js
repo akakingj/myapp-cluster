@@ -308,15 +308,15 @@ class FakeCR extends EventEmitter {
     lw = { left: false, right: true }; t += 10; ov._lcwTick();
     const rsg = cr.layers.get(ov.lcw().refs.right), rar = cr.layers.get(refs.right);
     check('the car now on the right: left off, right on, outside the right arrow', () => assert(!lsg.visible && rsg.visible && rsg.x >= rar.x + rar.w));
-    // (2026-11-14) the left arrow left of the middle, the right one at the right of what the HUD shows (x ~680), its sign
-    // outside it and still on the glass; the two far apart
-    check('the arrows: left of the middle, the right one at the HUD\'s right edge, its sign still on the glass', () => {
+    // (2026-11-15) where Redline 2.0.57 puts its own with its rev counter off: the top of what a G20 shows (x 124..676,
+    // y 72..221 seen well), the signs at 200 and 566..600, the arrows at 240 and 530; the two far apart
+    check('the arrows and signs at Redline\'s place: the top of a G20\'s glass, far apart', () => {
         const lar = cr.layers.get(refs.left);
-        assert(lar.x + lar.w <= 400 && rar.x >= 500, 'left ' + lar.x + ', right ' + rar.x);
-        // inside what the driver sees of a G21's glass as the head moves (bimmer-lab's x 120..605), 4 px from its right edge
-        assert(rsg.x + rsg.w === 601, 'the right sign ends at ' + (rsg.x + rsg.w));
+        assert(lsg.x === 200 && lar.x === 240 && rar.x === 530 && rsg.x === 566, 'x ' + [lsg.x, lar.x, rar.x, rsg.x].join(' '));
+        assert(lsg.y === 76 && rsg.y === 76 && lar.y === 86 && rar.y === 86, 'y ' + [lsg.y, lar.y].join(' '));
+        assert(rsg.x + rsg.w === 600, 'the right sign ends at ' + (rsg.x + rsg.w));
         assert(rar.x - (lar.x + lar.w) >= 150, 'the two arrows well apart: ' + (rar.x - (lar.x + lar.w)) + ' px');
-        assert(lsg.x >= 120 && lar.y >= 120 && rsg.y >= 120 && rsg.y + rsg.h <= 360, 'all on a G21\'s glass');
+        assert(lsg.x >= 124 && lsg.y >= 72 && rsg.x + rsg.w <= 676 && rsg.y + rsg.h <= 221, 'all in a G20\'s well-seen part');
         assert(lsg.x + lsg.w <= lar.x, 'the left sign outside the left arrow');
         assert(rar.y === lar.y, 'one height');
     });
