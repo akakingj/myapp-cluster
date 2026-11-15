@@ -2671,3 +2671,13 @@ Lane change warning on the HUD	HUD에 측후방 경고
 On: a car beside or coming up behind, by the arrows	켬: 옆이나 뒤에서 다가오는 차량을 화살표 옆에 표시
 Lane change warning	측후방 경고
 GEARBOX	미션오일
+The stock cluster shows	순정 계기판 표시 중
+Off - the stock cluster shows	꺼짐 - 순정 계기판 표시 중
+Showing on the cluster	계기판에 표시 중
+This layout has no readouts to choose	이 레이아웃은 고를 수 있는 표시값이 없습니다
+Stock	순정
+Stock cluster	순정 계기판
+Same as in Settings	설정과 같게 (모든 레이아웃 공통)
+Tap a layout: it shows on the cluster at once. Tap a readout to choose it for this layout.	레이아웃을 누르면 바로 계기판에 표시됩니다. 표시값을 누르면 이 레이아웃만의 값을 고를 수 있습니다.
+Common	공통
+Readouts per layout	레이아웃별 표시값

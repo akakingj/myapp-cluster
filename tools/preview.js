@@ -6,7 +6,7 @@
  *
  *   node tools/preview.js [--layout analog_sport] [--look comfort|sport|efficient] [--centre info|stock] [--kmh]
  *                         [--black] [--speed 62] [--rpm 3200] [--gear 4] [--stage D] [--mode S] [--oil 96] [--coolant 90]
- *                         [--mcar] [--strip] [--dap] [--hotOil 125] [--hotCoolant 112] [--hotGearbox 120] [--tempGauge scale]
+ *                         [--celsius] [--mcar] [--strip] [--dap] [--hotOil 125] [--hotCoolant 112] [--hotGearbox 120] [--tempGauge scale]
  *                         [--out preview.png]
  * --mcar: Settings > Cluster M car, with the M KOMBI's two dark boxes drawn over the layout as on the car
  */
@@ -34,6 +34,7 @@ function args(argv) {
         else if (k === 'strip') a.strip = true;
         else if (k === 'dap') a.dap = true;
         else if (k === 'engine') a.engine = true;
+        else if (k === 'celsius') a.celsius = true;
         else a[k] = isNaN(Number(argv[i + 1])) ? argv[++i] : Number(argv[++i]);
     }
     return a;
@@ -115,7 +116,7 @@ async function render(scene, out, mapWindow, over) {
 
 if (require.main === module) {
     const a = args(process.argv.slice(2));
-    const s = makeScene({ layout: a.layout, look: a.look, black: !!a.black, options: { centre: a.centre, speedUnit: a.kmh ? 'kmh' : 'mph', vehicle: a.engine ? 'ice' : 'phev', cluster: a.mcar ? 'm' : 'standard', bottomStrip: a.strip ? 'stock' : 'layout',
+    const s = makeScene({ layout: a.layout, look: a.look, black: !!a.black, options: { centre: a.centre, speedUnit: a.kmh ? 'kmh' : 'mph', tempUnit: a.celsius ? 'c' : undefined, vehicle: a.engine ? 'ice' : 'phev', cluster: a.mcar ? 'm' : 'standard', bottomStrip: a.strip ? 'stock' : 'layout',
         // (Settings > Too hot, as the Car profile sets them: --hotOil 125 --hotCoolant 112 --hotGearbox 120; --tempGauge scale)
         hotOil: a.hotOil, hotCoolant: a.hotCoolant, hotGearbox: a.hotGearbox, tempGauge: a.tempGauge || 'ch',
         // (the readouts: --infoA, --infoB, --infoMain, --infoLow: a readout's name, gear or off; --arcGear off)

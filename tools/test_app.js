@@ -36,9 +36,9 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     // (the personal build's defaults are Korean and petrol; these checks are written for the original's)
     Object.assign(S, { vehicle: 'auto', tankLitres: 69, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', timeZone: 'eastern', redline: 7000, rpmMax: 8000 });
     const handlers = {}, clicks = {}, warns = [];
-    let pages = 0;
+    let pages = 0, lastPage = null, sheets = null;
     const ctx = {
-        app: {}, ui: { onClick(n, fn) { clicks[n] = fn; }, text() {}, image: async () => { pages++; } },
+        app: {}, ui: { onClick(n, fn) { clicks[n] = fn; }, text() {}, image: async (n, cv) => { pages++; lastPage = cv; }, sheet: (sh) => { if (!sheets) return false; sheets.push(sh); return true; } },
         settings: { get: (k) => S[k], set: (k, v) => { S[k] = v; changes.forEach((f) => f(k, v)); }, onChange(f) { changes.push(f); }, display: (k) => String(S[k]) },
         log: { info() {}, warn: (m) => warns.push(m), error: (m, e) => warns.push(m + ' ' + e) },
         spec: SPEC, dataDir: fs.mkdtempSync(path.join(os.tmpdir(), 'cl-')),
@@ -61,6 +61,48 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     await clicks.BTN_SHOW();
     await sleep(120);
     check('shown after the button', () => assert(effects().every((l) => l.opts.visible === true)));
+    /* the page (0.29.0): each layout's picture on a card; a tap shows it on the cluster at once; its readouts set for it alone */
+    const rec = require(path.join(KIT, 'record'));
+    const tgt = (key) => { const x = lastPage.targets.find((q) => q.key === key); assert(x, 'no ' + key + ' on the page: ' + lastPage.targets.map((q) => q.key).join(',')); return x; };
+    check('the page: the chosen layout\'s picture and a row of cards, each a picture from previews.wad', () => {
+        const ids = Array.from(lastPage.images);
+        // (the row the Stock card is on, it being chosen while off: Twin cowl's picture and Stock's)
+        assert(ids.indexOf(0x434c0100) >= 0 && ids.indexOf(0x434c0200 + 12) >= 0, ids.map((i) => i.toString(16)).join(','));
+        assert(rec.imageById.get(0x434c0100).w === 600 && rec.imageById.get(0x434c0100).data.length === 600 * 225 * 4);
+    });
+    await tgt('cards_prev').run();
+    check('the row before: six layouts\' pictures', () => assert.strictEqual(Array.from(lastPage.images).filter((i) => i >= 0x434c0200 && i < 0x434c0300).length, 6));
+    // (a petrol car: Arc tach's main readout shows)
+    S.vehicle = 'ice'; changes.forEach((f) => f('vehicle', 'ice'));
+    await tgt('card_arc_tach').run();
+    await sleep(150);
+    check('a card tapped: that layout on the cluster at once', () => assert.strictEqual(S.layout, 'arc_tach'));
+    check('its readouts on the page, each following the Settings\' value', () => ['slot_infoMain', 'slot_gaugeSpeed', 'slot_gaugeRpm'].forEach(tgt));
+    // (no sheet: a tap goes to the next value)
+    await tgt('slot_infoMain').run();
+    check('a readout tapped (no sheet here): the next value, for this layout only', () => assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'off' } }));
+    sheets = [];
+    await tgt('slot_infoMain').run();
+    check('with sheets: the values listed, the one set marked', () => assert(sheets.length === 1 && sheets[0].focus === 1, 'focus ' + (sheets[0] && sheets[0].focus)));
+    sheets[0].focus = 6; sheets[0].press();     // (Boost: 'Same as in Settings' first, then the setting's own)
+    await sleep(150);
+    check('picked: this layout\'s, the cluster rebuilt with it', () => {
+        assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'boost' } });
+        assert(eng() && JSON.stringify(require(path.join(APP, 'layouts')).slotValue((k) => S[k], (k) => SPEC.settings.find((x) => x.key === k), 'arc_tach', 'infoMain')) === '"boost"');
+    });
+    sheets.length = 0;
+    await tgt('slot_infoMain').run();
+    sheets[0].focus = 0; sheets[0].press();
+    check('"Same as in Settings": the Settings\' value again (nothing kept for the layout)', () => assert.deepStrictEqual(S.slotsBy, {}));
+    sheets = null;
+    await tgt('cards_next').run();
+    await tgt('card_stock').run();
+    check('Stock: the layout off, the stock cluster back', () => assert.strictEqual(S.show, 'off'));
+    await clicks.BTN_SHOW();
+    await sleep(120);
+    S.layout = 'analog_sport'; changes.forEach((f) => f('layout', 'analog_sport'));
+    S.vehicle = 'auto'; changes.forEach((f) => f('vehicle', 'auto'));
+    await sleep(120);
     // the car: 50 mph, 2500 rpm, D3, oil 100 C
     handlers.statusCarSpeed2({ speedVehicleCentreOfGravity: Math.round(50 * 1.609344 / 0.015625) });
     handlers.statusEngineSpeed2({ actualValueRPMEngineCrankshaft: 2500 / 0.25 });

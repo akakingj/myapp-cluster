@@ -21,7 +21,13 @@ const clock = require('./clock');
 const mgu = require('./kit/mgu');
 const { ClusterRender } = require('./cluster_render_client');
 const { startCluster, STALE_MS, frozen } = require('./engine');
-const { byId, layoutFor } = require('./layouts');
+const { LAYOUTS, byId, layoutFor, slotValue, slotsFor } = require('./layouts');
+const menu = require('./menu');
+const { withAlpha } = require('./kit/canvas');
+const { t: tr } = require('./kit/i18n');
+let record = null, Sheet = null;
+try { record = require('./kit/record'); } catch (e) { /* an older kit: no pixel images */ }
+try { Sheet = require('./kit/sheet'); } catch (e) { /* no sheets: a readout's value goes round on a tap */ }
 const { lookNow } = require('./themes');
 const { startData } = require('./data');
 const presence = require('./presence');
@@ -33,6 +39,9 @@ const attribution = require('./attribution');
 const path = require('path');
 
 const W = 1600, H = 520;
+/* the page's pictures (record.js setImage): the large one, and each layout's card (+ its index) */
+const IMG_BIG = 0x434c0100, IMG_CARD = 0x434c0200;
+const CARDS = 6;   // cards a row
 const isNum = (v) => typeof v === 'number' && isFinite(v);
 const SIGNALS_PER_PAGE = 7;
 
@@ -71,9 +80,13 @@ mgu.run({
             d.dap = d.demo ? DAP_DEMO : dap ? dap.state() : null;
             return d;
         };
+        // the readouts (Settings' infoA ... gaugeRpm): the layout's own where it has one set (slotsBy, the page), else
+        // the Settings' value, every layout's default
+        const itemOf = (k) => (typeof settings.item === 'function' ? settings.item(k) : ((ctx.spec && ctx.spec.settings) || []).find((x) => x.key === k));
+        const slot = (k, id) => slotValue((x) => settings.get(x), itemOf, id || layout.id, k);
         const options = () => ({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
-            powerUnit: settings.get('powerUnit'), infoA: settings.get('infoA'), infoB: settings.get('infoB'), infoMain: settings.get('infoMain'), infoLow: settings.get('infoLow'), arcGear: settings.get('arcGear'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: settings.get('gaugeSpeed'), gaugeRpm: settings.get('gaugeRpm'),
+            powerUnit: settings.get('powerUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), arcGear: settings.get('arcGear'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'),
             amberRpm: settings.get('amberRpm'), shiftBefore: settings.get('shiftBefore'), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
@@ -153,7 +166,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look' || k === 'background') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'boxClear', 'boxBezel', 'cluster', 'bottomStrip', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'arcGear', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'boxClear', 'boxBezel', 'cluster', 'bottomStrip', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'arcGear', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */
@@ -163,9 +176,10 @@ mgu.run({
             log.info('signals for ranges, fuel and charge: ' + found.list.length);
             found.list.slice(0, 60).forEach((s) => log.info('  ' + s.iface + ' ' + s.field + (s.get ? ' get' : '') + (s.notify ? ' notify' : '') + ' {' + s.members.slice(0, 12).join(', ') + '}'));
         }
-        let page = 0;   // 0: status; 1...: the signal list, SIGNALS_PER_PAGE a page
-        // 0: status; 1: the raw drive-mode and range values; 2: what the cluster has up; 3...: the signal list
-        const pages = () => 3 + Math.ceil(found.list.length / SIGNALS_PER_PAGE);
+        // 0: the layouts (pictures to tap, the chosen one's readouts); 1: status; 2: the raw drive-mode and range values;
+        // 3: what the cluster has up; 4...: the signal list, SIGNALS_PER_PAGE a page
+        let page = 0;
+        const pages = () => 4 + Math.ceil(found.list.length / SIGNALS_PER_PAGE);
 
         ui.onClick('BTN_SHOW', () => { settings.set('show', showing() ? 'off' : 'on'); return render(); });
         ui.onClick('BTN_SIGNALS', () => { logView = null; page = (page + 1) % Math.max(1, pages()); return render(); });
@@ -233,6 +247,116 @@ mgu.run({
             return render();
         });
 
+        /* ---------- the layouts: the chosen one large, a row of cards to tap (it shows on the cluster at once), and
+         * its readouts, each set for it alone (slotsBy) or following the Settings' value ---------- */
+        const previews = menu.loadPreviews(__dirname, log);
+        const ITEMS = LAYOUTS.map((l) => l.id).concat(['stock']);
+        let cardPage = -1, bigShown = '';
+        const cardsUp = {};
+        /** The layout setting the drive mode now uses (a Sport / ECO PRO one only where set): what a tap changes. */
+        const modeKey = () => {
+            const m = data().driveMode || '';
+            if (/SPORT|XTRABOOST/.test(m) && settings.get('layoutSport') !== 'same') return 'layoutSport';
+            if (/ECO|ELECTRIC/.test(m) && settings.get('layoutEco') !== 'same') return 'layoutEco';
+            return 'layout';
+        };
+        const choose = (id) => {
+            if (id === 'stock') settings.set('show', 'off');
+            else { if (settings.get(modeKey()) !== id) settings.set(modeKey(), id); if (!showing()) settings.set('show', 'on'); }
+            return render();
+        };
+        /** A readout of layout id set to v ('' : the Settings' value again). */
+        const setSlot = (id, k, v) => {
+            const by = Object.assign({}, settings.get('slotsBy') || {}), own = Object.assign({}, by[id] || {});
+            if (v === '') delete own[k]; else own[k] = v;
+            if (Object.keys(own).length) by[id] = own; else delete by[id];
+            settings.set('slotsBy', by);
+            return render();
+        };
+        const ownSlot = (id, k) => { const by = settings.get('slotsBy'); return by && by[id] && by[id][k] !== undefined ? by[id][k] : undefined; };
+        const optLabel = (k, v) => { const it = itemOf(k), o = it && (it.options || []).find((x) => x[0] === v); return o ? o[1] : String(v); };
+        const openSlot = (id, k) => {
+            const it = itemOf(k), cur = ownSlot(id, k);
+            const opts = [['', 'Same as in Settings']].concat(it.options);
+            const sheet = Sheet && menu.pickSheet(Sheet, byId(id).title, it.label, opts, cur === undefined ? '' : cur, (v) => setSlot(id, k, v));
+            if (sheet && ui.sheet && ui.sheet(sheet) !== false) return null;
+            // (no sheet here: the next value, then back to the Settings')
+            const vals = it.options.map((x) => x[0]), i = cur === undefined ? -1 : vals.indexOf(cur);
+            return setSlot(id, k, i + 1 < vals.length ? vals[i + 1] : '');
+        };
+        /** A picture at x, y (w x h): a pixel image on the car's renderer, drawn in place on a plain canvas (the tests). */
+        const picture = (cv, id, px, w, h, x, y, upload) => {
+            if (!px) return false;
+            if (typeof cv.image === 'function' && record) { if (upload) record.setImage(id, w, h, px); cv.image(id, x, y, w, h); return true; }
+            if (typeof cv.drawImage === 'function') { cv.drawImage(px, w, h, x, y, w, h); return true; }
+            return false;
+        };
+        const tap = (cv, x, y, w, h, run, key) => { if (typeof cv.target === 'function') cv.target(x, y, w, h, run, key); };
+        function drawLayouts(cv, t) {
+            const st = cluster.status(), d = data(), o = options(), now = layoutNow(), on = showing();
+            const sel = on ? now.id : 'stock', shownId = on ? now.id : settings.get(modeKey());
+            const acc = t.sel || t.accent || '#3d8bff';
+            // the large picture: the layout the drive mode uses now (on or not)
+            const BX = 24, BY = 14;
+            cv.roundRect(BX - 4, BY - 4, menu.PW + 8, menu.PH + 8, 10, on ? acc : '#2a2f38');
+            if (!picture(cv, IMG_BIG, previews.big(shownId), menu.PW, menu.PH, BX, BY, bigShown !== shownId)) cv.fillRect(BX, BY, menu.PW, menu.PH, '#000000');
+            bigShown = shownId;
+            if (!on) { cv.fillRect(BX, BY, menu.PW, menu.PH, withAlpha('#000000', 0.55)); cv.text('The stock cluster shows', BX + menu.PW / 2, BY + menu.PH / 2 + 10, 28, t.text, { align: 'center', font: 'bold' }); }
+            // the right: the layout, its state, its readouts
+            const RX = 652, RW = W - 24 - RX;
+            cv.text(byId(shownId).title, RX, 50, 34, t.text, { font: 'bold' });
+            const state = !on ? 'Off - the stock cluster shows' : st.shown ? 'Showing on the cluster' : 'Waiting for live car data';
+            cv.text(state, RX + RW, 50, 20, !on ? t.dim : st.shown ? '#3ccf6e' : '#f0a63c', { align: 'right', font: 'bold' });
+            const modeName = modeKey() === 'layoutSport' ? 'Layout in Sport' : modeKey() === 'layoutEco' ? 'Layout in ECO PRO' : 'Layout';
+            cv.text(modeName, RX, 80, 17, t.dim, { font: 'bold' });
+            cv.text((d.demo ? 'demo' : live() ? 'live' : 'not live') + '  ·  ' + (isNum(d.speed) ? Math.round(o.speedUnit === 'kmh' ? d.speed : d.speed / 1.609344) : '--') + ' ' + (o.speedUnit === 'kmh' ? 'km/h' : 'mph')
+                + '  ·  ' + (isNum(d.rpm) ? Math.round(d.rpm) : '--') + ' rpm  ·  ' + st.renderer + ', ' + st.layers + ' layers', RX + RW, 80, 16, t.dim, { align: 'right', font: 'label', literal: true });
+            const keys = slotsFor(shownId, Object.assign({}, o, { vehicle: o.vehicle }));
+            if (!keys.length) cv.text('This layout has no readouts to choose', RX, 130, 20, t.dim);
+            const CW = (RW - 12) / 2, CH = 48;
+            keys.forEach((k, i) => {
+                const x = RX + (i % 2) * (CW + 12), y = 96 + Math.floor(i / 2) * (CH + 8);
+                const own = ownSlot(shownId, k), v = slot(k, shownId), lbl = String(tr((itemOf(k) || {}).label || k)).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M)\)$/, '');
+                cv.roundRect(x, y, CW, CH, 10, withAlpha('#ffffff', 0.07));
+                if (own !== undefined) cv.roundRect(x, y, 5, CH, 2, acc);
+                cv.text(lbl, x + 16, y + 19, 14, t.dim, { font: 'bold', literal: true });
+                cv.text(optLabel(k, v), x + 16, y + 40, 18, t.text, { font: 'bold' });
+                if (own === undefined) cv.text('Common', x + CW - 14, y + 40, 14, t.dim, { align: 'right' });
+                tap(cv, x, y, CW, CH, () => openSlot(shownId, k), 'slot_' + k);
+            });
+            // the cards: CARDS a row, the arrows for more; the one showing framed
+            const pages = Math.ceil(ITEMS.length / CARDS);
+            if (cardPage < 0) cardPage = Math.max(0, Math.floor(ITEMS.indexOf(sel) / CARDS));
+            cardPage = Math.min(cardPage, pages - 1);
+            const CY = 262, CX0 = 72, CGAP = 12, CWD = Math.floor((W - 2 * CX0 - (CARDS - 1) * CGAP) / CARDS), CHT = menu.TH + 44;
+            ITEMS.slice(cardPage * CARDS, cardPage * CARDS + CARDS).forEach((id, i) => {
+                const x = CX0 + i * (CWD + CGAP), y = CY, mine = id === sel;
+                cv.roundRect(x, y, CWD, CHT, 10, mine ? acc : withAlpha('#ffffff', 0.08));
+                cv.roundRect(x + 3, y + 3, CWD - 6, CHT - 6, 8, '#0b0d11');
+                const ix = x + Math.round((CWD - menu.TW) / 2), iy = y + 8;
+                if (id === 'stock') { cv.roundRect(ix, iy, menu.TW, menu.TH, 6, '#16191f'); cv.text('Stock', ix + menu.TW / 2, iy + menu.TH / 2 + 8, 24, t.dim, { align: 'center', font: 'bold' }); }
+                else {
+                    const n = ITEMS.indexOf(id);
+                    if (!picture(cv, IMG_CARD + n, previews.thumb(id), menu.TW, menu.TH, ix, iy, !cardsUp[id])) cv.fillRect(ix, iy, menu.TW, menu.TH, '#000000');
+                    cardsUp[id] = true;
+                }
+                cv.text(id === 'stock' ? 'Stock cluster' : byId(id).title, x + CWD / 2, y + CHT - 12, 18, mine ? '#ffffff' : t.text, { align: 'center', font: 'bold' });
+                tap(cv, x, y, CWD, CHT, () => choose(id), 'card_' + id);
+            });
+            // the arrows and where the row is
+            const arrow = (x, dir) => {
+                const cy = CY + CHT / 2, can = dir < 0 ? cardPage > 0 : cardPage < pages - 1, c = can ? t.text : '#3a3f48';
+                cv.line(x + 22 - dir * 8, cy - 16, x + 22 + dir * 8, cy, 4, c);
+                cv.line(x + 22 + dir * 8, cy, x + 22 - dir * 8, cy + 16, 4, c);
+                if (can) tap(cv, x, CY, 44, CHT, () => { cardPage += dir; return render(); }, dir < 0 ? 'cards_prev' : 'cards_next');
+            };
+            arrow(20, -1); arrow(W - 64, 1);
+            for (let i = 0; i < pages; i++) cv.circle(W / 2 - (pages - 1) * 10 + i * 20, CY + CHT + 16, 4, i === cardPage ? t.text : '#3a3f48');
+            cv.text('Tap a layout: it shows on the cluster at once. Tap a readout to choose it for this layout.', 48, 444, 17, t.dim);
+            creditFooter(cv, t);
+            return ui.image('MAIN_GFX', cv);
+        }
+
         const rawOf = (name) => { const r = D.status().raw || {}; return r[name] ? r[name].slice(0, 70) : 'nothing yet'; };
         function render() {
             const t = ctx.theme();
@@ -249,7 +373,7 @@ mgu.run({
                 });
                 return ui.image('MAIN_GFX', cv);
             }
-            if (page === 1) {
+            if (page === 2) {
                 cv.text('What the car sends for the drive mode and the ranges (photograph this in each mode)', 48, 70, 24, t.text, { font: 'bold', literal: true });
                 const raw = D.status().raw || {}, d = data();
                 let y = 120;
@@ -264,22 +388,23 @@ mgu.run({
                 cv.text('Read as: ' + (d.driveMode || '-') + ', steering ' + (isNum(d.steer) ? Math.round(d.steer) + '°' : '--') + ', yaw ' + (isNum(d.yaw) ? d.yaw.toFixed(1) : '--') + ', fuel ' + (isNum(d.frange) ? Math.round(d.frange) : '--') + ', electric ' + (isNum(d.erange) ? Math.round(d.erange) : '--'), 48, y + 6, 18, t.text, { font: 'bold', literal: true });
                 return ui.image('MAIN_GFX', cv);
             }
-            if (page === 2) {
+            if (page === 3) {
                 cv.text('What the cluster shows besides this app (the renderer\'s report; photograph it with a layout up)', 48, 70, 24, t.text, { font: 'bold', literal: true });
                 const txt = cluster.rendererStatus();
                 const lines = txt ? txt.split('\n').filter((l) => /^slot 0x|^target (panel|map|hud)|^dcsm/.test(l)) : ['nothing yet'];
                 lines.slice(0, 15).forEach((l, i) => cv.text(l.slice(0, 140), 48, 116 + i * 26, 16, t.text, { font: 'label', literal: true }));
                 return ui.image('MAIN_GFX', cv);
             }
-            if (page > 2) {
-                cv.text('Signals on this car for ranges, fuel and charge (' + found.list.length + ')   ·   page ' + (page - 2) + ' of ' + (pages() - 3), 48, 70, 26, t.text, { font: 'bold', literal: true });
-                found.list.slice((page - 3) * SIGNALS_PER_PAGE, (page - 2) * SIGNALS_PER_PAGE).forEach((s, i) => {
+            if (page > 3) {
+                cv.text('Signals on this car for ranges, fuel and charge (' + found.list.length + ')   ·   page ' + (page - 3) + ' of ' + (pages() - 4), 48, 70, 26, t.text, { font: 'bold', literal: true });
+                found.list.slice((page - 4) * SIGNALS_PER_PAGE, (page - 3) * SIGNALS_PER_PAGE).forEach((s, i) => {
                     const y = 130 + i * 54;
                     cv.text(s.iface.replace(/^de\.bmw\./, '') + '  ·  ' + s.field + (s.get ? '  get' : '') + (s.notify ? '  notify' : ''), 48, y, 20, t.text, { font: 'label', literal: true });
                     cv.text(s.members.slice(0, 10).join(', ').slice(0, 150), 72, y + 24, 16, t.dim, { font: 'label', literal: true });
                 });
                 return ui.image('MAIN_GFX', cv);
             }
+            if (page === 0) return drawLayouts(cv, t);
             const st = cluster.status(), d = data(), o = options();
             const LC = require('./layout_common');
             const spd = isNum(d.speed) ? Math.round(o.speedUnit === 'kmh' ? d.speed : d.speed / 1.609344) + ' ' + (o.speedUnit === 'kmh' ? 'km/h' : 'mph') : '--';

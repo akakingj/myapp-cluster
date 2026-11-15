@@ -196,6 +196,40 @@ LAYOUTS.forEach((L) => {
     };
 });
 const byId = (id) => LAYOUTS.find((l) => l.id === id) || LAYOUTS[0];
+/*
+ * The readout places each layout has, set per layout since 0.29.0 (Settings > slotsBy: the page's picker; the
+ * Settings' readouts are every layout's default): when(o), whether it shows with options o. ENGINE: only on a petrol
+ * or diesel car (or the engine's focus); STRIP: only with Settings > Bottom strip: the cluster's own (the time's and
+ * outside's places). tools/test_slots.js checks the table against what each layout draws.
+ */
+const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm'];
+const ALWAYS = () => true, ENGINE = (o) => C0.engineFocus(o), STRIP = (o) => stripOn(o), ENGINE_STRIP = (o) => ENGINE(o) && STRIP(o);
+const DIALS = { gaugeSpeed: ALWAYS, gaugeRpm: ALWAYS }, STRIP2 = { infoA: ENGINE_STRIP, infoB: ENGINE_STRIP };
+const SLOTS = {
+    analog_sport: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
+    digital_round: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
+    modern_wide: { infoMain: ENGINE, infoA: ENGINE_STRIP },
+    digital_dash: { infoMain: ENGINE },
+    retro: Object.assign({}, DIALS, STRIP2),
+    track: Object.assign({}, STRIP2),
+    pulse: { infoMain: ENGINE },
+    gt3: {}, m: {}, sport: {},
+    classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE }, DIALS),
+    // (its own strip's middle: the main readout; a plug-in's, with the cluster's strip, its battery's power)
+    arc_tach: Object.assign({ infoMain: (o) => ENGINE(o) || !STRIP(o) }, DIALS, STRIP2),
+    twin_cowl: Object.assign({}, DIALS, STRIP2, { infoLow: STRIP }),
+};
+/** The readout places layout id has (all: whatever the car and settings; else those that show with options o). */
+function slotsFor(id, o, all) {
+    const t = SLOTS[id] || {};
+    return SLOT_KEYS.filter((k) => k in t && (all || t[k](o)));
+}
+/** A readout's value for layout id: its own (slotsBy[id][k], when it is one of the setting's values), else the Settings'. */
+function slotValue(get, item, id, k) {
+    const by = get('slotsBy'), own = by && typeof by === 'object' && by[id] ? by[id][k] : undefined;
+    const s = item(k), ok = own !== undefined && s && (s.options || []).some((x) => x[0] === own);
+    return ok ? own : get(k);
+}
 /** The layout for the drive mode now (Settings > Layout in Sport / in ECO PRO; 'same': Layout): the car's own drive
  * mode switch (FES), not the gear selector's S. get(key): the setting; d: the data (its driveMode). */
 function layoutFor(get, d) {
@@ -203,4 +237,4 @@ function layoutFor(get, d) {
     const k = /SPORT|XTRABOOST/.test(m) ? get('layoutSport') : /ECO|ELECTRIC/.test(m) ? get('layoutEco') : null;
     return k && k !== 'same' && LAYOUTS.some((l) => l.id === k) ? k : get('layout');
 }
-module.exports = { LAYOUTS, byId, layoutFor, M_MOVES, M_ON_DIAL, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };
+module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotValue, M_MOVES, M_ON_DIAL, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };

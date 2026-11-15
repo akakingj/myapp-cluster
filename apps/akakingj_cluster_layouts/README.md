@@ -21,6 +21,30 @@ digits and the road's motion every frame, and the battery's power the moment eDr
 reading at once and this app watches for it, instead of a quarter-second file cycle and a half-second scan). The
 battery's own pace sets the limit: its current answers 10-20 times a second over diagnostics.
 
+### The app's page: pick a layout, set its readouts (0.29.0)
+
+```
++---------------------------+  Arc tach                      Showing on the cluster
+|                           |  Layout                     live · 88 km/h · 3200 rpm
+|  the layout, large        |  [ Main readout: Boost  ]  [ Readout 1: Intake air ]
+|  (its demo picture)       |  [ Readout 2: Gearbox   ]  [ Speedometer gauge      ]
++---------------------------+  [ Tach gauge           ]
+ <  [card] [card] [card] [card] [card] [card]  >          (13 layouts and Stock)
+```
+
+- **The cards:** every layout's picture (made beforehand with demo readings for a petrol car, km/h, °C:
+  `previews.wad`, from `python3 tools/make_previews.py`, which draws each with `tools/preview.js`), six a row, the
+  arrows for more. A tap shows that layout on the cluster at once (Show on the cluster turned on with it); in Sport
+  or ECO PRO with a layout set for that mode (Settings > Layout in Sport / in ECO PRO) the tap changes that one.
+  **Stock** turns the layout off: the stock cluster back.
+- **The readouts:** the places the layout has for Settings' readouts (main readout, readouts 1 and 2 in the time's
+  and outside temperature's places with the car's own strip, Classic M's and Twin cowl's bottom line, the small gauges
+  in the speedometer and the tach), only those that show on this car with these settings (`layouts.js` SLOTS, which
+  `tools/test_slots.js` checks against what each layout draws). A tap lists the values: one set there is that
+  layout's alone (Settings > slotsBy, a bar on its left), *Same as in Settings* follows the Settings' value again,
+  which stays every layout's default (*Common*).
+- **Status, raw values, the renderer and the signal list** moved behind the **Signals** button (its first page).
+
 ### Analog sport
 
 Deep analog dials with satin metal bezels and warm backlit markings, coolant and oil dials set into them, and a

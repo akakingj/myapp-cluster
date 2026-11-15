@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.28.19",
+  "version": "0.29.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -869,6 +869,13 @@
         ]
       ],
       "section": "Readouts and gauges"
+    },
+    {
+      "key": "slotsBy",
+      "label": "Readouts per layout",
+      "type": "object",
+      "default": {},
+      "hidden": true
     },
     {
       "key": "tempGauge",
