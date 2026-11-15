@@ -53,6 +53,9 @@ module.exports = {
     mapWindow: WINDOW,
     gearNumber: true,   // (the gear's number alone, as theirs)
     speedGauge: false,  // (its speed bracket reads through dyn, u_speed: the engine eases the engine speed alone)
+    // its own places, set on the page (layouts.js placesFor): the brackets' bars and the bottom bar's halves
+    places: [['fuelBar', 'Bar in the speed bracket (fuel)'], ['oilBar', 'Bar in the rev bracket (oil)'], ['half1', 'Bottom bar: left'], ['half2', 'Bottom bar: right']]
+        .map(([key, label]) => ({ key, kind: 'gauge', label })),
     dap: true,          // (the cruise control's icon and set speed: the driving assistant, dap.js)
     palette: pal,
     gearText: C.gearText,
@@ -88,26 +91,32 @@ module.exports = {
             u_speed: [0], u_fuel: [0], u_oil: [0], u_stripFill: [0, 0], u_zero: [0], u_regenR: [0],
         };
         const bottom = strip ? C.STRIP_Y : 646;
+        // (the brackets' bars and the bottom bar's halves as designed, or the readings set there on the page: places
+        // fuelBar, oilBar, half1, half2)
+        const PG = (k) => (C.placeOf(o, k) ? C.placeGauge(o, C.placeOf(o, k)) : null);
+        const pF = PG('fuelBar'), pO = PG('oilBar'), pL = PG('half1'), pR = PG('half2');
+        const q = (f) => Math.round(clamp01(f) * 500) / 500;
         const part = (key, n, x, y, w, h, extra) => Object.assign({ key, kind: 'sdash', x, y, w, h, z: -90, params: Object.assign({ u_part: [n], u_off: [x, y] }, sd),
             colors: (t) => ({ rline: t.rline, rband: t.rband, rlit: t.rlit, rin: t.rin }) }, extra);
         list.push(
             part('speedSide', 1, 0, 60, 760, bottom - 60, { dyn: (d) => ({
                 u_speed: [isNum(d.speed) ? Math.round(B.scaleFrac(C.speedIn(o, d.speed), scale) * 500) / 500 : 0],
-                u_fuel: [isNum(d.fuelPct) ? Math.round(clamp01(d.fuelPct / 100) * 500) / 500 : 0],
+                u_fuel: [pF ? q(pF.frac(d)) : isNum(d.fuelPct) ? Math.round(clamp01(d.fuelPct / 100) * 500) / 500 : 0],
             }) }),
             // the engine speed eased by the engine (u_value), or in an electric drive the battery's power
             part('revSide', 2, 1160, 60, 760, bottom - 60, {
                 value: (d) => (elec(d) ? ePower(d) : isNum(d.rpm) ? clamp01(d.rpm / RPM_MAX) : 0), max: 1, sweep: true,
                 dyn: (d) => ({
                     u_ticks: [8, elec(d) ? 4 : 7], u_redFrom: [elec(d) ? 2 : B.redMarks(o, RPM_MAX, d)[0]], u_orange: [elec(d) ? 2 : B.redMarks(o, RPM_MAX, d)[1]], u_zero: [elec(d) ? E_ZERO : 0],
-                    u_oil: [isNum(d.oil) ? Math.round(clamp01((d.oil - 50) / 100) * 500) / 500 : 0],
+                    u_oil: [pO ? q(pO.frac(d)) : isNum(d.oil) ? Math.round(clamp01((d.oil - 50) / 100) * 500) / 500 : 0],
                 }) }),
             // the bottom bar's halves as gauges: the charge and the battery's power (boost and the coolant)
             part('bottomBar', 3, 400, Y(620) - 6, 1120, bottom - Y(620) + 6, { dyn: (d) => ({
-                u_stripFill: engine ? [C.boostFrac(d), C.tempFrac(d.coolant)]
-                    : [isNum(d.soc) ? clamp01(d.soc / 100) : 0, isNum(d.kw) ? Math.round(clamp01(Math.abs(d.kw) / (d.kw < 0 ? C.kwRange(d).in : C.kwRange(d).out)) * 200) / 200 : 0],
+                u_stripFill: (engine ? [C.boostFrac(d), C.tempFrac(d.coolant)]
+                    : [isNum(d.soc) ? clamp01(d.soc / 100) : 0, isNum(d.kw) ? Math.round(clamp01(Math.abs(d.kw) / (d.kw < 0 ? C.kwRange(d).in : C.kwRange(d).out)) * 200) / 200 : 0])
+                    .map((f, i) => ([pL, pR][i] ? q([pL, pR][i].frac(d)) : f)),
                 // (green while regenerating, as the other power gauges)
-                u_regenR: [!engine && isNum(d.kw) && d.kw < -0.3 ? 1 : 0],
+                u_regenR: [!engine && !pR && isNum(d.kw) && d.kw < -0.3 ? 1 : 0],
             }) }));
         // the scales' numerals: the one nearest the reading white (theirs: "near")
         const nearSpeed = (i) => (t, d) => {
@@ -159,15 +168,15 @@ module.exports = {
                 // the fuel and oil bars' labels (the bars are the shader's); full screen the oil's top label steps
                 // left of the KOMBI's box
                 const tl = (c) => String(Math.round(C.tempIn(o, c) / 10) * 10), tu = '°' + (o.tempUnit === 'c' ? 'C' : 'F');
-                list.push(T('fuelFull', [446, 441, 40, 22], 's_gl', '1', B.role('fg'), 'center'),
-                    T('fuelHalf', [504, 516, 60, 22], 's_gl', '1/2', B.role('fg'), 'center'),
-                    B.icon('fuelIcon', 549, Y(551), 26, 30, 'fuel', 'dim'),
-                    T('fuelEmpty', [567, 593, 30, 22], 's_gl', '0', B.role('fg'), 'center'),
-                    T('oilHot', [strip ? 1405 : 1336, strip ? 441 : 446, 70, 22], 's_gl', tl(150), B.role('fg'), 'center'),
-                    T('oilUnit', [1406, 474, 40, 29], 's_unit', tu, B.role('dim'), 'center'),
-                    T('oilMid', [1343, 516, 70, 22], 's_gl', tl(100), B.role('fg'), 'center'),
-                    B.icon('oilIcon', 1332, Y(554), 36, 24, 'oilcan', 'dim'),
-                    T('oilCold', [1291, 593, 70, 22], 's_gl', tl(50), B.role('fg'), 'center'));
+                list.push(T('fuelFull', [pF ? 426 : 446, 441, pF ? 80 : 40, 22], 's_gl', pF ? pF.marks[2] : '1', B.role('fg'), 'center'),
+                    T('fuelHalf', [pF ? 484 : 504, 516, pF ? 100 : 60, 22], 's_gl', pF ? pF.marks[1] : '1/2', B.role('fg'), 'center'),
+                    B.icon('fuelIcon', 549, Y(551), 26, 30, pF ? pF.bIcon : 'fuel', 'dim'),
+                    T('fuelEmpty', [pF ? 542 : 567, 593, pF ? 80 : 30, 22], 's_gl', pF ? pF.marks[0] : '0', B.role('fg'), 'center'),
+                    T('oilHot', [strip ? 1405 : 1336, strip ? 441 : 446, 70, 22], 's_gl', pO ? pO.marks[2] : tl(150), B.role('fg'), 'center'),
+                    T('oilUnit', [pO ? 1396 : 1406, 474, pO ? 60 : 40, 29], 's_unit', pO ? pO.unit : tu, B.role('dim'), 'center'),
+                    T('oilMid', [1343, 516, 70, 22], 's_gl', pO ? pO.marks[1] : tl(100), B.role('fg'), 'center'),
+                    B.icon('oilIcon', 1332, Y(554), 36, 24, pO ? pO.bIcon : 'oilcan', 'dim'),
+                    T('oilCold', [1291, 593, 70, 22], 's_gl', pO ? pO.marks[0] : tl(50), B.role('fg'), 'center'));
             }
         }
         // the bottom bar's halves, each a gauge: the charge on blue and the battery's power on red (boost and the
@@ -178,6 +187,7 @@ module.exports = {
                 { icon: 'therm', txt: (d) => (isNum(d.coolant) ? String(Math.round(C.tempIn(o, d.coolant))) : '--'), unit: tu }]
             : [{ icon: 'battery', txt: (d) => (isNum(d.soc) ? String(Math.round(d.soc)) : '--'), unit: '%' },
                 { icon: 'bolt', txt: (d) => (isNum(d.kw) ? (Math.abs(d.kw) < 10 ? d.kw.toFixed(1) : String(Math.round(d.kw))) : '--'), unit: 'kW' }];
+        [pL, pR].forEach((g, i) => { if (g) halves[i] = { icon: g.bIcon, txt: g.num, unit: g.unit }; });
         list.push(B.icon('barIconL', 652, Y(638), 30, 30, halves[0].icon, 'fg'),
             T('barL', [690, 640, 150, 26], 's_val', halves[0].txt, B.role('fg'), 'right'),
             T('barLUnit', [846, 640, 60, 29], 's_unit', halves[0].unit, B.role('dim'), 'left'),

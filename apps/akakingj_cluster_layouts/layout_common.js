@@ -419,6 +419,39 @@ const gaugeOf = (o, which) => {
         txt: (d) => g.text(o, d),
     });
 };
+/*
+ * A layout's own places, each set on the page for that layout alone (layouts.js PLACES: Settings > slotsBy, the
+ * layout's id, the place's key; 'auto' or unset: the layout as designed). placeOf: the reading put there, or null.
+ * A readout place shows a READOUTS reading (its name and figures, 'off': nothing); a gauge place a GAUGES one (its
+ * scale, red zone, name, figures and unit, and three marks along it: the scale's start, middle and end).
+ */
+const placeOf = (o, k) => { const v = o && o.places && o.places[k]; return typeof v === 'string' && v && v !== 'auto' ? v : null; };
+function placeReadout(o, key) {
+    const r = readoutOf(key);
+    if (!r) return { key, label: '', short: '', value: () => '', num: () => '', unit: '', tone: null };
+    return { key, label: nameOf(r, o, true), short: nameOf(r, o, false), num: (d) => r.num(o, d), unit: r.unit ? r.unit(o) : '',
+        value: (d) => { const n = r.num(o, d); return n + (r.unit && n !== '--' && n !== 'OFF' ? ' ' + r.unit(o) : ''); },
+        tone: TEMP_TONES[key] ? key : null };
+}
+/** a gauge's reading in its unit, figures only (its marks too) */
+const GAUGE_NUM = {
+    temp: (o, v) => String(Math.round(tempIn(o, v))),
+    boost: (o, v) => pressNum(o, v), power: (o, v) => powerNum(o, v), torque: (o, v) => torqueNum(o, v),
+    pct: (o, v) => String(Math.round(v)), timing: (o, v) => String(Math.round(v)),
+};
+const GAUGE_KIND = { coolant: 'temp', oil: 'temp', iat: 'temp', gearbox: 'temp', boost: 'boost', power: 'power', torque: 'torque', throttle: 'pct', pedal: 'pct', timing: 'timing', fuel: 'pct' };
+/** each gauge's icon: the cluster's own icons (ICON_FS) and bimmer-lab's (bimmer.js ICON) */
+const GAUGE_ICON = { coolant: [0, 'therm'], oil: [1, 'oilcan'], iat: [3, 'therm'], gearbox: [2, 'cog'], boost: [5, 'turbo'], power: [7, 'bolt'], torque: [13, 'torque'], throttle: [13, 'gauge'], pedal: [13, 'gauge'], timing: [9, 'gauge'], fuel: [4, 'fuel'] };
+function placeGauge(o, key) {
+    const g = gaugeOf(Object.assign({}, o, { gaugeSpeed: key }), 'speed');
+    if (!g) return null;
+    const kind = GAUGE_KIND[key], f = GAUGE_NUM[kind];
+    const unit = kind === 'temp' ? '°' + (o.tempUnit === 'c' ? 'C' : 'F') : kind === 'boost' ? pressLabel(o) : kind === 'power' ? powerUnitText(o)
+        : kind === 'torque' ? torqueUnit(o) : kind === 'pct' ? '%' : '°';
+    const num = (d) => { const v = g.v(d); return key === 'boost' && d.engineOn === false ? 'OFF' : isNum(v) ? f(o, v) : '--'; };
+    return Object.assign({}, g, { unit, num, icon: GAUGE_ICON[key][0], bIcon: GAUGE_ICON[key][1],
+        marks: [g.min, (g.min + g.max) / 2, g.max].map((v) => f(o, v)), tone: TEMP_TONES[key] ? key : null });
+}
 const mainKey = (o) => (readoutOf(o && o.infoMain) ? o.infoMain : 'torque');
 /** Settings > Centre readout: under the speed is Nothing: the main readout's figures, name and bar left empty */
 const mainOff = (o) => !!(o && o.infoMain === 'off');
@@ -443,7 +476,9 @@ const focus = {
     bar: (o) => (engineFocus(o) ? boostFrac : (d) => (isNum(d.soc) ? d.soc / 100 : 0)),
     /** what the engine readings need read from the engine unit */
     needs: (o) => (engineFocus(o) ? ['boostActual', 'boostTarget', 'timing', 'hpfp'].concat(...[o.infoA || 'iat', o.infoB || 'gearbox', mainKey(o), o.infoLow || 'coolant'].map((k) => (readoutOf(k) && readoutOf(k).needs) || []),
-        ...[o.gaugeSpeed, o.gaugeRpm].map((k) => (GAUGES[k] && GAUGES[k].needs) || [])) : []),
+        ...[o.gaugeSpeed, o.gaugeRpm].map((k) => (GAUGES[k] && GAUGES[k].needs) || [])) : []).concat(
+        // (and what a layout's own places show: set on the page)
+        ...Object.keys((o && o.places) || {}).map((k) => { const v = o.places[k], r = READOUTS[v] || GAUGES[v]; return (r && r.needs) || []; })),
 };
 /** Outside temperature with its unit letter: '48°F'. */
 const outsideText = (o, c) => (isNum(c) ? Math.round(tempIn(o, c)) + '°' + (o.tempUnit === 'c' ? 'C' : 'F') : '--');
@@ -478,5 +513,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    STRIP_Y, strip, stripGauges, STRIP_DROP, electric, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    STRIP_Y, strip, stripGauges, STRIP_DROP, electric, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

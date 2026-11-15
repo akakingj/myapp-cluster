@@ -21,7 +21,7 @@ const clock = require('./clock');
 const mgu = require('./kit/mgu');
 const { ClusterRender } = require('./cluster_render_client');
 const { startCluster, STALE_MS, frozen } = require('./engine');
-const { LAYOUTS, byId, layoutFor, slotValue, slotsFor } = require('./layouts');
+const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, placesFor, placeItem } = require('./layouts');
 const menu = require('./menu');
 const { withAlpha } = require('./kit/canvas');
 const { t: tr } = require('./kit/i18n');
@@ -87,9 +87,15 @@ mgu.run({
         // the Settings' value, every layout's default
         const itemOf = (k) => (typeof settings.item === 'function' ? settings.item(k) : ((ctx.spec && ctx.spec.settings) || []).find((x) => x.key === k));
         const slot = (k, id) => slotValue((x) => settings.get(x), itemOf, id || layout.id, k);
+        /** a layout's own places (layouts.js placesFor: set on the page, for it alone; unset: as designed) */
+        const placesOf = (id) => {
+            const by = settings.get('slotsBy'), own = (by && typeof by === 'object' && by[id]) || {}, out = {};
+            placesFor(id).forEach((p) => { if (typeof own[p.key] === 'string') out[p.key] = own[p.key]; });
+            return out;
+        };
         const options = () => ({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
-            powerUnit: settings.get('powerUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), gFlipLat: settings.get('gFlipLat'), gFlipLong: settings.get('gFlipLong'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'),
+            powerUnit: settings.get('powerUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), gFlipLat: settings.get('gFlipLat'), gFlipLong: settings.get('gFlipLong'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'), places: placesOf(layout.id),
             amberRpm: settings.get('amberRpm'), shiftBefore: settings.get('shiftBefore'), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
@@ -271,14 +277,17 @@ mgu.run({
             return render();
         };
         const ownSlot = (id, k) => { const by = settings.get('slotsBy'); return by && by[id] && by[id][k] !== undefined ? by[id][k] : undefined; };
-        const optLabel = (k, v) => { const it = itemOf(k), o = it && (it.options || []).find((x) => x[0] === v); return o ? o[1] : String(v); };
+        /** a readout setting's item, or a layout's own place's (its kind's values, 'auto': as designed) */
+        const itemFor = (id, k) => placeItem(id, k, ctx.spec) || itemOf(k);
+        const optLabel = (k, v, id) => { const it = itemFor(id, k), o = it && (it.options || []).find((x) => x[0] === v); return o ? o[1] : String(v); };
         const openSlot = (id, k) => {
-            const it = itemOf(k), cur = ownSlot(id, k);
-            const opts = [['', 'Same as in Settings']].concat(it.options);
+            const it = itemFor(id, k), cur = ownSlot(id, k), place = !!placeItem(id, k, ctx.spec);
+            // (a place: its own values, the first back to as designed; a readout: the Settings' value first)
+            const opts = place ? it.options.map((x) => (x[0] === 'auto' ? ['', x[1]] : x)) : [['', 'Same as in Settings']].concat(it.options);
             const sheet = Sheet && menu.pickSheet(Sheet, byId(id).title, it.label, opts, cur === undefined ? '' : cur, (v) => setSlot(id, k, v));
             if (sheet && ui.sheet && ui.sheet(sheet) !== false) return null;
             // (no sheet here: the next value, then back to the Settings')
-            const vals = it.options.map((x) => x[0]), i = cur === undefined ? -1 : vals.indexOf(cur);
+            const vals = it.options.map((x) => x[0]).filter((v) => !place || v !== 'auto'), i = cur === undefined ? -1 : vals.indexOf(cur);
             return setSlot(id, k, i + 1 < vals.length ? vals[i + 1] : '');
         };
         /** A picture at x, y (w x h): a pixel image on the car's renderer, drawn in place on a plain canvas (the tests). */
@@ -310,17 +319,20 @@ mgu.run({
             cv.text(modeName, RX, 80, 17, t.dim, { font: 'bold' });
             cv.text((d.demo ? 'demo' : live() ? 'live' : 'not live') + '  ·  ' + (isNum(d.speed) ? Math.round(o.speedUnit === 'kmh' ? d.speed : d.speed / 1.609344) : '--') + ' ' + (o.speedUnit === 'kmh' ? 'km/h' : 'mph')
                 + '  ·  ' + (isNum(d.rpm) ? Math.round(d.rpm) : '--') + ' rpm  ·  ' + st.renderer + ', ' + st.layers + ' layers', RX + RW, 80, 16, t.dim, { align: 'right', font: 'label', literal: true });
-            const keys = slotsFor(shownId, Object.assign({}, o, { vehicle: o.vehicle }));
+            // its readouts (those showing on this car with these settings), then its own places (those showing now)
+            const so = Object.assign({}, o, { leftDial: slot('leftDial', shownId), places: placesOf(shownId) });
+            const keys = slotsFor(shownId, so).concat(placesFor(shownId).filter((p) => !p.when || p.when(so)).map((p) => p.key));
             if (!keys.length) cv.text('This layout has no readouts to choose', RX, 130, 20, t.dim);
-            const CW = (RW - 12) / 2, CH = 48;
+            // (two a row; three or four where it has more, three rows)
+            const COLS = keys.length <= 6 ? 2 : keys.length <= 9 ? 3 : 4, CW = (RW - 12 * (COLS - 1)) / COLS, CH = 48;
             keys.forEach((k, i) => {
-                const x = RX + (i % 2) * (CW + 12), y = 96 + Math.floor(i / 2) * (CH + 8);
-                const own = ownSlot(shownId, k), v = slot(k, shownId), lbl = String(tr((itemOf(k) || {}).label || k)).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M|Old M|ID6 M)\)$/, '');
+                const x = RX + (i % COLS) * (CW + 12), y = 96 + Math.floor(i / COLS) * (CH + 8), place = !!placeItem(shownId, k, ctx.spec);
+                const own = ownSlot(shownId, k), v = place ? (own === undefined ? 'auto' : own) : slot(k, shownId), lbl = String(tr((itemFor(shownId, k) || {}).label || k)).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M|Old M|ID6 M)\)$/, '');
                 cv.roundRect(x, y, CW, CH, 10, withAlpha('#ffffff', 0.07));
                 if (own !== undefined) cv.roundRect(x, y, 5, CH, 2, acc);
                 cv.text(lbl, x + 16, y + 19, 14, t.dim, { font: 'bold', literal: true });
-                cv.text(optLabel(k, v), x + 16, y + 40, 18, t.text, { font: 'bold' });
-                if (own === undefined) cv.text('Common', x + CW - 14, y + 40, 14, t.dim, { align: 'right' });
+                cv.text(optLabel(k, v, shownId), x + 16, y + 40, COLS > 2 ? 16 : 18, t.text, { font: 'bold' });
+                if (own === undefined && !place && COLS === 2) cv.text('Common', x + CW - 14, y + 40, 14, t.dim, { align: 'right' });
                 tap(cv, x, y, CW, CH, () => openSlot(shownId, k), 'slot_' + k);
             });
             // the cards: CARDS a row, the arrows for more; the one showing framed

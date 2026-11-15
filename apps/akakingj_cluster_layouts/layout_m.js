@@ -95,6 +95,12 @@ function gauges(o, engine) {
         bottom: [fuel, charge],
     };
 }
+/** A gauge as the M8's for a reading set on the page (layout_common.placeGauge): its icon, figures and unit, its
+ * scale's start, middle and end, red from its red zone. */
+function placed(o, key) {
+    const g = C.placeGauge(o, key);
+    return { icon: g.bIcon, unit: g.unit, read: g.num, labels: [[0, g.marks[0]], [0.5, g.marks[1]], [1, g.marks[2]]], value: g.frac, zero: 0, lo: -1, hi: g.redFrac < 1 ? g.redFrac : 2 };
+}
 /** One gauge at (x, y), w wide: its icon, its unit and its bar (MBAR_FS, which draws the scale's numbers too: one
  * layer, not three text pieces). */
 function gauge(T, key, x, y, w, g) {
@@ -121,6 +127,9 @@ module.exports = {
     speedGauge: false,  // (the speed in figures only, as theirs)
     gearNumber: true,   // (the gear's number, as the M8's)
     ownStripGauges: true,   // (the fuel and the charge are its own bars along the bottom: none of the strip's)
+    // its own places, set on the page (layouts.js placesFor): the cards' gauges and the bars along the bottom
+    places: [['card1', 'Left card: top'], ['card2', 'Left card: bottom'], ['card3', 'Right card: top'], ['card4', 'Right card: bottom'],
+        ['bar1', 'Bottom bar: left'], ['bar2', 'Bottom bar: right']].map(([key, label]) => ({ key, kind: 'gauge', label })),
     palette: pal,
     gearText: C.gearText,
 
@@ -132,6 +141,11 @@ module.exports = {
         const fg = B.role('fg'), dim = B.role('dim'), faint = B.role('faint');
         // the gauges, as the M8's (its coolant and boost bars, left): engine left, eDrive right, fuel and charge below
         const G = gauges(o, engine);
+        // (each as designed, or the reading set there on the page: places card1-card4, bar1-bar2)
+        const pk = (k, g) => (C.placeOf(o, k) ? placed(o, C.placeOf(o, k)) : g);
+        G.left = G.left.map((g, i) => pk('card' + (i + 1), g));
+        G.right = G.right.map((g, i) => pk('card' + (i + 3), g));
+        G.bottom = G.bottom.map((g, i) => pk('bar' + (i + 1), g));
         const rows = strip ? [222, 324] : [104, 462];   // (the right ones; full screen above and below the KOMBI's gear box, y 262-454)
         // the background: black (with the map, round its window; the stock centre, round its area)
         const W2 = WINDOW, around = [{ x: 0, y: 0, w: 1920, h: W2.y }, { x: 0, y: W2.y + W2.h, w: 1920, h: 720 - W2.y - W2.h },

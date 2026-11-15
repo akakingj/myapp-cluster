@@ -85,6 +85,7 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
   read twice a round while shown and kept 8 s (a round can take 3 s or more while driving). The car's
   `AcceleratorPedal` signal is not used (its scaling unconfirmed). Check against Live Data.
 - Centre: engine power and the accelerator pedal for the custom pages' slots.
+- Layouts 0.35.0: every fixed place (gauges, tiles, rows, boxes) can be set on the page per layout (layouts.js placesFor).
 - Layouts 0.34.0: always the car's own bottom strip; the full-screen form (and Settings > Bottom strip, Cluster: M car,
   Frame behind the gear box, Background, JDM 1: the gear in the arc) removed. Layout 'ID6 M' (0.33.0; an original
   design after the M cars' analog clusters of the mid 2010s), the E9x-style one renamed 'Old M'.

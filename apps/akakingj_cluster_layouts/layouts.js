@@ -150,6 +150,20 @@ const SLOTS = {
     twin_cowl: Object.assign({}, DIALS, STRIP2, { infoLow: STRIP }),
 };
 /** The readout places layout id has (all: whatever the car and settings; else those that show with options o). */
+/*
+ * Every other place a layout has (since 0.35.0 each can be set on the page, for that layout alone): its module's
+ * places, [{ key, kind: 'readout' | 'gauge', label }], set in Settings > slotsBy under the layout's id ('auto' or
+ * unset: as designed; layout_common.placeOf). PLACE_OPTIONS: what each kind can show (as Settings' readouts and small
+ * gauges: the app.json lists); tools/test_slots.js checks each place changes what its layout draws.
+ */
+const placesFor = (id) => (byId(id).places || []);
+function placeItem(id, k, spec) {
+    const p = placesFor(id).find((x) => x.key === k);
+    if (!p) return null;
+    const src = (spec && spec.settings || []).find((s) => s.key === (p.kind === 'gauge' ? 'gaugeSpeed' : 'infoA'));
+    const opts = ((src && src.options) || []).filter((x) => x[0] !== 'auto');
+    return { key: k, label: p.label, kind: p.kind, default: 'auto', options: [['auto', "The layout's own"]].concat(opts) };
+}
 function slotsFor(id, o, all) {
     const t = SLOTS[id] || {};
     return SLOT_KEYS.filter((k) => k in t && (all || t[k](o)));
@@ -167,4 +181,4 @@ function layoutFor(get, d) {
     const k = /SPORT|XTRABOOST/.test(m) ? get('layoutSport') : /ECO|ELECTRIC/.test(m) ? get('layoutEco') : null;
     return k && k !== 'same' && LAYOUTS.some((l) => l.id === k) ? k : get('layout');
 }
-module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotValue, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };
+module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotValue, placesFor, placeItem, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };

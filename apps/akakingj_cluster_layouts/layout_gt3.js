@@ -115,6 +115,9 @@ module.exports = {
     id: 'gt3',
     title: 'GT3',
     stripGear: true,   // (the big gear is the layout's centre: kept over the car's own strip too)
+    // its own places, set on the page (layouts.js placesFor): the boxes either side and the readings under the gear
+    places: [['box1', 'Right box: top'], ['box2', 'Right box: middle'], ['box3', 'Right box: bottom (last shift)'], ['box4', 'Left box: bottom (tyres)'],
+        ['gear1', 'Under the gear: left'], ['gear2', 'Under the gear: right']].map(([key, label]) => ({ key, kind: 'readout', label, when: (o) => o.centre !== 'map' && o.centre !== 'stock' })),
     palette: pal,
     gearText: C.gearText,
 
@@ -137,6 +140,12 @@ module.exports = {
         const second = ice || engine
             ? { label: 'SHIFT AT', value: (d) => String(shiftPoint(o, d.oil).rpm), c: (t, d) => (shiftPoint(o, d.oil).cold ? { color: [t.cold, 1], glow: [t.cold, 0.2] } : acc(t)) }
             : { label: 'CHARGE', value: (d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--'), c: (t) => ({ color: [t.ev, 1], glow: [t.ev, 0.2] }) };
+        // (the boxes and the readings under the gear as designed, or the reading set there on the page: places box1-box4,
+        // gear1-gear2; not with the map, where the boxes hold other things)
+        const P = (k) => (map ? null : C.placeOf(o, k)), Rd = (k) => C.placeReadout(o, P(k));
+        const toneOf = (k, piece) => (P(k) && Rd(k).tone ? Object.assign({}, piece, { tone: Rd(k).tone }) : piece);
+        if (P('box1')) Object.assign(power, { label: Rd('box1').label, value: Rd('box1').value, c: white, tone: Rd('box1').tone });
+        if (P('box2')) Object.assign(second, { label: Rd('box2').label, value: Rd('box2').value, c: white, tone: Rd('box2').tone });
         const list = [C.flat('bg', 0, 0, 1920, 720, 'bg')];
         if (map) {
             // with the map: around its window, the rev bar under it, the gear and temperatures where the tyres
@@ -155,10 +164,10 @@ module.exports = {
             list.push(...box('gear', GX, GY, GW, GH, 'GEAR'),
                 C.text('gear', GX, GY + 40, GW, GH - 140, C.gearText, (t, d) => ({ color: [C.gearText(d) === 'R' ? t.red : isNum(d.rpm) && d.rpm >= shiftPoint(o, d.oil).rpm ? t.red : t.text, 1], glow: [t.glow, 0.3] })),
                 C.flat('gearRule', GX + 40, GY + GH - 96, GW - 80, 2, 'tileEdge'),
-                C.text('coolantLbl', GX + 40, GY + GH - 84, 340, 18, 'COOLANT', lbl, { align: 0, tracking: 0.12 }),
-                C.text('coolant', GX + 40, GY + GH - 62, 340, 50, (d) => C.tempText(o, d.coolant), hot('coolant', C.hotAt(o, 'coolant')), { align: 0 }),
-                C.text('oilLbl', GX + GW - 380, GY + GH - 84, 340, 18, 'OIL', lbl, { align: 1, tracking: 0.12 }),
-                C.text('oil', GX + GW - 380, GY + GH - 62, 340, 50, (d) => C.tempText(o, d.oil), hot('oil', C.hotAt(o, 'oil')), { align: 1 }));
+                C.text('coolantLbl', GX + 40, GY + GH - 84, 340, 18, P('gear1') ? Rd('gear1').label : 'COOLANT', lbl, { align: 0, tracking: 0.12 }),
+                toneOf('gear1', C.text('coolant', GX + 40, GY + GH - 62, 340, 50, P('gear1') ? Rd('gear1').value : (d) => C.tempText(o, d.coolant), P('gear1') ? white : hot('coolant', C.hotAt(o, 'coolant')), { align: 0 })),
+                C.text('oilLbl', GX + GW - 380, GY + GH - 84, 340, 18, P('gear2') ? Rd('gear2').label : 'OIL', lbl, { align: 1, tracking: 0.12 }),
+                toneOf('gear2', C.text('oil', GX + GW - 380, GY + GH - 62, 340, 50, P('gear2') ? Rd('gear2').value : (d) => C.tempText(o, d.oil), P('gear2') ? white : hot('oil', C.hotAt(o, 'oil')), { align: 1 })));
         }
         // left: the speed, the engine speed, the tyres (with the map: the gear)
         list.push(...box('speedB', L.x, top, L.w, h1, 'SPEED ' + C.speedUnit(o).toUpperCase()),
@@ -166,18 +175,21 @@ module.exports = {
             ...box('rpmB', L.x, y2, L.w, h2, 'RPM'),
             C.text('rpmNow', L.x + 14, y2 + 32, L.w - 28, h2 - 38, rpmNow, (t, d) => ({ color: [isNum(d.rpm) && d.rpm >= shiftPoint(o, d.oil).rpm ? t.red : t.text, 1], glow: [t.glow, 0.1] }), { align: 1 }));
         if (map) list.push(...box('mgear', L.x, y3, L.w, h3, 'GEAR'), C.text('gear', L.x + 14, y3 + 32, L.w - 28, h3 - 38, C.gearText, white));
+        else if (P('box4')) list.push(...box('tyres', L.x, y3, L.w, h3, Rd('box4').label), toneOf('box4', C.text('tyresVal', L.x + 14, y3 + 36, L.w - 28, h3 - 46, Rd('box4').value, white, { align: 1 })));
         else list.push(...tyres(o, L.x, y3, L.w, h3));
         // right: the battery's power (boost), the charge (shift point), the last shift (with the map: the temperatures)
         list.push(...box('powerB', R.x, top, R.w, h1, power.label),
-            C.text('power', R.x + 14, top + 36, R.w - 28, h1 - 46, power.value, power.c, { align: 1 }),
+            Object.assign(C.text('power', R.x + 14, top + 36, R.w - 28, h1 - 46, power.value, power.c, { align: 1 }), power.tone ? { tone: power.tone } : {}),
             ...box('secondB', R.x, y2, R.w, h2, second.label),
-            C.text('second', R.x + 14, y2 + 32, R.w - 28, h2 - 38, second.value, second.c, { align: 1 }));
+            Object.assign(C.text('second', R.x + 14, y2 + 32, R.w - 28, h2 - 38, second.value, second.c, { align: 1 }), second.tone ? { tone: second.tone } : {}));
         if (map) {
             // (each half no taller than holds three figures, '104°': the narrow tile ran them over its edges)
             const tw = (R.w - 28) / 2, th = Math.min(h3 - 42, Math.floor(tw / 1.45)), ty = y3 + 34 + Math.round((h3 - 42 - th) / 2);
             list.push(...box('temps', R.x, y3, R.w, h3, 'COOLANT  ·  OIL'),
                 C.text('coolant', R.x + 14, ty, tw, th, (d) => C.tempText(o, d.coolant), hot('coolant', C.hotAt(o, 'coolant')), { align: 0 }),
                 C.text('oil', R.x + R.w / 2, ty, tw, th, (d) => C.tempText(o, d.oil), hot('oil', C.hotAt(o, 'oil')), { align: 1 }));
+        } else if (P('box3')) {
+            list.push(...box('lastB', R.x, y3, R.w, h3, Rd('box3').label), toneOf('box3', C.text('lastVal', R.x + 14, y3 + 36, R.w - 28, h3 - 46, Rd('box3').value, white, { align: 1 })));
         } else {
             list.push(...box('lastB', R.x, y3, R.w, h3, 'LAST SHIFT'),
                 C.text('lastGears', R.x + R.w - 120, y3 + 6, 106, 18, () => (score.last ? score.last.from + '-' + score.last.to : ''), lbl, { align: 1 }),

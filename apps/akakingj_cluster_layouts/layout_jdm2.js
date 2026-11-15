@@ -125,7 +125,8 @@ function leftDial(o, cx, cy, R) {
         }));
     }
     if (what === 'temps') {
-        const gs = TEMPS.map((k) => C.gaugeOf(Object.assign({}, o, { gaugeSpeed: k }), 'speed'));
+        // (each quarter's reading as designed, or the one set there on the page: places temp1-4)
+        const gs = TEMPS.map((k, i) => C.placeGauge(o, C.placeOf(o, 'temp' + (i + 1)) || k));
         const big = Math.round(R * 0.13), small = Math.round(R * 0.07), w = Math.round(R * 0.62);
         return [Object.assign({ key: 'tempDial', kind: 'jdm' }, base, {
             params: { u_mode: [7], u_origin: [cx - R, cy - R], u_t: [0, 0, 0, 0], u_tr: gs.map((g) => Math.min(1.01, Math.round(g.redFrac * 1000) / 1000)) },
@@ -135,7 +136,7 @@ function leftDial(o, cx, cy, R) {
             const qx = i === 0 || i === 3 ? -1 : 1, qy = i < 2 ? -1 : 1;
             const x = Math.round(cx + qx * R * 0.36 - w / 2), y = Math.round(cy + qy * R * 0.36 - (big + small + 6) / 2);
             return [
-                Object.assign(C.text(TEMPS[i] + 'Temp', x, y, w, big, g.txt, white), { tone: TEMPS[i] }),
+                Object.assign(C.text(TEMPS[i] + 'Temp', x, y, w, big, (d) => { const n = g.num(d); return n === '--' || n === 'OFF' ? n : n + (g.unit[0] === '°' ? '°' : ' ' + g.unit); }, white), g.tone ? { tone: g.tone } : {}),
                 C.text(TEMPS[i] + 'TempLbl', x, y + big + 6, w, small, g.label, lbl, { tracking: 0.1 }),
             ];
         }));
@@ -201,6 +202,8 @@ module.exports = {
     speedGauge: false,  // (the speed in figures in the tach; a speedometer only with Settings > JDM 2: left dial)
     // the engine unit's readings its left dial shows (the temperatures: the intake air and the gearbox oil)
     needs: (o) => (o && o.leftDial === 'temps' ? ['iat', 'gearbox'] : []),
+    // its own places, set on the page (layouts.js placesFor): the temperatures' four quarters, while the left dial shows them
+    places: ['top left', 'top right', 'bottom right', 'bottom left'].map((w, i) => ({ key: 'temp' + (i + 1), kind: 'gauge', label: 'Left dial: temperatures, ' + w, when: (o) => o.leftDial === 'temps' })),
     // (its own fuel gauge: the strip's fuel bar only with another reading there)
     stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
 

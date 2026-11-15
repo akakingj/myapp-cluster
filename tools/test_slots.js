@@ -48,6 +48,23 @@ L.LAYOUTS.forEach((l) => {
         });
     });
 });
+/* each layout's own places (0.35.0: every place can be set on the page): another reading there changes what the layout
+ * draws (where it shows: with its condition met), as designed ('auto') draws as with nothing set; each has its
+ * Korean, and its item lists its kind's values */
+const KO = JSON.parse(fs.readFileSync(path.join(ROOT, 'kit', 'runtime', 'locales', 'ko.json'), 'utf8'));
+L.LAYOUTS.forEach((l) => (l.places || []).forEach((p) => check(l.id + ': its place ' + p.key + ' (' + p.kind + ') changes what it draws', () => {
+    ['ice', 'phev'].forEach((vehicle) => {
+        const o = Object.assign({}, base, { vehicle, bottomStrip: 'stock', leftDial: 'temps' });
+        assert(!p.when || p.when(o), 'shows with the readings in the centre');
+        const own = drawn(l.id, o);
+        assert.strictEqual(drawn(l.id, Object.assign({}, o, { places: { [p.key]: 'auto' } })), own, 'auto: as designed');
+        const it = L.placeItem(l.id, p.key, SPEC);
+        assert(it && it.options[0][0] === 'auto' && it.options.length > 8, 'its values');
+        const changed = it.options.slice(1).filter(([v]) => drawn(l.id, Object.assign({}, o, { places: { [p.key]: v } })) !== own).map(([v]) => v);
+        assert(changed.length >= it.options.length - 2, vehicle + ': only ' + changed.join(',') + ' change it');
+    });
+    assert(Object.prototype.hasOwnProperty.call(KO, p.label), 'no Korean for ' + p.label);
+})));
 check('all: whatever the car, every place the layout can have', () => {
     assert.deepStrictEqual(L.slotsFor('arc_tach', base, true), ['infoMain', 'infoA', 'infoB', 'gaugeSpeed', 'gaugeRpm']);
     assert.deepStrictEqual(L.slotsFor('m', base, true), []);

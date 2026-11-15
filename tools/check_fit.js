@@ -24,6 +24,13 @@ RKEYS.forEach((k) => variants.push({ infoA: k, infoB: k, infoMain: k, infoLow: k
 ['hp', 'ps', 'kw'].forEach((p) => variants.push({ powerUnit: p, gaugeSpeed: 'power', gaugeRpm: 'power', infoA: 'power', infoB: 'power', infoMain: 'power', tag: 'power in ' + p }));
 ['nm', 'kgm', 'lbft'].forEach((p) => variants.push({ torqueUnit: p, gaugeSpeed: 'torque', gaugeRpm: 'torque', infoA: 'torque', infoB: 'torque', infoMain: 'torque', tag: 'torque in ' + p }));
 variants.push({ tempUnit: 'f', gaugeSpeed: 'gearbox', gaugeRpm: 'oil', tag: 'temperatures in F' });
+// each layout's own places (0.35.0) set to each reading: every gauge place to a gauge's, every readout place to a readout's
+{
+    const all = (g, r) => { const p = {}; LAYOUTS.forEach((l) => (l.places || []).forEach((x) => { p[x.key] = x.kind === 'gauge' ? g : r; })); return p; };
+    KEYS.forEach((k, i) => variants.push({ leftDial: 'temps', places: all(k, RKEYS[i % RKEYS.length]), tag: 'places ' + k + ' / ' + RKEYS[i % RKEYS.length] }));
+    ['psi', 'kpa'].forEach((pu) => variants.push({ pressUnit: pu, leftDial: 'temps', places: all('boost', 'boost'), tag: 'places boost in ' + pu }));
+    variants.push({ tempUnit: 'f', leftDial: 'temps', places: all('gearbox', 'gearbox'), tag: 'places in F' });
+}
 // and each in every arrangement over the car's own strip (the only form): the readings, the map or the stock centre
 const MODES = [];
 [['stock', 'info'], ['stock', 'map'], ['stock', 'stock']].forEach(([bottomStrip, centre]) =>

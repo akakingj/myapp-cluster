@@ -51,6 +51,12 @@ SETS.push({ tag: 'map', centre: 'map' });
 SETS.push({ tag: 'stock centre', centre: 'stock' });
 ['speed', 'tyres', 'temps'].forEach((w) => SETS.push({ tag: 'JDM 2 left dial ' + w, leftDial: w }));
 SETS.push({ tag: 'G meter swapped, 1 g', gScale: '1', gFlipLat: 'on', gFlipLong: 'on' });
+// each layout's own places set (0.35.0): every gauge place to one reading, every readout place to another
+{
+    const { LAYOUTS: LS } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
+    const all = (g, r) => { const p = {}; LS.forEach((l) => (l.places || []).forEach((x) => { p[x.key] = x.kind === 'gauge' ? g : r; })); return p; };
+    [['boost', 'gear'], ['fuel', 'off'], ['gearbox', 'timing'], ['torque', 'boost']].forEach(([g, r]) => SETS.push({ tag: 'places ' + g + ' / ' + r, leftDial: 'temps', places: all(g, r) }));
+}
 SETS.push({ tag: 'plug-in hybrid', vehicle: 'phev' });
 SETS.push({ tag: 'shift warning, no colours', shiftWarn: 'on', tempTone: 'off' });
 SETS.push({ tag: 'shift warning, gauges', shiftWarn: 'on', gaugeSpeed: 'coolant', gaugeRpm: 'gearbox', infoA: 'oil', infoB: 'coolant', infoMain: 'gearbox' });

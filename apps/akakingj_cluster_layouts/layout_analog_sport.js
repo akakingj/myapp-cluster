@@ -61,17 +61,19 @@ function bigDial(o, which, cx, size, cy) {
             : (d) => (C.electric(o, d) ? C.kwText(d) : 'x1000 rpm'), speed ? lbl : (t, d) => (C.electric(o, d) ? powerTxt(t, d) : lbl(t)), { tracking: 0.08 }),
     ]);
     if (speed) return list;
-    // the coolant gauge in the tach's foot
-    const sub = Math.round(170 * k), subDy = Math.round(176 * k), ks = sub / 640, ch = C.chOf(o, 'coolant'), scy = cy + subDy;
+    // the coolant gauge in the tach's foot (or the reading set there on the page: place footGauge)
+    const g = C.placeGauge(o, C.placeOf(o, 'footGauge') || 'coolant'), key = g.key;
+    const sub = Math.round(170 * k), subDy = Math.round(176 * k), ks = sub / 640, ch = C.chOf(o, key), scy = cy + subDy;
+    const fig = (d) => { const n = g.num(d); return n === '--' || n === 'OFF' ? n : n + (g.unit[0] === '°' ? '°' : ' ' + g.unit); };
     return list.concat([
         {
             key: 'coolantDial', kind: 'dial', x: cx - sub / 2, y: scy - sub / 2, w: sub, h: sub, z: 5,
-            params: { u_scale: [100, 50, 12.5, ch ? C.chRed(o, ch) * 100 : C.hotAt(o, 'coolant') - 40], u_arc: [-120, 120, 0, 0], u_needle_dim: [60 * sub / 170, 14 * sub / 170, 5, 2], u_look: [0.2, 1, 0, 0], u_look2: [Math.max(4, Math.round(8 * sub / 170)), ks, 0.6, 0.6] },
-            colors: dialColours, value: ch ? (d) => C.chFrac(ch, d.coolant) * 100 : (d) => (C.isNum(d.coolant) ? Math.max(0, d.coolant - 40) : 0), max: 100, sweep: true,
+            params: { u_scale: [100, 50, 12.5, ch ? C.chRed(o, ch) * 100 : Math.min(101, g.redFrac * 100)], u_arc: [-120, 120, 0, 0], u_needle_dim: [60 * sub / 170, 14 * sub / 170, 5, 2], u_look: [0.2, 1, 0, 0], u_look2: [Math.max(4, Math.round(8 * sub / 170)), ks, 0.6, 0.6] },
+            colors: dialColours, value: ch ? (d) => C.chFrac(ch, d[ch]) * 100 : (d) => g.frac(d) * 100, max: 100, sweep: true,
         },
-        C.text('coolantLbl', cx - 60, scy + Math.round(24 * k), 120, Math.max(11, Math.round(13 * k)), 'COOLANT', lbl, { tracking: 0.16 }),
+        C.text('coolantLbl', cx - 60, scy + Math.round(24 * k), 120, Math.max(11, Math.round(13 * k)), g.label, lbl, { tracking: 0.16 }),
     ], ch ? C.chMarks('coolantCh', cx, scy, sub * 0.35, -116, 116, Math.max(12, Math.round(16 * k)), white) : [
-        Object.assign(C.text('coolantFig', cx - 70, scy + sub / 2 + Math.round(2 * k), 140, Math.round(24 * k), (d) => C.tempText(o, d.coolant), glowText), { tone: 'coolant' }),
+        Object.assign(C.text('coolantFig', cx - 70, scy + sub / 2 + Math.round(2 * k), 140, Math.round(24 * k), fig, glowText), g.tone ? { tone: g.tone } : {}),
     ]);
 }
 
@@ -112,6 +114,8 @@ module.exports = {
     gearText: C.gearText,
     // (its own fuel gauge by the speedometer: the strip's fuel bar only with another reading there)
     stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
+    // its own places, set on the page (layouts.js placesFor)
+    places: [{ key: 'footGauge', kind: 'gauge', label: "Gauge in the tach's foot" }],
 
     /*
      * Built around what the glass and the KOMBI keep (layout_common: the camera's cowl, the dark box where the

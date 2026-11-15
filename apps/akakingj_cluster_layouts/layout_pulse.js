@@ -58,6 +58,8 @@ module.exports = {
     id: 'pulse',
     stripGear: true,   // (the gear beside the speed: kept over the car's own strip too)
     title: 'Pulse',
+    // its own places, set on the page (layouts.js placesFor): the bottom row's readings but the main readout's (the third)
+    places: [1, 2, 4, 5, 6].map((n) => ({ key: 'row' + n, kind: 'readout', label: 'Bottom row: reading ' + n })),
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
 
@@ -109,6 +111,15 @@ module.exports = {
             const kwC = C.engineFocus(o) ? txt : (t, d) => ({ color: [C.isNum(d.kw) && d.kw < -0.3 ? t.regen || '#3ddc84' : t.text, 1], glow: [t.glow, 0] });   // (its palettes have no regen colour: NaN on the car)
             const rpmNum = (d) => (d.engineOn === false ? 'OFF' : C.isNum(d.rpm) ? String(Math.round(d.rpm / 50) * 50) : '--');
             // (the gear stays: the layout is made round it and the speed)
+            // (each reading in the row as designed, or the one set there on the page: places row1-row6, the main
+            // readout's own setting in the third)
+            const cell = (place, key, x, value, label, colors) => {
+                const v = C.placeOf(o, place);
+                if (!v) return up(key, x, 526, 236, 64, value, label, colors, 24);
+                const r = C.placeReadout(o, v), c = up(key, x, 526, 236, 64, r.value, r.label, txt, 24);
+                if (r.tone) c[1] = Object.assign({}, c[1], { tone: r.tone });
+                return c;
+            };
             return [bg('bg', 0, 0, 1920, 720),
                 C.text('speedDigits', 690, 150, 540, 274, (d) => C.speedText(o, d), big),
                 C.text('speedUnit', 690, 424, 540, 30, C.speedUnit(o), lbl, { tracking: 0.3 }),
@@ -116,13 +127,13 @@ module.exports = {
                 rpmBar(o, 'rpmBar', 200, 474, 1520, 34, 64),
             ].concat(
                 up('rpmNum', 1250, 272, 340, 96, rpmNum, 'ENGINE RPM', txt, 24),
-                up('oil', 250, 526, 236, 64, (d) => C.tempText(o, d.oil), 'OIL', hotC('oil', C.hotAt(o, 'oil')), 24),
-                up('coolant', 488, 526, 236, 64, (d) => C.tempText(o, d.coolant), 'COOLANT', hotC('coolant', C.hotAt(o, 'coolant')), 24),
+                cell('row1', 'oil', 250, (d) => C.tempText(o, d.oil), 'OIL', hotC('oil', C.hotAt(o, 'oil'))),
+                cell('row2', 'coolant', 488, (d) => C.tempText(o, d.coolant), 'COOLANT', hotC('coolant', C.hotAt(o, 'coolant'))),
                 up('kw', 726, 526, 236, 64, C.focus.power(o), C.focus.powerLabel(o), kwC, 24),
-                up('soc', 964, 526, 236, 64, C.focus.charge(o), C.focus.chargeLabel(o), eTxt, 24),
-                C.engineFocus(o) || o.vehicle === 'ice' ? up('iat', 1202, 526, 236, 64, (d) => C.tempText(o, d.iat), 'INTAKE', txt, 24)
-                    : up('battT', 1202, 526, 236, 64, (d) => C.tempText(o, d.battTemp), 'BATTERY', eTxt, 24),
-                up('gbox', 1440, 526, 236, 64, (d) => C.tempText(o, d.gearbox), 'GEARBOX', txt, 24));
+                cell('row4', 'soc', 964, C.focus.charge(o), C.focus.chargeLabel(o), eTxt),
+                C.engineFocus(o) || o.vehicle === 'ice' ? cell('row5', 'iat', 1202, (d) => C.tempText(o, d.iat), 'INTAKE', txt)
+                    : cell('row5', 'battT', 1202, (d) => C.tempText(o, d.battTemp), 'BATTERY', eTxt),
+                cell('row6', 'gbox', 1440, (d) => C.tempText(o, d.gearbox), 'GEARBOX', txt));
         }
         return [bg('bg', 0, 0, 1920, 720),
             // the time and outside temperature in the top corners, inside the glass's slant

@@ -101,6 +101,9 @@ const powerNum = (o) => (d) => {
 module.exports = {
     id: 'track',
     stripGear: true,   // (its gear card is the layout's centre: kept over the car's own strip too)
+    // its own places, set on the page (layouts.js placesFor): the six tiles
+    places: [['tile1', 'Tile left of the gear, top'], ['tile2', 'Tile left of the gear, bottom'], ['tile3', 'Tile right of the gear, top'], ['tile4', 'Tile right of the gear, bottom'],
+        ['tile5', 'Right tile 1 (0-100 timer)'], ['tile6', 'Right tile 2 (peak)']].map(([key, label]) => ({ key, kind: 'readout', label })),
     title: 'Track',
     palette: pal,
     gearText: C.gearText,
@@ -158,6 +161,16 @@ module.exports = {
         // the right, either side of the middle, all above the strip and its fuel and charge gauges
         const strip = C.strip(o);
         if (strip) {
+            // (each tile as designed, or the reading set there on the page: places tile1-tile6; extra: the designed
+            // tile's own second line, left out with another reading)
+            const tp = (place, key, x, y, w, h, label, value, colours, valueH, extra) => {
+                const v = C.placeOf(o, place);
+                if (!v) return tile(key, x, y, w, h, label, value, colours, valueH).concat(extra || []);
+                const r = C.placeReadout(o, v), c = tile(key, x, y, w, h, r.label, r.value, white, valueH);
+                c[2] = C.fitText(c[2], 'bold', 0.98);   // (its widest figures in the tile: '160 kPa')
+                if (r.tone) c[2] = Object.assign({}, c[2], { tone: r.tone });
+                return c;
+            };
             return [C.flat('bg', 0, 0, 1920, 720, 'bg'), shiftLights(o, X0, 136, X1 - X0, 40, 15), rpmBar(o, X0, 188, X1 - X0, 26)].concat(
                 [
                     { key: 'gearCard', kind: 'panel', x: GX, y: 262, w: GW, h: 290, params: { u_box: [14, 2, 0.4, 1] }, colors: (t) => ({ top: t.tileTop, bottom: t.tileBottom, border: t.accent }) },
@@ -169,14 +182,13 @@ module.exports = {
                     C.text('clock', 90, 486, 200, 36, C.clock, white, { align: 0 }),
                     C.text('outside', 290, 486, 200, 36, (d) => C.outsideText(o, d.outside), lbl, { align: 1 }),
                 ],
-                tile('zero', 1400, 262, 220, 200, zeroLabel(o), zeroText(o), acc, 96),
-                [C.text('zeroBest', 1414, 418, 192, 24, bestText(o), lbl, { align: 0, tracking: 0.06 })],
-                tile('peak', 1640, 262, 220, 200, engine ? 'PEAK BOOST ' + C.pressLabel(o).toUpperCase() : 'PEAK POWER', peakText(o), white, 96),
-                [C.text('peakLbl2', 1654, 418, 192, 24, 'THIS DRIVE', lbl, { align: 0, tracking: 0.06 })],
-                tile('oil', X0, 262, 164, 135, 'OIL', (d) => C.tempText(o, d.oil)),
-                tile('coolant', X0, 417, 164, 135, 'COOLANT', (d) => C.tempText(o, d.coolant)),
-                tile('boost', 1176, 262, 164, 135, boostLbl, boostNum(o)),
-                tile('power', 1176, 417, 164, 135, powerLbl, powerNum(o), powerC(o)),
+                tp('tile5', 'zero', 1400, 262, 220, 200, zeroLabel(o), zeroText(o), acc, 96, [C.text('zeroBest', 1414, 418, 192, 24, bestText(o), lbl, { align: 0, tracking: 0.06 })]),
+                tp('tile6', 'peak', 1640, 262, 220, 200, engine ? 'PEAK BOOST ' + C.pressLabel(o).toUpperCase() : 'PEAK POWER', peakText(o), white, 96,
+                    [C.text('peakLbl2', 1654, 418, 192, 24, 'THIS DRIVE', lbl, { align: 0, tracking: 0.06 })]),
+                tp('tile1', 'oil', X0, 262, 164, 135, 'OIL', (d) => C.tempText(o, d.oil)),
+                tp('tile2', 'coolant', X0, 417, 164, 135, 'COOLANT', (d) => C.tempText(o, d.coolant)),
+                tp('tile3', 'boost', 1176, 262, 164, 135, boostLbl, boostNum(o)),
+                tp('tile4', 'power', 1176, 417, 164, 135, powerLbl, powerNum(o), powerC(o)),
             );
         }
         return [C.flat('bg', 0, 0, 1920, 720, 'bg'), shiftLights(o, X0, 136, X1 - X0, 40, 15), rpmBar(o, X0, 188, X1 - X0, 26)].concat(

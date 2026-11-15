@@ -51,6 +51,12 @@ always (the full-screen form is gone: below).
   `tools/test_slots.js` checks against what each layout draws). A tap lists the values: one set there is that
   layout's alone (Settings > slotsBy, a bar on its left), *Same as in Settings* follows the Settings' value again,
   which stays every layout's default (*Common*).
+- **Every other place (0.35.0):** each layout's places that had a fixed reading - 90's gauge between the dials, 20's
+  gauge in the tach's foot, ID7 M's four card gauges and two bottom bars, ID8 M's bars in the brackets and the bottom
+  bar's halves, JDM 2's four temperature quarters, Track's six tiles, Pulse's bottom row, GT3's boxes and the
+  readings under the gear - are cards on the page too, set for that layout alone (a gauge place any small gauge's
+  reading, with its scale, red zone and figures; a readout place any readout). *The layout's own* keeps it as
+  designed. With more than six the cards go three or four a row.
 - **Status, raw values, the renderer and the signal list** moved behind the **Signals** button (its first page).
 
 ### 90's

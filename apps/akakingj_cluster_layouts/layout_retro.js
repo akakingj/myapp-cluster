@@ -108,6 +108,8 @@ module.exports = {
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
     stripFuel: false,   // (its speedometer has a fuel gauge)
+    // its own places, set on the page (layouts.js placesFor)
+    places: [{ key: 'midGauge', kind: 'gauge', label: 'Gauge between the dials' }],
 
     pieces(o) {
         const gearC = (t, d) => ({ color: [C.gearText(d) === 'R' ? t.red : t.text, 1], glow: [t.glow, 0.55] });
@@ -132,11 +134,19 @@ module.exports = {
 
 /** The coolant gauge between the dials: C to H (Settings > Temperature gauges, warm in the middle), else a 40-140 °C
  * scale; red from Settings > Too hot: coolant (118 °C); and under it its figures, or with C-H the C and H at its ends. */
-const coolantDial = (o, mid, gy) => (C.chOf(o, 'coolant')
+const coolantDial = (o, mid, gy) => (C.placeOf(o, 'midGauge') ? midPlace(o, mid, gy)[0] : C.chOf(o, 'coolant')
     ? small('coolantDial', mid, gy, 184, [100, 25, 12.5, C.chRed(o, 'coolant') * 100], [-110, 110], (d) => C.chFrac('coolant', d.coolant) * 100, 2)
     : small('coolantDial', mid, gy, 184, [100, 25, 12.5, C.hotAt(o, 'coolant') - 40], [-110, 110], (d) => (C.isNum(d.coolant) ? Math.max(0, d.coolant - 40) : 0), 2));
-const coolantFig = (o, mid, gy) => (C.chOf(o, 'coolant') ? C.chMarks('coolantCh', mid, gy, 70, -110, 110, 18, lit)
+const coolantFig = (o, mid, gy) => (C.placeOf(o, 'midGauge') ? midPlace(o, mid, gy).slice(1) : C.chOf(o, 'coolant') ? C.chMarks('coolantCh', mid, gy, 70, -110, 110, 18, lit)
     : [C.text('coolantNum', mid - 60, gy + 50, 120, 24, (d) => C.tempText(o, d.coolant), lit)]);   // (in figures)
+
+/** The middle gauge set on the page (place midGauge): its dial (C to H for a temperature as the car's own), then its
+ * figures (or C and H). */
+function midPlace(o, mid, gy) {
+    const g = C.placeGauge(o, C.placeOf(o, 'midGauge')), ch = C.chOf(o, g.key);
+    return [small('coolantDial', mid, gy, 184, [100, 25, 12.5, ch ? C.chRed(o, ch) * 100 : Math.min(101, g.redFrac * 100)], [-110, 110], ch ? (d) => C.chFrac(ch, d[ch]) * 100 : (d) => g.frac(d) * 100, 2)]
+        .concat(ch ? C.chMarks('coolantCh', mid, gy, 70, -110, 110, 18, lit) : [Object.assign(C.text('coolantNum', mid - 70, gy + 50, 140, 24, (d) => { const n = g.num(d); return n === '--' || n === 'OFF' ? n : n + (g.unit[0] === '°' ? '°' : ' ' + g.unit); }, lit), g.tone ? { tone: g.tone } : {})]);
+}
 
 /** Between the dials, from y top to bottom: the time and outside temperature, the coolant gauge, and the amber
  * LCD with the gear, the speed and the drive mode. */
@@ -146,7 +156,7 @@ function middle(o, X, W, gearC, top, bottom, stripped) {
         C.text('clock', X + 8, top, (W - 22) / 2, 36, C.clock, lit, { align: 0 }),
         C.text('outside', X + W / 2 + 3, top, (W - 22) / 2, 36, (d) => C.outsideText(o, d.outside), lit, { align: 1 }),
         coolantDial(o, mid, gy),
-        C.text('coolantLbl', mid - 60, gy + 26, 120, 19, 'TEMP', lbl, { tracking: 0.14 }),
+        C.text('coolantLbl', mid - 60, gy + 26, 120, 19, C.placeOf(o, 'midGauge') ? C.placeGauge(o, C.placeOf(o, 'midGauge')).label : 'TEMP', lbl, { tracking: 0.14 }),
         ...coolantFig(o, mid, gy),
         { key: 'lcd', kind: 'panel', x: X + 10, y: ly, w: W - 20, h: 206, params: { u_box: [10, 2, 0.4, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },
     ];
@@ -160,7 +170,7 @@ function middle(o, X, W, gearC, top, bottom, stripped) {
         C.text('outside', X + W / 2 + 3, top, (W - 22) / 2, 36, (d) => C.outsideText(o, d.outside), lit, { align: 1 }),
         // coolant: cold left, hot right, red from Settings > Too hot (a 40-140 °C scale)
         coolantDial(o, mid, gy),
-        C.text('coolantLbl', mid - 60, gy + 26, 120, 19, 'TEMP', lbl, { tracking: 0.14 }),
+        C.text('coolantLbl', mid - 60, gy + 26, 120, 19, C.placeOf(o, 'midGauge') ? C.placeGauge(o, C.placeOf(o, 'midGauge')).label : 'TEMP', lbl, { tracking: 0.14 }),
         ...coolantFig(o, mid, gy),
         { key: 'lcd', kind: 'panel', x: X + 10, y: ly, w: W - 20, h: 206, params: { u_box: [10, 2, 0.4, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },
         C.text('gear', X + 10, ly + 12, W - 20, 100, C.gearText, gearC),
