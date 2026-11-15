@@ -91,6 +91,9 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
   in the speedometer pick others) and a pale grey display with dark figures: the speed, the gear (not over the car's
   strip), the fuel range (over the strip: Centre readout: bottom line), the time and the outside temperature (over
   the strip: Readout 1 / 2). An M car: the dials swapped (the tach under the M boxes), no arch on the full screen.
+- Layout 'JDM 2' (0.31.0; an original design after the idea of a Japanese grand tourer's digital cluster): a carbon-weave
+  panel, a tach with its scale as a broad coloured band, a G meter from the car's own acceleration, the gear in a
+  glossy disc, small coolant and fuel gauges (layout_jdm2.js, shaders.js JDM_FS).
 - Layout 'JDM 1' (Arc tach until 0.30.1; an original design after the idea of a three-ring sports-car cluster): three round dials under
   chrome rings, the tach in the middle in front, a smaller dial either side tucked behind it (each side ring ends where
   it goes behind the tach's). The tach: a needle round numerals, the red zone along its ring (lower while the oil is

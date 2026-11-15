@@ -66,7 +66,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     const tgt = (key) => { const x = lastPage.targets.find((q) => q.key === key); assert(x, 'no ' + key + ' on the page: ' + lastPage.targets.map((q) => q.key).join(',')); return x; };
     check('the page: the chosen layout\'s picture and a row of cards, each a picture from previews.wad', () => {
         const ids = Array.from(lastPage.images);
-        // (the row the Stock card is on, it being chosen while off: Twin cowl's picture and Stock's; the pictures with the
+        // (the row the Stock card is on, it being chosen while off: JDM 2's picture and Stock's; the pictures with the
         // car's own bottom strip, the default)
         assert.strictEqual(S.bottomStrip, 'stock');
         assert(ids.indexOf(0x434c0100) >= 0 && ids.indexOf(0x434c0200 + 0x40 + 6) >= 0, ids.map((i) => i.toString(16)).join(','));

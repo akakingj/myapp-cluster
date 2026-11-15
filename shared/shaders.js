@@ -1716,4 +1716,171 @@ void main() {
     gl_FragColor = acc;
 }`;
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS };
+/**
+ * JDM 2 (layout_jdm2.js), its parts in one program, u_mode picking which: an original drawing after the idea of a
+ * Japanese grand tourer's digital cluster.
+ *   0  the background: a dark twill weave (carbon fibre), continuous across layers (u_origin: the layer's place)
+ *   1  a G meter: a chrome ring, two rings and a cross, the dot at u_g (lateral, longitudinal g; u_gmax at the rings' edge)
+ *   2  a disc for the gear: a chrome ring round a glossy disc of u_disc
+ *   3  the tach: a chrome bezel, a broad band of u_band along the sweep with the numerals in it (from the red line in
+ *      u_red, below 0 in u_regen: a plug-in's regeneration as E9X), dots between, a slim glowing needle over a ring hub
+ *   u_scale, u_arc (start, end, numeral height of R), u_min, u_zero, u_regen, u_value: as E9X_FS
+ */
+const JDM_FS = `#version 100
+${HIGHP}${COMMON}${GLYPH}
+uniform vec2 u_size;
+uniform float u_mode;
+uniform vec2 u_origin;
+uniform vec4 u_scale;
+uniform vec4 u_arc;
+uniform float u_min;
+uniform float u_zero;
+uniform vec3 u_regen;
+uniform float u_value;
+uniform float u_digit_adv;
+uniform vec2 u_g;
+uniform float u_gmax;
+uniform vec3 u_face;
+uniform vec3 u_bezel;
+uniform vec3 u_band;
+uniform vec3 u_red;
+uniform vec3 u_tick;
+uniform vec3 u_needle;
+uniform vec3 u_dot;
+uniform vec3 u_disc;
+varying vec2 v_uv;
+float angOf(vec2 d, float am) { float a = atan(d.x, -d.y) / DEG; if (a < am - 180.0) a += 360.0; if (a > am + 180.0) a -= 360.0; return a; }
+vec2 dirOf(float a) { return vec2(sin(a * DEG), -cos(a * DEG)); }
+float zeroAt() { return u_min < 0.0 ? clamp(u_zero, 0.05, 0.95) : 0.0; }
+float fracOf(float v) { float z = zeroAt(); return v >= 0.0 ? z + (1.0 - z) * v / u_scale.x : z * (1.0 - v / u_min); }
+float numeral(vec2 p, vec2 c, float h, float v) {
+    float n = v >= 99.5 ? 3.0 : v >= 9.5 ? 2.0 : 1.0, adv = u_digit_adv;
+    vec2 g = (p - c) / h;
+    float x = g.x + n * adv * 0.5, i = floor(x / adv);
+    if (i < 0.0 || i >= n || abs(g.y) > 0.5) return 0.0;
+    float s = sdf(digitOf(v, i, n), vec2(x - (i + 0.5) * adv, g.y + 0.5));
+    return smoothstep(0.5 - 1.5 / h, 0.5 + 1.5 / h, s);
+}
+/* the weave's light at a panel point: tows 14 px wide, two over two under, a soft round across each */
+float weave(vec2 q) {
+    vec2 g = q / 14.0, cell = floor(g), f = fract(g);
+    float k = mod(cell.x + cell.y, 4.0);
+    float across = k < 2.0 ? f.y : f.x, along = k < 2.0 ? f.x : f.y;
+    float s = 0.35 + 0.65 * sin(across * 3.14159);
+    s *= 0.8 + 0.2 * sin(along * 3.14159);
+    return s * (k < 2.0 ? 1.0 : 0.62);
+}
+vec3 carbon(vec2 q) { return u_face * (0.55 + 0.9 * weave(q)); }
+/* brushed chrome round a circle: light from above, the brushing's fine streaks round it */
+vec3 chrome(vec2 d, float r) {
+    float up = clamp(0.5 - d.y / max(length(d), 1.0) * 0.5, 0.0, 1.0);
+    float a = atan(d.x, -d.y);
+    float streak = 0.92 + 0.08 * sin(a * 140.0) * sin(a * 37.0 + 1.3);
+    return u_bezel * (0.35 + 0.75 * up) * streak;
+}
+vec4 needle(vec4 acc, vec2 p, vec2 c, float a, float L, float T, float w) {
+    vec2 u = dirOf(a), n = vec2(-u.y, u.x);
+    float along = dot(p - c, u), side = abs(dot(p - c, n));
+    float ww = mix(w, w * 0.45, clamp(along / L, 0.0, 1.0)) * 0.5;
+    float d = side - ww;
+    float lit = clamp(L - along + 0.5, 0.0, 1.0) * clamp(along + 0.5, 0.0, 1.0);
+    float tail = clamp(-along + 0.5, 0.0, 1.0) * clamp(along + T + 0.5, 0.0, 1.0);
+    acc = over(acc, u_needle, exp(-max(d, 0.0) * max(d, 0.0) / (w * w * 2.2)) * 0.55 * lit);
+    acc = over(acc, mix(u_needle, vec3(1.0, 0.95, 0.85), 0.55 * clamp(1.0 - side / max(ww, 0.5), 0.0, 1.0)), clamp(0.5 - d, 0.0, 1.0) * lit);
+    acc = over(acc, vec3(0.05), clamp(0.5 - d, 0.0, 1.0) * tail);
+    return acc;
+}
+void main() {
+    vec2 p = v_uv * u_size;
+    if (u_mode < 0.5) {
+        vec2 q = p + u_origin;
+        vec3 col = carbon(q);
+        vec2 v = (q / vec2(1920.0, 720.0) - 0.5) * vec2(1.0, 1.3);
+        col *= 1.0 - 0.45 * smoothstep(0.3, 0.85, length(v));
+        gl_FragColor = vec4(col, 1.0);
+        return;
+    }
+    float R = min(u_size.x, u_size.y) * 0.5, px = 1.0 / R;
+    vec2 c = u_size * 0.5, d = p - c;
+    float r = length(d) / R;
+    vec4 acc = vec4(0.0);
+    if (r > 1.0 + 1.5 / R) { gl_FragColor = acc; return; }
+    float bw = u_mode < 2.5 ? 0.055 : 0.07;                       /* the bezel's width, of R */
+    /* the face: the weave, darker; the bezel round it */
+    acc = over(acc, carbon(p + u_origin) * 0.75, clamp((1.0 - bw - r) / px + 0.5, 0.0, 1.0));
+    acc = over(acc, chrome(d, r), span(r / px, (1.0 - bw) / px, 1.0 / px));
+    acc = over(acc, vec3(0.0), span(r / px, (1.0 - bw - 0.012) / px, (1.0 - bw) / px) * 0.8);
+    if (u_mode < 1.5) {
+        /* G meter: rings at half and all of u_gmax (0.62 R), a cross, a small ring at the middle; the dot */
+        float gr = 0.62;
+        float ring = max(span(r / px, gr / px - 1.2, gr / px + 1.2), span(r / px, gr * 0.5 / px - 0.9, gr * 0.5 / px + 0.9));
+        ring = max(ring, span(r / px, 0.06 / px - 0.8, 0.06 / px + 0.8));
+        float cross = max(span(d.x, -1.0, 1.0), span(d.y, -1.0, 1.0)) * step(r, gr + 0.06);
+        acc = over(acc, u_tick, max(ring, cross * 0.75) * 0.9);
+        acc = over(acc, u_tick * 0.25, clamp((gr - r) / px + 0.5, 0.0, 1.0) * 0.12);
+        vec2 g = clamp(u_g / max(u_gmax, 0.1), vec2(-1.15), vec2(1.15));
+        if (length(g) > 1.15) g = g / length(g) * 1.15;
+        vec2 dc = c + g * gr * R;
+        float dd = length(p - dc) / R;
+        acc = over(acc, u_dot, exp(-dd * dd / 0.006) * 0.5);
+        acc = over(acc, u_dot, clamp((0.045 - dd) / px + 0.5, 0.0, 1.0));
+        gl_FragColor = acc;
+        return;
+    }
+    if (u_mode < 2.5) {
+        /* the gear's disc: glossy, lighter at the top left, a sheen across its upper half */
+        float inner = 1.0 - bw - 0.03;
+        vec2 l = d / R - vec2(-0.3, -0.35);
+        vec3 col = u_disc * (0.55 + 0.75 * exp(-dot(l, l) * 1.6));
+        col += vec3(1.0) * 0.08 * smoothstep(0.1, 0.0, abs(d.y / R + 0.45 - 0.25 * (d.x / R) * (d.x / R)));
+        acc = over(acc, col, clamp((inner - r) / px + 0.5, 0.0, 1.0));
+        gl_FragColor = acc;
+        return;
+    }
+    /* the tach */
+    float a0 = u_arc.x, a1 = u_arc.y, sw = a1 - a0, mx = u_scale.x;
+    float ang = angOf(d, (a0 + a1) * 0.5), t = (ang - a0) / sw;
+    float b0 = 0.6, b1 = 0.885;                                   /* the band, of R */
+    float inArc = clamp(t * sw * DEG * r * R + 0.5, 0.0, 1.0) * clamp((1.0 - t) * sw * DEG * r * R + 0.5, 0.0, 1.0);
+    float z = zeroAt();
+    float redAt = u_scale.w < mx ? fracOf(u_scale.w) : 2.0;
+    vec3 bc = t >= redAt ? u_red : z > 0.0 && t < z ? u_regen : u_band;
+    float across = (r - b0) / (b1 - b0);
+    bc *= 0.78 + 0.32 * smoothstep(0.0, 1.0, across);
+    float onBand = span(r / px, b0 / px, b1 / px) * inArc;
+    acc = over(acc, bc, onBand);
+    /* its edges: a light line inside, notches along the outside at the half steps */
+    acc = over(acc, mix(bc, vec3(1.0), 0.35), span(r / px, b0 / px, b0 / px + 1.5) * inArc);
+    if (t > -0.02 && t < 1.02) {
+        bool neg = z > 0.0 && t < z;
+        float v = neg ? u_min * (1.0 - t / z) : (t - z) / (1.0 - z) * mx;
+        float sc = neg ? -u_min / z : mx / (1.0 - z);
+        float sh = neg ? -u_min / 2.0 : u_scale.y * 0.5;
+        float kh = floor(v / sh + 0.5) * sh;
+        float oh = abs(v - kh) / sc * sw * DEG * r * R;
+        acc = over(acc, vec3(0.02), clamp(R * 0.016 - oh + 0.5, 0.0, 1.0) * span(r / px, (b1 - 0.035) / px, b1 / px) * inArc);
+        /* dots at the minor steps, inside the band near its inner edge (none at the numerals) */
+        float sd = neg ? -u_min / 4.0 : u_scale.z;
+        float kd = floor(v / sd + 0.5) * sd, od = abs(v - kd) / sc * sw * DEG * r * R;
+        float atMajor = abs(mod(kd + 0.001, neg ? -u_min / 2.0 : u_scale.y)) < 0.01 ? 1.0 : 0.0;
+        acc = over(acc, u_tick, clamp(R * 0.011 - length(vec2(od, (r - b0 - 0.045) * R)) + 0.5, 0.0, 1.0) * (1.0 - atMajor) * inArc);
+        /* the numerals at the major steps, white on the band */
+        float kn = clamp(floor(v / u_scale.y + 0.5) * u_scale.y, 0.0, floor(mx / u_scale.y + 0.001) * u_scale.y);
+        if (!neg && v > -0.5 * u_scale.y) {
+            float an = a0 + sw * fracOf(kn), h = u_arc.z * R;
+            vec2 cn = c + dirOf(an) * R * ((b0 + b1) * 0.5 + 0.01);
+            acc = over(acc, u_tick, numeral(p, cn, h, kn));
+            /* and a white dot at the mark, inside the band */
+            vec2 cd = c + dirOf(an) * R * (b0 + 0.045);
+            acc = over(acc, u_tick, clamp(R * 0.017 - length(p - cd) + 0.5, 0.0, 1.0));
+        }
+    }
+    /* the hub: a chrome ring round a dark well */
+    acc = over(acc, vec3(0.015), clamp((0.15 - r) / px + 0.5, 0.0, 1.0));
+    acc = needle(acc, p, c, a0 + sw * clamp(fracOf(u_value), -0.01, 1.01), R * 0.84, R * 0.32, R * 0.03);
+    acc = over(acc, chrome(d, r), span(r / px, 0.125 / px, 0.155 / px));
+    acc = over(acc, vec3(0.02), clamp((0.125 - r) / px + 0.5, 0.0, 1.0));
+    gl_FragColor = acc;
+}`;
+
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS };

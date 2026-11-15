@@ -3,8 +3,8 @@
 *Part of [iDrive 7 cluster apps](../../README.md), with Cluster Info and [Cluster Centre](../cluster_centre/README.md).*
 
 Custom layouts for the whole instrument cluster of a BMW with iDrive 7 (MGU), **drawn by the cluster
-itself**. Ten layouts, in the page's order: 90's, 20's, ID6 M, ID7 M and ID8 M (the last two after bimmer-lab's M
-and Sport), JDM 1, GM, Track, Pulse and GT3 (after bimmer-lab's), each in comfort, sport and efficient
+itself**. Eleven layouts, in the page's order: 90's, 20's, ID6 M, ID7 M and ID8 M (the last two after bimmer-lab's M
+and Sport), JDM 1, JDM 2, GM, Track, Pulse and GT3 (after bimmer-lab's), each in comfort, sport and efficient
 colours (following the selector's S / M
 programme, or chosen), each with three centres: the **readings**, **Waze** or the **stock** centre content.
 
@@ -26,7 +26,7 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 
 0.30.0 took out Digital round, Modern wide and Digital dash (a layout saved as one of them becomes 20's, Pulse and
 Track), renamed Retro, Analog sport, Classic M, M and Sport to 90's, 20's, ID6 M, ID7 M and ID8 M, and put the
-layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM.
+layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.31.0 added JDM 2 after JDM 1.
 
 ```
 +---------------------------+  JDM 1                         Showing on the cluster
@@ -143,6 +143,21 @@ goes in the window between the brackets.
 | Map in the centre |
 |---|
 | ![](../../docs/sport_map.png) |
+
+### JDM 2
+
+An original drawing after the idea of a Japanese grand tourer's digital cluster (no maker's marks or names): a dark
+carbon-weave panel; a big tach whose scale is a broad coloured band with the numerals in it (red, the shift zone
+orange; Sport crimson and amber, Efficient blue), a slim glowing needle over a chrome ring hub and the digital speed
+in its open lower right; a **G meter** left of it (the car's own lateral and longitudinal acceleration, the dot
+where the car is pushed, rings at 0.5 and 1 g); a glossy disc with the gear; two small chrome-ringed gauges, the
+coolant (C-H) and the fuel (E-F), which Settings > Tach gauge / Speedometer gauge (or the page) can give another
+reading; the ranges and the main readout in the column right of the KOMBI's dark box. On a plug-in hybrid in an
+electric mode the tach's band reads the battery's power, its regeneration part green. With the map the tach stands
+left of it and the disc and gauges right of it; with the stock centre the tach takes the G meter's place. Its parts
+are one shader (`shaders.js` JDM_FS).
+
+![JDM 2](../../docs/jdm2.png)
 
 ### Track
 

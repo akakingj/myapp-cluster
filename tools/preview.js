@@ -25,7 +25,7 @@ void main() {
 }`;
 
 function args(argv) {
-    const a = { layout: 'analog_sport', look: 'comfort', mode: null, centre: 'info', kmh: false, speed: 62, rpm: 3200, gear: 4, stage: 'D', oil: 96, coolant: 90, outside: 9, soc: 64, kw: -12.4, erange: 29, frange: 520, fuel: 55, gearbox: 78, iat: 31, batt: 27, boost: 0.82, split: 62, out: 'preview.png', scale: 1 };
+    const a = { layout: 'analog_sport', look: 'comfort', mode: null, centre: 'info', kmh: false, speed: 62, rpm: 3200, gear: 4, stage: 'D', oil: 96, coolant: 90, outside: 9, soc: 64, kw: -12.4, erange: 29, frange: 520, fuel: 55, gearbox: 78, iat: 31, batt: 27, boost: 0.82, glat: -0.32, glong: 0.18, split: 62, out: 'preview.png', scale: 1 };
     for (let i = 0; i < argv.length; i++) {
         const k = argv[i].replace(/^--/, '');
         if (k === 'kmh') a.kmh = true;
@@ -122,7 +122,7 @@ if (require.main === module) {
         // (the readouts: --infoA, --infoB, --infoMain, --infoLow: a readout's name, gear or off; --arcGear off)
         infoA: a.infoA, infoB: a.infoB, infoMain: a.infoMain, infoLow: a.infoLow, arcGear: a.arcGear },
         data: { speed: a.speed * (a.kmh ? 1 : 1.609344), rpm: a.rpm, gear: a.gear, stage: a.stage, mode: a.mode, driveMode: a.drive, oil: a.oil, coolant: a.coolant, outside: a.outside, soc: a.soc, kw: a.kw, erange: a.erange, frange: a.frange,
-            gearbox: a.gearbox, iat: a.iat, battTemp: a.batt, boostActual: a.boost, torque: 312, timing: 14.5, hpfp: 205, boostTarget: 0.9, engineOn: a.rpm > 300, tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } }, fuelPct: a.fuel, pdDrive: 62, pdClimate: 24, pdSeats: 14, dap: a.dap ? require('../apps/akakingj_cluster_layouts/dap').DEMO : null } });
+            gearbox: a.gearbox, iat: a.iat, battTemp: a.batt, boostActual: a.boost, torque: 312, timing: 14.5, hpfp: 205, boostTarget: 0.9, engineOn: a.rpm > 300, tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } }, fuelPct: a.fuel, gLat: a.glat, gLong: a.glong, pdDrive: 62, pdClimate: 24, pdSeats: 14, dap: a.dap ? require('../apps/akakingj_cluster_layouts/dap').DEMO : null } });
     // let the needles ease to their readings
     // two minutes first, on a made-up clock, so trend lines have a past
     const base = Object.assign({}, s.data()), now = Date.now;
