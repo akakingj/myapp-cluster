@@ -2427,7 +2427,7 @@
   "Accelerator pedal (0 - 100 %)": "가속 페달 (0 - 100 %)",
   "Alaska": "알래스카",
   "Always on the HUD": "HUD에 항상 표시",
-  "Amber zone below the red zone (ID7 M, ID8 M)": "레드 존 아래 주황 구간 (ID7 M, ID8 M)",
+  "Amber zone below the red zone (ID6 M, ID7 M, ID8 M)": "레드 존 아래 주황 구간 (ID6 M, ID7 M, ID8 M)",
   "Arc gauge": "아크 게이지",
   "JDM 1: the gear in the arc (the layout's own strip)": "JDM 1: 아크 안 기어 표시 (레이아웃 자체 하단 띠)",
   "Arizona (no DST)": "애리조나 (서머타임 없음)",
@@ -2450,7 +2450,7 @@
   "C - H, as the car's: the middle is warm": "C - H, 순정처럼: 가운데가 정상 온도",
   "Central Europe": "중부 유럽",
   "Centre of the cluster": "계기판 가운데",
-  "Centre readout: bottom line (ID6 M)": "가운데 표시: 아래 줄 (ID6 M)",
+  "Centre readout: bottom line (Old M)": "가운데 표시: 아래 줄 (Old M)",
   "Centre readout: top left (petrol, diesel)": "가운데 표시: 왼쪽 위 (가솔린, 디젤)",
   "Centre readout: top right (petrol, diesel)": "가운데 표시: 오른쪽 위 (가솔린, 디젤)",
   "Centre readout: under the speed (petrol, diesel)": "가운데 표시: 속도 아래 (가솔린, 디젤)",
@@ -2672,5 +2672,6 @@
   "G meter": "G미터",
   "Speedometer": "속도계",
   "Tyre pressures": "타이어 공기압",
-  "Temperatures: oil, coolant, gearbox, intake": "온도: 엔진오일, 냉각수, 미션, 흡기"
+  "Temperatures: oil, coolant, gearbox, intake": "온도: 엔진오일, 냉각수, 미션, 흡기",
+  "Old M": "Old M"
 }

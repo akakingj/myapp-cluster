@@ -320,7 +320,7 @@ mgu.run({
             const CW = (RW - 12) / 2, CH = 48;
             keys.forEach((k, i) => {
                 const x = RX + (i % 2) * (CW + 12), y = 96 + Math.floor(i / 2) * (CH + 8);
-                const own = ownSlot(shownId, k), v = slot(k, shownId), lbl = String(tr((itemOf(k) || {}).label || k)).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M)\)$/, '');
+                const own = ownSlot(shownId, k), v = slot(k, shownId), lbl = String(tr((itemOf(k) || {}).label || k)).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M|Old M|ID6 M)\)$/, '');
                 cv.roundRect(x, y, CW, CH, 10, withAlpha('#ffffff', 0.07));
                 if (own !== undefined) cv.roundRect(x, y, 5, CH, 2, acc);
                 cv.text(lbl, x + 16, y + 19, 14, t.dim, { font: 'bold', literal: true });

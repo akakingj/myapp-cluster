@@ -3,7 +3,7 @@
  * layouts.js - the layouts this app offers, by id. A layout is one file, layout_<id>.js, next to this one
  * (the build ships only top-level .js files); list it here and in app.json's "layout" setting (README.md).
  */
-const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_gt3')];
+const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_gt3')];
 /* with Settings > Frame behind the gear box on: the bezel behind the KOMBI's gear bracket (layout_common.boxBezel),
  * just above the backgrounds. Off (the default, from the car: the frame read as a stray grey box) the box sits on
  * the layout's own black background and its black window disappears into it */
@@ -197,6 +197,7 @@ const SLOTS = {
     pulse: { infoMain: ENGINE },
     gt3: {}, m: {}, sport: {},
     classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE }, DIALS),
+    id6m: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
     // (its own strip's middle: the main readout; a plug-in's, with the cluster's strip, its battery's power)
     arc_tach: Object.assign({ infoMain: (o) => ENGINE(o) || !STRIP(o) }, DIALS, STRIP2),
     // (its left dial: the G meter, a speedometer, the tyres or the temperatures; not with the map or the stock centre)

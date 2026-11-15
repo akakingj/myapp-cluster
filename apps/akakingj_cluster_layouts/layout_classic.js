@@ -132,7 +132,7 @@ function display(o, X, Y, W, H, gear) {
 
 module.exports = {
     id: 'classic',
-    title: 'ID6 M',
+    title: 'Old M',
     stripFuel: false,   // (its own fuel gauge, in the speedometer)
     ownStripGauges: true,   // (the charge in its amber display: none of the strip's bars)
     palette: pal,

@@ -67,7 +67,7 @@ function clashes(p, o) {
         if (o && o.centre === 'map' && inB(C.MAP)) out.push('over the map');
         return out;
     }
-    const round = p.kind === 'dial' || p.kind === 'e9x' || (p.kind === 'jdm' && p.params && p.params.u_mode[0] > 0);
+    const round = p.kind === 'dial' || p.kind === 'e9x' || (p.kind === 'jdm' && p.params && p.params.u_mode[0] > 0) || (p.kind === 'mround' && p.params && p.params.u_mode[0] < 1.5);
     const cx = p.x + p.w / 2, cy = p.y + p.h / 2, r = Math.min(p.w, p.h) / 2;
     const hit = (b) => (round
         ? (() => { const nx = Math.max(b.x, Math.min(cx, b.x + b.w)), ny = Math.max(b.y, Math.min(cy, b.y + b.h)); return (nx - cx) ** 2 + (ny - cy) ** 2 < (r - 6) ** 2; })()

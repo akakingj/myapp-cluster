@@ -3,13 +3,13 @@
 *Part of [iDrive 7 cluster apps](../../README.md), with Cluster Info and [Cluster Centre](../cluster_centre/README.md).*
 
 Custom layouts for the whole instrument cluster of a BMW with iDrive 7 (MGU), **drawn by the cluster
-itself**. Eleven layouts, in the page's order: 90's, 20's, ID6 M, ID7 M and ID8 M (the last two after bimmer-lab's M
-and Sport), JDM 1, JDM 2, GM, Track, Pulse and GT3 (after bimmer-lab's), each in comfort, sport and efficient
+itself**. Twelve layouts, in the page's order: 90's, 20's, Old M, ID6 M, ID7 M and ID8 M (the last two after
+bimmer-lab's M and Sport), JDM 1, JDM 2, GM, Track, Pulse and GT3 (after bimmer-lab's), each in comfort, sport and efficient
 colours (following the selector's S / M
 programme, or chosen), each with three centres: the **readings**, **Waze** or the **stock** centre content.
 
 With the car's own bottom strip (the default) the strip shows the gear, the drive mode, the ranges, the time and the
-outside temperature, so no layout shows them a second time (ID7 M, ID8 M and ID6 M never show the time, the outside
+outside temperature, so no layout shows them a second time (ID7 M, ID8 M and Old M never show the time, the outside
 temperature or the fuel range at all): the places the time and temperature had show the
 battery's temperature (intake air on a petrol or diesel car) and the gearbox oil's, and where a layout had its gear
 it now has the digital speed or another reading. With **Waze** in the centre, Waze on cluster (0.9.107 or later,
@@ -26,7 +26,7 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 
 0.30.0 took out Digital round, Modern wide and Digital dash (a layout saved as one of them becomes 20's, Pulse and
 Track), renamed Retro, Analog sport, Classic M, M and Sport to 90's, 20's, ID6 M, ID7 M and ID8 M, and put the
-layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.31.0 added JDM 2 after JDM 1.
+layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.31.0 added JDM 2 after JDM 1; 0.33.0 renamed ID6 M (the E9x-style dials) to Old M and added a new ID6 M after it.
 
 ```
 +---------------------------+  JDM 1                         Showing on the cluster
@@ -45,7 +45,7 @@ layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.
   or ECO PRO with a layout set for that mode (Settings > Layout in Sport / in ECO PRO) the tap changes that one.
   **Stock** turns the layout off: the stock cluster back.
 - **The readouts:** the places the layout has for Settings' readouts (main readout, readouts 1 and 2 in the time's
-  and outside temperature's places with the car's own strip, ID6 M's and GM's bottom line, the small gauges
+  and outside temperature's places with the car's own strip, Old M's and GM's bottom line, the small gauges
   in the speedometer and the tach), only those that show on this car with these settings (`layouts.js` SLOTS, which
   `tools/test_slots.js` checks against what each layout draws). A tap lists the values: one set there is that
   layout's alone (Settings > slotsBy, a bar on its left), *Same as in Settings* follows the Settings' value again,
@@ -88,7 +88,7 @@ same scale (its 0 a quarter along the arc). Every power gauge in every layout wo
 |---|---|
 | ![](../../docs/analog_sport_sport.png) | ![](../../docs/analog_sport_map.png) |
 
-### ID6 M
+### Old M
 
 The round dials of BMW's M cars of the late 2000s, drawn after a photo of an E92 M3's cluster at night: black faces,
 a ring of cool white-blue light round each scale (open across the bottom), white bars, dots and numerals (one scale:
@@ -98,7 +98,19 @@ power along the top, the speed in large figures in the middle, the charge along 
 an electric drive the tach reads the battery's power in kW: 0 a quarter round, the ring green below it for
 regeneration. An original drawing.
 
-![ID6 M](../../docs/classic.png)
+![Old M](../../docs/classic.png)
+
+### ID6 M
+
+Round dials after the M cars' analog clusters of the mid 2010s, an original drawing (the M tricolour, no lettering):
+two big dials, each with a thin white ring round its top, open at the bottom, a dark band with white marks and large
+numerals, a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of its
+top end, amber from Settings > Amber zone below the red zone and red from the red line (both lower while the oil is
+cold, as the red zone); the gear under the tach in a white arc; a small fuel gauge (0, 1/2, 1) left of the
+speedometer and a small engine oil gauge (70-170 °C, 160-340 °F, red from Too hot) right of the tach, either of which
+Settings > Speedometer gauge / Tach gauge (or the page) can give another reading.
+
+![ID6 M](../../docs/id6m.png)
 
 ### ID7 M
 

@@ -1,0 +1,167 @@
+'use strict';
+/**
+ * layout_id6m.js - "ID6 M": round dials after the M cars' analog clusters of the mid 2010s, an original drawing. Two
+ * big dials, each with a thin white ring round its top (open at the bottom), a dark band, white marks and large
+ * numerals (the speed in figures too, under the speedometer's hub), a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of
+ * its top end (amber Settings > Amber zone below the red zone, then red; lower while the oil is cold, as the red zone);
+ * the gear under the tach in a white arc; the M tricolour under the speedometer (no lettering); a small fuel gauge
+ * left of the speedometer and a small engine oil gauge right of the tach (Settings > Speedometer gauge / Tach gauge,
+ * or the page, put another reading in either). Shaders: shaders.js MROUND_FS (kind 'mround').
+ */
+const C = require('./layout_common');
+
+const PALETTES = {
+    comfort: { bg: '#000000', face: '#1d1e21', ring: '#f2f3f4', tick: '#ffffff', needle: '#ff4a1c', amber: '#ffb01a', red: '#ff2a1a', text: '#ffffff', dim: '#9ca0a6', glow: '#ffffff', accent: '#ff4a1c', track: '#1a1b1d', ev: '#4ab4ff', num: '#ffffff' },
+    sport: { bg: '#000000', face: '#1f1d1e', ring: '#f4f2f2', tick: '#ffffff', needle: '#ff2a14', amber: '#ffa014', red: '#ff1a10', text: '#ffffff', dim: '#a49c9c', glow: '#ff6a4a', accent: '#ff2a14', track: '#1d1819', ev: '#4ab4ff', num: '#ffffff' },
+    efficient: { bg: '#000000', face: '#1b1e21', ring: '#e8f0f6', tick: '#f2f8ff', needle: '#ff6a1c', amber: '#ffb01a', red: '#ff2a1a', text: '#f2f8ff', dim: '#98a4ae', glow: '#6ab8ff', accent: '#3aa0ff', track: '#151a1e', ev: '#4ab4ff', num: '#ffffff' },
+};
+const roundColours = (t) => ({ face: t.face, ring: t.ring, tick: t.tick, needle: t.needle, amber: t.amber, red: t.red });
+const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.12] });
+const lbl = (t) => ({ color: [t.dim, 1], glow: [t.glow, 0.08] });
+const elecTxt = (t) => ({ color: [t.ev, 1], glow: [t.ev, 0.2] });
+const kwNow = (d) => (C.isNum(d.kw) ? d.kw : 0);
+const powerTxt = (t, d) => ({ color: [kwNow(d) < -0.3 ? '#3ddc84' : t.ev, 1], glow: [t.ev, 0.2] });
+const A0 = -125, A1 = 125;     // the big dials' sweep
+const NUM_H = 0.13;            // their numerals' height, of the radius
+/** Settings > Amber zone below the red zone, in thousands of rpm (700 rpm by default, as ID7 M's and ID8 M's). */
+const amberK = (o) => (o && o.amberRpm !== undefined && o.amberRpm !== '' && isFinite(Number(o.amberRpm)) ? Math.max(0, Number(o.amberRpm)) : 700) / 1000;
+
+/** The speedometer at (cx, cy), radius R: its unit over the middle, the M tricolour in its open foot. */
+function speedo(o, cx, cy, R) {
+    const s = C.speedScale(o), dense = o.speedUnit === 'kmh';
+    return [
+        {
+            key: 'speed', kind: 'mround', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R,
+            params: { u_mode: [0], u_scale: [s.max, s.major, s.minor, s.max + 1], u_arc: [A0, A1, dense ? 0.115 : NUM_H, s.max + 1], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB },
+            colors: roundColours, max: s.max, sweep: true, value: (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0),
+        },
+        C.text('speedUnit', cx - R * 0.3, cy - Math.round(R * 0.3), R * 0.6, Math.max(14, Math.round(R * 0.075)), C.speedUnit(o), white, { tracking: 0.04 }),
+        // the speed in figures too, in the dark disc under the hub
+        C.text('speedDigits', cx - R * 0.3, cy + Math.round(R * 0.2), R * 0.6, Math.round(R * 0.15), (d) => C.speedText(o, d), white),
+        // the M tricolour (bimmer-lab's stripes, as ID7 M's and Old M's)
+        { key: 'mStripes', kind: 'mdash', x: Math.round(cx - 42), y: Math.round(cy + R * 0.62), w: 84, h: 34, z: 5, params: { u_part: [4], u_off: [Math.round(cx - 42), Math.round(cy + R * 0.62)], u_mark: [Math.round(cx - 36), Math.round(cy + R * 0.62) + 4, 1.2] }, colors: (t) => ({ red: t.red }) },
+    ];
+}
+
+/** The tach at (cx, cy), radius R: the shift lights, the unit, the gear in the white arc under it. */
+function tach(o, cx, cy, R, gear) {
+    const s = C.rpmScale(o), dyn = C.tachDyn(o, s, s.red);
+    const list = [
+        {
+            key: 'rpm', kind: 'mround', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R,
+            params: { u_mode: [0], u_scale: [s.max, s.major, s.minor, s.red], u_arc: [A0, A1, NUM_H, s.red - amberK(o)], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB },
+            colors: roundColours, max: s.max, sweep: true, value: C.tachValue(o), range: C.tachRange(o, s),
+            // (the shift lights from the red zone where the shift point puts it now; none on the battery's power)
+            dyn: (d) => { const u = dyn(d), red = u.u_scale[3]; return Object.assign(u, { u_arc: [A0, A1, NUM_H, C.electric(o, d) ? u.u_scale[0] + 1 : red - amberK(o)] }); },
+        },
+        C.text('rpmUnit', cx - R * 0.35, cy - Math.round(R * 0.3), R * 0.7, Math.max(14, Math.round(R * 0.07)),
+            (d) => (C.electric(o, d) ? C.kwText(d) : '1/min x1000'), (t, d) => (C.electric(o, d) ? powerTxt(t, d) : white(t)), { tracking: 0.02 }),
+    ];
+    if (!gear) return list;
+    // the gear's white arc under the tach, in its open foot
+    const ax = Math.round(cx - R * 0.66), ay = Math.round(cy + R * 0.5), aw = Math.round(R * 1.32), ah = Math.round(R * 0.54), ar = Math.round(R * 1.02);
+    return list.concat([
+        { key: 'gearArc', kind: 'mround', x: ax, y: ay, w: aw, h: ah, params: { u_mode: [2], u_arc: [cx - ax, cy - ay, ar, 34] }, colors: roundColours },
+        C.text('gear', cx - R * 0.3, Math.round(cy + R * 0.62), R * 0.6, Math.round(R * 0.26), C.gearText, (t, d) => ({ color: [C.gearText(d) === 'R' ? t.red : t.text, 1], glow: [t.glow, 0.1] })),
+    ]);
+}
+
+/*
+ * A small gauge at (cx, cy), radius R: by the speedometer the fuel (0, 1/2, 1), by the tach the engine oil (70 to 170
+ * °C, 160 to 340 °F, red from Settings > Too hot); another reading there (Settings > Speedometer gauge / Tach
+ * gauge): its name and figures under the hub (a temperature as the car's own: C and H at the ends).
+ */
+function small(o, which, cx, cy, R) {
+    const g = C.gaugeOf(o, which), own = which === 'speed' ? 'fuel' : 'oil', id = which === 'speed' ? 'fuelSmall' : 'oilSmall';
+    const f = o.tempUnit === 'c', h = Math.max(13, Math.round(R * 0.2));
+    const pos = (a, rr) => [cx + Math.sin(a * Math.PI / 180) * R * rr, cy - Math.cos(a * Math.PI / 180) * R * rr];
+    const mark = (k, a, txt, col) => { const [x, y] = pos(a, 0.5), w = Math.round(h * 2.4); return C.text(id + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, txt, col || white); };
+    let value, red, marks = [], under = [];
+    if (!g) {
+        if (own === 'fuel') {
+            value = (d) => (C.isNum(d.fuelPct) ? Math.max(0, Math.min(100, d.fuelPct)) : 0); red = 101;
+            marks = [mark('Lo', -105, '0'), mark('Mid', 0, '1/2'), mark('Hi', 105, '1')];
+        } else {
+            const hot = C.hotAt(o, 'oil');
+            value = (d) => (C.isNum(d.oil) ? Math.max(0, Math.min(100, d.oil - 70)) : 0); red = Math.max(0, Math.min(101, hot - 70));
+            marks = [mark('Lo', -105, f ? '70' : '160'), mark('Mid', 0, f ? '120' : '250'), mark('Hi', 105, f ? '170' : '340')];
+        }
+        const [ix, iy] = pos(own === 'fuel' ? -140 : 140, 0.55), is = Math.round(R * 0.26);
+        under = [{ key: id + 'Icon', kind: 'icon', x: Math.round(ix - is / 2), y: Math.round(iy - is / 2), w: is, h: is, params: { u_icon: [own === 'fuel' ? 4 : 1], u_line: [0] }, colors: (t) => ({ color: [t.text, 1] }) }];
+    } else {
+        const ch = C.chOf(o, g.key);
+        value = ch ? (d) => C.chFrac(ch, d[ch]) * 100 : (d) => g.frac(d) * 100;
+        red = ch ? C.chRed(o, ch) * 100 : Math.min(101, g.redFrac * 100);
+        if (ch) marks = [mark('Lo', -105, 'C'), mark('Hi', 105, 'H', (t) => ({ color: [t.red, 1], glow: [t.red, 0.2] }))];
+        const fig = which === 'speed' ? 'speedSubNum' : 'rpmSubNum';
+        under = [C.text(id + 'Lbl', cx - R * 0.6, Math.round(cy + R * 0.22), R * 1.2, Math.max(11, Math.round(R * 0.14)), g.label, lbl, { tracking: 0.1 }),
+            Object.assign(C.text(fig, cx - R * 0.6, Math.round(cy + R * 0.42), R * 1.2, Math.max(12, Math.round(R * 0.2)), g.txt, white), C.TEMP_TONES[g.key] ? { tone: g.key } : {})];
+    }
+    return [{
+        key: id, kind: 'mround', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R, z: 6,
+        params: { u_mode: [1], u_scale: [100, 50, 12.5, red], u_arc: [-110, 110, 0, 0] }, colors: roundColours, value, max: 100, sweep: true,
+    }].concat(marks, under);
+}
+
+/** The column right of the KOMBI's dark box: the fuel range, the electric range (the boost), the main readout. */
+function column(o, RX, my) {
+    const RW = 216, y = my || 506;
+    return [
+        ...C.reading('fuel', RX, 292, RW, 44, (d) => C.distText(o, d.frange), 'FUEL RANGE', white, lbl),
+        ...C.reading('elec', RX, 400, RW, 44, C.focus.range(o), C.focus.rangeLabel(o), C.engineFocus(o) ? white : elecTxt, lbl),
+        C.text('kwNow', RX, y, RW, 44, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
+        C.text('kwNowLbl', RX, y + 56, RW, 18, C.focus.powerLabel(o), lbl, { tracking: 0.1 }),
+    ];
+}
+
+module.exports = {
+    id: 'id6m',
+    title: 'ID6 M',
+    palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
+    gearText: C.gearText,
+    stripGear: true,     // (the gear's white arc is part of the tach: kept over the car's own strip)
+    // (its own fuel gauge: the strip's fuel bar only with another reading there)
+    stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
+
+    /*
+     * Built round what the glass and the KOMBI keep (layout_common; tools/clearance.js): the camera's cowl between
+     * the dials' tops, the dark box right of the tach (the oil gauge under it), the warning lights under the middle.
+     */
+    pieces(o) {
+        if (o.centre === 'map') {
+            // the speedometer left of the map, the tach right of it (small, below the dark box; with the car's
+            // strip as big as the speedometer); the small gauges below their inner sides
+            const top = C.MAP.y, bot = C.MAP.y + C.MAP.h, st = C.strip(o);
+            return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(
+                speedo(o, 208, 360, 202), small(o, 'speed', 350, 584, 58),
+                st ? tach(o, 1712, 360, 202, true) : tach(o, 1792, 500, 128, true), st ? small(o, 'rpm', 1570, 584, 58) : small(o, 'rpm', 1600, 175, 56), [
+                    C.text('clock', 520, top - 76, 200, 34, C.clock, white),
+                    C.text('outside', 1200, top - 76, 200, 34, (d) => C.outsideText(o, d.outside), white),
+                ],
+                C.readingUp('fuel', 560, bot + 2, 260, 30, (d) => C.distText(o, d.frange), 'FUEL RANGE', white, lbl),
+                C.readingUp('elec', 1100, bot + 2, 300, 30, C.focus.both(o), C.focus.rangeLabel(o), C.engineFocus(o) ? white : elecTxt, lbl),
+            );
+        }
+        if (C.strip(o) && o.centre !== 'stock') {
+            // the car's own strip: the two dials either side of the middle under the camera's cowl, the small gauges
+            // at their outer feet; readouts 1 and 2 (the time's and temperature's places) left, the main readout right
+            return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 655, 372, 250), tach(o, 1265, 372, 250, true),
+                small(o, 'speed', 303, 535, 100), small(o, 'rpm', 1617, 535, 100), [
+                    C.text('clock', 16, 300, 180, 32, C.clock, white),
+                    C.text('outside', 16, 356, 180, 32, (d) => C.outsideText(o, d.outside), white),
+                ], column(o, 1724, 330));
+        }
+        // the layout's own strip: the speedometer left, the tach left of the KOMBI's dark box, the oil gauge under
+        // the box, the column right of it; with the stock centre the tach small between that and the box
+        const stock = o.centre === 'stock';
+        const list = stock
+            ? [C.flat('bg', 0, 0, 566, 720, 'bg'), C.flat('bgR', 1104, 0, 816, 720, 'bg')].concat(speedo(o, 300, 380, 240), small(o, 'speed', 84, 590, 80),
+                tach(o, 1256, 380, 148, true), small(o, 'rpm', 1402, 548, 72))
+            : [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 480, 380, 250), small(o, 'speed', 128, 543, 95),
+                tach(o, 1110, 380, 250, true), small(o, 'rpm', 1462, 556, 95));
+        return list.concat([
+            C.text('clock', stock ? 190 : 250, 652, 220, 34, C.clock, white, { align: 0 }),
+            C.text('outside', 1410, 112, 220, 36, (d) => C.outsideText(o, d.outside), white, { align: 0 }),
+        ], column(o, 1672));
+    },
+};

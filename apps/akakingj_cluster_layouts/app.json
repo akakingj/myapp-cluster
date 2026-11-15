@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -173,6 +173,10 @@
         ],
         [
           "classic",
+          "Old M"
+        ],
+        [
+          "id6m",
           "ID6 M"
         ],
         [
@@ -253,6 +257,10 @@
         ],
         [
           "classic",
+          "Old M"
+        ],
+        [
+          "id6m",
           "ID6 M"
         ],
         [
@@ -310,6 +318,10 @@
         ],
         [
           "classic",
+          "Old M"
+        ],
+        [
+          "id6m",
           "ID6 M"
         ],
         [
@@ -643,7 +655,7 @@
     },
     {
       "key": "infoLow",
-      "label": "Centre readout: bottom line (ID6 M)",
+      "label": "Centre readout: bottom line (Old M)",
       "type": "choice",
       "default": "coolant",
       "options": [
@@ -1055,7 +1067,7 @@
     },
     {
       "key": "amberRpm",
-      "label": "Amber zone below the red zone (ID7 M, ID8 M)",
+      "label": "Amber zone below the red zone (ID6 M, ID7 M, ID8 M)",
       "type": "number",
       "unit": "rpm",
       "default": 700,

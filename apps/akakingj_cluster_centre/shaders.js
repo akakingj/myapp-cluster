@@ -1967,4 +1967,124 @@ void main() {
     gl_FragColor = acc;
 }`;
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS };
+/**
+ * ID6 M (layout_id6m.js): round dials after the M cars' analog clusters of the mid 2010s, an original drawing. u_mode:
+ *   0  a big dial: a thin white ring round the top (open at the bottom, u_arc's ends and 9 degrees past them), a dark
+ *      band inside it, white marks (u_scale: max, numbered step, mark step, red from), the numerals inside them
+ *      (u_arc.z: their height of R), a darker disc in the middle, a long red-orange needle over a dark hub; the shift
+ *      lights along the outside of the tach's top end: amber from u_arc.w, red from u_scale.w (none past max). u_min,
+ *      u_zero, u_regen: a plug-in's regeneration below 0 (as E9X: its marks in u_regen, no numerals)
+ *   1  a small gauge: a white ring round a dark face, marks along u_arc (-110..110: majors at the ends and the middle,
+ *      the red end from u_scale.w of 100), the needle from the middle
+ *   2  the gear's arc under the tach: a white arc of a circle centred u_arc.xy in the layer, radius u_arc.z, u_arc.w
+ *      degrees either side of six o'clock, fading at its ends
+ */
+const MROUND_FS = `#version 100
+${HIGHP}${COMMON}${GLYPH}
+uniform vec2 u_size;
+uniform float u_mode;
+uniform vec4 u_scale;
+uniform vec4 u_arc;
+uniform float u_min;
+uniform float u_zero;
+uniform vec3 u_regen;
+uniform float u_value;
+uniform float u_digit_adv;
+uniform vec3 u_face;
+uniform vec3 u_ring;
+uniform vec3 u_tick;
+uniform vec3 u_needle;
+uniform vec3 u_amber;
+uniform vec3 u_red;
+varying vec2 v_uv;
+float angOf(vec2 d, float am) { float a = atan(d.x, -d.y) / DEG; if (a < am - 180.0) a += 360.0; if (a > am + 180.0) a -= 360.0; return a; }
+vec2 dirOf(float a) { return vec2(sin(a * DEG), -cos(a * DEG)); }
+float zeroAt() { return u_min < 0.0 ? clamp(u_zero, 0.05, 0.95) : 0.0; }
+float fracOf(float v) { float z = zeroAt(); return v >= 0.0 ? z + (1.0 - z) * v / u_scale.x : z * (1.0 - v / u_min); }
+float numeral(vec2 p, vec2 c, float h, float v) {
+    float n = v >= 99.5 ? 3.0 : v >= 9.5 ? 2.0 : 1.0, adv = u_digit_adv;
+    vec2 g = (p - c) / h;
+    float x = g.x + n * adv * 0.5, i = floor(x / adv);
+    if (i < 0.0 || i >= n || abs(g.y) > 0.5) return 0.0;
+    float s = sdf(digitOf(v, i, n), vec2(x - (i + 0.5) * adv, g.y + 0.5));
+    return smoothstep(0.5 - 1.5 / h, 0.5 + 1.5 / h, s);
+}
+/* a needle from c at angle a: L long, a tail T back, w wide at the hub tapering to a third */
+vec4 needle(vec4 acc, vec2 p, vec2 c, float a, float L, float T, float w) {
+    vec2 u = dirOf(a), n = vec2(-u.y, u.x);
+    float along = dot(p - c, u), side = abs(dot(p - c, n));
+    float ww = mix(w, w * 0.35, clamp((along + T) / (L + T), 0.0, 1.0)) * 0.5;
+    float d = side - ww;
+    float on = clamp(L - along + 0.5, 0.0, 1.0) * clamp(along + T + 0.5, 0.0, 1.0);
+    acc = over(acc, vec3(0.0), exp(-max(side - ww - 2.0, 0.0) * max(side - ww - 2.0, 0.0) / (w * w)) * 0.35 * on);
+    acc = over(acc, mix(u_needle, vec3(1.0, 0.8, 0.6), 0.25 * clamp(1.0 - side / max(ww, 0.5), 0.0, 1.0)), clamp(0.5 - d, 0.0, 1.0) * on);
+    return acc;
+}
+void main() {
+    vec2 p = v_uv * u_size;
+    vec4 acc = vec4(0.0);
+    if (u_mode > 1.5) {
+        vec2 d = p - u_arc.xy;
+        float a = angOf(d, 180.0), off = abs(a - 180.0);
+        float fade = smoothstep(u_arc.w, u_arc.w - 8.0, off);
+        acc = over(acc, u_ring, span(length(d), u_arc.z - 1.6, u_arc.z + 1.6) * fade);
+        gl_FragColor = acc;
+        return;
+    }
+    float R = min(u_size.x, u_size.y) * 0.5, px = 1.0 / R;
+    vec2 c = u_size * 0.5, d = p - c;
+    float r = length(d) / R;
+    if (r > 1.0 + 1.5 / R) { gl_FragColor = acc; return; }
+    float a0 = u_arc.x, a1 = u_arc.y, sw = a1 - a0;
+    float ang = angOf(d, (a0 + a1) * 0.5), t = (ang - a0) / sw;
+    if (u_mode > 0.5) {
+        /* a small gauge */
+        acc = over(acc, u_face * (1.25 - 0.45 * r), clamp((0.9 - r) / px + 0.5, 0.0, 1.0));
+        acc = over(acc, u_ring, span(r / px, 0.9 / px, 1.0 / px));
+        float k4 = floor(t * 8.0 + 0.5) / 8.0, o4 = abs(t - k4) * abs(sw) * DEG * r * R;
+        bool major = abs(mod(k4 * 8.0 + 0.01, 4.0)) < 0.1;
+        vec3 mc = k4 * 100.0 >= u_scale.w - 0.01 && u_scale.w <= 100.0 ? u_red : u_tick;
+        if (k4 >= -0.001 && k4 <= 1.001) acc = over(acc, mc, clamp(R * (major ? 0.03 : 0.02) - o4 + 0.5, 0.0, 1.0) * span(r / px, (major ? 0.66 : 0.72) / px, 0.84 / px));
+        acc = needle(acc, p, c, a0 + sw * clamp(u_value / u_scale.x, -0.02, 1.02), R * 0.78, R * 0.12, R * 0.06);
+        acc = over(acc, u_face * 0.6, clamp((0.12 - r) / px + 0.5, 0.0, 1.0));
+        acc = over(acc, u_tick * 0.35, span(r / px, 0.1 / px, 0.12 / px));
+        gl_FragColor = acc;
+        return;
+    }
+    /* a big dial: the face, its middle darker, the band round it */
+    acc = over(acc, u_face * (1.15 - 0.25 * r), clamp((0.965 - r) / px + 0.5, 0.0, 1.0));
+    acc = over(acc, u_face * 0.72, clamp((0.52 - r) / px + 0.5, 0.0, 1.0));
+    acc = over(acc, u_face * 1.5, span(r / px, 0.52 / px - 1.0, 0.52 / px + 0.6));
+    /* the white ring round the top, past the scale's ends */
+    float pad = 9.0 / abs(sw);
+    float ringOn = clamp((t + pad) * abs(sw) * DEG * R + 0.5, 0.0, 1.0) * clamp((1.0 + pad - t) * abs(sw) * DEG * R + 0.5, 0.0, 1.0);
+    acc = over(acc, u_ring, span(r / px, 0.965 / px, 1.0 / px) * ringOn);
+    if (t > -0.03 && t < 1.03) {
+        float mx = u_scale.x, z = zeroAt();
+        bool neg = z > 0.0 && t < z;
+        float v = neg ? u_min * (1.0 - t / z) : (t - z) / (1.0 - z) * mx;
+        float sc = neg ? -u_min / z : mx / (1.0 - z);
+        float sm = neg ? -u_min / 4.0 : u_scale.z, sn = neg ? -u_min / 2.0 : u_scale.y;
+        float km = floor(v / sm + 0.5) * sm, om = abs(v - km) / sc * abs(sw) * DEG * r * R;
+        bool major = abs(mod(km + 0.001, sn)) < 0.01;
+        if (km >= min(u_min, 0.0) - 0.001 && km <= mx + 0.001)
+            acc = over(acc, neg ? u_regen : u_tick, clamp(R * (major ? 0.009 : 0.0055) - om + 0.5, 0.0, 1.0) * span(r / px, (major ? 0.8 : 0.86) / px, 0.93 / px));
+        /* the shift lights: segments along the outside from u_arc.w (amber) and u_scale.w (red) */
+        if (!neg && u_arc.w < mx && v >= u_arc.w) {
+            float seg = mx / 40.0, ks = fract(v / seg);
+            vec3 lc = v >= u_scale.w ? u_red : u_amber;
+            acc = over(acc, lc, span(ks, 0.12, 0.88) * span(r / px, 0.875 / px, 0.955 / px));
+        }
+        if (!neg && v > -0.5 * sn) {
+            float kn = clamp(floor(v / sn + 0.5) * sn, 0.0, floor(mx / sn + 0.001) * sn);
+            vec2 cn = c + dirOf(a0 + sw * fracOf(kn)) * R * (0.8 - u_arc.z * 0.62);
+            acc = over(acc, u_tick, numeral(p, cn, u_arc.z * R, kn));
+        }
+    }
+    acc = needle(acc, p, c, a0 + sw * clamp(fracOf(u_value), -0.01, 1.01), R * 0.92, R * 0.18, R * 0.032);
+    acc = over(acc, vec3(0.05), clamp((0.085 - r) / px + 0.5, 0.0, 1.0));
+    acc = over(acc, u_face * 2.2, span(r / px, 0.085 / px, 0.1 / px));
+    gl_FragColor = acc;
+}`;
+
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS };
