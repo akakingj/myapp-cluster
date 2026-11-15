@@ -95,7 +95,7 @@ function dialSet(o, which, cx, size, cy) {
         which === 'speed' || C.engineFocus(o) || o.vehicle === 'ice' ? subPiece : Object.assign({}, subPiece, { visible: (d) => !engineOffKw(d) }),
         // the dial's unit (the tach's: the battery's power while the engine is off)
         C.text(which + 'Unit', cx - 130, cy + Math.round(50 * k), 260, Math.max(16, Math.round(25 * k)),
-            which === 'speed' ? C.speedUnit(o) : (d) => (engineOffKw(d) ? C.kwText(d) : '1/min x1000'),
+            which === 'speed' ? C.speedUnit(o) : (d) => (engineOffKw(d) ? C.kwText(d) : 'x1000 rpm'),
             which === 'speed' ? lbl : (t, d) => (engineOffKw(d) ? (C.isNum(d.kw) && d.kw < -0.3 ? regenTxt : lit(t)) : lbl(t)), { tracking: 0.08 }),
         Object.assign(C.text(which + 'SubLbl', cx - 60, subY + Math.round(22 * k), 120, Math.max(13, Math.round(19 * k)), subLbl, lbl, { tracking: 0.12 }),
             which === 'speed' || C.engineFocus(o) || o.vehicle === 'ice' ? {} : { visible: (d) => !engineOffKw(d) }),

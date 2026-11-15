@@ -198,7 +198,7 @@ module.exports = {
             list.push(Object.assign(T('nlTop', [644, 10, 84, 38], 'm_num', num(4), numC(4), 'center'), { visible: elec }),
                 Object.assign(T('nrTop', [1192, 10, 84, 38], 'm_num', num(4), numC(4), 'center'), { visible: elec }));
         }
-        list.push(T('rpmUnit', [1252, 602, 160, 29], 'm_tiny', (d) => (elec(d) ? 'kW' : '1/min x1000'), dim, 'left'));   // (under the right blade's foot)
+        list.push(T('rpmUnit', [1252, 602, 160, 29], 'm_tiny', (d) => (elec(d) ? 'kW' : 'x1000 rpm'), dim, 'left'));   // (under the right blade's foot)
         // the gear and the speed: in the middle, or (the map, an M car's boxes) their map-up places
         // the gear: its number (P, R, N as letters), the shift programme's stack beside it, as the M8's
         const gearNum = (d) => { const g = C.gearText(d); return /^[DSM]\d+$/.test(g) ? g.slice(1) : g; };

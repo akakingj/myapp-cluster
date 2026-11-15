@@ -67,7 +67,7 @@ function dial(o, which, cx, cy, size) {
     const lab = (key, a, r, txt, w) => { const [x, y] = at(a, r); return C.text(key, Math.round(x - w / 2), Math.round(y - h / 2), w, h, txt, white); };
     const tl = (c) => String(Math.round(C.tempIn(o, c) / 10) * 10);
     const unitTxt = () => (speed ? C.text('speedUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), kmh ? 'km/h' : 'mph', white)
-        : C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : '1/min x 1000'), white));
+        : C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : 'x1000 rpm'), white));
     if (ch) {
         // C and H at the small gauge's ends (H red), its name above the pivot (the oil: its can)
         const red = (t) => ({ color: [t.red, 1], glow: [t.red, 0] });
@@ -82,7 +82,7 @@ function dial(o, which, cx, cy, size) {
         const [x, y] = at(180, lr * 1.04);
         out.push(C.text(which + 'SubLbl', Math.round(cx - 0.3 * R), Math.round(pv[1] - 0.17 * R), Math.round(0.6 * R), Math.round(22 * k), g.label, white, { tracking: 0.08 }),
             C.text(which + 'Sub1', Math.round(x - 0.3 * R), Math.round(y - h / 2), Math.round(0.6 * R), h, g.txt, (t, d) => (g.hot(d) ? { color: [t.red, 1], glow: [t.red, 0] } : white(t))));
-        if (!speed) out.push(C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : '1/min x 1000'), white));
+        if (!speed) out.push(C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : 'x1000 rpm'), white));
         else out.push(C.text('speedUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), kmh ? 'km/h' : 'mph', white));
         return out;
     }
@@ -96,7 +96,7 @@ function dial(o, which, cx, cy, size) {
     } else {
         out.push(B.icon('oilIcon', Math.round(cx - 34 * k), Math.round(pv[1] - 0.17 * R), Math.round(34 * k), Math.round(24 * k), 'oilcan', 'dim'),
             C.text('oilUnit', Math.round(cx + 2 * k), Math.round(pv[1] - 0.17 * R), Math.round(40 * k), Math.round(22 * k), '°' + (o.tempUnit === 'c' ? 'C' : 'F'), white, { align: 0 }),
-            C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : '1/min x 1000'), white));
+            C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : 'x1000 rpm'), white));
     }
     return out;
 }

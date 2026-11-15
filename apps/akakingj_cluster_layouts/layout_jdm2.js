@@ -53,7 +53,7 @@ function tach(o, cx, cy, R) {
         },
         // the unit right of the hub, under the band's end (with the engine off the battery's power, the tach reads it then)
         C.text('rpmUnit', cx + Math.round(R * 0.2), cy + Math.round(R * 0.16), Math.round(R * 0.5), Math.max(14, Math.round(R * 0.07)),
-            (d) => (C.electric(o, d) ? C.kwText(d) : 'RPM x1000'), (t, d) => (C.electric(o, d) ? powerTxt(t, d) : redTxt(t)), { tracking: 0.06 }),
+            (d) => (C.electric(o, d) ? C.kwText(d) : 'x1000 rpm'), (t, d) => (C.electric(o, d) ? powerTxt(t, d) : redTxt(t)), { tracking: 0.06 }),
         C.text('speedDigits', cx + Math.round(R * 0.16), cy + Math.round(R * 0.33), Math.round(R * 0.6), Math.round(R * 0.34), (d) => C.speedText(o, d), white),
         C.text('speedDigitsUnit', cx + Math.round(R * 0.16), cy + Math.round(R * 0.7), Math.round(R * 0.6), Math.max(14, Math.round(R * 0.08)), C.speedUnit(o), white, { tracking: 0.04 }),
     ];

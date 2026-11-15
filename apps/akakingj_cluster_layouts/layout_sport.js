@@ -142,7 +142,7 @@ module.exports = {
             list.push(Object.assign(T(i < 0 ? 'powRegen' : 'pow' + i, [at[0], at[1], i < 0 || i === 4 ? 74 : 50, 27], 's_scale', i < 0 ? '-50' : String(i * 25), nearPow(i), 'left'), { visible: elec }));
         });
         list.push(T('mphCap', [338, 88, 80, 29], 's_unit', C.speedUnit(o), B.role('sblue'), 'center'),
-            T('rpmCap', [1430, 86, 200, 29], 's_unit', (d) => (elec(d) ? 'ePower %' : '1/min x 1000'), B.role('sred'), 'center'));
+            T('rpmCap', [1430, 86, 200, 29], 's_unit', (d) => (elec(d) ? 'ePower %' : 'x1000 rpm'), B.role('sred'), 'center'));
         // their gear: the number alone (P, R or N in park, reverse or neutral; the selector's letter with no gear)
         const gearNum = (d) => { const g = C.gearText(d); return /^[DSM]\d+$/.test(g) ? g.slice(1) : g; };
         const gearC = (t, d) => ({ color: [B.shiftNow(o, d) ? t.red : t.fg, 1], glow: [t.fg, 0] });
