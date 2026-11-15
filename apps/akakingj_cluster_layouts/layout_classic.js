@@ -49,7 +49,7 @@ function dial(o, which, cx, cy, size) {
     const out = [{
         key: which, kind: 'e9x', x: cx - R, y: cy - R, w: size, h: size,
         params: {
-            u_scale: sc, u_arc: [A0, A1, red, speed ? (kmh ? 0.098 : 0.122) : 0.14],
+            u_scale: sc, u_arc: [A0, A1, red, speed ? (kmh ? 0.112 : 0.136) : 0.14],
             u_sub: [SUB[0], SUB[1], 2, 2], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB,
         },
         colors: (t) => ({ face: t.face, ring: t.ring, ring2: t.ring2, bezel: t.bezel, tick: t.tick, needle: t.needle, red: t.red }),

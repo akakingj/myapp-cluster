@@ -50,7 +50,7 @@ function bigDial(o, which, cx, size, cy) {
     const list = extra.concat([
         {
             key: which, kind: 'dial', x: cx - size / 2, y: cy - size / 2, w: size, h: size,
-            params: { u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 34 : 48) * k + 2), (dense ? 226 : 214) * k], u_needle_dim: [290 * k, 56 * k, 14 * k, 4], u_look: [0.22, 1, 0, 0], u_look2: [Math.round(20 * k), k, 0.9, 1] },
+            params: { u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 40 : 54) * k + 2), (dense ? 222 : 210) * k], u_needle_dim: [290 * k, 56 * k, 14 * k, 4], u_look: [0.22, 1, 0, 0], u_look2: [Math.round(20 * k), k, 0.9, 1] },
             colors: dialColours, max: s.max, sweep: true,
             // the tach reads the battery's power in an electric eDrive mode (layout_common.electric)
             value: speed ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : C.tachValue(o), range: speed ? undefined : C.tachRange(o, s),

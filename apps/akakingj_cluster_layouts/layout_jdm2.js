@@ -109,7 +109,7 @@ function leftDial(o, cx, cy, R) {
         const s = C.speedScale(o);
         return [
             Object.assign({ key: 'speedDial', kind: 'jdm' }, base, {
-                params: { u_mode: [5], u_origin: [cx - R, cy - R], u_scale: [s.max, s.major, s.minor, s.max + 1], u_arc: [145, 415, 0.085, 0] },
+                params: { u_mode: [5], u_origin: [cx - R, cy - R], u_scale: [s.max, s.major, s.minor, s.max + 1], u_arc: [145, 415, 0.1, 0] },
                 colors: (t) => Object.assign(jdmColours(t), { needle: '#ff2a1e' }), max: s.max, sweep: true,
                 value: (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0),
             }),

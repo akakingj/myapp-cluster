@@ -47,7 +47,7 @@ function dial(o, which, cx, cy, size) {
     const kwS = (d) => C.kwDialScale(C.kwRange(d).out);
     return [{
         key: which, kind: 'e9x', x: cx - R, y: cy - R, w: size, h: size,
-        params: { u_scale: sc, u_arc: [A0, A1, red, speed ? 0.1 : 0.14], u_sub: [0, 0, 0, 0], u_subv: [0], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB },
+        params: { u_scale: sc, u_arc: [A0, A1, red, speed ? 0.114 : 0.14], u_sub: [0, 0, 0, 0], u_subv: [0], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB },
         colors: (t) => ({ face: t.face, ring: t.ring, ring2: t.ring2, bezel: t.bezel, tick: t.tick, needle: t.needle, red: t.red }),
         value: speed ? (d) => (isNum(d.speed) ? C.speedIn(o, d.speed) : 0)
             : (d) => (elec(d) ? (isNum(d.kw) ? Math.max(-C.kwRange(d).in, Math.min(kwS(d).max, d.kw)) : 0) : isNum(d.rpm) ? d.rpm / 1000 : 0),
