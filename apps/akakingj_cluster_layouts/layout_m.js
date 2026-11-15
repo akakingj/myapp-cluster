@@ -125,7 +125,6 @@ module.exports = {
     stripFuel: false,   // (its own fuel bar)
     mapWindow: WINDOW,
     speedGauge: false,  // (the speed in figures only, as theirs)
-    gearNumber: true,   // (the gear's number, as the M8's)
     ownStripGauges: true,   // (the fuel and the charge are its own bars along the bottom: none of the strip's)
     // its own places, set on the page (layouts.js placesFor): the cards' gauges and the bars along the bottom
     places: [['card1', 'Left card: top'], ['card2', 'Left card: bottom'], ['card3', 'Right card: top'], ['card4', 'Right card: bottom'],
@@ -201,16 +200,16 @@ module.exports = {
         list.push(T('rpmUnit', [1252, 602, 160, 29], 'm_tiny', (d) => (elec(d) ? 'kW' : 'x1000 rpm'), dim, 'left'));   // (under the right blade's foot)
         // the gear and the speed: in the middle, or (the map, an M car's boxes) their map-up places
         // the gear: its number (P, R, N as letters), the shift programme's stack beside it, as the M8's
-        const gearNum = (d) => { const g = C.gearText(d); return /^[DSM]\d+$/.test(g) ? g.slice(1) : g; };
+        // (the gear with its programme, D4 / S3 / M2, P R N as letters: since 0.35.3, not the number alone as the M8's)
+        const gearNum = (d) => C.gearText(d);
         const gearC = (t, d) => ({ color: [B.shiftNow(o, d) ? t.red : t.fg, 1], glow: [t.fg, 0] });
-        const stack = (x, y, z) => Object.assign(B.icon('gearStack', x, y, z, z, 'stack', 'fg'), { visible: (d) => /^[DSM]\d*$/.test(C.gearText(d)) });
         if (!stock) {
             if (map || mcar) {
-                list.push(T('gear', [710, 450, 230, 117], 'm_gear', gearNum, gearC, 'right'), stack(944, 512, 54),
+                list.push(T('gear', [700, 450, 300, 117], 'm_gear', gearNum, gearC, 'right'),
                     T('speedDigits', [1006, 467, 203, 82], 'm_speed', (d) => C.speedText(o, d), fg, 'left'),
                     T('speedUnit', [1006, 549, 108, 29], 'm_tiny', C.speedUnit(o), dim, 'left'));
             } else {
-                list.push(T('gear', [700, 246, 520, 117], 'm_gear', gearNum, gearC, 'center'), stack(1014, 290, 54),
+                list.push(T('gear', [700, 246, 520, 117], 'm_gear', gearNum, gearC, 'center'),
                     T('speedDigits', [700, 400, 520, 82], 'm_speed', (d) => C.speedText(o, d), fg, 'center'),
                     T('speedUnit', [1111, 409, 97, 29], 'm_tiny', C.speedUnit(o), dim, 'left'));
             }

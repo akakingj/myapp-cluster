@@ -62,7 +62,7 @@ LAYOUTS.forEach((L) => {
         const s = makeScene({ layout: id, data: {} });
         drive(s, 2, () => ({ speed: 50 * 1.609344, rpm: 2500, stage: 'D', gear: 3, oil: 100, coolant: 90 }));
         const t = textsOf(s);
-        // (Sport shows the gear's number alone, as theirs: L.gearNumber; the car's strip shows the gear, so only the
+        // (the car's strip shows the gear, so only the
         // layouts made round a big gear show it too: L.stripGear)
         [...(L.stripGear ? [L.gearNumber ? '3' : 'D3'] : []), '50'].forEach((x) => assert(t.indexOf(x) >= 0, x + ' in ' + JSON.stringify(t)));
         const vals = s.engine._pieces().filter((p) => p.value !== null).map((p) => p.value);

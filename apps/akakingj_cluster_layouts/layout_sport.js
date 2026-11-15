@@ -51,7 +51,6 @@ module.exports = {
     stripFuel: false,   // (its own fuel bar)
     ownStripGauges: true,   // (the charge is its bottom bar's blue half, the fuel its own bar: none of the strip's bars)
     mapWindow: WINDOW,
-    gearNumber: true,   // (the gear's number alone, as theirs)
     speedGauge: false,  // (its speed bracket reads through dyn, u_speed: the engine eases the engine speed alone)
     // its own places, set on the page (layouts.js placesFor): the brackets' bars and the bottom bar's halves
     places: [['fuelBar', 'Bar in the speed bracket (fuel)'], ['oilBar', 'Bar in the rev bracket (oil)'], ['half1', 'Bottom bar: left'], ['half2', 'Bottom bar: right']]
@@ -144,7 +143,8 @@ module.exports = {
         list.push(T('mphCap', [338, 88, 80, 29], 's_unit', C.speedUnit(o), B.role('sblue'), 'center'),
             T('rpmCap', [1430, 86, 200, 29], 's_unit', (d) => (elec(d) ? 'ePower %' : 'x1000 rpm'), B.role('sred'), 'center'));
         // their gear: the number alone (P, R or N in park, reverse or neutral; the selector's letter with no gear)
-        const gearNum = (d) => { const g = C.gearText(d); return /^[DSM]\d+$/.test(g) ? g.slice(1) : g; };
+        // (the gear with its programme, D4 / S3 / M2: since 0.35.3, not the number alone as theirs)
+        const gearNum = (d) => C.gearText(d);
         const gearC = (t, d) => ({ color: [B.shiftNow(o, d) ? t.red : t.fg, 1], glow: [t.fg, 0] });
         if (map) {
             // their map-up places (full screen the gear above the KOMBI's box)

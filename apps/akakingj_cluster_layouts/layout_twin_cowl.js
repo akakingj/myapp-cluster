@@ -29,7 +29,10 @@ const PAL = {
     // the display: pale grey, dark figures
     lcd0: '#c3ccd0', lcd1: '#97a3a9', lcdInk: '#0b0f12', lcdRule: '#5d6a71',
 };
-const pal = () => Object.assign({}, PAL);
+/* the dials' ring of light by the drive mode (Settings > Colours: following the drive programme, layouts' looks):
+ * ice-blue in comfort (and Adaptive), teal in ECO PRO and on electricity, red in a sport mode; the rest as designed */
+const RINGS = { comfort: {}, efficient: { ring: '#86f7de', ring2: '#0e9e86' }, sport: { ring: '#ff9a8c', ring2: '#d0221c' } };
+const pal = (look) => Object.assign({}, PAL, RINGS[look] || {});
 const isNum = C.isNum;
 const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0] });
 const ink = (t) => ({ color: [t.lcdInk, 1], glow: [t.lcdInk, 0] });

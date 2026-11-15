@@ -28,7 +28,8 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 Track), renamed Retro, Analog sport, Classic M, M and Sport to 90's, 20's, ID6 M, ID7 M and ID8 M, and put the
 layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.31.0 added JDM 2 after JDM 1; 0.33.0
 renamed ID6 M (the E9x-style dials) to Old M and added a new ID6 M after it; 0.34.0 keeps the car's own bottom strip
-always (the full-screen form is gone: below).
+always (the full-screen form is gone: below). 0.35.3: ID7 M and ID8 M show the gear with its programme (D4, S3,
+M2), not the number alone; GM's rings of light follow the drive mode (ice-blue, red in sport, teal in ECO PRO).
 
 ```
 +---------------------------+  JDM 1                         Showing on the cluster
