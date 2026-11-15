@@ -39,8 +39,9 @@ const attribution = require('./attribution');
 const path = require('path');
 
 const W = 1600, H = 520;
-/* the page's pictures (record.js setImage): the large one, and each layout's card (+ its index) */
-const IMG_BIG = 0x434c0100, IMG_CARD = 0x434c0200;
+/* the page's pictures (record.js setImage): the large one, and each layout's card (+ its index; + 0x40 with the car's
+ * own bottom strip) */
+const IMG_BIG = 0x434c0100, IMG_CARD = 0x434c0200, IMG_STRIP = 0x40;
 const CARDS = 6;   // cards a row
 const isNum = (v) => typeof v === 'number' && isFinite(v);
 const SIGNALS_PER_PAGE = 7;
@@ -295,12 +296,14 @@ mgu.run({
         function drawLayouts(cv, t) {
             const st = cluster.status(), d = data(), o = options(), now = layoutNow(), on = showing();
             const sel = on ? now.id : 'stock', shownId = on ? now.id : settings.get(modeKey());
+            // (the pictures as the layouts look with the bottom strip set: the car's own, or the layout's full screen)
+            const strip = o.bottomStrip === 'stock', bigKey = shownId + (strip ? ':strip' : '');
             const acc = t.sel || t.accent || '#3d8bff';
             // the large picture: the layout the drive mode uses now (on or not)
             const BX = 24, BY = 14;
             cv.roundRect(BX - 4, BY - 4, menu.PW + 8, menu.PH + 8, 10, on ? acc : '#2a2f38');
-            if (!picture(cv, IMG_BIG, previews.big(shownId), menu.PW, menu.PH, BX, BY, bigShown !== shownId)) cv.fillRect(BX, BY, menu.PW, menu.PH, '#000000');
-            bigShown = shownId;
+            if (!picture(cv, IMG_BIG, previews.big(shownId, strip), menu.PW, menu.PH, BX, BY, bigShown !== bigKey)) cv.fillRect(BX, BY, menu.PW, menu.PH, '#000000');
+            bigShown = bigKey;
             if (!on) { cv.fillRect(BX, BY, menu.PW, menu.PH, withAlpha('#000000', 0.55)); cv.text('The stock cluster shows', BX + menu.PW / 2, BY + menu.PH / 2 + 10, 28, t.text, { align: 'center', font: 'bold' }); }
             // the right: the layout, its state, its readouts
             const RX = 652, RW = W - 24 - RX;
@@ -336,9 +339,9 @@ mgu.run({
                 const ix = x + Math.round((CWD - menu.TW) / 2), iy = y + 8;
                 if (id === 'stock') { cv.roundRect(ix, iy, menu.TW, menu.TH, 6, '#16191f'); cv.text('Stock', ix + menu.TW / 2, iy + menu.TH / 2 + 8, 24, t.dim, { align: 'center', font: 'bold' }); }
                 else {
-                    const n = ITEMS.indexOf(id);
-                    if (!picture(cv, IMG_CARD + n, previews.thumb(id), menu.TW, menu.TH, ix, iy, !cardsUp[id])) cv.fillRect(ix, iy, menu.TW, menu.TH, '#000000');
-                    cardsUp[id] = true;
+                    const n = ITEMS.indexOf(id) + (strip ? IMG_STRIP : 0), ck = id + (strip ? ':strip' : '');
+                    if (!picture(cv, IMG_CARD + n, previews.thumb(id, strip), menu.TW, menu.TH, ix, iy, !cardsUp[ck])) cv.fillRect(ix, iy, menu.TW, menu.TH, '#000000');
+                    cardsUp[ck] = true;
                 }
                 cv.text(id === 'stock' ? 'Stock cluster' : byId(id).title, x + CWD / 2, y + CHT - 12, 18, mine ? '#ffffff' : t.text, { align: 'center', font: 'bold' });
                 tap(cv, x, y, CWD, CHT, () => choose(id), 'card_' + id);

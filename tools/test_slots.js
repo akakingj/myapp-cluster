@@ -65,20 +65,20 @@ check('slotsBy: a hidden object setting, empty by default', () => {
     assert(s && s.type === 'object' && s.hidden === true && JSON.stringify(s.default) === '{}');
 });
 
-check('previews.wad: a 600 x 225 picture of every layout', () => {
+check('previews.wad: a 600 x 225 picture of every layout, with its own bottom strip and with the car\'s', () => {
     const b = fs.readFileSync(path.join(APP, 'previews.wad'));
     assert.strictEqual(b.slice(0, 4).toString(), 'LPV1');
     const hl = b.readUInt32LE(4), head = JSON.parse(b.slice(8, 8 + hl).toString()), data = 8 + hl;
     assert(head.w === 600 && head.h === 225);
-    L.LAYOUTS.forEach((l) => {
-        const e = head.list.find((x) => x.id === l.id);
-        assert(e, 'no picture of ' + l.id);
+    L.LAYOUTS.forEach((l) => [0, 1].forEach((strip) => {
+        const e = head.list.find((x) => x.id === l.id && x.strip === strip);
+        assert(e, 'no picture of ' + l.id + (strip ? ' with the car\'s strip' : ''));
         const px = zlib.inflateSync(b.slice(data + e.off, data + e.off + e.len));
         assert.strictEqual(px.length, 600 * 225 * 3, l.id);
         let lit = 0;
         for (let i = 0; i < px.length; i += 3) if (px[i] + px[i + 1] + px[i + 2] > 120) lit++;
         assert(lit > 1500, l.id + ': nearly black (' + lit + ')');
-    });
+    }));
 });
 
 console.log(n + ' passed');

@@ -4,12 +4,16 @@ the cluster would (tools/preview.js, WebGL in headless Chromium) with demo readi
 PW x PH and packed, each deflated RGB, into apps/akakingj_cluster_layouts/previews.wad (.wad: the build ships it
 as it is, as the fonts; kit/tools/build.py):
 
-    'LPV1', u32 header length, header JSON { w, h, list: [{ id, off, len }] }, the data (off from the data's start)
+    'LPV1', u32 header length, header JSON { w, h, list: [{ id, strip, off, len }] }, the data (off from the data's start)
+
+Each layout twice: with its own strip (strip 0, Settings > Bottom strip: the layout's) and with the car's (strip 1, the
+default), the car's strip drawn in as a stand-in (the KOMBI draws the real one: gear, drive mode, ranges, time,
+outside temperature) so the picture reads as on the car.
 
 Run again after a layout's look changes:  python3 tools/make_previews.py
 """
 import json, os, struct, subprocess, sys, tempfile, zlib
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, 'apps', 'akakingj_cluster_layouts')
@@ -22,30 +26,48 @@ def layout_ids():
         raise SystemExit('layout list: ' + out.stderr)
     return json.loads(out.stdout)
 
+FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf'
+
+def stock_strip(im):
+    """The car's own strip under y 660 (1920 x 720): a stand-in, grey, its usual contents."""
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 664, 1919, 719], fill=(10, 11, 13))
+    d.line([360, 664, 1560, 664], fill=(48, 52, 58), width=2)
+    f, big = ImageFont.truetype(FONT, 30), ImageFont.truetype(FONT, 40)
+    grey, light = (120, 126, 134), (190, 195, 202)
+    d.text((420, 676), '520 km', font=f, fill=grey)
+    d.text((960, 668), 'D4', font=big, fill=light, anchor='ma')
+    d.text((800, 676), 'COMFORT', font=f, fill=grey, anchor='ma')
+    d.text((1500, 676), '4:13   9\u00b0C', font=f, fill=grey, anchor='ra')
+    return im
+
 def main():
-    only = sys.argv[1:]
     ids = layout_ids()
     tmp = tempfile.mkdtemp(prefix='lpv-')
     blobs, head = [], {'w': PW, 'h': PH, 'list': []}
     off = 0
-    for lid in ids:
-        png = os.path.join(tmp, lid + '.png')
-        r = subprocess.run(['node', os.path.join(ROOT, 'tools', 'preview.js'), '--layout', lid, '--engine', '--kmh', '--celsius', '--speed', '88',
-                            '--rpm', '4200', '--gear', '4', '--stage', 'D', '--oil', '96', '--coolant', '90', '--out', png],
-                           capture_output=True, text=True, cwd=ROOT)
-        if r.returncode != 0:
-            raise SystemExit(lid + ': ' + r.stderr[-800:])
-        im = Image.open(png).convert('RGB').resize((PW, PH), Image.LANCZOS)
-        data = zlib.compress(im.tobytes(), 9)
-        head['list'].append({'id': lid, 'off': off, 'len': len(data)})
-        blobs.append(data)
-        off += len(data)
-        im.save(os.path.join(tmp, lid + '_small.png'))
-        print('%-14s %6d bytes' % (lid, len(data)))
+    for strip in (0, 1):
+        for lid in ids:
+            png = os.path.join(tmp, '%s_%d.png' % (lid, strip))
+            r = subprocess.run(['node', os.path.join(ROOT, 'tools', 'preview.js'), '--layout', lid, '--engine', '--kmh', '--celsius', '--speed', '88',
+                                '--rpm', '4200', '--gear', '4', '--stage', 'D', '--oil', '96', '--coolant', '90', '--out', png] + (['--strip'] if strip else []),
+                               capture_output=True, text=True, cwd=ROOT)
+            if r.returncode != 0:
+                raise SystemExit(lid + ': ' + r.stderr[-800:])
+            im = Image.open(png).convert('RGB')
+            if strip:
+                im = stock_strip(im)
+            im = im.resize((PW, PH), Image.LANCZOS)
+            data = zlib.compress(im.tobytes(), 9)
+            head['list'].append({'id': lid, 'strip': strip, 'off': off, 'len': len(data)})
+            blobs.append(data)
+            off += len(data)
+            im.save(os.path.join(tmp, '%s_%d_small.png' % (lid, strip)))
+            print('%-14s strip %d %6d bytes' % (lid, strip, len(data)))
     hj = json.dumps(head, separators=(',', ':')).encode()
     with open(os.path.join(APP, 'previews.wad'), 'wb') as f:
         f.write(b'LPV1' + struct.pack('<I', len(hj)) + hj + b''.join(blobs))
-    print('previews.wad: %d layouts, %d bytes (pictures in %s)' % (len(ids), 8 + len(hj) + off, tmp))
+    print('previews.wad: %d pictures, %d bytes (pictures in %s)' % (len(head['list']), 8 + len(hj) + off, tmp))
 
 if __name__ == '__main__':
     main()

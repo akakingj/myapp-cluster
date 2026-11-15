@@ -33,7 +33,9 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 ```
 
 - **The cards:** every layout's picture (made beforehand with demo readings for a petrol car, km/h, °C:
-  `previews.wad`, from `python3 tools/make_previews.py`, which draws each with `tools/preview.js`), six a row, the
+  `previews.wad`, from `python3 tools/make_previews.py`, which draws each with `tools/preview.js`), as it looks with
+  Settings > Bottom strip as set (0.29.1: with the car's own strip, the default, the layout above it and a grey
+  stand-in for the strip the car draws; with the layout's, full screen), six a row, the
   arrows for more. A tap shows that layout on the cluster at once (Show on the cluster turned on with it); in Sport
   or ECO PRO with a layout set for that mode (Settings > Layout in Sport / in ECO PRO) the tap changes that one.
   **Stock** turns the layout off: the stock cluster back.

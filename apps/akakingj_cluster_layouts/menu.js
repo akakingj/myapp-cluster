@@ -1,7 +1,8 @@
 'use strict';
 /**
  * menu.js - the page's layout picker (0.29.0): each layout's picture, made beforehand with demo readings
- * (tools/make_previews.py: previews.wad, 600 x 225 deflated RGB a layout), large for the one chosen and small on
+ * (tools/make_previews.py: previews.wad, 600 x 225 deflated RGB a layout, with its own bottom strip and with the
+ * car's: Settings > Bottom strip picks which, 0.29.1), large for the one chosen and small on
  * a row of cards to tap; and the list a readout's value is picked from (a sheet over the page).
  */
 const fs = require('fs');
@@ -11,7 +12,8 @@ const zlib = require('zlib');
 const PW = 600, PH = 225;           // the large picture (previews.wad's size)
 const TW = 216, TH = 81;            // a card's
 
-/** The pictures in previews.wad: { has(id), big(id), thumb(id) } (RGBA buffers, made once each; null if none). */
+/** The pictures in previews.wad: { has(id), big(id, strip), thumb(id, strip) } (RGBA buffers, made once each; null if
+ * none). strip: with the car's own bottom strip (a file without that one: the layout's). */
 function loadPreviews(dir, log) {
     let head = { list: [] }, buf = null, data = 0;
     try {
@@ -21,8 +23,9 @@ function loadPreviews(dir, log) {
         head = JSON.parse(buf.slice(8, 8 + hl).toString());
         data = 8 + hl;
     } catch (e) { if (log) log.warn('previews: ' + e.message); buf = null; }
-    const rgbOf = (id) => {
-        const e = buf && head.list.find((x) => x.id === id);
+    const rgbOf = (id, strip) => {
+        const want = strip ? 1 : 0;
+        const e = buf && (head.list.find((x) => x.id === id && (x.strip || 0) === want) || head.list.find((x) => x.id === id));
         if (!e) return null;
         try { return zlib.inflateSync(buf.slice(data + e.off, data + e.off + e.len)); } catch (err) { if (log) log.warn('preview ' + id + ': ' + err.message); return null; }
     };
@@ -30,21 +33,23 @@ function loadPreviews(dir, log) {
     return {
         has: (id) => !!(buf && head.list.some((x) => x.id === id)),
         /** The large picture of layout id, RGBA PW x PH. */
-        big(id) {
-            if (bigs[id] !== undefined) return bigs[id];
-            const rgb = rgbOf(id);
+        big(id, strip) {
+            const key = id + (strip ? ':strip' : '');
+            if (bigs[key] !== undefined) return bigs[key];
+            const rgb = rgbOf(id, strip);
             let out = null;
             if (rgb) { out = Buffer.alloc(PW * PH * 4); for (let i = 0, j = 0; i < rgb.length; i += 3, j += 4) { out[j] = rgb[i]; out[j + 1] = rgb[i + 1]; out[j + 2] = rgb[i + 2]; out[j + 3] = 255; } }
             // (only the last two large ones kept: 540 KB each)
             const keys = Object.keys(bigs);
             if (keys.length >= 2) delete bigs[keys[0]];
-            bigs[id] = out;
+            bigs[key] = out;
             return out;
         },
         /** The card's picture of layout id, RGBA TW x TH (each pixel the average of the large one's under it). */
-        thumb(id) {
-            if (thumbs[id] !== undefined) return thumbs[id];
-            const rgb = rgbOf(id);
+        thumb(id, strip) {
+            const key = id + (strip ? ':strip' : '');
+            if (thumbs[key] !== undefined) return thumbs[key];
+            const rgb = rgbOf(id, strip);
             let out = null;
             if (rgb) {
                 out = Buffer.alloc(TW * TH * 4);
@@ -60,7 +65,7 @@ function loadPreviews(dir, log) {
                     }
                 }
             }
-            thumbs[id] = out;
+            thumbs[key] = out;
             return out;
         },
     };
