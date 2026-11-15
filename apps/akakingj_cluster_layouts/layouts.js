@@ -84,7 +84,15 @@ LAYOUTS.forEach((L) => {
     const own = L.pieces;
     // (Settings > Bottom strip, Cluster: M car and Frame behind the gear box are gone: always the car's strip, which
     // leaves none of the KOMBI's boxes)
-    L.pieces = (o0) => { const o = Object.assign({}, o0 || {}, { bottomStrip: 'stock', cluster: 'standard', boxBezel: false }); return finish(L, o, built(o)); };
+    L.pieces = (o0) => {
+        const o = Object.assign({}, o0 || {}, { bottomStrip: 'stock', cluster: 'standard', boxBezel: false });
+        // a setting this build can't draw (a stale saved value) must not stop the app (the main app deletes an app
+        // that keeps failing): the layout as designed, its places and readouts on their defaults
+        try { return finish(L, o, built(o)); } catch (e) {
+            const safe = Object.assign({}, o, { places: {}, infoMain: undefined, infoA: undefined, infoB: undefined, infoLow: undefined, gaugeSpeed: 'auto', gaugeRpm: 'auto', leftDial: 'gmeter' });
+            return finish(L, safe, built(safe));
+        }
+    };
     const built = (o) => {
         // over the car's own strip there is no dark box to work round: the stock centre content shows in the
         // map's window, so the layout takes the same form as with the map (its window left clear for it)

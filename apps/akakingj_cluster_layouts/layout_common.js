@@ -442,7 +442,10 @@ const GAUGE_NUM = {
 const GAUGE_KIND = { coolant: 'temp', oil: 'temp', iat: 'temp', gearbox: 'temp', boost: 'boost', power: 'power', torque: 'torque', throttle: 'pct', pedal: 'pct', timing: 'timing', fuel: 'pct' };
 /** each gauge's icon: the cluster's own icons (ICON_FS) and bimmer-lab's (bimmer.js ICON) */
 const GAUGE_ICON = { coolant: [0, 'therm'], oil: [1, 'oilcan'], iat: [3, 'therm'], gearbox: [2, 'cog'], boost: [5, 'turbo'], power: [7, 'bolt'], torque: [13, 'torque'], throttle: [13, 'gauge'], pedal: [13, 'gauge'], timing: [9, 'gauge'], fuel: [4, 'fuel'] };
-function placeGauge(o, key) {
+function placeGauge(o, key0) {
+    // a value this build doesn't know (a stale saved setting) draws the coolant gauge rather than failing the layout
+    const known = (k) => !!(GAUGE_KIND[k] && GAUGE_ICON[k] && gaugeOf(Object.assign({}, o, { gaugeSpeed: k }), 'speed'));
+    const key = known(key0) ? key0 : 'coolant';
     const g = gaugeOf(Object.assign({}, o, { gaugeSpeed: key }), 'speed');
     if (!g) return null;
     const kind = GAUGE_KIND[key], f = GAUGE_NUM[kind];
