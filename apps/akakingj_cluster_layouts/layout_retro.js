@@ -109,7 +109,7 @@ module.exports = {
     gearText: C.gearText,
     stripFuel: false,   // (its speedometer has a fuel gauge)
     // its own places, set on the page (layouts.js placesFor)
-    places: [{ key: 'midGauge', kind: 'gauge', label: 'Gauge between the dials' }],
+    places: [{ key: 'midGauge', kind: 'gauge', label: 'Gauge between the dials', extra: [['clock', 'Analog clock']] }],
 
     pieces(o) {
         const gearC = (t, d) => ({ color: [C.gearText(d) === 'R' ? t.red : t.text, 1], glow: [t.glow, 0.55] });
@@ -140,9 +140,17 @@ const coolantDial = (o, mid, gy) => (C.placeOf(o, 'midGauge') ? midPlace(o, mid,
 const coolantFig = (o, mid, gy) => (C.placeOf(o, 'midGauge') ? midPlace(o, mid, gy).slice(1) : C.chOf(o, 'coolant') ? C.chMarks('coolantCh', mid, gy, 70, -110, 110, 18, lit)
     : [C.text('coolantNum', mid - 60, gy + 50, 120, 24, (d) => C.tempText(o, d.coolant), lit)]);   // (in figures)
 
+/** An analog clock, size across at (cx, cy), in the dials' look (shaders.js ACLOCK_FS): its hands moved each minute. */
+const analogClock = (key, cx, cy, size) => ({
+    key, kind: 'aclock', x: cx - size / 2, y: cy - size / 2, w: size, h: size, z: 2, params: { u_hm: [0, 0] },
+    colors: (t) => ({ face0: t.face0, face1: t.face1, bezel: t.bezel, tick: t.tick, minor: t.minor, num: t.num, needle: t.needle, hub: t.hub, glow: t.glow }),
+    dyn: () => { const n = require('./clock').local(); return { u_hm: [(n.h % 12) + n.m / 60, n.m] }; },
+});
 /** The middle gauge set on the page (place midGauge): its dial (C to H for a temperature as the car's own), then its
  * figures (or C and H). */
 function midPlace(o, mid, gy) {
+    // an analog clock (the time in Settings > Time zone): no figures under it
+    if (C.placeOf(o, 'midGauge') === 'clock') return [analogClock('coolantDial', mid, gy, 184)];
     const g = C.placeGauge(o, C.placeOf(o, 'midGauge')), ch = C.chOf(o, g.key);
     return [small('coolantDial', mid, gy, 184, [100, 25, 12.5, ch ? C.chRed(o, ch) * 100 : Math.min(101, g.redFrac * 100)], [-110, 110], ch ? (d) => C.chFrac(ch, d[ch]) * 100 : (d) => g.frac(d) * 100, 2)]
         .concat(ch ? C.chMarks('coolantCh', mid, gy, 70, -110, 110, 18, lit) : [Object.assign(C.text('coolantNum', mid - 70, gy + 50, 140, 24, (d) => { const n = g.num(d); return n === '--' || n === 'OFF' ? n : n + (g.unit[0] === '°' ? '°' : ' ' + g.unit); }, lit), g.tone ? { tone: g.tone } : {})]);
@@ -156,7 +164,7 @@ function middle(o, X, W, gearC, top, bottom, stripped) {
         C.text('clock', X + 8, top, (W - 22) / 2, 36, C.clock, lit, { align: 0 }),
         C.text('outside', X + W / 2 + 3, top, (W - 22) / 2, 36, (d) => C.outsideText(o, d.outside), lit, { align: 1 }),
         coolantDial(o, mid, gy),
-        C.text('coolantLbl', mid - 60, gy + 26, 120, 19, C.placeOf(o, 'midGauge') ? C.placeGauge(o, C.placeOf(o, 'midGauge')).label : 'TEMP', lbl, { tracking: 0.14 }),
+        ...(C.placeOf(o, 'midGauge') === 'clock' ? [] : [C.text('coolantLbl', mid - 60, gy + 26, 120, 19, C.placeOf(o, 'midGauge') ? C.placeGauge(o, C.placeOf(o, 'midGauge')).label : 'TEMP', lbl, { tracking: 0.14 })]),
         ...coolantFig(o, mid, gy),
         { key: 'lcd', kind: 'panel', x: X + 10, y: ly, w: W - 20, h: 206, params: { u_box: [10, 2, 0.4, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },
     ];
@@ -170,7 +178,7 @@ function middle(o, X, W, gearC, top, bottom, stripped) {
         C.text('outside', X + W / 2 + 3, top, (W - 22) / 2, 36, (d) => C.outsideText(o, d.outside), lit, { align: 1 }),
         // coolant: cold left, hot right, red from Settings > Too hot (a 40-140 °C scale)
         coolantDial(o, mid, gy),
-        C.text('coolantLbl', mid - 60, gy + 26, 120, 19, C.placeOf(o, 'midGauge') ? C.placeGauge(o, C.placeOf(o, 'midGauge')).label : 'TEMP', lbl, { tracking: 0.14 }),
+        ...(C.placeOf(o, 'midGauge') === 'clock' ? [] : [C.text('coolantLbl', mid - 60, gy + 26, 120, 19, C.placeOf(o, 'midGauge') ? C.placeGauge(o, C.placeOf(o, 'midGauge')).label : 'TEMP', lbl, { tracking: 0.14 })]),
         ...coolantFig(o, mid, gy),
         { key: 'lcd', kind: 'panel', x: X + 10, y: ly, w: W - 20, h: 206, params: { u_box: [10, 2, 0.4, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },
         C.text('gear', X + 10, ly + 12, W - 20, 100, C.gearText, gearC),

@@ -2087,4 +2087,77 @@ void main() {
     gl_FragColor = acc;
 }`;
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS };
+/**
+ * An analog clock (90's, its middle gauge set to the clock: layout_retro.js), in the dials' look: the face from u_face0
+ * at the middle to u_face1 at the rim inside a thin u_bezel ring, a mark each hour (the quarters longer) and a dot each
+ * minute, 12, 3, 6 and 9 in figures, the hour and minute hands in u_needle with a glow of u_glow, over a u_hub cap.
+ *   u_hm   the hour (0..12, its fraction the minutes) and the minute (0..60)
+ */
+const ACLOCK_FS = `#version 100
+${HIGHP}${COMMON}${GLYPH}
+uniform vec2 u_size;
+uniform vec2 u_hm;
+uniform float u_digit_adv;
+uniform vec3 u_face0;
+uniform vec3 u_face1;
+uniform vec3 u_bezel;
+uniform vec3 u_tick;
+uniform vec3 u_minor;
+uniform vec3 u_num;
+uniform vec3 u_needle;
+uniform vec3 u_hub;
+uniform vec3 u_glow;
+varying vec2 v_uv;
+vec2 dirOf(float a) { return vec2(sin(a * DEG), -cos(a * DEG)); }
+float numeral(vec2 p, vec2 c, float h, float v) {
+    float n = v >= 9.5 ? 2.0 : 1.0, adv = u_digit_adv;
+    vec2 g = (p - c) / h;
+    float x = g.x + n * adv * 0.5, i = floor(x / adv);
+    if (i < 0.0 || i >= n || abs(g.y) > 0.5) return 0.0;
+    float s = sdf(digitOf(v, i, n), vec2(x - (i + 0.5) * adv, g.y + 0.5));
+    return smoothstep(0.5 - 1.5 / h, 0.5 + 1.5 / h, s);
+}
+/* a hand from c at angle a, L long, a tail T back, w wide tapering to half */
+float hand(vec2 p, vec2 c, float a, float L, float T, float w) {
+    vec2 u = dirOf(a), n = vec2(-u.y, u.x);
+    float along = dot(p - c, u), side = abs(dot(p - c, n));
+    float ww = mix(w, w * 0.5, clamp((along + T) / (L + T), 0.0, 1.0)) * 0.5;
+    return clamp(0.5 - (side - ww), 0.0, 1.0) * clamp(L - along + 0.5, 0.0, 1.0) * clamp(along + T + 0.5, 0.0, 1.0);
+}
+void main() {
+    vec2 p = v_uv * u_size;
+    float R = min(u_size.x, u_size.y) * 0.5, px = 1.0 / R;
+    vec2 c = u_size * 0.5, d = p - c;
+    float r = length(d) / R;
+    vec4 acc = vec4(0.0);
+    if (r > 1.0 + 1.5 / R) { gl_FragColor = acc; return; }
+    acc = over(acc, mix(u_face0, u_face1, smoothstep(0.0, 0.95, r)), clamp((0.94 - r) / px + 0.5, 0.0, 1.0));
+    acc = over(acc, u_bezel, span(r / px, 0.94 / px, 1.0 / px));
+    float a = atan(d.x, -d.y) / DEG;
+    if (a < 0.0) a += 360.0;
+    /* the hour marks (each 30 degrees; the quarters longer) and the minute dots */
+    float kh = floor(a / 30.0 + 0.5), oh = abs(a - kh * 30.0) * DEG * r * R;
+    bool quarter = abs(mod(kh, 3.0)) < 0.5;
+    float mark = clamp(R * (quarter ? 0.035 : 0.025) - oh + 0.5, 0.0, 1.0) * span(r / px, (quarter ? 0.72 : 0.78) / px, 0.88 / px);
+    float km = floor(a / 6.0 + 0.5), om = abs(a - km * 6.0) * DEG * r * R;
+    float dot1 = clamp(R * 0.018 - length(vec2(om, (r - 0.85) * R)) + 0.5, 0.0, 1.0) * (abs(mod(km, 5.0)) < 0.5 ? 0.0 : 1.0);
+    acc = over(acc, u_tick, mark);
+    acc = over(acc, u_minor, dot1);
+    /* 12, 3, 6, 9 */
+    float h = 0.2 * R;
+    acc = over(acc, u_num, numeral(p, c + dirOf(0.0) * R * 0.56, h, 12.0));
+    acc = over(acc, u_num, numeral(p, c + dirOf(90.0) * R * 0.58, h, 3.0));
+    acc = over(acc, u_num, numeral(p, c + dirOf(180.0) * R * 0.56, h, 6.0));
+    acc = over(acc, u_num, numeral(p, c + dirOf(270.0) * R * 0.58, h, 9.0));
+    /* the hands: the hour short and broad, the minute long; a soft glow round them */
+    float hh = hand(p, c, u_hm.x * 30.0, R * 0.5, R * 0.1, R * 0.075);
+    float mm = hand(p, c, u_hm.y * 6.0, R * 0.8, R * 0.12, R * 0.05);
+    float halo = max(hand(p, c, u_hm.x * 30.0, R * 0.52, R * 0.1, R * 0.11), hand(p, c, u_hm.y * 6.0, R * 0.82, R * 0.12, R * 0.09));
+    acc = over(acc, u_glow, clamp(halo - max(hh, mm), 0.0, 1.0) * 0.35);
+    acc = over(acc, u_needle, max(hh, mm));
+    acc = over(acc, u_hub, clamp((0.08 - r) / px + 0.5, 0.0, 1.0));
+    acc = over(acc, u_needle * 0.6, span(r / px, 0.065 / px, 0.08 / px));
+    gl_FragColor = acc;
+}`;
+
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS };

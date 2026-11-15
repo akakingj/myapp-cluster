@@ -162,7 +162,8 @@ function placeItem(id, k, spec) {
     if (!p) return null;
     const src = (spec && spec.settings || []).find((s) => s.key === (p.kind === 'gauge' ? 'gaugeSpeed' : 'infoA'));
     const opts = ((src && src.options) || []).filter((x) => x[0] !== 'auto');
-    return { key: k, label: p.label, kind: p.kind, default: 'auto', options: [['auto', "The layout's own"]].concat(opts) };
+    // (and a place's own extra values: 90's middle gauge as an analog clock)
+    return { key: k, label: p.label, kind: p.kind, default: 'auto', options: [['auto', "The layout's own"]].concat(opts, p.extra || []) };
 }
 function slotsFor(id, o, all) {
     const t = SLOTS[id] || {};

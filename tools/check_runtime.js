@@ -56,6 +56,7 @@ SETS.push({ tag: 'G meter swapped, 1 g', gScale: '1', gFlipLat: 'on', gFlipLong:
     const { LAYOUTS: LS } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
     const all = (g, r) => { const p = {}; LS.forEach((l) => (l.places || []).forEach((x) => { p[x.key] = x.kind === 'gauge' ? g : r; })); return p; };
     [['boost', 'gear'], ['fuel', 'off'], ['gearbox', 'timing'], ['torque', 'boost']].forEach(([g, r]) => SETS.push({ tag: 'places ' + g + ' / ' + r, leftDial: 'temps', places: all(g, r) }));
+    SETS.push({ tag: "90's analog clock", places: { midGauge: 'clock' } });
 }
 SETS.push({ tag: 'plug-in hybrid', vehicle: 'phev' });
 SETS.push({ tag: 'shift warning, no colours', shiftWarn: 'on', tempTone: 'off' });
