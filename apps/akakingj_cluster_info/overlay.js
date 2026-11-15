@@ -37,15 +37,16 @@ const HUD_SPEED_CLEAR = 405;     // left edge limit: the speed readout ends at x
 const HUD_MAX_H = 60;             // the HUD panel's height at most (the room right of the speed limits it first)
 const HUD_MAX_PCT = 85;           // the HUD map's widest (waze-on-cluster hud_width_pct)
 // turn signal arrows on the HUD, small, where Redline (idrive7-apps apps/redline hud-signals.js, 2.0.57) puts its own with
-// its rev counter switched off: at the top of what a G20 shows (its owner's own HUD app's measure, x 124..676, y 72..221
-// seen well), the left sign at x 200 with its arrow at 240, the right arrow at 530 and its sign at 566..600, the arrows at
-// y 86 and the signs at y 76 (2026-11-15). So Cluster Info's and Redline's signals sit in one place whichever shows them.
+// its rev counter switched off: near the top of what a G20 shows, the left sign at x 200 with its arrow at 240, the right
+// arrow at 530 and its sign at 566..600, the arrows at y 114 and the signs at y 104 (2026-11-15). So Cluster Info's and Redline's signals sit in one place whichever shows them.
 const LCW_W = 34, LCW_GAP = 6;
 // the glass a G21 (and G20) shows whole: its HUD test pattern's 120 px frame, x 120..680 and y 120..360 (photos,
 // 2026-11-09; Redline's GLASS). What a G20 shows well (above): Redline's G20_WINDOW, x 124..676, y 72..356.
 const G21_GLASS = { x: 120, y: 120, w: 560, h: 240 };
 const HUD_SEEN = { x: 124, y: 72, w: 552, h: 284 };
-const SIGNALS_TOP = 76, SIGNALS_LEFT = 200, SIGNALS_SPAN = 400;     // Redline's tach place at 100 %: x 200..600, y 76
+// (y 76 / 86 at first: the arrows lost their top on the owner's G20, 2026-11-15; now 104 / 114, bimmer-lab's G21 seen top
+// plus 4, the top place Redline 2.0.60 gives its own too)
+const SIGNALS_TOP = 104, SIGNALS_LEFT = 200, SIGNALS_SPAN = 400;    // Redline's tach place at 100 %: x 200..600
 const ARROW = { w: 30, h: 24, y: SIGNALS_TOP + 10, left: SIGNALS_LEFT + LCW_W + LCW_GAP, right: SIGNALS_LEFT + SIGNALS_SPAN - LCW_W - LCW_GAP - 30 };   // the cluster's proportions (5:4)
 const INDICATOR_GREEN = '#22d046';   // the cluster's indicator green
 // the lane change warning beside the arrows: outside each arrow, while the car says one is beside or coming up behind on

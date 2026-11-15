@@ -308,12 +308,12 @@ class FakeCR extends EventEmitter {
     lw = { left: false, right: true }; t += 10; ov._lcwTick();
     const rsg = cr.layers.get(ov.lcw().refs.right), rar = cr.layers.get(refs.right);
     check('the car now on the right: left off, right on, outside the right arrow', () => assert(!lsg.visible && rsg.visible && rsg.x >= rar.x + rar.w));
-    // (2026-11-15) where Redline 2.0.57 puts its own with its rev counter off: the top of what a G20 shows (x 124..676,
-    // y 72..221 seen well), the signs at 200 and 566..600, the arrows at 240 and 530; the two far apart
+    // (2026-11-15) where Redline puts its own with its rev counter off: near the top of what a G20 shows (y 104, not 76:
+    // the arrows at 86 lost their top on the car), the signs at 200 and 566..600, the arrows at 240 and 530
     check('the arrows and signs at Redline\'s place: the top of a G20\'s glass, far apart', () => {
         const lar = cr.layers.get(refs.left);
         assert(lsg.x === 200 && lar.x === 240 && rar.x === 530 && rsg.x === 566, 'x ' + [lsg.x, lar.x, rar.x, rsg.x].join(' '));
-        assert(lsg.y === 76 && rsg.y === 76 && lar.y === 86 && rar.y === 86, 'y ' + [lsg.y, lar.y].join(' '));
+        assert(lsg.y === 104 && rsg.y === 104 && lar.y === 114 && rar.y === 114, 'y ' + [lsg.y, lar.y].join(' '));
         assert(rsg.x + rsg.w === 600, 'the right sign ends at ' + (rsg.x + rsg.w));
         assert(rar.x - (lar.x + lar.w) >= 150, 'the two arrows well apart: ' + (rar.x - (lar.x + lar.w)) + ' px');
         assert(lsg.x >= 124 && lsg.y >= 72 && rsg.x + rsg.w <= 676 && rsg.y + rsg.h <= 221, 'all in a G20\'s well-seen part');
@@ -343,7 +343,7 @@ class FakeCR extends EventEmitter {
         assert(lsgT.y + lsgT.h <= 221, 'sign ends ' + (lsgT.y + lsgT.h));
     });
     settings.v.place = 'bottom'; t += 300; ov._tick(); t += 10; ov._arrowTick();
-    check('the panel back at the bottom: the signals back at the top', () => assert(larT.y === 86 && lsgT.y === 76, larT.y + ' / ' + lsgT.y));
+    check('the panel back at the bottom: the signals back at the top', () => assert(larT.y === 114 && lsgT.y === 104, larT.y + ' / ' + lsgT.y));
     lw = null; ind = 'off'; kw = null; extras = [];
     ov.stop();
 
