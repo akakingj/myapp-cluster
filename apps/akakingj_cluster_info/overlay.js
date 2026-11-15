@@ -395,6 +395,7 @@ function startOverlay(ctx, lv, opts) {
     };
     let CR = opts.ClusterRender;
     let cr = null, ref = 0, geo = '', cv = null, last = null, visible = false, lastT = 0, lastKey = '';
+    let hudBadge = null;          // the panel's rectangle while it is on the HUD (the signals keep clear of it)
     let map = { showing: false, target: null, pct: 0, hx: 0, hy: 0 }, statusText = '';
     let warned = '';
     const warnOnce = (m) => { if (m !== warned) { warned = m; log.warn('map overlay: ' + m); } };
@@ -445,6 +446,7 @@ function startOverlay(ctx, lv, opts) {
         if (!r) return 0;
         const b = badgeRect(r, where(), pl.target, nExtras, hasPower, !!(lv.underOn && lv.underOn(pl.target)));
         const key = [pl.target, b.x, b.y, b.w, b.h, b.ph].join(',');
+        hudBadge = pl.target === 'hud' ? b : null;
         if (key === geo && ref) return ref;
         if (!client()) return 0;
         if (ref) cr.drop(ref);
@@ -516,6 +518,27 @@ function startOverlay(ctx, lv, opts) {
      * lv.indicator(): 'off' | 'left' | 'right' | 'both' (hazards), from the car's light module. The two arrows
      * are drawn and sent once; blinking only switches their opacity (a few bytes each time, no pixels), and
      * they stay visible (opacity 0 between flashes) so the HUD's slot is kept while they blink. */
+    /* The panel at the top of a wide HUD map (85 %, the kW and two or three values) reaches the signals' place: then
+     * they go just under it (still on a G20's well-seen part), and back when it goes. */
+    const SIG_BAND = { x: LCW.left, y: LCW.y, w: LCW.right + LCW.w - LCW.left, h: LCW.h };
+    const sigShift = () => {
+        const b = visible && hudBadge;
+        if (!b || b.x >= SIG_BAND.x + SIG_BAND.w || b.x + b.w <= SIG_BAND.x || b.y >= SIG_BAND.y + SIG_BAND.h || b.y + b.h <= SIG_BAND.y) return 0;
+        return Math.max(0, b.y + b.h + 6 - SIG_BAND.y);
+    };
+    let shiftNow = 0;
+    const lcwRefs = {};               // the lane change signs' layers (below)
+    /** Move the signal layers made so far by the panel's shift (only when it changes). */
+    function followPanel() {
+        const sh = sigShift();
+        if (sh === shiftNow || !cr) return sh;
+        shiftNow = sh;
+        ['left', 'right'].forEach((d) => {
+            if (arrows[d]) cr.set(arrows[d], { y: ARROW.y + sh });
+            if (lcwRefs[d]) cr.set(lcwRefs[d], { y: LCW.y + sh });
+        });
+        return sh;
+    }
     const arrows = { left: 0, right: 0 };
     let arrowsShown = false, blinkFrom = 0, lastDir = 'off', lastPhase = null, offSince = 0;
     // (with the app: Show the panel Off takes the arrows off too, and so does the car locked and left)
@@ -526,7 +549,7 @@ function startOverlay(ctx, lv, opts) {
         ['left', 'right'].forEach((d) => {
             const c = new Canvas(ARROW.w, ARROW.h);
             drawArrow(c, d);
-            const ref = cr.image({ target: 'hud', klass: 'overlay', z: 12, x: ARROW[d], y: ARROW.y, w: ARROW.w, h: ARROW.h, iw: ARROW.w, ih: ARROW.h, visible: false, opacity: 0 });
+            const ref = cr.image({ target: 'hud', klass: 'overlay', z: 12, x: ARROW[d], y: ARROW.y + shiftNow, w: ARROW.w, h: ARROW.h, iw: ARROW.w, ih: ARROW.h, visible: false, opacity: 0 });
             if (ref) cr.pixels(ref, null, Buffer.from(c.d.buffer, c.d.byteOffset, c.d.length));
             arrows[d] = ref;
         });
@@ -542,6 +565,7 @@ function startOverlay(ctx, lv, opts) {
         // (another app took the HUD: the arrows gone at once, not after the let-go moment)
         if (arrowsShown && settings.get('turnSignals') !== 'off' && hudTaken()) { hideArrows(); lastDir = 'off'; return; }
         const dir = signalsOn() ? lv.indicator() || 'off' : 'off';
+        followPanel();
         const tm = now();
         if (dir === 'off') {
             // the arrows go a moment after the stalk is let go (no flicker between flashes on tap-blink)
@@ -563,7 +587,6 @@ function startOverlay(ctx, lv, opts) {
     const arrowTimer = si(arrowTick, ARROW_TICK_MS);
 
     /* ---------- the lane change warning on the HUD (lv.laneChange(): { left, right } | null) ---------- */
-    const lcwRefs = {};
     const lcwShown = {};
     const lcwOn = () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !(lv.parked && lv.parked())
         && typeof lv.laneChange === 'function' && !hudTaken();
@@ -571,7 +594,7 @@ function startOverlay(ctx, lv, opts) {
         if (lcwRefs[side] !== undefined || !client()) return lcwRefs[side];
         const c = new Canvas(LCW.w, LCW.h);
         drawLaneSign(c, side);
-        const ref = cr.image({ target: 'hud', klass: 'overlay', z: 12, x: LCW[side], y: LCW.y, w: LCW.w, h: LCW.h, iw: LCW.w, ih: LCW.h, visible: false, opacity: 0 });
+        const ref = cr.image({ target: 'hud', klass: 'overlay', z: 12, x: LCW[side], y: LCW.y + shiftNow, w: LCW.w, h: LCW.h, iw: LCW.w, ih: LCW.h, visible: false, opacity: 0 });
         if (ref) cr.pixels(ref, null, Buffer.from(c.d.buffer, c.d.byteOffset, c.d.length));
         lcwRefs[side] = ref || null;
         return lcwRefs[side];

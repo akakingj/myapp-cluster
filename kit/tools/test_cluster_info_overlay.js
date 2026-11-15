@@ -328,6 +328,23 @@ class FakeCR extends EventEmitter {
     t += 1300; ov._arrowTick();
     check('Show the panel Off: no sign and no arrows either (one switch)', () => assert(!lsg.visible && !rsg.visible && !ov.arrows().shown));
     settings.v.show = 'map';
+    // (2026-11-15) the panel at the top of an 85 % HUD map with the kW and two values reaches the signals' place: they go
+    // just under it, and back when it goes
+    lw = { left: true, right: false }; ind = 'left';
+    write({ state: 'showing', target: 'hud', hud_width_pct: 85 });
+    await step();
+    settings.v.place = 'top'; kw = 20; extras = [{ label: 'OIL', text: '88°' }, { label: 'COOL', text: '90°' }]; t += 300; ov._tick();
+    t += 10; ov._arrowTick(); ov._lcwTick();
+    const badge = [...cr.layers.values()].find((l) => l.target === 'hud' && l.z === 10 && l.visible);
+    const larT = cr.layers.get(ov.arrows().refs.left), lsgT = cr.layers.get(ov.lcw().refs.left);
+    check('a wide map\'s panel at the top: the signals just under it, still on a G20\'s well-seen part', () => {
+        assert(badge, 'the panel on the HUD');
+        assert(larT.y >= badge.y + badge.h && lsgT.y >= badge.y + badge.h, 'arrow ' + larT.y + ', sign ' + lsgT.y + ', panel ends ' + (badge.y + badge.h));
+        assert(lsgT.y + lsgT.h <= 221, 'sign ends ' + (lsgT.y + lsgT.h));
+    });
+    settings.v.place = 'bottom'; t += 300; ov._tick(); t += 10; ov._arrowTick();
+    check('the panel back at the bottom: the signals back at the top', () => assert(larT.y === 86 && lsgT.y === 76, larT.y + ' / ' + lsgT.y));
+    lw = null; ind = 'off'; kw = null; extras = [];
     ov.stop();
 
     if (process.argv[2]) {
