@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_centre",
   "title": "AK Cluster Centre",
   "description": "Pages of engine, gearbox and eDrive data, warm-up, turbo cool-down, a shift light and a 0-60 timer in the centre of the factory cluster, drawn by the cluster itself",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCC",
@@ -2253,7 +2253,7 @@
       "section": "Units and clock"
     },
     {
-      "key": "timeZone",
+      "key": "timeZone", "profile": "timeZone",
       "label": "Time zone (the clock)",
       "type": "choice",
       "default": "utc+9",
@@ -2314,7 +2314,7 @@
       "section": "Units and clock"
     },
     {
-      "key": "clock",
+      "key": "clock", "profile": "clock",
       "label": "Clock",
       "type": "choice",
       "default": "12",
@@ -2357,7 +2357,7 @@
       "profile": "engine"
     },
     {
-      "key": "tankLitres",
+      "key": "tankLitres", "profile": "tankLitres",
       "label": "Fuel tank size",
       "type": "number",
       "unit": "L",
@@ -2404,7 +2404,7 @@
       "section": "Car"
     },
     {
-      "key": "eFull",
+      "key": "eFull", "profile": "eFull",
       "label": "Electric range when full (until the car's own is found)",
       "type": "number",
       "unit": "mi",
@@ -2428,7 +2428,7 @@
       "section": "Car"
     },
     {
-      "key": "demo",
+      "key": "demo", "profile": "demo",
       "label": "Demo data",
       "type": "choice",
       "default": "off",

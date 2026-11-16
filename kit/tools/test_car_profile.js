@@ -43,15 +43,16 @@ const PROFILE_VALUES = {
     coldLimit: [0, 2000, 4500, 5500], lightMode: ['shift', 'rev'], lightStart: [2000, 4000, 6000], coldGuard: ['on', 'off'], warmOil: [60, 80, 100],
     warmCoolant: [60, 90], hotOil: [110, 125, 140], hotCoolant: [110, 125, 140], hotGearbox: [80, 100, 130], speedUnit: ['kmh', 'mph'], distUnit: ['km', 'mi'], tempUnit: ['c', 'f'],
     pressUnit: ['bar', 'psi', 'kpa'], fuelUnit: ['l100', 'kml', 'mpguk', 'mpgus'], torqueUnit: ['nm', 'lbft', 'kgm'],
-    powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'],
+    powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'], theme: ['m_red', 'ice'], layout: ['full', 'standard'], renderer: ['auto', 'software'],
+    demo: ['auto', 'on', 'off'], clock: ['12', '24'], timeZone: ['utc+9', 'eastern'], tankLitres: [40, 59, 90], eFull: [20, 31, 50],
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
-    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftBefore: 'shiftBefore', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin' },
-    centre: { vehicle: 'engine', redline: 'redline', shiftBefore: 'shiftBefore', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin' },
-    info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin' },
+    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftBefore: 'shiftBefore', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', timeZone: 'timeZone', clock: 'clock', tankLitres: 'tankLitres', eFull: 'eFull' },
+    centre: { vehicle: 'engine', redline: 'redline', shiftBefore: 'shiftBefore', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', timeZone: 'timeZone', clock: 'clock', tankLitres: 'tankLitres', eFull: 'eFull' },
+    info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin', theme: 'theme', layout: 'layout', renderer: 'renderer', demo: 'demo' },
 };
-const MINE = { vehicle: 'petrol', skin: 'idrive7', speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftBefore: 200, coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
+const MINE = { vehicle: 'petrol', skin: 'idrive7', theme: 'm_tricolour', layout: 'standard', renderer: 'software', demo: 'on', clock: '24', timeZone: 'utc', tankLitres: 60, eFull: 30, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftBefore: 200, coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
     hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120 };
 
 const cases = {
@@ -79,7 +80,8 @@ const cases = {
             shiftBefore: [0, 100, 200, 300, 400, 500, 700, 800, 1000], rpmScale: [0, 5000, 6000, 7000, 8000, 9000, 10000],
             coldLimit: [0, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500], lightStart: [2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000],
             warmOil: [60, 70, 75, 80, 85, 90, 100], warmCoolant: [60, 70, 75, 80, 85, 90],
-            hotOil: [110, 115, 120, 125, 130, 135, 140], hotCoolant: [110, 115, 120, 125, 130, 135, 140], hotGearbox: [80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130] };
+            hotOil: [110, 115, 120, 125, 130, 135, 140], hotCoolant: [110, 115, 120, 125, 130, 135, 140], hotGearbox: [80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130],
+            tankLitres: [40, 42, 46, 50, 52, 55, 57, 59, 60, 63, 65, 66, 68, 69, 70, 74, 80, 83, 85, 90], eFull: [20, 22, 24, 26, 28, 30, 31, 32, 34, 36, 38, 40, 45, 50] };
         Object.keys(FOLLOWS).forEach((app) => schemaOf(app).filter((s) => s.profile && s.type === 'number').forEach((s) => {
             const lost = STEPS[s.profile].filter((v) => v > 0 || (v === 0 && (s.steps || []).indexOf(0) >= 0)).filter((v) => s.steps.indexOf(v) < 0);
             assert.deepStrictEqual(lost, [], app + ' ' + s.key + ': ' + lost.join(', '));
