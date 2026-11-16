@@ -41,6 +41,23 @@ const RPM_MAX = 7000;   // their scale: 0-7 (ticks 7)
 const E_ZERO = C.KW_ZERO;   // the ePower scale's 0, a quarter up (below it regeneration, to the battery's limit)
 
 /* their map window ("hole" [524, 120, 872, 480], inset 10), pressed as the rest */
+/*
+ * SDASH_FS's bracket: the outer line (y at its top, at its bend, at its bottom; x at the bend), how far it leans
+ * (x a px of y above the bend, below it; the bend's roundness), the inner line's distance from it; and worked out once
+ * here, not every pixel (0.38.1): the outer line's x at its top and its bottom, the inner line's x at its top run,
+ * 1 / the scale's height (u_pts)
+ */
+const GEO = [Y(120), Y(317), Y(620), 180], KK = [0.58 / SY, 0.75 / SY, 30], INNER = 59;
+const outerX = (y) => { const dy = y - GEO[1], k = dy < 0 ? KK[0] : KK[1]; return GEO[3] + k * (Math.sqrt(dy * dy + KK[2] * KK[2]) - KK[2]); };
+const slope = (y) => { const dy = y - GEO[1], k = dy < 0 ? KK[0] : KK[1]; return k * dy / Math.sqrt(dy * dy + KK[2] * KK[2]); };
+const PTS = [outerX(GEO[0]), outerX(GEO[2]), outerX(GEO[0] + 8) + INNER * Math.sqrt(1 + slope(GEO[0] + 8) * slope(GEO[0] + 8)), 1 / (Y(610) - Y(155))];
+/*
+ * (0.38.1) the left bracket's three layers [y0, y1, x0, x1], the right one's mirrored: round all either draws (its
+ * glow, its flares, the bar and its rail), measured off the shader's own picture (alpha above 1/255) with 2 px to
+ * spare, the rows not overlapping. One 760 x 586 layer a side (most of it empty black, every pixel through the whole
+ * shader) restarted the car's cluster: these are 42 % of that.
+ */
+const BOXES = [[112, 130, 246, 731], [130, 410, 28, 344], [410, 646, 175, 552]];
 const WINDOW = { x: 534, y: Y(130), w: 852, h: Y(130 + 460) - Y(130) };
 
 module.exports = {
@@ -75,12 +92,12 @@ module.exports = {
         const list = map ? around.map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg'))
             : stock ? [C.flat('bgL', 0, 0, 566, 720, 'bg'), C.flat('bgR', 1104, 0, 816, 720, 'bg')] : [C.flat('bg', 0, 0, 1920, 720, 'bg')];
         /*
-         * The view (SDASH_FS) in three layers, never one over the whole panel (M's backdrop in one full-screen layer
-         * restarted the cluster): the speed bracket with the fuel bar, the rev bracket with the oil bar, the bottom line
-         * and strip. Each over the background.
+         * The view (SDASH_FS) in seven layers, never one over the whole panel (M's backdrop in one full-screen layer
+         * restarted the cluster): the speed bracket with the fuel bar (three: BOXES), the rev bracket with the oil bar
+         * (three), the bottom line and strip. Each over the background.
          */
         const sd = {
-            u_geo: [Y(120), Y(317), Y(620), 180], u_k: [0.58 / SY, 0.75 / SY, 30], u_w: [40], u_inner: [59],
+            u_geo: GEO, u_k: KK, u_w: [40], u_inner: [INNER], u_pts: PTS,
             u_scale: [Y(610), Y(155)], u_ticks: [8, 7], u_redFrom: [redFrom], u_orange: [orange],
             u_fuelSeg: [412, Y(440), 537, Y(607)], u_oilSeg: [1508, Y(440), 1383, Y(607)],
             // the map window cut see-through (the map drawn in it); the stock centre's area likewise
@@ -97,13 +114,18 @@ module.exports = {
         const q = (f) => Math.round(clamp01(f) * 500) / 500;
         const part = (key, n, x, y, w, h, extra) => Object.assign({ key, kind: 'sdash', x, y, w, h, z: -90, params: Object.assign({ u_part: [n], u_off: [x, y] }, sd),
             colors: (t) => ({ rline: t.rline, rband: t.rband, rlit: t.rlit, rin: t.rin }) }, extra);
+        const speedDyn = { dyn: (d) => ({
+            u_speed: [isNum(d.speed) ? Math.round(B.scaleFrac(C.speedIn(o, d.speed), scale) * 500) / 500 : 0],
+            u_fuel: [pF ? q(pF.frac(d)) : isNum(d.fuelPct) ? Math.round(clamp01(d.fuelPct / 100) * 500) / 500 : 0],
+        }) };
+        // (0.38.1) each bracket in three layers close round what it draws (BOXES; the right one mirrored): its top
+        // runs (nothing there moves), its upper part and its lower part with the bar
+        const side = (key, n, extra) => BOXES.map(([y0, y1, x0, x1], i) => part(key + i, n,
+            n === 1 ? x0 : 1920 - x1, y0, x1 - x0, Math.min(y1, bottom) - y0, i ? extra : {}));
         list.push(
-            part('speedSide', 1, 0, 60, 760, bottom - 60, { dyn: (d) => ({
-                u_speed: [isNum(d.speed) ? Math.round(B.scaleFrac(C.speedIn(o, d.speed), scale) * 500) / 500 : 0],
-                u_fuel: [pF ? q(pF.frac(d)) : isNum(d.fuelPct) ? Math.round(clamp01(d.fuelPct / 100) * 500) / 500 : 0],
-            }) }),
+            ...side('speedSide', 1, speedDyn),
             // the engine speed eased by the engine (u_value), or in an electric drive the battery's power
-            part('revSide', 2, 1160, 60, 760, bottom - 60, {
+            ...side('revSide', 2, {
                 value: (d) => (elec(d) ? ePower(d) : isNum(d.rpm) ? clamp01(d.rpm / RPM_MAX) : 0), max: 1, sweep: true,
                 dyn: (d) => ({
                     u_ticks: [8, elec(d) ? 4 : 7], u_redFrom: [elec(d) ? 2 : B.redMarks(o, RPM_MAX, d)[0]], u_orange: [elec(d) ? 2 : B.redMarks(o, RPM_MAX, d)[1]], u_zero: [elec(d) ? E_ZERO : 0],
@@ -191,7 +213,7 @@ module.exports = {
             B.icon('barIconR', 992, Y(638), 30, 30, halves[1].icon, 'fg'),
             T('barR', [1026, 640, 100, 26], 's_val', halves[1].txt, B.role('fg'), 'right'),
             T('barRUnit', [1132, 640, 60, 29], 's_unit', halves[1].unit, B.role('dim'), 'left'));
-        if (stock) return list.filter((p) => p.kind === 'flat' || /^(speedSide|revSide)$/.test(p.key) || p.x + p.w <= 566 || p.x >= 1104);
+        if (stock) return list.filter((p) => p.kind === 'flat' || /^(speedSide|revSide)\d$/.test(p.key) || p.x + p.w <= 566 || p.x >= 1104);
         return list;
     },
 };
