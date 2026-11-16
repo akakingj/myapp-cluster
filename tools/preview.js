@@ -35,6 +35,7 @@ function args(argv) {
         else if (k === 'strip') a.strip = true;
         else if (k === 'dap') a.dap = true;
         else if (k === 'engine') a.engine = true;
+        else if (k === 'diesel') a.diesel = true;
         else if (k === 'celsius') a.celsius = true;
         else a[k] = isNaN(Number(argv[i + 1])) ? argv[++i] : Number(argv[++i]);
     }
@@ -117,7 +118,7 @@ async function render(scene, out, mapWindow, over) {
 
 if (require.main === module) {
     const a = args(process.argv.slice(2));
-    const s = makeScene({ layout: a.layout, look: a.look, black: !!a.black, options: { centre: a.centre, speedUnit: a.kmh ? 'kmh' : 'mph', tempUnit: a.celsius ? 'c' : undefined, vehicle: a.engine ? 'ice' : 'phev', cluster: a.mcar ? 'm' : 'standard', bottomStrip: a.strip ? 'stock' : 'layout',
+    const s = makeScene({ layout: a.layout, look: a.look, black: !!a.black, options: { centre: a.centre, speedUnit: a.kmh ? 'kmh' : 'mph', tempUnit: a.celsius ? 'c' : undefined, vehicle: a.engine || a.diesel ? 'ice' : 'phev', fuel: a.diesel ? 'diesel' : 'petrol', cluster: a.mcar ? 'm' : 'standard', bottomStrip: a.strip ? 'stock' : 'layout',
         // (Settings > Too hot, as the Car profile sets them: --hotOil 125 --hotCoolant 112 --hotGearbox 120; --tempGauge scale)
         hotOil: a.hotOil, hotCoolant: a.hotCoolant, hotGearbox: a.hotGearbox, tempGauge: a.tempGauge || 'ch', leftDial: a.leftDial, places: a.places ? JSON.parse(a.places) : undefined,
         // (the readouts: --infoA, --infoB, --infoMain, --infoLow: a readout's name, gear or off; --arcGear off)

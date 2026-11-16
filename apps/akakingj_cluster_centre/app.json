@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_centre",
   "title": "AK Cluster Centre",
   "description": "Pages of engine, gearbox and eDrive data, warm-up, turbo cool-down, a shift light and a 0-60 timer in the centre of the factory cluster, drawn by the cluster itself",
-  "version": "0.9.19",
+  "version": "0.9.20",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCC",
@@ -2353,7 +2353,8 @@
           "Diesel (boost, torque, intake air; no ignition timing)"
         ]
       ],
-      "section": "Car"
+      "section": "Car",
+      "profile": "engine"
     },
     {
       "key": "tankLitres",

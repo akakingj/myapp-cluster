@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.35.7",
+  "version": "0.35.8",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -1297,7 +1297,8 @@
           "Diesel (boost, torque, intake air; no ignition timing)"
         ]
       ],
-      "section": "Car"
+      "section": "Car",
+      "profile": "engine"
     },
     {
       "key": "tankLitres",
