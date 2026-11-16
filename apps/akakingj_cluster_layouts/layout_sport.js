@@ -155,15 +155,9 @@ module.exports = {
                 T('speedUnit', [360, 358, 80, 29], 's_unit', C.speedUnit(o), B.role('sblue'), 'center'),
                 T('gear', [1415, strip ? 230 : 182, 200, 65], 's_gear', gearNum, gearC, 'center'));
         } else {
-            // the cruise control, as BMW's: its icon grey, green while it holds a speed, with the set speed beside it
-            // the head-up display's set speed (data.js cruise); the driving assistant's (d.dap) only in the previews' sample
-            const dapOn = (d) => !!(d.dap && d.dap.acc && d.dap.acc.on);
-            const acc = (d) => dapOn(d) || !!(d.cruise && d.cruise.on);
-            const setOf = (d) => (dapOn(d) ? d.dap.acc.set : d.cruise ? d.cruise.set : undefined);
-            const setTxt = (d) => (acc(d) && isNum(setOf(d)) ? String(Math.round(setOf(d))) : '');
-            list.push(Object.assign(B.icon('accIcon', 490, Y(182), 40, 36, 'gauge', 'faint'), { colors: (t, d) => ({ color: [acc(d) ? t.regen : t.faint, 1] }) }),
-                T('accSet', [538, 182, 110, 29], 's_val', setTxt, (t) => ({ color: [t.regen, 1], glow: [t.regen, 0] }), 'left'),
-                T('speedDigits', [420, 313, 280, 68], 's_speed', (d) => C.speedText(o, d), B.role('fg'), 'center'),
+            // (0.36.8: no cruise control icon or set speed here until the cruise control is read again; 0.28.0-0.36.7
+            // drew BMW's icon at 490, Y(182), grey or green, the set speed beside it at 538, 182)
+            list.push(T('speedDigits', [420, 313, 280, 68], 's_speed', (d) => C.speedText(o, d), B.role('fg'), 'center'),
                 T('speedUnit', [580, 382, 80, 29], 's_unit', C.speedUnit(o), B.role('sblue'), 'center'),
                 // (an M car's KOMBI boxes in the middle: the gear above the right one)
                 T('gear', [1185, C.mCar(o) ? 196 : 310, 210, 65], 's_gear', gearNum, gearC, 'center'));
