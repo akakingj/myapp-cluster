@@ -17,7 +17,7 @@ const path = require('path');
 const fs = require('fs');
 const { FakeClient } = require('./scene');   // (also points the apps' './kit/' at kit/runtime)
 
-const DEMO_VERSION = '2.4.0';
+const DEMO_VERSION = '2.5.0';
 const ROOT = path.join(__dirname, '..');
 const APPS = { layouts: path.join(ROOT, 'apps', 'akakingj_cluster_layouts'), centre: path.join(ROOT, 'apps', 'akakingj_cluster_centre'), info: path.join(ROOT, 'apps', 'akakingj_cluster_info') };
 const argv = process.argv.slice(2);
@@ -262,13 +262,39 @@ function startInfo(set) {
     return st;
 }
 
+/* ---------- the MGU screen (tools/mgu/emu.js): the app's own page on the centre display, as the car shows it ----------
+ * Its settings are the cluster's here: what is set on that screen (or in the list, sent there) draws the cluster;
+ * "Show on the cluster" off there leaves the stock cluster. The car values stay the demo's own (sliders, automatic
+ * drive); the page there runs on the app's own demo readings. --no-mgu: without it. */
+const MGU_IDS = { layouts: 'akakingj_cluster_layouts', centre: 'akakingj_cluster_centre', info: 'akakingj_cluster_info' };
+const MGU = { proc: null, port: 0, values: {}, app: MGU_IDS.layouts, error: '' };
+function startMgu(port) {
+    const { fork } = require('child_process');
+    MGU.port = port;
+    const ch = MGU.proc = fork(path.join(__dirname, 'mgu', 'emu.js'), [MGU.app, '--port', String(port)], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+    const lines = (d) => String(d).split('\n').forEach((x) => { if (/^(! |emu: http|emu: .*(failed|error|exited))/.test(x)) console.log('  [MGU] ' + x.replace(/^! /, '')); });
+    ch.stdout.on('data', lines); ch.stderr.on('data', (d) => { MGU.error = String(d).slice(-400); lines(d); });
+    ch.on('message', (m) => {
+        if (m && m.t === 'port') { MGU.port = m.port; return; }
+        if (!m || m.t !== 'settings') return;
+        const key = Object.keys(MGU_IDS).find((k) => MGU_IDS[k] === m.app);
+        if (key) MGU.values[key] = m.values || {};
+    });
+    ch.on('exit', (code) => { console.log('  [MGU] the MGU screen stopped (' + code + ')'); MGU.proc = null; });
+    process.on('exit', () => { try { ch.kill(); } catch (e) { /* gone */ } });
+}
+const mguSend = (m) => { if (MGU.proc && MGU.proc.connected) { try { MGU.proc.send(m); } catch (e) { /* gone */ } } };
+
 /* ---------- the one live app ---------- */
 let S = null;
 let assetSig = { layouts: '', centre: '' }, assetVer = { layouts: 0, centre: 0 };
 const STARTERS = { layouts: startLayouts, centre: startCentre, info: startInfo };
 function frame(body) {
     const app = STARTERS[body.app] ? body.app : 'layouts';
-    const set = withDefaults(app, body.settings);
+    // the MGU screen shows the app the demo shows; its settings over the page's
+    if (MGU.proc && MGU.app !== MGU_IDS[app]) { MGU.app = MGU_IDS[app]; mguSend({ t: 'app', id: MGU.app }); }
+    const mv = MGU.proc ? MGU.values[app] : null;
+    const set = withDefaults(app, mv ? Object.assign({}, body.settings, mv) : body.settings);
     const key = app + JSON.stringify(set);
     if (!S || S.key !== key) {
         if (S) { try { S.stop(); } catch (e) { /* gone */ } }
@@ -286,6 +312,12 @@ function frame(body) {
         out.fsFrom = known; out.fsNew = fsList.slice(known);
         out.layers = sc.quads.length;
     }
+    // "Show on the cluster" off on the MGU screen: the stock cluster (nothing of the app's)
+    if (mv && (app === 'layouts' || app === 'centre') && mv.show === 'off') {
+        out.stock = true; out.map = false;
+        if (out.scene) { out.scene.quads = []; out.layers = 0; }
+    }
+    if (mv) out.mguValues = mv;
     if (app !== 'layouts') {
         const C = tryReq('layouts', 'layout_common');
         out.mapRect = C && C.MAP ? C.MAP : { x: 416, y: 120, w: 1088, h: 480 };
@@ -306,7 +338,7 @@ function meta() {
     try { layouts = req('layouts', 'layouts').LAYOUTS.map((l) => ({ id: l.id, title: l.title, dap: !!l.dap })); } catch (e) { /* none */ }
     let readings = {};
     try { const R = req('centre', 'readings'); readings = R.READINGS ? Object.fromEntries(Object.keys(R.READINGS).map((k) => [k, R.READINGS[k].short])) : {}; } catch (e) { /* none */ }
-    return { demo: DEMO_VERSION, apps, layouts, readings };
+    return { demo: DEMO_VERSION, apps, layouts, readings, mgu: MGU.port ? { port: MGU.port, on: !!MGU.proc } : null };
 }
 
 const server = http.createServer((rq, res) => {
@@ -314,6 +346,15 @@ const server = http.createServer((rq, res) => {
     const pathOnly = String(rq.url || '/').split('?')[0];   // (?view=display / ?view=controls: the same page)
     if (rq.method === 'GET' && (pathOnly === '/' || pathOnly === '/index.html')) return send(200, 'text/html; charset=utf-8', PAGE());
     if (rq.method === 'GET' && rq.url === '/meta') return send(200, 'application/json', JSON.stringify(meta()));
+    // a setting changed in the page's list: to the MGU screen's app (its values come back from there)
+    if (rq.method === 'POST' && rq.url === '/mgu/set') {
+        let b = '';
+        rq.on('data', (c) => { b += c; if (b.length > 1e4) rq.destroy(); });
+        rq.on('end', () => {
+            try { const m = JSON.parse(b || '{}'); if (MGU_IDS[m.app] === MGU.app) mguSend({ t: 'set', k: String(m.k), v: m.v }); send(200, 'application/json', '{}'); } catch (e) { send(400, 'text/plain', 'bad'); }
+        });
+        return undefined;
+    }
     if (rq.method === 'POST' && rq.url === '/frame') {
         let b = '';
         rq.on('data', (c) => { b += c; if (b.length > 2e6) rq.destroy(); });
@@ -336,6 +377,7 @@ server.on('error', (e) => {
 });
 server.on('listening', () => {
     const url = 'http://127.0.0.1:' + port + '/';
+    if (argv.indexOf('--no-mgu') < 0 && !MGU.proc) { try { startMgu(port + 1); } catch (e) { console.log('  [MGU] not started: ' + e.message); } }
     const m = meta().apps;
     console.log('Cluster demo ' + DEMO_VERSION + '  (Layouts ' + (m.layouts.version || '?') + ', Centre ' + (m.centre.version || '?') + ', Info ' + (m.info.version || '?') + ')');
     console.log('  settings: ' + url + '?view=controls');

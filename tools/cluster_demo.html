@@ -66,6 +66,12 @@
   .seg button { padding: 4px 10px; }
   .note { color: var(--dim); font-size: 12px; margin-top: 8px; }
   .only { display: none; }
+  section.wide { grid-column: 1 / -1; }
+  .mguFrame { position: relative; width: 100%; aspect-ratio: 1920 / 720; max-width: 1400px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; outline: 1px solid var(--line); }
+  .mguFrame iframe { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; }
+  #stockNote { left: 0; top: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 10px;
+    color: #7d8794; font: 600 1.6vw "Segoe UI", "Malgun Gothic", sans-serif; pointer-events: none; }
+  #stockNote small { font-size: 0.55em; font-weight: 400; }
   #link { font-size: 12px; padding: 3px 8px; border-radius: 10px; background: #2a1d1d; color: #ff9b8f; }
   #link.ok { background: #13281c; color: #6fe0a0; }
   /* two windows: ?view=display (the screens alone) and ?view=controls (everything else) */
@@ -114,6 +120,7 @@
         <span id="sGear" style="left:76.6%">P</span>
         <span id="sTemp" style="left:82%">+20.0°C</span>
       </div>
+      <div id="stockNote">순정 계기판<small>MGU 화면에서 '계기판에 표시'를 켜면 레이아웃이 나옵니다</small></div>
       <div class="lcd"></div>
       <div class="glass"></div>
     </div>
@@ -132,10 +139,17 @@
 <div id="dispHint">더블클릭: 전체 화면</div>
 
 <main>
+  <section id="mguBox" class="wide" style="display:none">
+    <h2>MGU 화면 <span class="stat">차의 가운데 화면에 나오는 앱 화면 그대로 (앱 코드와 렌더러가 차와 같음)</span><span class="spacer"></span><a id="mguOpen" target="_blank" class="stat">새 창으로 ↗</a></h2>
+    <div class="mguFrame"><iframe id="mgu" title="MGU 화면"></iframe></div>
+    <div class="note">마우스로 누르면 터치입니다. 여기서 바꾼 설정(레이아웃, 표시값, 계기판에 표시 켜기/끄기 …)이 위 계기판에 그대로 반영됩니다. 아래 차량 값(속도, 기어, 온도 …)은 계기판 데모용으로 따로 움직입니다.</div>
+  </section>
   <section>
     <h2>앱 설정 <span id="appName" class="stat"></span><span class="spacer"></span><button id="resetSet">이 앱 설정 초기화</button></h2>
+    <details id="setDetails" open><summary class="stat" id="setSummary">설정 목록</summary>
     <div id="settings"></div>
-    <div class="note">차의 앱 설정 화면과 같은 항목입니다(앱의 app.json에서 읽음). 바꾸면 바로 반영됩니다.</div>
+    <div class="note" id="setNote">차의 앱 설정 화면과 같은 항목입니다(앱의 app.json에서 읽음). 바꾸면 바로 반영됩니다.</div>
+    </details>
   </section>
   <section>
     <h2>차량 값 <span class="spacer"></span><button id="resetData">값 초기화</button></h2>
@@ -231,7 +245,10 @@ function buildSettings() {
       const opts = s.type === 'choice' ? s.options : (s.steps || []).map((v) => [v, v + (s.unit ? ' ' + s.unit : '')]);
       opts.forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); });
       sel.value = String(set[s.key]);
-      sel.onchange = () => { set[s.key] = s.type === 'number' ? Number(sel.value) : sel.value; save(); };
+      sel.onchange = () => {
+        set[s.key] = s.type === 'number' ? Number(sel.value) : sel.value; save();
+        if (META && META.mgu) fetch('/mgu/set', { method: 'POST', body: JSON.stringify({ app, k: s.key, v: set[s.key] }) }).catch(() => {});
+      };
       l.appendChild(sel); g.appendChild(l);
     });
   });
@@ -280,7 +297,28 @@ function showApp() {
   $('cap').textContent = app === 'layouts' ? '계기판 (1920×720): 레이아웃이 화면 전체를 덮음'
     : app === 'centre' ? '계기판 (1920×720): 순정 계기판(모형)의 가운데 지도 자리(1088×480)에 페이지'
     : '계기판 (1920×720): 순정 계기판(모형) + Waze 지도 위 패널';
-  buildSettings(); drawMock();
+  buildSettings(); drawMock(); mguFrame();
+}
+/* the MGU screen (tools/mgu/emu.js, started by the demo server): the app the demo shows */
+const MGU_ID = { layouts: 'akakingj_cluster_layouts', centre: 'akakingj_cluster_centre', info: 'akakingj_cluster_info' };
+function mguFrame() {
+  const on = !!(META && META.mgu && META.mgu.port) && VIEW !== 'display';
+  $('mguBox').style.display = on ? 'block' : 'none';
+  $('setDetails').open = !on;
+  $('setSummary').textContent = on ? '설정 목록 (MGU 화면과 같은 값: 여기서 바꿔도 그쪽에 반영)' : '설정 목록';
+  if (!on) return;
+  const src = 'http://127.0.0.1:' + META.mgu.port + '/?embed=1&app=' + MGU_ID[app];
+  if ($('mgu').dataset.port !== String(META.mgu.port)) { $('mgu').dataset.port = META.mgu.port; $('mgu').src = src; }
+  $('mguOpen').href = 'http://127.0.0.1:' + META.mgu.port + '/?app=' + MGU_ID[app];
+}
+/* the MGU screen's settings (the demo server's frame): the list here follows them */
+function mguValues(v) {
+  if (!v || !META) return;
+  const set = settingsByApp[app]; let changed = false;
+  Object.keys(v).forEach((k) => { if (set[k] !== undefined && set[k] !== v[k]) { set[k] = v[k]; changed = true; } });
+  if (!changed) return;
+  document.querySelectorAll('#settings label.f').forEach((l) => { const sel = l.querySelector('select'); if (sel && set[l.dataset.key] !== undefined) sel.value = String(set[l.dataset.key]); });
+  if (VIEW !== 'display') store.set({ app, settings: settingsByApp, data, extra });
 }
 document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => { app = b.dataset.app; save(); showApp(); }; });
 
@@ -385,6 +423,8 @@ function overlays(f) {
     $('sTime').textContent = s.time; $('sMode').textContent = s.mode; $('sGear').textContent = s.gear; $('sTemp').textContent = s.temp;
   }
   $('cluster').classList.toggle('car', extra.carLook !== false);
+  $('stockNote').style.display = f.stock ? 'flex' : 'none';
+  if (f.mguValues) mguValues(f.mguValues);
   const map = $('map');
   const showMap = (app === 'layouts' && f.map) || (app === 'info' && extra.waze === 'cluster');
   map.style.display = showMap ? 'flex' : 'none';
@@ -491,7 +531,7 @@ async function loop() {
     const e = $('err'); if (errors.size) { e.style.display = 'block'; e.textContent = '셰이더 오류:\n' + Array.from(errors).join('\n\n'); } else e.style.display = 'none';
     if (bc && VIEW === 'display' && now - lastStatus > 200) {
       lastStatus = now;
-      bc.postMessage({ type: 'status', app: f.app, page: f.page, pages: f.pages, rotate: f.rotate, look: f.look, layers: f.layers, fps, err: errors.size ? Array.from(errors).join('\n').slice(0, 300) : '' });
+      bc.postMessage({ type: 'status', app: f.app, page: f.page, pages: f.pages, rotate: f.rotate, look: f.look, layers: f.layers, fps, err: errors.size ? Array.from(errors).join('\n').slice(0, 300) : '', mguValues: f.mguValues || null });
     }
   } catch (err) {
     const e = $('err'); e.style.display = 'block'; e.textContent = '데모 서버 오류: ' + (err && err.message || err) + '\n(창을 닫았다면 cluster_demo.bat을 다시 실행하세요)';
@@ -540,6 +580,7 @@ if (bc) bc.onmessage = (ev) => {
     if (m.app !== app) return;
     if (wantPage && m.page === wantPage) wantPage = null;
     if (app === 'centre') pageButtons(m);
+    if (m.mguValues) mguValues(m.mguValues);
     $('stat').textContent = (m.look ? '색상: ' + m.look + ' · ' : '') + (m.layers != null ? '레이어 ' + m.layers + ' · ' : '') + m.fps + ' fps' + (m.err ? ' · 셰이더 오류 (디스플레이 창 확인)' : '');
   }
 };

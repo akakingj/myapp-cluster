@@ -297,6 +297,13 @@ mgu.run({
             if (typeof cv.drawImage === 'function') { cv.drawImage(px, w, h, x, y, w, h); return true; }
             return false;
         };
+        /** s cut to maxW px at size in font, ending in "…" (as drawn: cv.textWidth; a plain canvas without it: as it is) */
+        const fitText = (cv, s, size, font, maxW) => {
+            if (typeof cv.textWidth !== 'function' || cv.textWidth(s, size, { font, literal: true }) <= maxW) return s;
+            let n = s.length;
+            while (n > 1 && cv.textWidth(s.slice(0, n) + '…', size, { font, literal: true }) > maxW) n--;
+            return s.slice(0, n).replace(/[\s(·,:]+$/, '') + '…';
+        };
         const tap = (cv, x, y, w, h, run, key) => { if (typeof cv.target === 'function') cv.target(x, y, w, h, run, key); };
         function drawLayouts(cv, t) {
             const st = cluster.status(), d = data(), o = options(), now = layoutNow(), on = showing();
@@ -330,9 +337,11 @@ mgu.run({
                 const own = ownSlot(shownId, k), v = place ? (own === undefined ? 'auto' : own) : slot(k, shownId), lbl = String(tr((itemFor(shownId, k) || {}).label || k)).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M|Old M|ID6 M)\)$/, '');
                 cv.roundRect(x, y, CW, CH, 10, withAlpha('#ffffff', 0.07));
                 if (own !== undefined) cv.roundRect(x, y, 5, CH, 2, acc);
-                cv.text(lbl, x + 16, y + 19, 14, t.dim, { font: 'bold', literal: true });
-                cv.text(optLabel(k, v, shownId), x + 16, y + 40, COLS > 2 ? 16 : 18, t.text, { font: 'bold' });
-                if (own === undefined && !place && COLS === 2) cv.text('Common', x + CW - 14, y + 40, 14, t.dim, { align: 'right' });
+                const common = own === undefined && !place && COLS === 2, vs = COLS > 2 ? 16 : 18;
+                // (0.36.9: each text cut to its cell with "…": the Korean "auto" labels ran into the next cell)
+                cv.text(fitText(cv, lbl, 14, 'bold', CW - 28), x + 16, y + 19, 14, t.dim, { font: 'bold', literal: true });
+                cv.text(fitText(cv, String(tr(optLabel(k, v, shownId))), vs, 'bold', CW - 30 - (common ? 64 : 0)), x + 16, y + 40, vs, t.text, { font: 'bold', literal: true });
+                if (common) cv.text('Common', x + CW - 14, y + 40, 14, t.dim, { align: 'right' });
                 tap(cv, x, y, CW, CH, () => openSlot(shownId, k), 'slot_' + k);
             });
             // the cards: CARDS a row, the arrows for more; the one showing framed

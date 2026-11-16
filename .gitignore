@@ -21,3 +21,4 @@ secret/
 
 # the personal build's app icons (the Store shows them; the build uses them)
 !apps/akakingj_cluster_*/icon.png
+.demo/
