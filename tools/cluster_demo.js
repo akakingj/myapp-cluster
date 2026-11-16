@@ -17,7 +17,7 @@ const path = require('path');
 const fs = require('fs');
 const { FakeClient } = require('./scene');   // (also points the apps' './kit/' at kit/runtime)
 
-const DEMO_VERSION = '2.2.0';
+const DEMO_VERSION = '2.3.0';
 const ROOT = path.join(__dirname, '..');
 const APPS = { layouts: path.join(ROOT, 'apps', 'akakingj_cluster_layouts'), centre: path.join(ROOT, 'apps', 'akakingj_cluster_centre'), info: path.join(ROOT, 'apps', 'akakingj_cluster_info') };
 const argv = process.argv.slice(2);
@@ -36,13 +36,20 @@ const SKIP = {
     centre: ['show', 'demo', 'eFull', 'kwFast'],
     info: ['demo', 'renderer', 'layout'],
 };
+/* the choices in Korean, as the car shows them (kit/runtime/locales/ko.json; the English where it has none) */
+let KO = {};
+try { KO = JSON.parse(fs.readFileSync(path.join(ROOT, 'kit', 'runtime', 'locales', 'ko.json'), 'utf8')); } catch (e) { /* English */ }
+const ko = (t) => (typeof t === 'string' && KO[t] ? KO[t] : t);
 function settingsOf(app) {
     const m = manifest(app);
-    return { version: m.version, title: m.title || m.id, list: (m.settings || []).filter((s) => SKIP[app].indexOf(s.key) < 0 && (s.type === 'choice' || s.type === 'number')) };
+    const list = (m.settings || []).filter((s) => SKIP[app].indexOf(s.key) < 0 && (s.type === 'choice' || s.type === 'number'))
+        .map((s) => (s.options ? Object.assign({}, s, { options: s.options.map((o) => [o[0], ko(o[1])]) }) : s));
+    return { version: m.version, title: m.title || m.id, list };
 }
 const withDefaults = (app, set) => { const o = {}; settingsOf(app).list.forEach((s) => { o[s.key] = s.default; }); return Object.assign(o, set || {}); };
 const num = (set, k, d) => { const v = Number(set[k]); return isFinite(v) ? v : d; };
 const vehicleOf = (set) => (set.vehicle === 'phev' ? 'phev' : 'ice');     // (Auto: a petrol car here, unless chosen)
+const fuelOf = (set) => (set.vehicle === 'diesel' ? 'diesel' : 'petrol');
 
 /* ---------- scenes: shader sources sent to the page once each, assets when they change ---------- */
 const fsIds = new Map(); const fsList = [];
@@ -75,20 +82,19 @@ function startLayouts(set) {
     clock.setZone(set.timeZone); clock.setTwelve(set.clock !== '24');
     const { layoutFor } = req('layouts', 'layouts');
     let layout = byId(set.layout);
-    const BLACK = { bg: '#000000', bgTop: '#000000', bgBottom: '#000000', face0: '#000000', face1: '#000000' };
     const o = {
         speedUnit: set.speedUnit, tempUnit: set.tempUnit, torqueUnit: set.torqueUnit, pressUnit: set.pressUnit,
         centre: set.centre === 'pages' ? 'map' : set.centre, redline: num(set, 'redline', 7000), rpmMax: num(set, 'rpmMax', 8000),
-        cluster: set.cluster === 'm' ? 'm' : 'standard',
-        bottomStrip: set.bottomStrip === 'layout' ? 'layout' : 'stock', boxBezel: set.boxBezel === 'on', vehicle: vehicleOf(set),
+        cluster: 'standard',
+        bottomStrip: 'stock', boxBezel: false, vehicle: vehicleOf(set), fuel: fuelOf(set),
         tankLitres: num(set, 'tankLitres', 69),
-        powerUnit: set.powerUnit, infoA: set.infoA, infoB: set.infoB, infoMain: set.infoMain, infoLow: set.infoLow, gaugeSpeed: set.gaugeSpeed, gaugeRpm: set.gaugeRpm, tempGauge: set.tempGauge, tempTone: set.tempTone, shiftWarn: set.shiftWarn, amberRpm: set.amberRpm, shiftBefore: set.shiftBefore, coldGuard: set.coldGuard, coldLimit: set.coldLimit, warmOil: set.warmOil,
+        powerUnit: set.powerUnit, infoA: set.infoA, infoB: set.infoB, infoMain: set.infoMain, infoLow: set.infoLow, gaugeSpeed: set.gaugeSpeed, gaugeRpm: set.gaugeRpm, leftDial: set.leftDial, gScale: set.gScale, gFlipLat: set.gFlipLat, gFlipLong: set.gFlipLong, places: {}, tempGauge: set.tempGauge, tempTone: set.tempTone, shiftWarn: set.shiftWarn, amberRpm: set.amberRpm, shiftBefore: set.shiftBefore, coldGuard: set.coldGuard, coldLimit: set.coldLimit, warmOil: set.warmOil, hotOil: set.hotOil, hotCoolant: set.hotCoolant, hotGearbox: set.hotGearbox,
     };
     const st = { data: {}, client: new FakeClient() };
     st.look = () => lookNow(set.look, st.data);
     st.engine = startCluster({
         client: st.client, log: nullLog, layout: () => layout, font: () => layout.font || 'bold', settleMs: 0, target: 'panel',
-        options: () => o, theme: () => Object.assign({}, layout.palette(st.look()), set.background === 'tinted' ? {} : BLACK),
+        options: () => o, theme: () => layout.palette(st.look()),
         sweep: () => false, data: () => st.data, live: () => true, enabled: () => true,
     });
     st.lastLook = st.look();
