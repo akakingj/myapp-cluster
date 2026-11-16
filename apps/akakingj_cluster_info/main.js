@@ -19,6 +19,7 @@ const Car = require('./kit/car');
 const { startOverlay, drawBadge, badgeRect, mapRect } = require('./overlay');
 const { startProviders, DIR } = require('./providers');
 const IND = require('./indicators');
+const { startBlindSpot } = require('./blindspot');
 
 const W = 1600, H = 520;
 const GO = '#2fd27a';
@@ -213,6 +214,10 @@ mgu.run({
             indicator: () => live.indicator,
             night: () => live.night === true,
         };
+        // the lane change warning: the door mirror lamps, read from the BDC (blindspot.js, read only: 22 D3 47) while
+        // it can show: the setting on, the panel not off, the car not locked and left (1.6.25)
+        const bs = startBlindSpot(ctx, log, { want: () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !awake.parked() });
+        src.blindSpot = () => bs.state();
         let overlay = null, overlayError = null;
         try { overlay = startOverlay(ctx, src); } catch (e) { overlayError = String(e); log.warn('overlay: ' + e); }
 
@@ -248,6 +253,9 @@ mgu.run({
                     + '   ·   Waze map: ' + (ov ? ov.map : '--') + '   ·   Cluster renderer: ' + (overlayError ? 'error: ' + overlayError : ov ? ov.renderer : 'not started')],
                 ['Apps providing', (pnames.length ? pnames.join(', ') : 'none') + (pw ? '   ·   power ' + pw.text + ' kW' : '') + '   (folder ' + DIR + ')'],
                 ['Values', chosen().map((k) => { const v = valueNow(k); return VALUES[k].label + ' ' + (v ? (G.isNum(v.c) ? temp(v.c) : v.text) + ' from ' + v.src : 'no reading'); }).join('   ·   ') || 'none chosen'],
+                ['Lane change warning', settings.get('blindSpot') === 'off' ? 'off (settings)' : (() => { const b = bs.status();
+                    return (b.refused ? 'the BDC has no D347 (' + b.refused + ')' : b.left !== null ? 'mirror lamps: left ' + b.left + ', right ' + b.right : b.reading ? 'no answer yet' : 'not read now (panel off or parked)')
+                        + '   ·   BDC 22 D347: ' + b.good + ' of ' + b.reads + ' answered   ·   link ' + b.link; })()],
                 ['Turn signals', st('turn signals') + (live.indicator !== 'off' ? ' (now ' + live.indicator + ')' : '')
                     + '   ·   Day / night: ' + (live.night === null ? st('day / night') + ', none received' : live.night ? 'night' : 'day')
                     + '   ·   Driver profile: ' + (live.profile || (st('driver profile') === 'subscribed' ? 'none read yet' : st('driver profile')))],

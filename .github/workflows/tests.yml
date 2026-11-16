@@ -18,6 +18,7 @@ jobs:
           node-version: '22'
       - run: node kit/tools/test_runtime.js
       - run: node kit/tools/test_cluster_info_overlay.js
+      - run: node kit/tools/test_cluster_info_blindspot.js
       - run: node kit/tools/test_cluster_info.js
       # test_logs decodes the Logs screen's QR codes from simulated photos with OpenCV
       - uses: actions/setup-python@v5

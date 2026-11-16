@@ -40,7 +40,7 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
 ## Added
 - Cluster Info > Show the panel Off takes the HUD's turn arrows off too. (1.6.12..1.6.23 also had a lane change
   warning on the HUD from the driving assistant's de.bmw.dass lane change service; on a G20 and a G21 the head unit
-  reported that service not available, so 1.6.24 took it out.)
+  reported that service not available, so 1.6.24 took it out. 1.6.25 has it back from the door mirror lamps, BDC 22 D347, read only.)
 - Layouts > Fuel % from: Engine unit (default; its own tank level, OBD PID 0x2F, the % Live Data shows) or
   Litres / tank size (the car's whole litres over Fuel tank size: a few % lower on a G20). The litres stay the fallback
   while the engine unit doesn't answer.
