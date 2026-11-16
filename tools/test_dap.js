@@ -42,9 +42,8 @@ check('the picture: the cruise target followed, else the nearest in the lane; th
     p = D.pick([{ id: 9, x: 20, y: 0.3, lane: null }], 0);
     assert.strictEqual(p.lead.id, 9, 'no lane assignment: by its offset');
 });
-check('subscriptions: the four events, declared in app.json; the state dropped 3 s after the last event', () => {
+check('subscriptions: the decoders for all four events; the state dropped 3 s after the last event', () => {
     const app = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'app.json'));
-    Object.keys(D.SERVICES).forEach((i) => assert.deepStrictEqual(app.signals[i]._broadcasts, [D.SERVICES[i]], i));
     const handlers = {};
     const ctx = { spec: { config: app.config }, signals: { watch: (iface, inst, h) => { Object.assign(handlers, h); return Promise.resolve({}); } } };
     const logs = [];
@@ -57,5 +56,16 @@ check('subscriptions: the four events, declared in app.json; the state dropped 3
     assert(logs.some((m) => /^dap raw ibvip/.test(m)) && logs.some((m) => /^dap raw objects/.test(m)), 'raw values logged');
     s.at -= 4000;
     assert.strictEqual(dap.state(), null, 'stale');
+});
+check('Cluster Layouts (0.36.6): the cruise control\'s service alone, the only one declared in app.json', () => {
+    const app = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'app.json'));
+    const dass = Object.keys(app.signals).filter((k) => /^de\.bmw\.dass\./.test(k));
+    assert.deepStrictEqual(dass, ['de.bmw.dass.AssistedDrivingViewFunctionInput']);
+    assert.deepStrictEqual(app.signals[dass[0]]._broadcasts, ['assistedDrivingViewFunctionInputIbVip']);
+    const src = require('fs').readFileSync(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'main.js'), 'utf8');
+    assert(/startDap\(ctx, log, \{ only: \['ibvip'\] \}\)/.test(src), 'main.js asks for ibvip alone');
+    const got = [];
+    D.startDap({ spec: {}, signals: { watch: (iface) => { got.push(iface); return Promise.resolve({}); } } }, { info() {}, warn() {} }, { only: ['ibvip'] });
+    assert.deepStrictEqual(got, ['de.bmw.dass.AssistedDrivingViewFunctionInput']);
 });
 console.log(ok + ' passed');

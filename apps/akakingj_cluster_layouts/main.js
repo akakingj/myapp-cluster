@@ -76,12 +76,14 @@ mgu.run({
         const D = startData(ctx, { shown: showing, tyres: true });
         const car = D.car;
         // the driving assistant (dap.js), for the layouts that show it (layout.dap: ID8 M's
-        // cruise control): subscribed once one is first shown
+        // cruise control): subscribed once one is first shown, to the cruise control's service alone (0.36.6: not the
+        // lane, warning and object list services, the last a car's whole surroundings many times a second, which no
+        // layout draws since Modern wide went)
         let dap = null;
         const dapWanted = () => showing() && !!byId(settings.get('layout')).dap;
         const data = () => {
             const d = D.data();
-            if (!dap && dapWanted() && !d.demo) dap = startDap(ctx, log);
+            if (!dap && dapWanted() && !d.demo) dap = startDap(ctx, log, { only: ['ibvip'] });
             d.dap = d.demo ? DAP_DEMO : dap ? dap.state() : null;
             return d;
         };

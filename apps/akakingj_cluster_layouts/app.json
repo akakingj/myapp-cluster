@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.36.5",
+  "version": "0.36.6",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -78,24 +78,6 @@
         "assistedDrivingViewFunctionInputIbVip"
       ],
       "_optional": "The driving assistant: the cruise control's state, set speed and gap"
-    },
-    "de.bmw.dass.pad.communication.AssistedDrivingViewLateralFunctionInput": {
-      "_broadcasts": [
-        "lateralFunctionInputAssistedDrivingView"
-      ],
-      "_optional": "The driving assistant: the steering assist holding the lane"
-    },
-    "de.bmw.dass.driverassistanceapplications.AssistedDrivingViewLateralCollisionAvoidance": {
-      "_broadcasts": [
-        "assistedDrivingViewLcaInput"
-      ],
-      "_optional": "The driving assistant: lane departure and lane change warnings"
-    },
-    "de.bmw.dass.pad.communication.ObjectListSuAAR": {
-      "_broadcasts": [
-        "suAARObjectList"
-      ],
-      "_optional": "The driving assistant: the cars ahead and beside"
     },
     "de.bmw.infotainment.vehicle.TPMS": {
       "statusTyrePressure": "rs",

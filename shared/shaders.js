@@ -1368,9 +1368,14 @@ vec4 bar(vec2 p, vec4 s, float val, float zones, vec4 c) {
 }
 
 // (here) a flare where a bracket's outer line bends, as BMW's own: a soft glow and a four-pointed star
+// (where it adds anything at all, under 1/255: the streaks' narrow cross and the glow's disc)
+bool flareNear(vec2 q, vec2 c, float s) {
+    vec2 d = abs(q - c);
+    return (d.y < 10.0 && d.x < s * 14.0) || (d.x < 10.0 && d.y < s * 9.0) || dot(d, d) < s * s * 4.84;
+}
 vec4 flare(vec2 q, vec2 c, vec3 col, float s, vec4 acc) {
     vec2 d = abs(q - c);
-    if (d.x > s * 14.0 || d.y > s * 9.0) return acc;     // (nothing to add this far out: no work)
+    if (!flareNear(q, c, s)) return acc;     // (nothing to add this far out: no work)
     float star = exp(-d.x / (s * 2.6)) * exp(-d.y / (s * 0.07)) + exp(-d.y / (s * 1.6)) * exp(-d.x / (s * 0.07));
     float glow = exp(-dot(d, d) / (s * s * 0.5));
     acc = over(vec4(col, glow * 0.55), acc);
@@ -1383,6 +1388,20 @@ void main() {
     vec2 p = v_uv * u_size + u_off;
     vec2 pm = vec2(1920.0 - p.x, p.y);
     vec4 c = vec4(0.0);
+    // (0.36.6) a bracket's layer is mostly empty black: a pixel far from everything it draws (the bracket's lines and
+    // band with their glow, the top and bottom runs, the flares, the bar) is see-through at once. ID8 M cost about four
+    // times any other layout to draw, and the KOMBI's GPU is the one that restarts the cluster when it runs short.
+    if (u_part < 2.5) {
+        vec2 q = u_part < 1.5 ? p : pm;
+        vec4 sg = u_part < 1.5 ? u_fuelSeg : u_oilSeg;
+        float d0 = dIn(q), xb = outerX(u_geo.z);
+        bool near = (d0 > -30.0 && d0 < u_inner + 6.0)
+            || (abs(q.y - u_geo.x) < 16.0 && q.x < u_topEnd + 8.0)
+            || (abs(q.y - u_geo.z) < 10.0 && q.x < xb + u_inner + 50.0)
+            || flareNear(q, vec2(u_geo.w - 1.0, u_geo.y), 26.0) || flareNear(q, vec2(xb, u_geo.z), 18.0)
+            || (u_hole.z <= 0.0 && segD(p, sg.xy, sg.zw) < 27.0);
+        if (!near) { gl_FragColor = vec4(0.0); return; }
+    }
     float hole = 1.0;
     if (u_hole.z > 0.0) {
         vec2 hs = u_hole.zw * 0.5;
