@@ -43,15 +43,15 @@ const PROFILE_VALUES = {
     coldLimit: [0, 2000, 4500, 5500], lightMode: ['shift', 'rev'], lightStart: [2000, 4000, 6000], coldGuard: ['on', 'off'], warmOil: [60, 80, 100],
     warmCoolant: [60, 90], hotOil: [110, 125, 140], hotCoolant: [110, 125, 140], hotGearbox: [80, 100, 130], speedUnit: ['kmh', 'mph'], distUnit: ['km', 'mi'], tempUnit: ['c', 'f'],
     pressUnit: ['bar', 'psi', 'kpa'], fuelUnit: ['l100', 'kml', 'mpguk', 'mpgus'], torqueUnit: ['nm', 'lbft', 'kgm'],
-    powerUnit: ['hp', 'ps', 'kw'],
+    powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'],
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
-    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftBefore: 'shiftBefore', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit' },
-    centre: { vehicle: 'engine', redline: 'redline', shiftBefore: 'shiftBefore', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit' },
-    info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit' },
+    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftBefore: 'shiftBefore', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin' },
+    centre: { vehicle: 'engine', redline: 'redline', shiftBefore: 'shiftBefore', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin' },
+    info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin' },
 };
-const MINE = { vehicle: 'petrol', speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftBefore: 200, coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
+const MINE = { vehicle: 'petrol', skin: 'idrive7', speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftBefore: 200, coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
     hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120 };
 
 const cases = {

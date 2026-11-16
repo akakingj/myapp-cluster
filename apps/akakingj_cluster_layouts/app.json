@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.37.4",
+  "version": "0.38.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -1459,7 +1459,8 @@
         50
       ],
       "section": "Car"
-    }
+    },
+    {"key": "skin", "label": "Skin", "type": "choice", "default": "classic", "options": [["classic", "Classic"], ["idrive7", "iDrive 7"]], "profile": "skin", "section": "Display"}
   ],
   "config": {
     "scaling": {

@@ -38,6 +38,10 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
 | Info | Panel slots 1-3 | power, battery, oil > boost, torque, oil |
 
 ## Added
+- Skin (Layouts > Display, Centre > Look and size, Info > Screen; or the Car profile's Units and display > Skin
+  for every app): Classic (the default, as before) or iDrive 7, the iDrive screens drawn as the head unit's own (the
+  kit's themes.js / gauges.js / sheet.js, as akakingj/idrive7-apps car-profile-test): orange name and focus, flat tabs
+  and bar, settings split into a list and a preview. The cluster display itself stays as each layout draws it.
 - Cluster Info > Show the panel Off takes the HUD's turn arrows off too. (1.6.12..1.6.23 also had a lane change
   warning on the HUD from the driving assistant's de.bmw.dass lane change service; on a G20 and a G21 the head unit
   reported that service not available, so 1.6.24 took it out. 1.6.25 has it back from the door mirror lamps, BDC 22 D347, read only.)
