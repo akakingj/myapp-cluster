@@ -2164,4 +2164,13 @@ void main() {
     gl_FragColor = acc;
 }`;
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS };
+
+/* One program per mode for the shaders that pick their part by u_mode (JDM_FS, MROUND_FS): u_mode a constant, so the
+ * compiler drops every other mode's code. The whole JDM 2 in one program ran its largest program over 1.9 million
+ * pixels a frame (the full-screen carbon background with it), more than the cluster's GPU keeps up with: the
+ * cluster removed the scene (2026-11-16, a car's cluster-render log: "1 x scene removed"). (engine.js fsOf) */
+const byMode = (fs, n) => Array.from({ length: n }, (_, m) => fs.replace('uniform float u_mode;', '#define u_mode ' + m + '.0'));
+const JDM_FS_MODES = byMode(JDM_FS, 8);
+const MROUND_FS_MODES = byMode(MROUND_FS, 3);
+
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, JDM_FS_MODES, MROUND_FS_MODES };
