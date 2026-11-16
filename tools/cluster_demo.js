@@ -17,7 +17,7 @@ const path = require('path');
 const fs = require('fs');
 const { FakeClient } = require('./scene');   // (also points the apps' './kit/' at kit/runtime)
 
-const DEMO_VERSION = '2.6.2';
+const DEMO_VERSION = '2.6.3';
 const ROOT = path.join(__dirname, '..');
 const APPS = { layouts: path.join(ROOT, 'apps', 'akakingj_cluster_layouts'), centre: path.join(ROOT, 'apps', 'akakingj_cluster_centre'), info: path.join(ROOT, 'apps', 'akakingj_cluster_info') };
 const argv = process.argv.slice(2);
