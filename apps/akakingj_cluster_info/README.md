@@ -22,7 +22,8 @@ A small panel of live values over the Waze map in the instrument cluster or on t
 - Lane change warning on the HUD (1.6.25, Settings > Lane change warning on the HUD, on by default): outside each
   arrow the sign of 1.6.12-1.6.23 (this car in yellow, the other's bonnet in red behind it, outward), steady while the
   door mirror's lamp on that side is lit or flashing (a car in the blind spot, the turn signal or not), gone with it
-  (1.6.26). The lamps are read from the body controller (BDC,
+  (1.6.26) While another app holds the HUD (Redline 2.0.64 draws the same sign) the BDC isn't read
+  here, so only one app polls it (1.6.27). The lamps are read from the body controller (BDC,
   0x40), identifier D347, every 300 ms while the panel is on and the car not locked and left, over the kit's read-only
   diagnostic link (only 22 D3 47 is ever sent: the same identifier written switches the lamps). Gone 3 s after the
   last answer. After mlurker's HUD signals (mlurker/bmw-idrive7-apps, found on a G05), written anew; whether a G20's

@@ -216,9 +216,11 @@ mgu.run({
         };
         // the lane change warning: the door mirror lamps, read from the BDC (blindspot.js, read only: 22 D3 47) while
         // it can show: the setting on, the panel not off, the car not locked and left (1.6.25)
-        const bs = startBlindSpot(ctx, log, { want: () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !awake.parked() });
-        src.blindSpot = () => bs.state();
+        // (read only while the sign can show: not while another app holds the HUD, so Redline and this never both poll the BDC)
         let overlay = null, overlayError = null;
+        const bs = startBlindSpot(ctx, log, { want: () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !awake.parked()
+            && !(overlay && overlay.lcwWanted && !overlay.lcwWanted()) });
+        src.blindSpot = () => bs.state();
         try { overlay = startOverlay(ctx, src); } catch (e) { overlayError = String(e); log.warn('overlay: ' + e); }
 
         /* ---------- this app's page: the panel as it is now, larger, and every source's state ---------- */

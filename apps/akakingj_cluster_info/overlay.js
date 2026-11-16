@@ -631,6 +631,8 @@ function startOverlay(ctx, lv, opts) {
         }),
         /** The turn signal arrows: { shown, phase } (phase true: lit). */
         arrows: () => ({ shown: arrowsShown, phase: lastPhase, refs: Object.assign({}, arrows) }),
+        /** Whether the lane change sign can show now (blindspot.js reads the BDC only then: not while Redline holds the HUD). */
+        lcwWanted: lcwOn,
         _arrowTick: arrowTick, _lcwTick: lcwTick, lcw: () => ({ shown: Object.assign({}, lcwShown), refs: Object.assign({}, lcwRefs) }),
         _tick: tick, _read: readStatus,
     };
