@@ -29,8 +29,8 @@ Track), renamed Retro, Analog sport, Classic M, M and Sport to 90's, 20's, ID6 M
 layouts in that order; 0.30.1 renamed Arc tach and Twin cowl to JDM 1 and GM; 0.31.0 added JDM 2 after JDM 1; 0.33.0
 renamed ID6 M (the E9x-style dials) to Old M and added a new ID6 M after it; 0.34.0 keeps the car's own bottom strip
 always (the full-screen form is gone: below). 0.35.3: ID7 M and ID8 M show the gear with its programme (D4, S3,
-M2), not the number alone; GM's rings of light follow the drive mode (ice-blue, red in sport, teal in ECO PRO). 0.36.2: a plug-in hybrid's charge bars go red at 15 % and under (the strip's, Pulse's, Track's, ID8 M's bottom bar; ID8 M's
-rev bracket bar with the charge red at its empty end, as the fuel's; the battery gauge's figures). 0.36.1: the readouts (Readout 1 / 2, Main, bottom line) are Auto by default: by the car (petrol or diesel: intake air, gearbox oil,
+M2), not the number alone; GM's rings of light follow the drive mode (ice-blue, red in sport, teal in ECO PRO). 0.36.3: a plug-in hybrid's charge bars go red at 10 % and under, every layout alike (the strip's, Pulse's, Track's, ID7 M's,
+ID8 M's bottom bar and rev bracket bar; the battery gauge's figures). 0.36.1: the readouts (Readout 1 / 2, Main, bottom line) are Auto by default: by the car (petrol or diesel: intake air, gearbox oil,
 torque, coolant; plug-in hybrid: each layout's eDrive reading), and any reading can be set on either car, the battery's
 charge, temperature, power and electric range among them (the small gauges and the places too); ID8 M's rev bracket bar
 is a plug-in hybrid's charge. 0.35.9: a plug-in hybrid's tach is a Power % meter in HYBRID and ELECTRIC

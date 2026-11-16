@@ -109,8 +109,8 @@ module.exports = {
                 dyn: (d) => ({
                     u_ticks: [8, elec(d) ? 4 : 7], u_redFrom: [elec(d) ? 2 : B.redMarks(o, RPM_MAX, d)[0]], u_orange: [elec(d) ? 2 : B.redMarks(o, RPM_MAX, d)[1]], u_zero: [elec(d) ? E_ZERO : 0],
                     u_oil: [pO ? q(pO.frac(d)) : isNum(d.oil) ? Math.round(clamp01((d.oil - 50) / 100) * 500) / 500 : 0],
-                    // (the charge or the fuel there: the fuel's zones, red at the empty end)
-                    u_regenR: [pO && (pO.key === 'soc' || pO.key === 'fuel') ? 4 : 0],
+                    // (the fuel there: the fuel's zones, red at the empty end; a plug-in's charge: none, all red when low)
+                    u_regenR: [pO && pO.key === 'fuel' ? 4 : pO && pO.key === 'soc' ? (C.socLow(d) ? 12 : 8) : 0],
                 }) }),
             // the bottom bar's halves as gauges: the charge and the battery's power (boost and the coolant)
             part('bottomBar', 3, 400, Y(620) - 6, 1120, bottom - Y(620) + 6, { dyn: (d) => ({

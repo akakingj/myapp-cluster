@@ -1256,7 +1256,7 @@ uniform float u_topEnd;   // the top lines run from the bracket to this x (left;
 uniform vec2 u_off;       // (here) the layer's place on the panel
 uniform float u_part;     // (here) 1 the speed bracket (and the fuel bar), 2 the rev bracket (and the oil bar), 3 the bottom line and strip
 uniform vec2 u_stripFill; // (here) the bottom strip's halves as gauges: the left half lit from its left end to x, the right from the middle to y (0..1; negative: all lit)
-uniform float u_regenR;   // (here) flags: 1 the bottom strip's right half is regeneration (green); 2 its left half red (a plug-in's charge low); 4 the rev bracket's bar with the fuel's zones (a plug-in's charge: red at its empty end)
+uniform float u_regenR;   // (here) flags: 1 the bottom strip's right half is regeneration (green); 2 its left half red (a plug-in's charge low); in the rev bracket: 4 its bar with the fuel's zones (the fuel there), 8 without zones (a plug-in's charge), 12 that all red (the charge low)
 uniform float u_zero;     // (here) the rev bracket's 0 (0..1 up it): above 0 a power gauge's regeneration below it, lit green
                           // from the 0 down to the value, its marks counted from the 0
 
@@ -1357,8 +1357,10 @@ vec4 bar(vec2 p, vec4 s, float val, float zones, vec4 c) {
     body *= clamp(sg - 1.5, 0.0, 1.0) * clamp(L / 8.0 - 1.5 - sg, 0.0, 1.0);
     vec3 col = mix(vec3(0.35, 0.6, 1.0), vec3(0.96, 0.97, 1.0), smoothstep(0.0, 0.6, h));
     if (zones < 0.5 && h < 0.125) col = vec3(1.0, 0.2, 0.22);
-    if (zones > 0.5 && h > 0.875) col = vec3(1.0, 0.2, 0.22);
-    if (zones > 0.5 && h < 0.125) col = vec3(0.25, 0.5, 1.0);
+    if (zones > 0.5 && zones < 1.5 && h > 0.875) col = vec3(1.0, 0.2, 0.22);
+    if (zones > 0.5 && zones < 1.5 && h < 0.125) col = vec3(0.25, 0.5, 1.0);
+    // (2: no zones, a plug-in's charge; 3: the same, all red: the charge low)
+    if (zones > 2.5) col = mix(vec3(0.8, 0.1, 0.12), vec3(1.0, 0.3, 0.3), smoothstep(0.0, 0.6, h));
     c = over(vec4(0.3, 0.32, 0.38, 0.9 * body), c);
     c = over(vec4(col, body * step(h, val + 0.0001) * step(0.001, val)), c);
     c = over(vec4(0.5, 0.52, 0.58, 0.8 * cov(abs(side + 12.0) - 1.0) * cov(segD(p, a, b) - 13.0)), c);
@@ -1399,7 +1401,7 @@ void main() {
         c = bracket(pm, u_rpm, u_zero, u_redFrom, u_orange, u_ticks.y, RED_LINE, RED_BAND, RED_LIT, RED_IN, c);
         c = flare(pm, vec2(u_geo.w - 1.0, u_geo.y), RED_LINE, 26.0, c);
         c = flare(pm, vec2(outerX(u_geo.z), u_geo.z), RED_LINE, 18.0, c);
-        if (u_hole.z <= 0.0) c = bar(p, u_oilSeg, u_oil, u_regenR > 3.5 ? 0.0 : 1.0, c);
+        if (u_hole.z <= 0.0) c = bar(p, u_oilSeg, u_oil, u_regenR > 11.5 ? 3.0 : u_regenR > 7.5 ? 2.0 : u_regenR > 3.5 ? 0.0 : 1.0, c);
         c.a *= hole;
     } else {
         // the bottom line between the brackets

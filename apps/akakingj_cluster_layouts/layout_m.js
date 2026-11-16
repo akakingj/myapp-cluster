@@ -69,7 +69,7 @@ function gauges(o, engine) {
     const ice = o.vehicle === 'ice';
     // (the fuel's bar reads the range left on it)
     const fuel = { icon: 'fuel', unit: '', read: (d) => (isNum(d.frange) ? C.distText(o, d.frange) : ''), labels: [[0, '0'], [-1, '0'], [1, '1']], value: (d) => (isNum(d.fuelPct) ? clamp01(d.fuelPct / 100) : 0), zero: 0, lo: 0.125, hi: 2 };
-    const charge = { icon: 'battery', unit: '%', read: (d) => (isNum(d.soc) ? String(Math.round(d.soc)) : '--'), labels: [[0, '0'], [0.5, '50'], [1, '100']], value: (d) => f01(d.soc, 0, 100), zero: 0, lo: 0.1, hi: 2 };
+    const charge = { icon: 'battery', unit: '%', read: (d) => (isNum(d.soc) ? String(Math.round(d.soc)) : '--'), labels: [[0, '0'], [0.5, '50'], [1, '100']], value: (d) => f01(d.soc, 0, 100), zero: 0, lo: C.LOW_SOC / 100, hi: 2 };   // (red at the plug-in's low charge: layout_common.LOW_SOC)
     const left = ice ? [coolant, gearbox] : [coolant, oil];
     if (engine) {
         // (Settings > Pressure and Torque unit; the gauges' spans stay 0-3 bar, 0-40 psi and 0-500 Nm)

@@ -134,8 +134,8 @@ function stripGauges(o, opts) {
     return out;
 }
 /** The layout's own range readings (keys) left out with the strip: it shows both ranges. */
-/** A plug-in hybrid's battery low (0.36.2): at 15 % and under its charge bars and gauges go red, as the fuel's reserve */
-const LOW_SOC = 15;
+/** A plug-in hybrid's battery low (0.36.3: 10 %, as ID7 M's): at it and under its charge bars and gauges go red */
+const LOW_SOC = 10;
 const socLow = (d) => !!d && isNum(d.soc) && d.soc <= LOW_SOC;
 const STRIP_DROP = /^(fuel|elec|frange|erange|range2)(Lbl)?$|^erangeL$/;
 
