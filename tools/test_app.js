@@ -84,11 +84,11 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     check('its readouts on the page, each following the Settings\' value', () => ['slot_infoMain', 'slot_gaugeSpeed', 'slot_gaugeRpm'].forEach(tgt));
     // (no sheet: a tap goes to the next value)
     await tgt('slot_infoMain').run();
-    check('a readout tapped (no sheet here): the next value, for this layout only', () => assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'off' } }));
+    check('a readout tapped (no sheet here): the next value, for this layout only', () => assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'auto' } }));
     sheets = [];
     await tgt('slot_infoMain').run();
     check('with sheets: the values listed, the one set marked', () => assert(sheets.length === 1 && sheets[0].focus === 1, 'focus ' + (sheets[0] && sheets[0].focus)));
-    sheets[0].focus = 6; sheets[0].press();     // (Boost: 'Same as in Settings' first, then the setting's own)
+    sheets[0].focus = 7; sheets[0].press();     // (Boost: 'Same as in Settings' first, then the setting's own: Auto, Nothing, ...)
     await sleep(150);
     check('picked: this layout\'s, the cluster rebuilt with it', () => {
         assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'boost' } });

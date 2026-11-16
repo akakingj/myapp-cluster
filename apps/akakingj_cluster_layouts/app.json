@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.36.0",
+  "version": "0.36.1",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -416,10 +416,14 @@
     },
     {
       "key": "infoA",
-      "label": "Centre readout: top left (petrol, diesel)",
+      "label": "Centre readout: top left",
       "type": "choice",
-      "default": "iat",
+      "default": "auto",
       "options": [
+        [
+          "auto",
+          "Auto (by the car: petrol and diesel, intake air; plug-in hybrid, the layout's eDrive reading)"
+        ],
         [
           "off",
           "Nothing"
@@ -463,6 +467,22 @@
         [
           "timing",
           "Ignition timing"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ],
+        [
+          "kw",
+          "Battery power (plug-in hybrid)"
+        ],
+        [
+          "erange",
+          "Electric range (plug-in hybrid)"
         ],
         [
           "gear",
@@ -473,10 +493,14 @@
     },
     {
       "key": "infoB",
-      "label": "Centre readout: top right (petrol, diesel)",
+      "label": "Centre readout: top right",
       "type": "choice",
-      "default": "gearbox",
+      "default": "auto",
       "options": [
+        [
+          "auto",
+          "Auto (by the car: petrol and diesel, gearbox oil; plug-in hybrid, the layout's eDrive reading)"
+        ],
         [
           "off",
           "Nothing"
@@ -520,6 +544,22 @@
         [
           "timing",
           "Ignition timing"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ],
+        [
+          "kw",
+          "Battery power (plug-in hybrid)"
+        ],
+        [
+          "erange",
+          "Electric range (plug-in hybrid)"
         ],
         [
           "gear",
@@ -530,10 +570,14 @@
     },
     {
       "key": "infoMain",
-      "label": "Centre readout: under the speed (petrol, diesel)",
+      "label": "Centre readout: under the speed",
       "type": "choice",
-      "default": "torque",
+      "default": "auto",
       "options": [
+        [
+          "auto",
+          "Auto (by the car: petrol and diesel, torque; plug-in hybrid, the layout's eDrive reading)"
+        ],
         [
           "off",
           "Nothing"
@@ -577,6 +621,22 @@
         [
           "timing",
           "Ignition timing"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ],
+        [
+          "kw",
+          "Battery power (plug-in hybrid)"
+        ],
+        [
+          "erange",
+          "Electric range (plug-in hybrid)"
         ],
         [
           "gear",
@@ -589,8 +649,12 @@
       "key": "infoLow",
       "label": "Centre readout: bottom line (Old M)",
       "type": "choice",
-      "default": "coolant",
+      "default": "auto",
       "options": [
+        [
+          "auto",
+          "Auto (by the car: petrol and diesel, coolant; plug-in hybrid, the layout's eDrive reading)"
+        ],
         [
           "off",
           "Nothing"
@@ -634,6 +698,22 @@
         [
           "timing",
           "Ignition timing"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ],
+        [
+          "kw",
+          "Battery power (plug-in hybrid)"
+        ],
+        [
+          "erange",
+          "Electric range (plug-in hybrid)"
         ],
         [
           "gear",
@@ -775,6 +855,14 @@
         [
           "fuel",
           "Fuel level"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
         ]
       ],
       "section": "Readouts and gauges"
@@ -832,6 +920,14 @@
         [
           "fuel",
           "Fuel level"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
         ]
       ],
       "section": "Readouts and gauges"

@@ -85,7 +85,8 @@ LAYOUTS.forEach((L) => {
     // (Settings > Bottom strip, Cluster: M car and Frame behind the gear box are gone: always the car's strip, which
     // leaves none of the KOMBI's boxes)
     L.pieces = (o0) => {
-        const o = Object.assign({}, o0 || {}, { bottomStrip: 'stock', cluster: 'standard', boxBezel: false });
+        // (the readouts' Auto by the car: layout_common.resolveReadouts)
+        const o = C0.resolveReadouts(Object.assign({}, o0 || {}, { bottomStrip: 'stock', cluster: 'standard', boxBezel: false }));
         // a setting this build can't draw (a stale saved value) must not stop the app (the main app deletes an app
         // that keeps failing): the layout as designed, its places and readouts on their defaults
         try { return finish(L, o, withPowerWords(o, built(o))); } catch (e) {
@@ -108,7 +109,7 @@ LAYOUTS.forEach((L) => {
             // (each only where the layout doesn't show it already)
             const has = (re) => list.some((p) => re.test(p.key));
             const ice = o.vehicle === 'ice' || C0.engineFocus(o);
-            const hasGbox = has(/^gbox$/) && (!ice || (o.infoB || 'gearbox') === 'gearbox'), hasBatt = o.vehicle !== 'ice' && !C0.engineFocus(o) && has(/^(battT|c_battV|batt)$/);
+            const hasGbox = has(/^gbox$/) && (ice || !C0.phevPick(o, 'infoB') ? (o.infoB || 'gearbox') === 'gearbox' : o.infoB === 'gearbox'), hasBatt = o.vehicle !== 'ice' && !C0.engineFocus(o) && !C0.phevPick(o, 'infoA') && has(/^(battT|c_battV|batt)$/);
             list = list.filter((p) => !((p.key === 'outside' && hasGbox) || (p.key === 'clock' && hasBatt)))
                 .map((p) => (p.key === 'clock' ? fitted(L, Object.assign({}, p, { text: C0.stripInfoA(o, p) })) : p.key === 'outside' ? fitted(L, Object.assign({}, p, { text: C0.stripInfoB(o, p) })) : p));
             // (the two side by side at one size: the smaller of the two)
@@ -139,7 +140,8 @@ const byId = (id) => LAYOUTS.find((l) => l.id === id) || LAYOUTS[0];
  * outside's places). tools/test_slots.js checks the table against what each layout draws.
  */
 const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm', 'leftDial'];
-const ALWAYS = () => true, ENGINE = (o) => C0.engineFocus(o), STRIP = (o) => stripOn(o), ENGINE_STRIP = (o) => ENGINE(o) && STRIP(o);
+// (0.36.1: a plug-in hybrid sets them too: Auto, the default, keeps each layout's own eDrive reading there)
+const ALWAYS = () => true, ENGINE = ALWAYS, STRIP = (o) => stripOn(o), ENGINE_STRIP = STRIP;
 const MAPFORM = (o) => o.centre === 'map' || (STRIP(o) && o.centre === 'stock');
 const DIALS = { gaugeSpeed: ALWAYS, gaugeRpm: ALWAYS }, STRIP2 = { infoA: ENGINE_STRIP, infoB: ENGINE_STRIP };
 const SLOTS = {

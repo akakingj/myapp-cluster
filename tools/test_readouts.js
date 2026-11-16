@@ -70,10 +70,15 @@ check('main readout: the engine torque by default, else the one picked, with its
     assert.strictEqual(C.focus.power(o({ infoMain: 'power' }))({}), '--');
     assert(Math.abs(C.focus.mainFrac(o({ infoMain: 'pedal' }))(d) - 0.854) < 1e-9);
 });
-check('a plug-in hybrid keeps its battery readings', () => {
-    const p = o({ vehicle: 'phev', infoA: 'boost', infoMain: 'power' });
+check('a plug-in hybrid: Auto keeps its battery readings; one set by hand shows (0.36.1)', () => {
+    const p = C.resolveReadouts(o({ vehicle: 'phev', infoA: 'auto', infoMain: 'auto' }));
     assert.strictEqual(C.stripInfoA(p, narrow)({ battTemp: 27 }), 'BATT 27°');
     assert.strictEqual(C.focus.power(p)({ kw: 12.34 }), '+12 kW');
+    const q = C.resolveReadouts(o({ vehicle: 'phev', infoA: 'soc', infoMain: 'battTemp' }));
+    assert.strictEqual(C.stripInfoA(q, narrow)({ soc: 64 }), 'SOC 64%');
+    assert.strictEqual(C.focus.power(q)({ battTemp: 27 }), '27°');
+    const i = C.resolveReadouts(o({ vehicle: 'ice', infoA: 'auto', infoMain: 'auto' }));
+    assert.strictEqual(i.infoA, 'iat'); assert.strictEqual(i.infoMain, 'torque');
 });
 check('the engine unit reads what the readouts show', () => {
     const w = C.focus.needs(o({ infoA: 'timing', infoB: 'boost', infoMain: 'iat' }));
@@ -83,7 +88,7 @@ check('the engine unit reads what the readouts show', () => {
 check('the settings offer every readout, and the defaults are this build\'s', () => {
     const s = (k) => SPEC.settings.find((x) => x.key === k);
     ['infoA', 'infoB', 'infoMain'].forEach((k) => Object.keys(C.READOUTS).forEach((r) => assert(s(k).options.some((x) => x[0] === r), k + ' ' + r)));
-    const want = { vehicle: 'petrol', tankLitres: 59, speedUnit: 'kmh', tempUnit: 'c', torqueUnit: 'kgm', pressUnit: 'psi', powerUnit: 'hp', timeZone: 'utc+9', infoA: 'iat', infoB: 'gearbox', infoMain: 'torque', redline: 6000, rpmMax: 7000 };
+    const want = { vehicle: 'petrol', tankLitres: 59, speedUnit: 'kmh', tempUnit: 'c', torqueUnit: 'kgm', pressUnit: 'psi', powerUnit: 'hp', timeZone: 'utc+9', infoA: 'auto', infoB: 'auto', infoMain: 'auto', redline: 6000, rpmMax: 7000 };
     Object.keys(want).forEach((k) => assert.strictEqual(s(k).default, want[k], k));
     // (a number setting is a drop-down on the car: its steps, the default among them)
     SPEC.settings.filter((x) => x.type === 'number').forEach((x) => assert(Array.isArray(x.steps) && x.steps.indexOf(x.default) >= 0, x.key));

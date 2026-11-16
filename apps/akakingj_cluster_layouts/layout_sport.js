@@ -53,7 +53,7 @@ module.exports = {
     mapWindow: WINDOW,
     speedGauge: false,  // (its speed bracket reads through dyn, u_speed: the engine eases the engine speed alone)
     // its own places, set on the page (layouts.js placesFor): the brackets' bars and the bottom bar's halves
-    places: [['fuelBar', 'Bar in the speed bracket (fuel)'], ['oilBar', 'Bar in the rev bracket (oil)'], ['half1', 'Bottom bar: left'], ['half2', 'Bottom bar: right']]
+    places: [['fuelBar', 'Bar in the speed bracket (fuel)'], ['oilBar', 'Bar in the rev bracket (oil; a plug-in hybrid\'s charge)'], ['half1', 'Bottom bar: left'], ['half2', 'Bottom bar: right']]
         .map(([key, label]) => ({ key, kind: 'gauge', label })),
     dap: true,          // (the cruise control's icon and set speed: the driving assistant, dap.js)
     palette: pal,
@@ -93,7 +93,8 @@ module.exports = {
         // (the brackets' bars and the bottom bar's halves as designed, or the readings set there on the page: places
         // fuelBar, oilBar, half1, half2)
         const PG = (k) => (C.placeOf(o, k) ? C.placeGauge(o, C.placeOf(o, k)) : null);
-        const pF = PG('fuelBar'), pO = PG('oilBar'), pL = PG('half1'), pR = PG('half2');
+        // (a plug-in hybrid's rev bracket bar: its battery's charge, as designed, 0.36.1; set on the page as any other)
+        const pF = PG('fuelBar'), pO = PG('oilBar') || (C.engineFocus(o) || o.vehicle === 'ice' ? null : C.placeGauge(o, 'soc')), pL = PG('half1'), pR = PG('half2');
         const q = (f) => Math.round(clamp01(f) * 500) / 500;
         const part = (key, n, x, y, w, h, extra) => Object.assign({ key, kind: 'sdash', x, y, w, h, z: -90, params: Object.assign({ u_part: [n], u_off: [x, y] }, sd),
             colors: (t) => ({ rline: t.rline, rband: t.rband, rlit: t.rlit, rin: t.rin }) }, extra);

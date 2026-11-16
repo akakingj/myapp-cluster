@@ -122,7 +122,7 @@ if (require.main === module) {
         // (Settings > Too hot, as the Car profile sets them: --hotOil 125 --hotCoolant 112 --hotGearbox 120; --tempGauge scale)
         hotOil: a.hotOil, hotCoolant: a.hotCoolant, hotGearbox: a.hotGearbox, tempGauge: a.tempGauge || 'ch', leftDial: a.leftDial, places: a.places ? JSON.parse(a.places) : undefined,
         // (the readouts: --infoA, --infoB, --infoMain, --infoLow: a readout's name, gear or off; --arcGear off)
-        infoA: a.infoA, infoB: a.infoB, infoMain: a.infoMain, infoLow: a.infoLow, arcGear: a.arcGear },
+        infoA: a.infoA, infoB: a.infoB, infoMain: a.infoMain, infoLow: a.infoLow, arcGear: a.arcGear, gaugeSpeed: a.gaugeSpeed, gaugeRpm: a.gaugeRpm },
         data: { speed: a.speed * (a.kmh ? 1 : 1.609344), rpm: a.rpm, gear: a.gear, stage: a.stage, mode: a.mode, driveMode: a.drive, pedal: a.pedal, oil: a.oil, coolant: a.coolant, outside: a.outside, soc: a.soc, kw: a.kw, erange: a.erange, frange: a.frange,
             gearbox: a.gearbox, iat: a.iat, battTemp: a.batt, boostActual: a.boost, torque: 312, timing: 14.5, hpfp: 205, boostTarget: 0.9, engineOn: a.rpm > 300, tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } }, fuelPct: a.fuel, gLat: a.glat, gLong: a.glong, pdDrive: 62, pdClimate: 24, pdSeats: 14, dap: a.dap ? require('../apps/akakingj_cluster_layouts/dap').DEMO : null } });
     // let the needles ease to their readings

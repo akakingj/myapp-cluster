@@ -210,9 +210,9 @@ function powerLabels(o, key, cx, cy, R, a0, a1, rr) {
  * both): on a petrol or diesel car the two picked in Settings > Readout 1 / 2 (intake air and the gearbox oil's
  * by default), on a plug-in hybrid the battery's temperature and the gearbox oil's. box: the piece's { w, h }: the
  * long names where they fit ('INTAKE AIR 31°'), else the short ('IAT 31°'). */
-const stripInfoA = (o, box) => (o.vehicle === 'ice' || engineFocus(o)
+const stripInfoA = (o, box) => (o.vehicle === 'ice' || engineFocus(o) || phevPick(o, 'infoA')
     ? readout(o, o.infoA || 'iat', box) : (d) => 'BATT ' + tempText(o, d.battTemp));
-const stripInfoB = (o, box) => (o.vehicle === 'ice' || engineFocus(o)
+const stripInfoB = (o, box) => (o.vehicle === 'ice' || engineFocus(o) || phevPick(o, 'infoB')
     ? readout(o, o.infoB || 'gearbox', box) : (d) => 'GEARBOX ' + tempText(o, d.gearbox));
 
 /*
@@ -315,6 +315,11 @@ const numOrOff = (f) => (o, d) => (d.engineOn === false ? 'OFF' : f(o, d));
 const READOUTS = {
     iat: { short: 'IAT', long: 'INTAKE AIR', num: tempOf('iat'), frac: (d) => (isNum(d.iat) ? d.iat / 80 : 0), needs: ['iat'] },
     gearbox: { short: 'TRANS', long: 'TRANS OIL', num: tempOf('gearbox'), frac: (d) => (isNum(d.gearbox) ? (d.gearbox - 40) / 90 : 0), needs: ['gearbox'] },
+    // (a plug-in hybrid's, 0.36.1: set as any other on either kind of car; '--' on a car without them)
+    soc: { short: 'SOC', long: 'BATTERY', num: (o, d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--'), frac: (d) => (isNum(d.soc) ? d.soc / 100 : 0) },
+    battTemp: { short: 'BATT', long: 'BATTERY TEMP', num: tempOf('battTemp'), frac: (d) => (isNum(d.battTemp) ? (d.battTemp + 10) / 60 : 0) },
+    kw: { short: 'kW', long: 'BATTERY POWER', num: (o, d) => (isNum(d.kw) ? (d.kw > 0.05 ? '+' : '') + (Math.abs(d.kw) < 10 ? d.kw.toFixed(1) : String(Math.round(d.kw))) : '--'), unit: () => 'kW', frac: (d) => (isNum(d.kw) ? Math.min(1, Math.abs(d.kw) / kwRange(d).out) : 0) },
+    erange: { short: 'E-RNG', long: 'ELECTRIC RANGE', num: (o, d) => erangeText(o, d), frac: (d) => (isNum(d.erange) ? Math.min(1, d.erange / 100) : 0) },
     oil: { short: 'OIL', long: 'ENGINE OIL', num: tempOf('oil'), frac: (d) => (isNum(d.oil) ? (d.oil - 40) / 100 : 0) },
     coolant: { short: 'CLT', long: 'COOLANT', num: tempOf('coolant'), frac: (d) => (isNum(d.coolant) ? (d.coolant - 40) / 90 : 0) },
     boost: { short: 'BST', long: 'BOOST', num: numOrOff((o, d) => pressNum(o, d.boostActual)), unit: (o) => pressLabel(o), frac: (d) => boostFrac(d), needs: ['boostActual', 'boostTarget'] },
@@ -401,8 +406,8 @@ function fitText(p, fam, room) {
 /** The readings at their widest figures (three-figure temperatures, the most negative timing and boost ...): what a
  * readout's box is sized to hold (layouts.js), and what tools/check_fit.js measures every text with. */
 const READOUT_SAMPLES = [
-    { oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8 },
-    { oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P' },
+    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8 },
+    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P' },
 ];
 const nameOf = (r, o, long) => { const n = long ? r.long : r.short; return typeof n === 'function' ? n(o) : n; };
 /** A readout on one line, its name first: 'IAT 31°', 'BST 14.5' ('INTAKE AIR 31°', 'BOOST 14.5 psi' where it
@@ -432,6 +437,8 @@ const GAUGES = {
     throttle: { label: 'THROTTLE', min: 0, max: 100, red: null, v: (d) => d.throttle, text: (o, d) => (isNum(d.throttle) ? Math.round(d.throttle) + '%' : '--'), needs: ['throttle'] },
     pedal: { label: 'PEDAL', min: 0, max: 100, red: null, v: (d) => d.pedal, text: (o, d) => (isNum(d.pedal) ? Math.round(d.pedal) + '%' : '--'), needs: ['pedal'] },
     timing: { label: 'TIMING', min: -10, max: 40, red: null, v: (d) => d.timing, text: (o, d) => timingText(d), needs: ['timing'] },
+    soc: { label: 'BATTERY', min: 0, max: 100, red: null, v: (d) => d.soc, text: (o, d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--') },
+    battTemp: { label: 'BATT', min: 0, max: 60, red: 45, v: (d) => d.battTemp, text: tempOf('battTemp') },
     fuel: { label: 'FUEL', min: 0, max: 100, red: null, v: (d) => d.fuelPct, text: (o, d) => (isNum(d.fuelPct) ? Math.round(d.fuelPct) + '%' : '--') },
 };
 /** The gauge picked for the speedometer ('speed') or the tach ('rpm'), or null for the layout's own. */
@@ -468,9 +475,9 @@ const GAUGE_NUM = {
     boost: (o, v) => pressNum(o, v), power: (o, v) => powerNum(o, v), torque: (o, v) => torqueNum(o, v),
     pct: (o, v) => String(Math.round(v)), timing: (o, v) => String(Math.round(v)),
 };
-const GAUGE_KIND = { coolant: 'temp', oil: 'temp', iat: 'temp', gearbox: 'temp', boost: 'boost', power: 'power', torque: 'torque', throttle: 'pct', pedal: 'pct', timing: 'timing', fuel: 'pct' };
+const GAUGE_KIND = { coolant: 'temp', oil: 'temp', iat: 'temp', gearbox: 'temp', boost: 'boost', power: 'power', torque: 'torque', throttle: 'pct', pedal: 'pct', timing: 'timing', fuel: 'pct', soc: 'pct', battTemp: 'temp' };
 /** each gauge's icon: the cluster's own icons (ICON_FS) and bimmer-lab's (bimmer.js ICON) */
-const GAUGE_ICON = { coolant: [0, 'therm'], oil: [1, 'oilcan'], iat: [3, 'therm'], gearbox: [2, 'cog'], boost: [5, 'turbo'], power: [7, 'bolt'], torque: [13, 'torque'], throttle: [13, 'gauge'], pedal: [13, 'gauge'], timing: [9, 'gauge'], fuel: [4, 'fuel'] };
+const GAUGE_ICON = { coolant: [0, 'therm'], oil: [1, 'oilcan'], iat: [3, 'therm'], gearbox: [2, 'cog'], boost: [5, 'turbo'], power: [7, 'bolt'], torque: [13, 'torque'], throttle: [13, 'gauge'], pedal: [13, 'gauge'], timing: [9, 'gauge'], fuel: [4, 'fuel'], soc: [6, 'battery'], battTemp: [6, 'battery'] };
 function placeGauge(o, key0) {
     // a value this build doesn't know (a stale saved setting) draws the coolant gauge rather than failing the layout
     const known = (k) => !!(GAUGE_KIND[k] && GAUGE_ICON[k] && gaugeOf(Object.assign({}, o, { gaugeSpeed: k }), 'speed'));
@@ -484,18 +491,34 @@ function placeGauge(o, key0) {
     return Object.assign({}, g, { unit, num, icon: GAUGE_ICON[key][0], bIcon: GAUGE_ICON[key][1],
         marks: [g.min, (g.min + g.max) / 2, g.max].map((v) => f(o, v)), tone: TEMP_TONES[key] ? key : null });
 }
+/*
+ * Settings > Readout 1 / 2, Main readout, Centre readout: bottom line: 'Auto' (0.36.1, the default) by the car (Settings >
+ * Vehicle, the Car profile's Engine): on a petrol or diesel car the intake air, the gearbox oil, the torque, the
+ * coolant; on a plug-in hybrid each layout's own eDrive reading there (the battery's temperature, its power, its
+ * charge), as before. Any other value: that reading, on either kind of car. layouts.js applies it to what a layout
+ * gets; focus.needs too.
+ */
+const AUTO_READOUT = { infoA: 'iat', infoB: 'gearbox', infoMain: 'torque', infoLow: 'coolant' };
+function resolveReadouts(o) {
+    if (!o) return o;
+    const ice = o.vehicle === 'ice' || o.focus === 'engine', r = Object.assign({}, o);
+    Object.keys(AUTO_READOUT).forEach((k) => { if (r[k] === 'auto' || r[k] === undefined || r[k] === null) r[k] = ice ? AUTO_READOUT[k] : undefined; });
+    return r;
+}
+/** a plug-in hybrid's readout set by hand (not Auto): shown in place of the layout's own eDrive reading */
+const phevPick = (o, k) => !!o && !engineFocus(o) && o[k] !== undefined && o[k] !== null && o[k] !== 'auto';
 const mainKey = (o) => (readoutOf(o && o.infoMain) ? o.infoMain : 'torque');
 /** Settings > Centre readout: under the speed is Nothing: the main readout's figures, name and bar left empty */
 const mainOff = (o) => !!(o && o.infoMain === 'off');
 const focus = {
     /** a petrol or diesel car's main readout (Settings > Main readout: the engine torque by default), with its unit */
     power: (o) => {
-        if (!engineFocus(o)) return kwText;
+        if (!engineFocus(o) && !phevPick(o, 'infoMain')) return kwText;
         if (mainOff(o)) return '';
         const r = readoutOf(mainKey(o));
         return (d) => { const n = r.num(o, d); return n + (r.unit && n !== '--' && n !== 'OFF' ? ' ' + r.unit(o) : ''); };
     },
-    powerLabel: (o, long) => (engineFocus(o) ? mainOff(o) ? '' : nameOf(readoutOf(mainKey(o)), o, true).replace('ENGINE ', long ? 'ENGINE ' : '') : (long ? 'BATTERY POWER' : 'POWER')),
+    powerLabel: (o, long) => (engineFocus(o) || phevPick(o, 'infoMain') ? mainOff(o) ? '' : nameOf(readoutOf(mainKey(o)), o, true).replace('ENGINE ', long ? 'ENGINE ' : '') : (long ? 'BATTERY POWER' : 'POWER')),
     /** 0..1 for the main readout's bar (the torque to 450 Nm by default), or none (the eDrive layouts draw their own centre-zero bar) */
     mainFrac: (o) => { if (mainOff(o)) return () => 0; const r = readoutOf(mainKey(o)); return (d) => Math.max(0, Math.min(1, r.frac(d) || 0)); },
     torqueFrac: (d) => (isNum(d.torque) ? Math.max(0, Math.min(1, d.torque / 450)) : 0),
@@ -509,10 +532,12 @@ const focus = {
     bar: (o) => (engineFocus(o) ? boostFrac : (d) => (isNum(d.soc) ? d.soc / 100 : 0)),
     /** what the engine readings need read from the engine unit */
     // (a plug-in hybrid: the pedal for the Power % meter)
-    needs: (o) => (o && o.vehicle !== 'ice' && !engineFocus(o) ? ['pedal'] : []).concat(engineFocus(o) ? ['boostActual', 'boostTarget', diesel(o) ? 'iat' : 'timing', 'hpfp'].concat(...[o.infoA || 'iat', o.infoB || 'gearbox', mainKey(o), o.infoLow || 'coolant'].map((k) => (readoutOf(k) && readoutOf(k).needs) || []),
+    needs: (o0) => { const o = resolveReadouts(o0); return (o && o.vehicle !== 'ice' && !engineFocus(o) ? ['pedal'] : []).concat(engineFocus(o) ? ['boostActual', 'boostTarget', diesel(o) ? 'iat' : 'timing', 'hpfp'].concat(...[o.infoA || 'iat', o.infoB || 'gearbox', mainKey(o), o.infoLow || 'coolant'].map((k) => (readoutOf(k) && readoutOf(k).needs) || []),
         ...[o.gaugeSpeed, o.gaugeRpm].map((k) => (GAUGES[k] && GAUGES[k].needs) || [])) : []).concat(
         // (and what a layout's own places show: set on the page)
-        ...Object.keys((o && o.places) || {}).map((k) => { const v = o.places[k], r = READOUTS[v] || GAUGES[v]; return (r && r.needs) || []; })),
+        ...Object.keys((o && o.places) || {}).map((k) => { const v = o.places[k], r = READOUTS[v] || GAUGES[v]; return (r && r.needs) || []; })).concat(
+        // (a plug-in hybrid's readouts set by hand: what they read)
+        ...['infoA', 'infoB', 'infoMain', 'infoLow'].filter((k) => phevPick(o, k)).map((k) => (readoutOf(o[k]) && readoutOf(o[k]).needs) || [])); },
 };
 /** Outside temperature with its unit letter: '48°F'. */
 const outsideText = (o, c) => (isNum(c) ? Math.round(tempIn(o, c)) + '°' + (o.tempUnit === 'c' ? 'C' : 'F') : '--');
@@ -547,5 +572,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };
