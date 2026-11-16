@@ -15,7 +15,11 @@ battery's temperature (intake air on a petrol or diesel car) and the gearbox oil
 it now has the digital speed or another reading. With **Waze** in the centre, Waze on cluster (0.9.107 or later,
 [eroobeeroo/idrive-apps](https://github.com/eroobeeroo/idrive-apps)) draws the map in the layout's own panel,
 above it, filling the window exactly; under the layout the cluster drew its own map screen (its speed, edge shading)
-over the map. Needs **Central display area: Map view** on the car.
+over the map. Needs **Central display area: Map view** on the car. The MGU Store's own build (robertnisipeanu's
+"Maps on cluster", waze-on-cluster 0.10.x, 2026-11-16) does not read the layout's window file: with it the map stays
+in the car's map slot under the layout, seen through the window with the cluster's own map screen over it, as before
+0.21.0. (Its renderer, cluster-render 0.6.x, can host a target in a scene drawn from a RAMSES file, which a layout of
+shaders doesn't have yet.)
 
 Every reading goes to the cluster within a frame of arriving: the needles and bars at 60 updates a second, the
 digits every frame, and the battery's power the moment eDrive Live reads it (it writes each
