@@ -17,7 +17,7 @@ const path = require('path');
 const fs = require('fs');
 const { FakeClient } = require('./scene');   // (also points the apps' './kit/' at kit/runtime)
 
-const DEMO_VERSION = '2.5.0';
+const DEMO_VERSION = '2.5.1';
 const ROOT = path.join(__dirname, '..');
 const APPS = { layouts: path.join(ROOT, 'apps', 'akakingj_cluster_layouts'), centre: path.join(ROOT, 'apps', 'akakingj_cluster_centre'), info: path.join(ROOT, 'apps', 'akakingj_cluster_info') };
 const argv = process.argv.slice(2);
@@ -220,7 +220,10 @@ function startInfo(set) {
         if (!r) return null;
         const extras = chosen().map((k) => {
             const v = valueNow(k, d, x);
-            return { slot: slots().indexOf(k), label: (v && v.label) || VALUES[k], text: v ? (G.isNum(v.c) ? temp(v.c) : v.text || '--') : '--', col: k === 'soc' ? (v ? t.text : t.dim) : tempCol(k, v && v.c) };
+            // (as main.js since Info 1.6.23: boost, rpm and torque in the text colour, as bright as the oil, not through the
+            // temperatures' colours, which gave them dim grey; this copy kept the old way until demo 2.5.1)
+            const engine = k === 'boost' || k === 'rpm' || k === 'torque';
+            return { slot: slots().indexOf(k), label: (v && v.label) || VALUES[k], text: v ? (G.isNum(v.c) ? temp(v.c) : v.text || '--') : '--', col: k === 'soc' || engine ? (v ? t.text : t.dim) : tempCol(k, v && v.c) };
         }).filter((e) => e.text !== '--');
         let pw = null;
         if (slots().indexOf('power') >= 0 && x.edrive && G.isNum(d.kw)) {

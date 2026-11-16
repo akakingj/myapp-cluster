@@ -21,7 +21,7 @@
   .stageBox .cap { font-size: 12px; color: var(--dim); margin: 0 0 4px 2px; }
   #hudBox { flex: 0 0 34%; display: none; }
   .stage { position: relative; width: 100%; background: #000; border-radius: 10px; overflow: hidden; outline: 1px solid var(--line); }
-  #cluster { aspect-ratio: 1920 / 720; }
+  #cluster { aspect-ratio: 1920 / 720; container-type: inline-size; }   /* (the strip's text in cqw: the cluster's own width) */
   #hud { aspect-ratio: 800 / 480; background: radial-gradient(ellipse at 50% 60%, #0d1621, #000 70%); }
   .stage > * { position: absolute; }
   .full { left: 0; top: 0; width: 100%; height: 100%; }
@@ -32,7 +32,7 @@
   /* the car's own bottom strip (G20, iDrive 7), as the KOMBI draws it: range and clock at the left, the place, then
      the drive mode, gear and outside temperature; plain white on black */
   #strip { left: 0; width: 100%; bottom: 0; display: none; pointer-events: none; color: #eef1f5;
-    font: 500 1.42vw "BMW Type Next", "Segoe UI", "Malgun Gothic", sans-serif; letter-spacing: 0.01em; }
+    font: 500 1.42vw "BMW Type Next", "Segoe UI", "Malgun Gothic", sans-serif; font-size: 1.42cqw; letter-spacing: 0.01em; }
   #strip span { position: absolute; top: 50%; transform: translateY(-50%); white-space: nowrap; }
   #strip .ic { display: inline-block; width: 0.8em; height: 0.9em; margin-right: 0.25em; vertical-align: -0.08em; }
   #strip .dim { color: #b9c0ca; }
