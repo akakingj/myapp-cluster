@@ -44,7 +44,6 @@ const DEFAULT_TARGET = 'panel';
 const RATE_HZ = 60;          // value updates a second (a frame of the cluster's 60 Hz), and at once on a new reading
 const TEXT_HZ = 60;          // text and colour updates a second at most: every frame, sent only when they change
 const STALE_MS = 3000;
-const TAU_MS = 10;           // a needle's easing towards its reading: most of the way there in the frame it comes
 const MIN_GAP_MS = 4;        // a reading's update at most this soon after the last
 const EPS = 0.0015;          // a value moving less than this (of its max) is not sent
 const SWEEP_MS = 700;        // up, then as long back down
@@ -251,13 +250,13 @@ function startCluster(opts) {
     }
 
     /** Values (needles, bands): each eased towards its reading, sent when it moved enough. */
-    let valuesAt = 0, valuesAt0 = 0;
+    let valuesAt = 0, valuesAt0 = 0, vnow = 0;
     const clock0 = Date.now();
     function values(d0) {
         const d = d0 || opts.data(), now = Date.now();
-        // eased by time, not by update: the same TAU_MS whether a reading or the frame timer brought it
-        // (at least a frame's worth an update, so updates in quick succession still settle)
-        const k = valuesAt ? 1 - Math.exp(-Math.max(1000 / RATE_HZ, now - valuesAt) / TAU_MS) : 1;
+        // (the glides' clock: at least a frame a call, as the easing before it, so calls in quick succession still
+        // settle; the time since the last call otherwise)
+        vnow += valuesAt ? Math.max(1000 / RATE_HZ, now - valuesAt) : 0;
         valuesAt = now;
         const dt = Math.max(0, Math.min(250, now - (valuesAt0 || now)));
         valuesAt0 = now;
@@ -273,8 +272,19 @@ function startCluster(opts) {
             if (!s.value || !inGroup(p)) return;
             const r = s.range ? s.range(d) : null, max = r ? r[1] : s.max || 1;
             const want = Math.max(r ? r[0] : s.min || 0, Math.min(max * 1.02, Number(s.value(d)) || 0));
-            p.value += (want - p.value) * k;
-            if (Math.abs(want - p.value) < max * EPS / 4) p.value = want;
+            /* (0.36.0) between the car's readings, which come a few to a few tens of times a second: the needle
+             * glides from where it is to the new reading over the time readings have been coming apart (smoothed,
+             * 16-150 ms), drawn every frame, rather than stepping at each reading (which looked like a low frame
+             * rate); a jump the size of most of the scale (a change of scale) goes at once, as before */
+            if (p.to === undefined) { p.to = want; p.from = want; p.t0 = vnow; p.dur = 0; p.lastAt = vnow; p.iv = 60; }
+            if (Math.abs(want - p.to) >= max * EPS / 4) {
+                const gap = vnow - p.lastAt;
+                if (gap > 0 && gap < 1000) p.iv += (Math.max(16, Math.min(150, gap)) - p.iv) * 0.3;
+                p.lastAt = vnow; p.from = p.value; p.to = want; p.t0 = vnow; p.dur = Math.abs(want - p.value) > max * 0.6 ? 0 : p.iv;
+                if (s.key === 'rpm' || s.key === 'speed') stats.readings++;
+            }
+            const f = p.dur > 0 ? Math.min(1, (vnow - p.t0) / p.dur) : 1;
+            p.value = f >= 1 ? p.to : p.from + (p.to - p.from) * f;
             if (Math.abs(p.value - p.sent) >= max * EPS) { p.sent = p.value; cr.uniform(p.ref, 'u_value', [Math.round(p.value * 10000) / 10000]); }
         });
     }
@@ -367,10 +377,19 @@ function startCluster(opts) {
      * update takes is kept (perf) */
     let tickAt = 0, nudged = false;
     const perf = { n: 0, totalMs: 0, maxMs: 0 };
+    /* the frames this process ran and the car's readings (speed, rpm) a second, logged each minute while shown: what
+     * a slow-looking cluster comes from (the timer late on a busy unit, or readings coming seldom) */
+    const stats = { at: Date.now(), frames: 0, readings: 0, maxGap: 0, last: 0 };
+    const statsTimer = setInterval(() => {
+        const now = Date.now(), secs = (now - stats.at) / 1000;
+        if (shown && secs > 0 && stats.frames) log.info('cluster: ' + Math.round(stats.frames / secs) + ' frames/s (longest gap ' + stats.maxGap + ' ms), readings ' + Math.round(stats.readings / secs) + '/s, ' + (perf.n ? Math.round(perf.totalMs / perf.n * 100) / 100 : 0) + ' ms a frame in JS');
+        stats.at = now; stats.frames = 0; stats.readings = 0; stats.maxGap = 0;
+    }, 60000).unref();
     const timed = () => {
         // (process.hrtime() as [s, ns]: the unit runs Node 8, which has no hrtime.bigint)
         const t0 = process.hrtime();
         tickAt = Date.now();
+        if (shown) { stats.frames++; if (stats.last) stats.maxGap = Math.max(stats.maxGap, tickAt - stats.last); stats.last = tickAt; }
         tick();
         const dt = process.hrtime(t0), ms = dt[0] * 1e3 + dt[1] / 1e6;
         perf.n++; perf.totalMs += ms; if (ms > perf.maxMs) perf.maxMs = ms;
@@ -386,7 +405,7 @@ function startCluster(opts) {
         rebuild, setGroup,
         group: () => group,
         recolour: () => update(true),
-        stop() { clearInterval(timer); setShown(false); cr.close(); },
+        stop() { clearInterval(timer); clearInterval(statsTimer); setShown(false); cr.close(); },
         status: () => ({ shown, renderer: state.renderer, target: state.target, layers: pieces.length, pieces: pieces.length, refused: state.refused }),
         /** The renderer's own status text (empty until it answers). */
         rendererStatus: () => statusText,
