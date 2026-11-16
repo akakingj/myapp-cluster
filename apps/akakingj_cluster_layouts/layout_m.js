@@ -175,7 +175,7 @@ module.exports = {
             colors: (t, d) => ({ red: t.red, regen: t.regen, lit: t.lit, mark: !elec(d) ? t.mark : isNum(d.kw) && d.kw < -0.3 ? t.regen : t.ev }),
             dyn: (d) => (elec(d) ? { u_shiftNow: [0], u_zero: [KW_ZERO], u_orange: [2], u_redFrom: [2] }
                 : ((m) => ({ u_shiftNow: [B.shiftNow(o, d) ? 1 : 0], u_zero: [0], u_orange: [m[1]], u_redFrom: [m[0]] }))(B.redMarks(o, RPM_MAX, d))),
-            value: (d) => (elec(d) ? C.kwFrac(d.kw, bladeRange(d)) : isNum(d.rpm) ? clamp01(d.rpm / RPM_MAX) : 0), max: 1, sweep: true,
+            value: (d) => (elec(d) ? C.powerFrac(d) : isNum(d.rpm) ? clamp01(d.rpm / RPM_MAX) : 0), max: 1, sweep: true,
         });
         list.push(blade('tachL', false), blade('tachR', true));
         // the blades' numerals, every 2000 as the M8's, on the blades' inner side (their places' curve; the top one
@@ -183,8 +183,8 @@ module.exports = {
         // drive in kW: the regeneration's limit (green) at the foot, then 0 and a third of the top each
         const num = (i) => (d) => {
             if (!elec(d)) return String(i * 2);
-            const r = bladeRange(d);
-            return String(i === 0 ? Math.round(r.in) : Math.round((i - 1) * r.out / 3));
+            // (Power %: the foot the regeneration's end, then 0 and a third of the top each)
+            return i === 0 ? '' : String(Math.round((i - 1) * 100 / 3));
         };
         const numC = (i) => (t, d) => ({ color: [i === 0 && elec(d) ? t.regen : t.fg, 1], glow: [t.fg, 0] });
         [[0, 693, 547], [1, 659, 422], [2, 653, 297], [3, 675, 172], [4, 712, 47]].forEach(([i, cx, y]) => {
@@ -197,7 +197,7 @@ module.exports = {
             list.push(Object.assign(T('nlTop', [644, 10, 84, 38], 'm_num', num(4), numC(4), 'center'), { visible: elec }),
                 Object.assign(T('nrTop', [1192, 10, 84, 38], 'm_num', num(4), numC(4), 'center'), { visible: elec }));
         }
-        list.push(T('rpmUnit', [1252, 602, 160, 29], 'm_tiny', (d) => (elec(d) ? 'kW' : 'x1000 rpm'), dim, 'left'));   // (under the right blade's foot)
+        list.push(T('rpmUnit', [1252, 602, 160, 29], 'm_tiny', (d) => (elec(d) ? C.POWER_UNIT : 'x1000 rpm'), dim, 'left'));   // (under the right blade's foot)
         // the gear and the speed: in the middle, or (the map, an M car's boxes) their map-up places
         // the gear: its number (P, R, N as letters), the shift programme's stack beside it, as the M8's
         // (the gear with its programme, D4 / S3 / M2, P R N as letters: since 0.35.3, not the number alone as the M8's)

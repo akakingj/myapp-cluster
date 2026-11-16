@@ -131,7 +131,7 @@ module.exports = {
         const top = strip ? 262 : 300, bottom = strip ? 586 : 640;
         const h1 = Math.round((bottom - top) * 0.34), h2 = Math.round((bottom - top) * 0.22), gap = 10, h3 = bottom - top - h1 - h2 - 2 * gap;
         const y2 = top + h1 + gap, y3 = y2 + h2 + gap;
-        const rpmNow = (d) => (C.electric(o, d) || d.engineOn === false ? 'OFF' : isNum(d.rpm) ? String(Math.round(d.rpm / 50) * 50) : '--');
+        const rpmNow = (d) => (d.engineOn === false ? 'OFF' : isNum(d.rpm) ? String(Math.round(d.rpm / 50) * 50) : '--');
         const hot = (k, lim) => (t, d) => ({ color: [isNum(d[k]) && d[k] >= lim ? t.red : t.text, 1], glow: [t.glow, 0.1] });
         const kwC = (t, d) => ({ color: [isNum(d.kw) && d.kw < -0.3 ? t.regen : t.ev, 1], glow: [t.ev, 0.2] });
         const power = engine || ice

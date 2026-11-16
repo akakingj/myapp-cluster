@@ -39,7 +39,7 @@ function dial(o, which, cx, cy, size) {
      * 0 a quarter round, regeneration below it (the ring green) to the battery's limit, the power drawn above it to
      * its limit, numbered in round steps (eDrive Live's ends: kwRange, kwDialScale) */
     const elec = (d) => !speed && C.electric(o, d);
-    const kwS = (d) => C.kwDialScale(C.kwRange(d).out);
+    const kwS = () => C.PCT;   // (Power %: layout_common.powerPct)
     // Settings > Speedometer gauge / Tach gauge: another reading in the small gauge (its name and figures by it)
     const g = C.gaugeOf(o, which);
     // (a temperature as the car's own: C to H, warm in the middle; Settings > Temperature gauges)
@@ -54,11 +54,11 @@ function dial(o, which, cx, cy, size) {
         },
         colors: (t) => ({ face: t.face, ring: t.ring, ring2: t.ring2, bezel: t.bezel, tick: t.tick, needle: t.needle, red: t.red }),
         value: speed ? (d) => (isNum(d.speed) ? C.speedIn(o, d.speed) : 0)
-            : (d) => (elec(d) ? (isNum(d.kw) ? Math.max(-C.kwRange(d).in, Math.min(kwS(d).max, d.kw)) : 0) : isNum(d.rpm) ? d.rpm / 1000 : 0),
+            : (d) => (elec(d) ? C.powerPct(d) : isNum(d.rpm) ? d.rpm / 1000 : 0),
         max: sc[0], sweep: true,
-        range: speed ? undefined : (d) => (elec(d) ? [-C.kwRange(d).in, kwS(d).max] : [0, sc[0]]),
+        range: speed ? undefined : (d) => (elec(d) ? [-C.PCT.max, C.PCT.max] : [0, sc[0]]),
         dyn: speed ? (d) => ({ u_subv: subv(d) })
-            : (d) => (elec(d) ? { u_subv: subv(d), u_scale: [kwS(d).max, kwS(d).major, kwS(d).major, kwS(d).major / 2], u_arc: [A0, A1, kwS(d).max + 1, 0.14], u_min: [-C.kwRange(d).in], u_zero: [C.KW_ZERO] }
+            : (d) => (elec(d) ? { u_subv: subv(d), u_scale: [kwS(d).max, kwS(d).major, kwS(d).major, kwS(d).major / 2], u_arc: [A0, A1, kwS(d).max + 1, 0.14], u_min: [-C.PCT.max], u_zero: [C.KW_ZERO] }
                 : { u_subv: subv(d), u_scale: sc, u_arc: [A0, A1, Math.min(red, C.shiftPoint(o, d).red / 1000), 0.14], u_min: [0], u_zero: [0] }),
     }];
     // the small gauge's labels round its pivot (0.42 R below the centre): either end and the middle
@@ -67,7 +67,7 @@ function dial(o, which, cx, cy, size) {
     const lab = (key, a, r, txt, w) => { const [x, y] = at(a, r); return C.text(key, Math.round(x - w / 2), Math.round(y - h / 2), w, h, txt, white); };
     const tl = (c) => String(Math.round(C.tempIn(o, c) / 10) * 10);
     const unitTxt = () => (speed ? C.text('speedUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), kmh ? 'km/h' : 'mph', white)
-        : C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : 'x1000 rpm'), white));
+        : C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? C.POWER_UNIT : 'x1000 rpm'), white));
     if (ch) {
         // C and H at the small gauge's ends (H red), its name above the pivot (the oil: its can)
         const red = (t) => ({ color: [t.red, 1], glow: [t.red, 0] });
@@ -82,7 +82,7 @@ function dial(o, which, cx, cy, size) {
         const [x, y] = at(180, lr * 1.04);
         out.push(C.text(which + 'SubLbl', Math.round(cx - 0.3 * R), Math.round(pv[1] - 0.17 * R), Math.round(0.6 * R), Math.round(22 * k), g.label, white, { tracking: 0.08 }),
             C.text(which + 'Sub1', Math.round(x - 0.3 * R), Math.round(y - h / 2), Math.round(0.6 * R), h, g.txt, (t, d) => (g.hot(d) ? { color: [t.red, 1], glow: [t.red, 0] } : white(t))));
-        if (!speed) out.push(C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : 'x1000 rpm'), white));
+        if (!speed) out.push(C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? C.POWER_UNIT : 'x1000 rpm'), white));
         else out.push(C.text('speedUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), kmh ? 'km/h' : 'mph', white));
         return out;
     }
@@ -96,7 +96,7 @@ function dial(o, which, cx, cy, size) {
     } else {
         out.push(B.icon('oilIcon', Math.round(cx - 34 * k), Math.round(pv[1] - 0.17 * R), Math.round(34 * k), Math.round(24 * k), 'oilcan', 'dim'),
             C.text('oilUnit', Math.round(cx + 2 * k), Math.round(pv[1] - 0.17 * R), Math.round(40 * k), Math.round(22 * k), '°' + (o.tempUnit === 'c' ? 'C' : 'F'), white, { align: 0 }),
-            C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? 'kW' : 'x1000 rpm'), white));
+            C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy - 0.45 * R), Math.round(0.8 * R), Math.round(22 * k), (d) => (elec(d) ? C.POWER_UNIT : 'x1000 rpm'), white));
     }
     return out;
 }

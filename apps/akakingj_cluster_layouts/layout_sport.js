@@ -69,7 +69,7 @@ module.exports = {
         // electric M cars (i4 M50) do (the share of the most the battery gives, eDrive Live's limits:
         // layout_common.kwRange), its bottom quarter regeneration (green, to the most it takes)
         const elec = (d) => C.electric(o, d);
-        const ePower = (d) => C.kwFrac(d.kw, C.kwRange(d), E_ZERO);
+        const ePower = (d) => C.powerFrac(d, E_ZERO);   // (Power %: layout_common.powerPct)
         // the background: black (with the map round its window; the stock centre full screen round its area, x 566-1104)
         const W2 = WINDOW, around = [{ x: 0, y: 0, w: 1920, h: W2.y }, { x: 0, y: W2.y + W2.h, w: 1920, h: 720 - W2.y - W2.h },
             { x: 0, y: W2.y, w: W2.x, h: W2.h }, { x: W2.x + W2.w, y: W2.y, w: 1920 - W2.x - W2.w, h: W2.h }];

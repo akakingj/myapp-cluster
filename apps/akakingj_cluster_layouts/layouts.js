@@ -88,7 +88,7 @@ LAYOUTS.forEach((L) => {
         const o = Object.assign({}, o0 || {}, { bottomStrip: 'stock', cluster: 'standard', boxBezel: false });
         // a setting this build can't draw (a stale saved value) must not stop the app (the main app deletes an app
         // that keeps failing): the layout as designed, its places and readouts on their defaults
-        try { return finish(L, o, built(o)); } catch (e) {
+        try { return finish(L, o, withPowerWords(o, built(o))); } catch (e) {
             const safe = Object.assign({}, o, { places: {}, infoMain: undefined, infoA: undefined, infoB: undefined, infoLow: undefined, gaugeSpeed: 'auto', gaugeRpm: 'auto', leftDial: 'gmeter' });
             return finish(L, safe, built(safe));
         }
@@ -185,9 +185,18 @@ function slotValue(get, item, id, k) {
 }
 /** The layout for the drive mode now (Settings > Layout in Sport / in ECO PRO; 'same': Layout): the car's own drive
  * mode switch (FES), not the gear selector's S. get(key): the setting; d: the data (its driveMode). */
+/* A plug-in hybrid's round tach as a Power % meter (layout_common.electric): its words, eBOOST, eDRIVE and CHARGE,
+ * round the dial (0.35.9). The tach: the piece 'rpm' of a round dial's kind, its sweep in u_arc. */
+const ROUND_TACH = { dial: 1, e9x: 1, mround: 1, jdm: 1 };
+function withPowerWords(o, list) {
+    if (!o || o.vehicle === 'ice' || C0.engineFocus(o)) return list;
+    const t = list.find((p) => p.key === 'rpm' && ROUND_TACH[p.kind] && p.params && p.params.u_arc && p.w === p.h);
+    if (!t) return list;
+    return list.concat(C0.powerLabels(o, 'pw', t.x + t.w / 2, t.y + t.h / 2, t.w / 2, t.params.u_arc[0], t.params.u_arc[1]));
+}
 function layoutFor(get, d) {
     const m = (d && d.driveMode) || '';
-    const k = /SPORT|XTRABOOST/.test(m) ? get('layoutSport') : /ECO|ELECTRIC/.test(m) ? get('layoutEco') : null;
+    const k = /SPORT|XTRABOOST/.test(m) ? get('layoutSport') : /ECO|ELECTRIC/.test(m) && !/HYBRID|BATTERY/.test(m) ? get('layoutEco') : null;
     return k && k !== 'same' && LAYOUTS.some((l) => l.id === k) ? k : get('layout');
 }
 module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotValue, placesFor, placeItem, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };

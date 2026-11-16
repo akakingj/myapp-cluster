@@ -55,7 +55,7 @@ function tach(o, cx, cy, R, withGear) {
         // the speed bottom right, where the scale leaves off; its unit and the scale's under it
         C.text('speedDigits', cx + Math.round(0.02 * R), cy + Math.round(0.25 * R), Math.round(0.5 * R), Math.round(0.27 * R), (d) => C.speedText(o, d), lit, { align: 1 }),
         C.text('speedDigitsUnit', cx + Math.round(0.02 * R), cy + Math.round(0.54 * R), Math.round(0.5 * R), Math.round(0.07 * R), C.speedUnit(o), lbl, { align: 1, tracking: 0.12 }),
-        C.text('rpmUnit', cx + Math.round(0.12 * R), cy + Math.round(0.65 * R), Math.round(0.4 * R), Math.round(0.055 * R), (d) => (evOff(d) ? 'kW' : 'x1000 rpm'), (t, d) => (evOff(d) ? elecTxt(t) : lbl(t)), { align: 1, tracking: 0.1 }),
+        C.text('rpmUnit', cx + Math.round(0.12 * R), cy + Math.round(0.65 * R), Math.round(0.4 * R), Math.round(0.055 * R), (d) => (evOff(d) ? C.POWER_UNIT : 'x1000 rpm'), (t, d) => (evOff(d) ? elecTxt(t) : lbl(t)), { align: 1, tracking: 0.1 }),
         // the main readout above the hub
         C.text('kwNow', cx - Math.round(0.36 * R), cy - Math.round(0.46 * R), Math.round(0.72 * R), Math.round(0.15 * R), C.focus.power(o), (t, d) => (C.engineFocus(o) ? lit(t) : kwOf(d) < -0.3 ? { color: [t.regen, 1], glow: [t.regen, 0.3] } : elecTxt(t))),
         C.text('kwNowLbl', cx - Math.round(0.3 * R), cy - Math.round(0.29 * R), Math.round(0.6 * R), Math.round(0.055 * R), C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),

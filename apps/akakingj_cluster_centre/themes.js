@@ -16,6 +16,8 @@ function lookNow(setting, d) {
     if (LOOKS.indexOf(setting) >= 0) return setting;
     if (!d) return 'comfort';
     if (/SPORT|XTRABOOST/.test(d.driveMode || '') || d.mode === 'S' || d.mode === 'M') return 'sport';
+    // (a plug-in hybrid's HYBRID, HYBRID ECO PRO and BATTERY CONTROL: comfort, as ADAPTIVE; ELECTRIC: ECO PRO's)
+    if (/HYBRID|BATTERY/.test(d.driveMode || '')) return 'comfort';
     if (/ECO|ELECTRIC/.test(d.driveMode || '')) return 'efficient';
     return 'comfort';
 }

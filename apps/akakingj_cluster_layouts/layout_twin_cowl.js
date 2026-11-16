@@ -47,21 +47,21 @@ function dial(o, which, cx, cy, size) {
     const red = speed ? sc[0] + 1 : rs.red;
     // the tach in an electric drive: the battery's power, regeneration below its 0 (as Classic M's)
     const elec = (d) => !speed && C.electric(o, d);
-    const kwS = (d) => C.kwDialScale(C.kwRange(d).out);
+    const kwS = () => C.PCT;   // (Power %: layout_common.powerPct)
     return [{
         key: which, kind: 'e9x', x: cx - R, y: cy - R, w: size, h: size,
         params: { u_scale: sc, u_arc: [A0, A1, red, speed ? 0.114 : 0.14], u_sub: [0, 0, 0, 0], u_subv: [0], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB },
         colors: (t) => ({ face: t.face, ring: t.ring, ring2: t.ring2, bezel: t.bezel, tick: t.tick, needle: t.needle, red: t.red }),
         value: speed ? (d) => (isNum(d.speed) ? C.speedIn(o, d.speed) : 0)
-            : (d) => (elec(d) ? (isNum(d.kw) ? Math.max(-C.kwRange(d).in, Math.min(kwS(d).max, d.kw)) : 0) : isNum(d.rpm) ? d.rpm / 1000 : 0),
+            : (d) => (elec(d) ? C.powerPct(d) : isNum(d.rpm) ? d.rpm / 1000 : 0),
         max: sc[0], sweep: true,
-        range: speed ? undefined : (d) => (elec(d) ? [-C.kwRange(d).in, kwS(d).max] : [0, sc[0]]),
+        range: speed ? undefined : (d) => (elec(d) ? [-C.PCT.max, C.PCT.max] : [0, sc[0]]),
         dyn: speed ? undefined
-            : (d) => (elec(d) ? { u_scale: [kwS(d).max, kwS(d).major, kwS(d).major, kwS(d).major / 2], u_arc: [A0, A1, kwS(d).max + 1, 0.14], u_min: [-C.kwRange(d).in], u_zero: [C.KW_ZERO] }
+            : (d) => (elec(d) ? { u_scale: [kwS(d).max, kwS(d).major, kwS(d).major, kwS(d).major / 2], u_arc: [A0, A1, kwS(d).max + 1, 0.14], u_min: [-C.PCT.max], u_zero: [C.KW_ZERO] }
                 : { u_scale: sc, u_arc: [A0, A1, Math.min(red, C.shiftPoint(o, d).red / 1000), 0.14], u_min: [0], u_zero: [0] }),
     },
     speed ? C.text('speedUnit', Math.round(cx - 0.4 * R), Math.round(cy + 0.3 * R), Math.round(0.8 * R), Math.round(24 * k), kmh ? 'km/h' : 'mph', white, { tracking: 0.1 })
-        : C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy + 0.3 * R), Math.round(0.8 * R), Math.round(24 * k), (d) => (elec(d) ? 'kW' : 'x1000 rpm'), white, { tracking: 0.1 })];
+        : C.text('rpmUnit', Math.round(cx - 0.4 * R), Math.round(cy + 0.3 * R), Math.round(0.8 * R), Math.round(24 * k), (d) => (elec(d) ? C.POWER_UNIT : 'x1000 rpm'), white, { tracking: 0.1 })];
 }
 
 /**

@@ -263,7 +263,7 @@ mgu.run({
         const modeKey = () => {
             const m = data().driveMode || '';
             if (/SPORT|XTRABOOST/.test(m) && settings.get('layoutSport') !== 'same') return 'layoutSport';
-            if (/ECO|ELECTRIC/.test(m) && settings.get('layoutEco') !== 'same') return 'layoutEco';
+            if (/ECO|ELECTRIC/.test(m) && !/HYBRID|BATTERY/.test(m) && settings.get('layoutEco') !== 'same') return 'layoutEco';
             return 'layout';
         };
         const choose = (id) => {

@@ -46,7 +46,8 @@ function bigDial(o, which, cx, size, cy) {
     const red = speed ? s.max + 1 : s.red;
     // km/h: 14 numerals, most of three figures (mph: 9): smaller and further out
     const dense = speed && o.speedUnit === 'kmh';
-    const extra = !speed && !C.engineFocus(o) ? C.powerMeter(cx, size, cy, lbl, o) : [];   // (Show: Engine: no power meter)
+    // (Show: Engine: no power meter; none while the tach itself is the Power % meter: layout_common.electric)
+    const extra = !speed && !C.engineFocus(o) ? C.powerMeter(cx, size, cy, lbl, o).map((p) => Object.assign(p, { visible: (d) => !C.electric(o, d) })) : [];
     const list = extra.concat([
         {
             key: which, kind: 'dial', x: cx - size / 2, y: cy - size / 2, w: size, h: size,
@@ -58,7 +59,7 @@ function bigDial(o, which, cx, size, cy) {
         },
         // the unit (the tach's: with the engine off the battery's power, which the power meter reads)
         C.text(which + 'Unit', cx - 120, cy + Math.round(speed ? 96 * k : 62 * k), 240, Math.round(22 * k), speed ? C.speedUnit(o)
-            : (d) => (C.electric(o, d) ? C.kwText(d) : 'x1000 rpm'), speed ? lbl : (t, d) => (C.electric(o, d) ? powerTxt(t, d) : lbl(t)), { tracking: 0.08 }),
+            : (d) => (C.electric(o, d) ? C.POWER_UNIT : 'x1000 rpm'), speed ? lbl : (t, d) => (C.electric(o, d) ? powerTxt(t, d) : lbl(t)), { tracking: 0.08 }),
     ]);
     if (speed) return list;
     // the coolant gauge in the tach's foot (or the reading set there on the page: place footGauge)

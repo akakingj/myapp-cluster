@@ -53,7 +53,7 @@ function tach(o, cx, cy, R, gear) {
             dyn: (d) => { const u = dyn(d), red = u.u_scale[3]; return Object.assign(u, { u_arc: [A0, A1, NUM_H, C.electric(o, d) ? u.u_scale[0] + 1 : red - amberK(o)] }); },
         },
         C.text('rpmUnit', cx - R * 0.35, cy - Math.round(R * 0.3), R * 0.7, Math.max(14, Math.round(R * 0.07)),
-            (d) => (C.electric(o, d) ? C.kwText(d) : 'x1000 rpm'), (t, d) => (C.electric(o, d) ? powerTxt(t, d) : white(t)), { tracking: 0.02 }),
+            (d) => (C.electric(o, d) ? C.POWER_UNIT : 'x1000 rpm'), (t, d) => (C.electric(o, d) ? powerTxt(t, d) : white(t)), { tracking: 0.02 }),
     ];
     if (!gear) return list;
     // the gear's white arc under the tach, in its open foot

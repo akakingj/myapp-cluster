@@ -142,8 +142,11 @@ const STRIP_DROP = /^(fuel|elec|frange|erange|range2)(Lbl)?$|^erangeL$/;
  * battery's power instead (tachDyn, below). In HYBRID, SPORT, BATTERY CONTROL and the rest they are tachs, with a small
  * power gauge inside. Never with Show: Engine or on a petrol or diesel car.
  */
-const electric = (o, d) => !engineFocus(o) && !!o && o.vehicle !== 'ice' && !!d
-    && (typeof d.driveMode === 'string' && d.driveMode ? /ELECTRIC/.test(d.driveMode) : d.engineOn === false);
+/* (0.35.9, as the car's own plug-in hybrid cluster: a Power % meter in HYBRID and ELECTRIC, eBOOST at its top,
+ * CHARGE below its 0; the rev counter in SPORT and XTRABOOST, the lever in S or M) */
+const sportNow = (d) => /SPORT|XTRABOOST/.test(d.driveMode || '') || d.mode === 'S' || d.mode === 'M';
+const electric = (o, d) => !engineFocus(o) && !!o && o.vehicle !== 'ice' && !!d && !sportNow(d)
+    && (typeof d.driveMode === 'string' && d.driveMode ? true : d.engineOn === false);
 /*
  * The power gauges: 0 a quarter along (KW_ZERO), the battery's power drawn above it to the gauge's top, the
  * regeneration below it to its start, each side on its own scale. The ends are eDrive Live's (the battery's
@@ -152,6 +155,23 @@ const electric = (o, d) => !engineFocus(o) && !!o && o.vehicle !== 'ice' && !!d
 const KW_ZERO = 0.25;
 const KW_FLOOR = -500;                  // (a dial's lowest value passed on: the engine's clamp; the gauge clamps itself)
 const REGEN_RGB = [0.24, 0.86, 0.52];   // (#3ddc84, the layouts' regeneration green)
+/*
+ * Power % (the tach in HYBRID and ELECTRIC): the accelerator's demand, 0 to 100 (from the engine unit, as the car's own
+ * Power % follows the pedal; the battery's power over its limit where the pedal isn't read), or, off the pedal, the
+ * regeneration below 0 (CHARGE: the battery's charging over its limit, to -100). eBOOST: the top tenth.
+ */
+const PCT = { max: 100, major: 20, minor: 10 };
+const POWER_UNIT = 'POWER %';
+const EBOOST_AT = 90;
+const powerPct = (d) => {
+    if (!d) return 0;
+    if (isNum(d.pedal) && d.pedal > 2) return Math.min(100, d.pedal);
+    if (isNum(d.kw) && d.kw < -0.3) return -Math.min(100, -d.kw / kwRange(d).in * 100);
+    if (!isNum(d.pedal) && isNum(d.kw) && d.kw > 0) return Math.min(100, d.kw / kwRange(d).out * 100);
+    return 0;
+};
+/** Power % as a place along a bar (0..1, 0 % at z; ID7 M's blades, ID8 M's bracket) */
+const powerFrac = (d, z) => { const zz = isNum(z) ? z : KW_ZERO, p = powerPct(d); return p >= 0 ? zz + (1 - zz) * p / 100 : zz * (1 + p / 100); };
 /** The gauge's ends now: { out, in } kW. */
 const kwRange = (d) => ({ out: d && isNum(d.kwOut) && d.kwOut >= 20 ? d.kwOut : 100, in: d && isNum(d.kwIn) && d.kwIn >= 5 ? d.kwIn : 35 });
 /** kW as a place along a power gauge (0..1, 0 kW at z). */
@@ -170,15 +190,22 @@ function kwDialScale(out) {
 const tachDyn = (o, s, red) => (d) => {
     // (the red zone where the shift point puts it now: lower while the oil is cold)
     if (!electric(o, d)) return { u_scale: [s.max, s.major, s.minor, Math.min(red, shiftPoint(o, d).red / 1000)], u_min: [0], u_zero: [0], u_regen: REGEN_RGB };
-    const r = kwRange(d), k = kwDialScale(r.out);
-    return { u_scale: [k.max, k.major, k.minor, k.max + 1], u_min: [-r.in], u_zero: [KW_ZERO], u_regen: REGEN_RGB };
+    return { u_scale: [PCT.max, PCT.major, PCT.minor, PCT.max + 1], u_min: [-PCT.max], u_zero: [KW_ZERO], u_regen: REGEN_RGB };
 };
-const tachValue = (o) => (d) => {
-    if (!electric(o, d)) return isNum(d.rpm) ? d.rpm / 1000 : 0;
-    const r = kwRange(d);
-    return isNum(d.kw) ? Math.max(-r.in, Math.min(kwDialScale(r.out).max, d.kw)) : 0;
-};
-const tachRange = (o, s) => (d) => (electric(o, d) ? [-kwRange(d).in, kwDialScale(kwRange(d).out).max] : [0, s.max]);
+const tachValue = (o) => (d) => (electric(o, d) ? powerPct(d) : isNum(d.rpm) ? d.rpm / 1000 : 0);
+const tachRange = (o, s) => (d) => (electric(o, d) ? [-PCT.max, PCT.max] : [0, s.max]);
+/**
+ * The Power % meter's words on a round tach (centre cx, cy, radius R, its sweep a0..a1 in degrees from twelve
+ * o'clock): eBOOST by its top, eDRIVE above 0, CHARGE along the regeneration; empty while it is a rev counter.
+ */
+function powerLabels(o, key, cx, cy, R, a0, a1, rr) {
+    const at = (f, r) => { const a = (a0 + (a1 - a0) * f) * Math.PI / 180; return [cx + Math.sin(a) * r, cy - Math.cos(a) * r]; };
+    const h = Math.max(15, Math.round(R * 0.065)), w = Math.max(60, Math.round(R * 0.32)), r0 = (rr || 0.42) * R;
+    const ev = (t) => ({ color: [t.ev || '#4ab4ff', 1], glow: [t.ev || '#4ab4ff', 0.2] });
+    const green = () => ({ color: ['#3ddc84', 1], glow: ['#3ddc84', 0.2] });
+    const lab = (k, f, word, col) => { const [x, y] = at(f, r0); return text(key + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, (d) => (electric(o, d) ? word : ''), col, { tracking: 0.1 }); };
+    return [lab('Boost', 0.94, 'eBOOST', ev), lab('Drive', KW_ZERO + 0.07, 'eDRIVE', ev), lab('Charge', KW_ZERO * 0.4, 'CHARGE', green)];
+}
 /* The readings put where the time and outside temperature were, with the car's own bottom strip (which shows
  * both): on a petrol or diesel car the two picked in Settings > Readout 1 / 2 (intake air and the gearbox oil's
  * by default), on a plug-in hybrid the battery's temperature and the gearbox oil's. box: the piece's { w, h }: the
@@ -481,7 +508,8 @@ const focus = {
     both: (o) => (engineFocus(o) ? (d) => boostText(o, d) + '  ' + focus.charge(o)(d) : (d) => erangeText(o, d) + '  ' + socText(d)),
     bar: (o) => (engineFocus(o) ? boostFrac : (d) => (isNum(d.soc) ? d.soc / 100 : 0)),
     /** what the engine readings need read from the engine unit */
-    needs: (o) => (engineFocus(o) ? ['boostActual', 'boostTarget', diesel(o) ? 'iat' : 'timing', 'hpfp'].concat(...[o.infoA || 'iat', o.infoB || 'gearbox', mainKey(o), o.infoLow || 'coolant'].map((k) => (readoutOf(k) && readoutOf(k).needs) || []),
+    // (a plug-in hybrid: the pedal for the Power % meter)
+    needs: (o) => (o && o.vehicle !== 'ice' && !engineFocus(o) ? ['pedal'] : []).concat(engineFocus(o) ? ['boostActual', 'boostTarget', diesel(o) ? 'iat' : 'timing', 'hpfp'].concat(...[o.infoA || 'iat', o.infoB || 'gearbox', mainKey(o), o.infoLow || 'coolant'].map((k) => (readoutOf(k) && readoutOf(k).needs) || []),
         ...[o.gaugeSpeed, o.gaugeRpm].map((k) => (GAUGES[k] && GAUGES[k].needs) || [])) : []).concat(
         // (and what a layout's own places show: set on the page)
         ...Object.keys((o && o.places) || {}).map((k) => { const v = o.places[k], r = READOUTS[v] || GAUGES[v]; return (r && r.needs) || []; })),
@@ -519,5 +547,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    STRIP_Y, strip, stripGauges, STRIP_DROP, electric, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

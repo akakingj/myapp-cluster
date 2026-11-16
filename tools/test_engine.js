@@ -185,26 +185,32 @@ check('start-up sweep: played by the cluster (one animation per needle and band)
     assert(s.client.log.filter((m) => m.op === 'stop').length >= 4);
 });
 
-check('electric tach: the battery\'s power reaches the needle (past the rev scale\'s 8), regeneration below 0, scale from eDrive Live\'s ends', () => {
+check('Power % tach (0.35.9): HYBRID and ELECTRIC as the car\'s own: the pedal, else the battery over its limit; CHARGE below 0; XTRABOOST the revs', () => {
     const d = { speed: 40, rpm: 0, stage: 'D', driveMode: 'ELECTRIC', engineOn: false, kw: 55, kwOut: 120, kwIn: 50 };
     const s = makeScene({ layout: 'analog_sport', data: d });
     const tach = () => s.engine._pieces().find((p) => p.key === 'rpm');
     drive(s, 3, () => d);
-    assert(Math.abs(tach().value - 55) < 0.5, 'drawing: ' + tach().value);
+    assert(Math.abs(tach().value - 55 / 120 * 100) < 0.5, 'drawing, no pedal read: ' + tach().value);
     const u = s.client.layers.get(tach().layer).uniforms;
-    assert.deepStrictEqual(u.u_min.v, [-50]); assert.strictEqual(u.u_scale.v[0], 125); assert.deepStrictEqual(u.u_zero.v, [0.25]);
-    drive(s, 3, () => Object.assign({}, d, { kw: -80 }));
-    assert(Math.abs(tach().value + 50) < 0.5, 'regenerating, held at the limit: ' + tach().value);
+    assert.deepStrictEqual(u.u_min.v, [-100]); assert.strictEqual(u.u_scale.v[0], 100); assert.deepStrictEqual(u.u_zero.v, [0.25]);
+    drive(s, 3, () => Object.assign({}, d, { pedal: 62 }));
+    assert(Math.abs(tach().value - 62) < 0.5, 'the pedal: ' + tach().value);
+    drive(s, 3, () => Object.assign({}, d, { kw: -80, pedal: 0 }));
+    assert(Math.abs(tach().value + 100) < 0.5, 'regenerating, held at the limit: ' + tach().value);
+    drive(s, 3, () => Object.assign({}, d, { driveMode: 'HYBRID', engineOn: true, rpm: 2500, pedal: 30 }));
+    assert(Math.abs(tach().value - 30) < 0.5, 'HYBRID: Power % too: ' + tach().value);
+    drive(s, 3, () => Object.assign({}, d, { driveMode: 'SPORT XTRABOOST', engineOn: true, rpm: 4000, pedal: 80 }));
+    assert(Math.abs(tach().value - 4) < 0.05, 'XTRABOOST: the revs: ' + tach().value);
     s.stop();
 });
 
-check('electric: Classic M\'s tach and Retro\'s economy gauge read the battery\'s power to its limits', () => {
+check('electric: Classic M\'s tach reads Power % (the battery over its limits), Retro\'s economy gauge the battery\'s kW', () => {
     const d = { speed: 40, rpm: 0, stage: 'D', driveMode: 'ELECTRIC', engineOn: false, kw: 55, kwOut: 120, kwIn: 50 };
     const c = makeScene({ layout: 'classic', data: d });
     drive(c, 3, () => d);
-    assert(Math.abs(c.engine._pieces().find((p) => p.key === 'rpm').value - 55) < 0.5);
+    assert(Math.abs(c.engine._pieces().find((p) => p.key === 'rpm').value - 55 / 120 * 100) < 0.5);
     drive(c, 3, () => Object.assign({}, d, { kw: -30 }));
-    assert(Math.abs(c.engine._pieces().find((p) => p.key === 'rpm').value + 30) < 0.5);
+    assert(Math.abs(c.engine._pieces().find((p) => p.key === 'rpm').value + 60) < 0.5);
     c.stop();
     const h = Object.assign({}, d, { driveMode: 'HYBRID', engineOn: true, rpm: 1500, kw: -30 });
     const r = makeScene({ layout: 'retro', data: h });
