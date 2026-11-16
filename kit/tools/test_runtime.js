@@ -36,12 +36,13 @@ async function waitFor(fn, ms) {
 // the renderer's side: the app's FRAMEs (time of each, a TICK back for each), READY on connect (onConn)
 let onConn = null;
 const server = net.createServer((s) => {
-    const c = { s, frames: [], buf: Buffer.alloc(0), send: (t, p) => s.write(msg(t, p)) };
+    const c = { s, frames: [], msgs: [], buf: Buffer.alloc(0), send: (t, p) => s.write(msg(t, p)) };
     s.on('data', (d) => {
         c.buf = Buffer.concat([c.buf, d]);
         while (c.buf.length >= 8) {
             const t = c.buf.readUInt32LE(0), n = c.buf.readUInt32LE(4);
             if (c.buf.length < 8 + n) break;
+            c.msgs.push({ t, len: n, p: Buffer.from(c.buf.slice(8, 8 + n)) });
             c.buf = c.buf.slice(8 + n);
             if (t === FRAME) { c.frames.push(Date.now()); c.send(TICK, u32(c.frames.length, 0)); }
         }
@@ -212,11 +213,59 @@ test('a new scale keeps the uploads (the renderer keeps them), a new size sends 
     } finally { t.end(); }
 });
 
+test('mgu-render/1: a pixel image goes as a picture (10, premultiplied, exact length), the frame in the native OP_IMAGE', async () => {
+    const rec = require('../runtime/record');
+    const t = await setup(), g = t.d.gpu, c = t.c;
+    try {
+        const W = 6, H = 4, px = Buffer.alloc(W * H * 4, 200);
+        px[3] = 128;                                                  // one see-through pixel
+        const im = rec.setImage(0x434c0100, W, H, px), nid1 = im.nid;
+        const draw = (x) => { const r = t.d.canvas(1600, 520); r.fillRect(0, 0, 10, 10, '#ff0000'); r.image(0x434c0100, x, 20, 60, 40); t.d.present('MAIN', r, () => Promise.resolve()); };
+        draw(24);
+        assert(await waitFor(() => c.msgs.some((m) => m.t === 10)), 'a picture sent');
+        const pic = c.msgs.find((m) => m.t === 10);
+        assert.strictEqual(pic.len, 12 + W * H * 4, 'exact length (mgu-render refuses any other): ' + c.msgs.map((m) => m.t + ':' + m.len).join(' '));
+        assert.deepStrictEqual([pic.p.readUInt32LE(0), pic.p.readUInt32LE(4), pic.p.readUInt32LE(8)], [im.nid, W, H]);
+        assert.deepStrictEqual(Array.from(pic.p.slice(12, 16)), [100, 100, 100, 128], 'premultiplied');
+        assert(await waitFor(() => c.msgs.some((m) => m.t === FRAME && m.p.indexOf(u32(18)) >= 0)), 'a frame with an image');
+        const fr = c.msgs.filter((m) => m.t === FRAME).pop().p, fw = new Uint32Array(fr.buffer.slice(fr.byteOffset, fr.byteOffset + fr.length)), ff = new Float32Array(fw.buffer);
+        let at = -1;
+        for (let i = 0; i < fw.length - 6; i++) if (fw[i] === 18 && fw[i + 6] === im.nid) at = i;
+        assert(at >= 0, 'OP_IMAGE x y w h r id');
+        assert.deepStrictEqual([ff[at + 1], ff[at + 2], ff[at + 3], ff[at + 4], ff[at + 5]], [24, 20, 60, 40, 0]);
+        // a new version: the old picture dropped, the new one sent, the frame names it
+        const im2 = rec.setImage(0x434c0100, W, H, Buffer.alloc(W * H * 4, 255));
+        assert.notStrictEqual(im2.nid, nid1, 'a new id for the new version');
+        draw(25);
+        assert(await waitFor(() => c.msgs.some((m) => m.t === 11)), 'the old one dropped');
+        assert.strictEqual(c.msgs.find((m) => m.t === 11).p.readUInt32LE(0), nid1);
+        assert(c.msgs.some((m) => m.t === 10 && m.p.readUInt32LE(0) === im2.nid), 'the new one sent');
+        assert(t.log.errors.length === 0, 'no errors');
+    } finally { t.end(); }
+});
+
+test('nativeImages: only OP_IMAGE rewritten, past glyphs, gradients and triangles', async () => {
+    const rec = require('../runtime/record');
+    const im = rec.setImage(77, 2, 2, Buffer.alloc(16, 255));
+    const r = new rec.Recorder(100, 100);
+    r.gradientRect(0, 0, 10, 10, [[0, '#ff0000'], [1, '#0000ff']]).fillUnder([[0, 0], [10, 2], [20, 1]], 9, '#00ff00').arc(5, 5, 1, 3, 0, 90, '#123456').image(77, 5, 6, 7, 8).fillRect(1, 2, 3, 4, '#ffffff');
+    const a = r.words(), b = rec.nativeImages(a);
+    assert.notStrictEqual(a, b, 'a copy');
+    assert.strictEqual(a.length, b.length);
+    const fb = new Float32Array(b.buffer, b.byteOffset, b.length);
+    const i = Array.from(b).indexOf(18);
+    assert.deepStrictEqual([fb[i + 1], fb[i + 2], fb[i + 3], fb[i + 4], fb[i + 5], b[i + 6]], [5, 6, 7, 8, 0, im.nid]);
+    assert.deepStrictEqual(Array.from(b.slice(i + 7)), Array.from(a.slice(i + 7)), 'what follows unchanged');
+    const plain = new rec.Recorder(10, 10).fillRect(0, 0, 1, 1, '#000');
+    const pw = plain.words();
+    assert.strictEqual(rec.nativeImages(pw), pw, 'no image: the words themselves');
+});
+
 (async () => {
     await new Promise((r) => server.listen(process.env.MGU_RENDERD_SOCKET, r));
     let failed = 0;
     for (const [name, fn] of cases) {
-        try { await fn(); console.log('ok    ' + name); } catch (e) { failed++; console.log('FAIL  ' + name + '\n      ' + e.message.split('\n')[0]); }
+        try { await fn(); console.log('ok    ' + name); } catch (e) { failed++; console.log('FAIL  ' + name + '\n      ' + e.message.split('\n').slice(0, 6).join(' | ')); }
     }
     server.close();
     fs.rmSync(dir, { recursive: true, force: true });
