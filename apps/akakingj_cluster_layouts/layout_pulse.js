@@ -49,8 +49,9 @@ const up = (key, x, y, w, h, value, label, colors, lh) => [
     C.text(key + 'Lbl', x, y, w, lh || 22, label, lbl, { tracking: 0.12 }),
     C.text(key, x, y + (lh || 22) + 2, w, h, value, colors),
 ];
-const socBar = (o, key, x, y, w, h) => C.bar(key, x, y, w, h, C.focus.bar(o), (t) => {
-    const f = C.engineFocus(o) ? t.fill1 : t.ev;
+const socBar = (o, key, x, y, w, h) => C.bar(key, x, y, w, h, C.focus.bar(o), (t, d) => {
+    // (the charge red when low: layout_common.socLow)
+    const f = C.engineFocus(o) ? t.fill1 : C.socLow(d) ? t.red : t.ev;
     return { track: t.track, fill0: f, fill1: f, redc: t.red, tip: t.tip, tick: t.dim, num: t.num };
 }, 20);
 

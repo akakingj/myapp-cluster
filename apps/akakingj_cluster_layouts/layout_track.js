@@ -115,7 +115,7 @@ module.exports = {
             ...C.reading('fuel', 1672, 292, 216, 44, (d) => C.distText(o, d.frange), 'FUEL RANGE', white, lbl),
             ...C.reading('elec', 1672, 400, 216, 44, C.focus.range(o), C.focus.rangeLabel(o), engine ? white : (t) => ({ color: [t.ev, 1], glow: [t.ev, 0.2] }), lbl),
             C.text('socTxt', 1672, 506, 216, 44, C.focus.charge(o), white),
-            C.bar('soc', 1680, 562, 200, 16, C.focus.bar(o), (t) => ({ track: t.track, fill0: engine ? t.accent : t.ev, fill1: engine ? t.accent : t.ev, redc: t.red, tip: t.text, tick: t.dim, num: t.num }), 16),
+            C.bar('soc', 1680, 562, 200, 16, C.focus.bar(o), (t, d) => ({ track: t.track, fill0: engine ? t.accent : C.socLow(d) ? t.red : t.ev, fill1: engine ? t.accent : C.socLow(d) ? t.red : t.ev, redc: t.red, tip: t.text, tick: t.dim, num: t.num }), 16),
         ];
 
         if (o.centre === 'map') {

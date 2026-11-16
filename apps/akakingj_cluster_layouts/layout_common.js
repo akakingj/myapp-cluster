@@ -122,18 +122,21 @@ const strip = (o) => !!o && o.bottomStrip === 'stock';
 function stripGauges(o, opts) {
     const lab = (t) => ({ color: [t.dim || '#9aa4ae', 1], glow: [t.glow || '#000000', 0] });
     const fuelC = (t) => ({ track: t.track || '#1a1a1a', fill0: t.text || t.tick || '#e8e8e8', fill1: t.text || t.tick || '#e8e8e8', redc: t.red || '#ff3b30', tip: t.text || '#ffffff', tick: t.dim || '#888888', num: t.num || '#888888' });
-    const evC = (t) => ({ track: t.track || '#1a1a1a', fill0: t.ev || '#4ab4ff', fill1: t.ev || '#4ab4ff', redc: t.red || '#ff3b30', tip: t.ev || '#4ab4ff', tick: t.dim || '#888888', num: t.num || '#888888' });
+    const evC = (t, d) => { const c = socLow(d) ? t.red || '#ff3b30' : t.ev || '#4ab4ff'; return { track: t.track || '#1a1a1a', fill0: c, fill1: c, redc: t.red || '#ff3b30', tip: c, tick: t.dim || '#888888', num: t.num || '#888888' }; };
     const out = opts && opts.fuel === false ? [] : [
         // each with its level in % beside its name (the strip under it shows the range)
         text('stripFuelLbl', 96, 598, 220, 16, (d) => 'FUEL' + (isNum(d.fuelPct) ? '  ' + Math.round(d.fuelPct) + '%' : ''), lab, { align: 0, tracking: 0.18 }),
         bar('stripFuel', 90, 618, 250, 16, (d) => (isNum(d.fuelPct) ? d.fuelPct / 100 : 0), fuelC, 16),
     ];
     if (o.vehicle !== 'ice') out.push(
-        text('stripSocLbl', 1610, 598, 220, 16, (d) => (isNum(d.soc) ? Math.round(d.soc) + '%  ' : '') + 'CHARGE', lab, { align: 1, tracking: 0.18 }),
+        text('stripSocLbl', 1610, 598, 220, 16, (d) => (isNum(d.soc) ? Math.round(d.soc) + '%  ' : '') + 'CHARGE', (t, d) => (socLow(d) ? { color: [t.red || '#ff3b30', 1], glow: [t.red || '#ff3b30', 0.2] } : lab(t)), { align: 1, tracking: 0.18 }),
         bar('stripSoc', 1580, 618, 250, 16, (d) => (isNum(d.soc) ? d.soc / 100 : 0), evC, 16));
     return out;
 }
 /** The layout's own range readings (keys) left out with the strip: it shows both ranges. */
+/** A plug-in hybrid's battery low (0.36.2): at 15 % and under its charge bars and gauges go red, as the fuel's reserve */
+const LOW_SOC = 15;
+const socLow = (d) => !!d && isNum(d.soc) && d.soc <= LOW_SOC;
 const STRIP_DROP = /^(fuel|elec|frange|erange|range2)(Lbl)?$|^erangeL$/;
 
 /*
@@ -437,7 +440,7 @@ const GAUGES = {
     throttle: { label: 'THROTTLE', min: 0, max: 100, red: null, v: (d) => d.throttle, text: (o, d) => (isNum(d.throttle) ? Math.round(d.throttle) + '%' : '--'), needs: ['throttle'] },
     pedal: { label: 'PEDAL', min: 0, max: 100, red: null, v: (d) => d.pedal, text: (o, d) => (isNum(d.pedal) ? Math.round(d.pedal) + '%' : '--'), needs: ['pedal'] },
     timing: { label: 'TIMING', min: -10, max: 40, red: null, v: (d) => d.timing, text: (o, d) => timingText(d), needs: ['timing'] },
-    soc: { label: 'BATTERY', min: 0, max: 100, red: null, v: (d) => d.soc, text: (o, d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--') },
+    soc: { label: 'BATTERY', min: 0, max: 100, red: null, low: LOW_SOC, v: (d) => d.soc, text: (o, d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--') },
     battTemp: { label: 'BATT', min: 0, max: 60, red: 45, v: (d) => d.battTemp, text: tempOf('battTemp') },
     fuel: { label: 'FUEL', min: 0, max: 100, red: null, v: (d) => d.fuelPct, text: (o, d) => (isNum(d.fuelPct) ? Math.round(d.fuelPct) + '%' : '--') },
 };
@@ -451,7 +454,8 @@ const gaugeOf = (o, which) => {
     return Object.assign({ key: k }, g, {
         frac: (d) => { const v = g.v(d); return isNum(v) ? Math.max(0, Math.min(1, (v - g.min) / (g.max - g.min))) : 0; },
         redFrac: isNum(g.red) ? (g.red - g.min) / (g.max - g.min) : 1.01,
-        hot: (d) => isNum(g.red) && isNum(g.v(d)) && g.v(d) >= g.red,
+        // (or under its low mark: the battery's charge)
+        hot: (d) => isNum(g.v(d)) && ((isNum(g.red) && g.v(d) >= g.red) || (isNum(g.low) && g.v(d) <= g.low)),
         txt: (d) => g.text(o, d),
     });
 };
@@ -572,5 +576,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

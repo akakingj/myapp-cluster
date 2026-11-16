@@ -1256,7 +1256,7 @@ uniform float u_topEnd;   // the top lines run from the bracket to this x (left;
 uniform vec2 u_off;       // (here) the layer's place on the panel
 uniform float u_part;     // (here) 1 the speed bracket (and the fuel bar), 2 the rev bracket (and the oil bar), 3 the bottom line and strip
 uniform vec2 u_stripFill; // (here) the bottom strip's halves as gauges: the left half lit from its left end to x, the right from the middle to y (0..1; negative: all lit)
-uniform float u_regenR;   // (here) 1: the bottom strip's right half is regeneration (green)
+uniform float u_regenR;   // (here) flags: 1 the bottom strip's right half is regeneration (green); 2 its left half red (a plug-in's charge low); 4 the rev bracket's bar with the fuel's zones (a plug-in's charge: red at its empty end)
 uniform float u_zero;     // (here) the rev bracket's 0 (0..1 up it): above 0 a power gauge's regeneration below it, lit green
                           // from the 0 down to the value, its marks counted from the 0
 
@@ -1399,7 +1399,7 @@ void main() {
         c = bracket(pm, u_rpm, u_zero, u_redFrom, u_orange, u_ticks.y, RED_LINE, RED_BAND, RED_LIT, RED_IN, c);
         c = flare(pm, vec2(u_geo.w - 1.0, u_geo.y), RED_LINE, 26.0, c);
         c = flare(pm, vec2(outerX(u_geo.z), u_geo.z), RED_LINE, 18.0, c);
-        if (u_hole.z <= 0.0) c = bar(p, u_oilSeg, u_oil, 1.0, c);
+        if (u_hole.z <= 0.0) c = bar(p, u_oilSeg, u_oil, u_regenR > 3.5 ? 0.0 : 1.0, c);
         c.a *= hole;
     } else {
         // the bottom line between the brackets
@@ -1412,8 +1412,9 @@ void main() {
             float dx = abs(p.x - 960.0), xe = 960.0 - xl;
             float inside = cov(dx - xe) * cov(-sy) * cov(sy - u_strip.z);
             float f = dx / xe;
-            vec3 sc = p.x < 960.0 ? mix(vec3(0.06, 0.2, 0.62), vec3(0.15, 0.36, 0.92), f)
-                : u_regenR > 0.5 ? mix(vec3(0.04, 0.3, 0.16), vec3(0.16, 0.72, 0.4), f) : mix(RED_LINE * 0.42, RED_LINE * 0.9, f);
+            float fl0 = mod(u_regenR, 4.0);
+            vec3 sc = p.x < 960.0 ? (fl0 > 1.5 ? mix(vec3(0.38, 0.04, 0.05), vec3(0.95, 0.14, 0.14), f) : mix(vec3(0.06, 0.2, 0.62), vec3(0.15, 0.36, 0.92), f))
+                : mod(fl0, 2.0) > 0.5 ? mix(vec3(0.04, 0.3, 0.16), vec3(0.16, 0.72, 0.4), f) : mix(RED_LINE * 0.42, RED_LINE * 0.9, f);
             // (here) each half a gauge: lit to its reading, dim beyond
             float fl = p.x < 960.0 ? (p.x - xl) / xe : (p.x - 960.0) / xe;
             float lv = p.x < 960.0 ? u_stripFill.x : u_stripFill.y;

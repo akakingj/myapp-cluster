@@ -109,6 +109,8 @@ module.exports = {
                 dyn: (d) => ({
                     u_ticks: [8, elec(d) ? 4 : 7], u_redFrom: [elec(d) ? 2 : B.redMarks(o, RPM_MAX, d)[0]], u_orange: [elec(d) ? 2 : B.redMarks(o, RPM_MAX, d)[1]], u_zero: [elec(d) ? E_ZERO : 0],
                     u_oil: [pO ? q(pO.frac(d)) : isNum(d.oil) ? Math.round(clamp01((d.oil - 50) / 100) * 500) / 500 : 0],
+                    // (the charge or the fuel there: the fuel's zones, red at the empty end)
+                    u_regenR: [pO && (pO.key === 'soc' || pO.key === 'fuel') ? 4 : 0],
                 }) }),
             // the bottom bar's halves as gauges: the charge and the battery's power (boost and the coolant)
             part('bottomBar', 3, 400, Y(620) - 6, 1120, bottom - Y(620) + 6, { dyn: (d) => ({
@@ -116,7 +118,8 @@ module.exports = {
                     : [isNum(d.soc) ? clamp01(d.soc / 100) : 0, isNum(d.kw) ? Math.round(clamp01(Math.abs(d.kw) / (d.kw < 0 ? C.kwRange(d).in : C.kwRange(d).out)) * 200) / 200 : 0])
                     .map((f, i) => ([pL, pR][i] ? q([pL, pR][i].frac(d)) : f)),
                 // (green while regenerating, as the other power gauges)
-                u_regenR: [!engine && !pR && isNum(d.kw) && d.kw < -0.3 ? 1 : 0],
+                // (and the left half red with the battery's charge low: layout_common.socLow)
+                u_regenR: [(!engine && !pR && isNum(d.kw) && d.kw < -0.3 ? 1 : 0) + (((!engine && !pL) || (pL && pL.key === 'soc')) && C.socLow(d) ? 2 : 0)],
             }) }));
         // the scales' numerals: the one nearest the reading white (theirs: "near")
         const nearSpeed = (i) => (t, d) => {
