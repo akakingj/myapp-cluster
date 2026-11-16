@@ -285,7 +285,10 @@ mgu.run({
             // (a place: its own values, the first back to as designed; a readout: the Settings' value first)
             const opts = place ? it.options.map((x) => (x[0] === 'auto' ? ['', x[1]] : x)) : [['', 'Same as in Settings']].concat(it.options);
             const sheet = Sheet && menu.pickSheet(Sheet, byId(id).title, it.label, opts, cur === undefined ? '' : cur, (v) => setSlot(id, k, v));
-            if (sheet && ui.sheet && ui.sheet(sheet) !== false) return null;
+            // (the kit's sheet is ctx.sheet - mgu.js; 0.29.0-0.37.0 asked ui.sheet, which the kit has not, so on the car a
+            // tap only stepped to the next value: 0.37.1 opens the list. ui.sheet stays for the tests' stand-in)
+            const showSheet = typeof ctx.sheet === 'function' ? ctx.sheet : ui.sheet;
+            if (sheet && showSheet && showSheet(sheet) !== false) return null;
             // (no sheet here: the next value, then back to the Settings')
             const vals = it.options.map((x) => x[0]).filter((v) => !place || v !== 'auto'), i = cur === undefined ? -1 : vals.indexOf(cur);
             return setSlot(id, k, i + 1 < vals.length ? vals[i + 1] : '');
