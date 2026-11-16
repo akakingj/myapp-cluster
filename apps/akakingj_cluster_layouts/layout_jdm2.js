@@ -52,8 +52,9 @@ function tach(o, cx, cy, R) {
         // the unit right of the hub, under the band's end (with the engine off the battery's power, the tach reads it then)
         C.text('rpmUnit', cx + Math.round(R * 0.2), cy + Math.round(R * 0.16), Math.round(R * 0.5), Math.max(14, Math.round(R * 0.07)),
             (d) => (C.electric(o, d) ? C.POWER_UNIT : 'x1000 rpm'), (t, d) => (C.electric(o, d) ? powerTxt(t, d) : redTxt(t)), { tracking: 0.06 }),
-        C.text('speedDigits', cx + Math.round(R * 0.16), cy + Math.round(R * 0.33), Math.round(R * 0.6), Math.round(R * 0.34), (d) => C.speedText(o, d), white),
-        C.text('speedDigitsUnit', cx + Math.round(R * 0.16), cy + Math.round(R * 0.7), Math.round(R * 0.6), Math.max(14, Math.round(R * 0.08)), C.speedUnit(o), white, { tracking: 0.04 }),
+        // (0.37.0: both up a little, the unit clear of the bezel's ring: it sat on it at cy + R * 0.7)
+        C.text('speedDigits', cx + Math.round(R * 0.16), cy + Math.round(R * 0.26), Math.round(R * 0.6), Math.round(R * 0.34), (d) => C.speedText(o, d), white),
+        C.text('speedDigitsUnit', cx + Math.round(R * 0.16), cy + Math.round(R * 0.62), Math.round(R * 0.6), Math.max(14, Math.round(R * 0.08)), C.speedUnit(o), white, { tracking: 0.04 }),
     ];
 }
 
@@ -225,13 +226,10 @@ module.exports = {
             );
         }
         // the car's own strip: no boxes to keep clear of, so as first drawn: the G meter's window left, the tach
-        // over its edge, the disc above right of the tach, the coolant under it and the fuel right of both; the
-        // readouts the strip leaves (the main readout, readouts 1 and 2 in the time's and temperature's places)
-        // in the column at the right
+        // over its edge, the disc above right of the tach, the coolant under it and the fuel right of both. (0.37.0:
+        // no column of readouts at the right any more - readouts 1 and 2 and the main readout, the intake air, the
+        // gearbox oil and the torque there - the owner's call; column() stays for a later use)
         return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 427, 410, 233), tach(o, 900, 387, 259),
-            gearDisc(o, 1287, 262, 100), small(o, 'rpm', 1297, 526, 112), small(o, 'speed', 1500, 404, 110), [
-                C.text('clock', 1672, 300, 216, 34, C.clock, white),
-                C.text('outside', 1672, 360, 216, 34, (d) => C.outsideText(o, d.outside), white),
-            ], column(o, 430));
+            gearDisc(o, 1287, 262, 100), small(o, 'rpm', 1297, 526, 112), small(o, 'speed', 1500, 404, 110));
     },
 };

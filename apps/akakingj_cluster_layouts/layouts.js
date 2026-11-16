@@ -156,7 +156,8 @@ const SLOTS = {
     // (its own strip's middle: the main readout; a plug-in's, with the cluster's strip, its battery's power)
     arc_tach: Object.assign({ infoMain: (o) => ENGINE(o) || !STRIP(o) }, DIALS, STRIP2),
     // (its left dial: the G meter, a speedometer, the tyres or the temperatures; not with the map or the stock centre)
-    jdm2: Object.assign({ infoMain: ENGINE, leftDial: (o) => (o.centre || 'info') === 'info' }, DIALS, STRIP2),
+    // (0.37.0: no readouts at the right beside the strip; with the map, readouts 1 and 2 above it over the car's strip)
+    jdm2: Object.assign({ infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o), leftDial: (o) => (o.centre || 'info') === 'info' }, DIALS),
     twin_cowl: Object.assign({}, DIALS, STRIP2, { infoLow: STRIP }),
 };
 /** The readout places layout id has (all: whatever the car and settings; else those that show with options o). */
