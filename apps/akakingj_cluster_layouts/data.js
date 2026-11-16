@@ -14,6 +14,7 @@
  * (No xDrive split: neither the car's split signal nor the transfer case's front torque gave usable readings on the
  * car, Nov 9 2026: removed.)
  *   eDrive Live, through the shared folder: battery charge and power
+ *   the battery unit (SME) over UDS: its charge, only while no app shares one (eDrive Live not running), every 15 s
  *
  * The diagnostic reads are the slow part: only the values the page on screen needs are read, about twice a
  * second (want(keys)); the rest every 10 s; none while nothing is shown or nothing wants them (the car shows
@@ -34,6 +35,15 @@ const PROGRAMS = { S_MINUS_PROGRAMM: 'S', M_MINUS_PROGRAMM: 'M', 1: 'S', 2: 'M' 
 const DME_KEYS = ['iat', 'hpfp', 'lpfp', 'timing', 'boostCtl', 'egs', 'pedal', 'throttle', 'tank'];
 /* (read twice a round while shown: they move with the right foot) */
 const FAST_KEYS = ['pedal', 'throttle'];
+/*
+ * (Layouts 0.39.1) the high-voltage battery's charge from the battery unit (SME, 0x07) itself, as eDrive reads it:
+ * plug-in hybrids DDBC (0.1 %; fully electric cars answer it with no data bytes, so min 0.5), fully electric E5CE
+ * (0.01 %). Only while no app shares a charge: two apps asking the battery unit in turn left both without answers.
+ */
+const HV = { ecu: 7, soc: [
+    { did: 'DDBC', bytes: 2, at: 0, factor: 0.1, offset: 0, min: 0.5, max: 100 },
+    { did: 'E5CE', bytes: 2, at: 0, factor: 0.01, offset: 0, min: 0, max: 100 }] };
+const HV_EVERY_MS = 15000, HV_ALONE_MS = 10000;
 
 /*
  * The driving mode, as the car's FES service sends it: BMW's FES mode table (TAB_FES_MODUS_ARG in the G05's
@@ -355,7 +365,23 @@ function startData(ctx, opts) {
     const rd = new DidReader(link, { ecu: dme.ecu });
     const fail = {}, tried = {};
     let baro = 101.3, baroT = 0, wanted = [], wantedT = 0, timer = null;
+    /* the battery unit's charge (HV): while shown and no app has shared a charge for HV_ALONE_MS, not on a petrol or
+     * diesel car, every HV_EVERY_MS; five misses in a row (no battery unit, or another app holding it): 5 minutes */
+    const hv = Object.assign({}, HV, cfg.battery || {});
+    let hvAt = 0, hvMiss = 0, sharedAt = Date.now();
+    const hvDue = () => {
+        const now = Date.now(), p = providers.readings();
+        if (isNum(p.soc) || providers.powerShared()) { sharedAt = now; return false; }
+        return !ice() && (hv.soc || []).length > 0 && now - sharedAt >= HV_ALONE_MS
+            && now - hvAt >= (hvMiss >= 5 ? 300000 : HV_EVERY_MS);
+    };
     async function readOne(k) {
+        if (k === 'hvSoc') {
+            hvAt = Date.now();
+            const v = await rd.value('hvSoc', hv.soc.map((c) => Object.assign({ ecu: hv.ecu }, c)));
+            if (v !== null) { hvMiss = 0; put('socSme', v); } else hvMiss++;
+            return v;
+        }
         if (k === 'boostCtl') {
             if (Date.now() - baroT > 60000) { baroT = Date.now(); const b = await rd.value('baro', dme.baro); if (b !== null) baro = b; }
             const tg = await rd.value('boostTarget', dme.boostTarget);
@@ -400,7 +426,7 @@ function startData(ctx, opts) {
             if (wantedNow && now - slowAt > 10000) { slowAt = now; DME_KEYS.forEach((k) => { if (queue.indexOf(k) < 0) queue.push(k); }); }
             queue = queue.filter(usable);
         }
-        const turn = on && queue.length ? [queue.shift()] : [];
+        const turn = on && hvDue() ? ['hvSoc'] : on && queue.length ? [queue.shift()] : [];
         let asked = 0;
         try {
             if (link.available) {
@@ -409,8 +435,9 @@ function startData(ctx, opts) {
                     asked++;
                     tried[k] = Date.now();
                     const v = await readOne(k);
-                    fail[k] = v === null ? (fail[k] || 0) + 1 : 0;
-                    if (v !== null) dmeAnswered = true;
+                    // (the battery unit's misses its own: hvMiss)
+                    fail[k] = v === null && k !== 'hvSoc' ? (fail[k] || 0) + 1 : 0;
+                    if (v !== null && k !== 'hvSoc') dmeAnswered = true;
                 }
             }
         } catch (e) { const m = String(e); if (m !== lastPollErr) { lastPollErr = m; log.warn('diagnostic poll: ' + m); } }   // (once per distinct error)
@@ -463,6 +490,7 @@ function startData(ctx, opts) {
         if (setVehicle()) return;
         const p = providers.readings();
         if (providers.powerShared() || isNum(p.soc)) return detect('phev', 'eDrive Live shares its battery readings');
+        if (fresh('socSme', 60000)) return detect('phev', 'the battery unit answers with its charge');
         if (fresh('carErange', 120000) && x.carErange > 0) return detect('phev', 'the car gives an electric range');
         if (opts && opts.shown && active()) shownFor += 5000;
         if (!detected.vehicle && dmeAnswered && shownFor >= 90000) detect('ice', 'no drive modes, electric range or eDrive Live of a plug-in hybrid (the engine unit answers)');
@@ -485,7 +513,7 @@ function startData(ctx, opts) {
                 if (isNum(p.kw) && isNum(p.kwAt) && p.kwAt !== lastKwAt) { lastKwAt = p.kwAt; fuse.measure(p.kwAt - 100, p.kw); }
             }
             const fz = !d.demo && fastKw() ? fuse.now(tNow) : null;
-            const o = Object.assign({}, d, { mode: x.mode, soc: isNum(p.soc) ? p.soc : undefined,
+            const o = Object.assign({}, d, { mode: x.mode, soc: isNum(p.soc) ? p.soc : !d.demo && fresh('socSme', 60000) ? x.socSme : undefined,
                 kw: fz ? fz.kw : isNum(p.kw) ? p.kw : undefined, kwRead: isNum(p.kw) ? p.kw : undefined, kwFused: !!(fz && fz.fused), kwModel: fz && fz.model ? fz.model : undefined, kwOut: endsOf(p).out || undefined, kwIn: kwEnds.in || undefined, driveMode: x.driveMode,
                 erange: isNum(p.erange) ? p.erange : fresh('carErange', 120000) ? x.carErange : undefined,
                 frange: isNum(p.frange) ? p.frange : fresh('carFrange', 120000) ? x.carFrange : undefined,
