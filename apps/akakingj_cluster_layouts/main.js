@@ -31,7 +31,7 @@ try { Sheet = require('./kit/sheet'); } catch (e) { /* no sheets: a readout's va
 const { lookNow } = require('./themes');
 const { startData } = require('./data');
 const presence = require('./presence');
-const { startDap, DEMO: DAP_DEMO } = require('./dap');
+const { DEMO: DAP_DEMO } = require('./dap');
 const { startMapWindow } = require('./map_window');
 const { findSignals } = require('./signal_finder');
 const logs = require('./logs');
@@ -75,16 +75,11 @@ mgu.run({
         // what a layout needs (layout.needs), eDrive Live's charge and power while shown
         const D = startData(ctx, { shown: showing, tyres: true });
         const car = D.car;
-        // the driving assistant (dap.js), for the layouts that show it (layout.dap: ID8 M's
-        // cruise control): subscribed once one is first shown, to the cruise control's service alone (0.36.6: not the
-        // lane, warning and object list services, the last a car's whole surroundings many times a second, which no
-        // layout draws since Modern wide went)
-        let dap = null;
-        const dapWanted = () => showing() && !!byId(settings.get('layout')).dap;
+        // the driving assistant (dap.js): none of its services is subscribed (0.36.7). ID8 M's cruise control reads the
+        // head-up display's set speed (data.js cruise); dap.js stays for the previews' sample (DAP_DEMO) and later use
         const data = () => {
             const d = D.data();
-            if (!dap && dapWanted() && !d.demo) dap = startDap(ctx, log, { only: ['ibvip'] });
-            d.dap = d.demo ? DAP_DEMO : dap ? dap.state() : null;
+            d.dap = d.demo ? DAP_DEMO : null;
             return d;
         };
         // the readouts (Settings' infoA ... gaugeRpm): the layout's own where it has one set (slotsBy, the page), else
@@ -214,7 +209,7 @@ mgu.run({
                 ['cluster renderer status', squeeze(cluster.rendererStatus() || '(no answer yet)', full)],
                 ['data now', JSON.stringify(snap)],
                 ['raw signals', JSON.stringify(D.status().raw || {})],
-                ['driving assistant (ID8 M)', dap ? JSON.stringify(dap.status()) + '\nnow ' + JSON.stringify(dap.state()) : 'not started (ID8 M not shown yet)'],
+                ['driving assistant (ID8 M)', 'not subscribed (0.36.7): the cruise control from the head-up display\'s set speed'],
                 ['vehicle', (() => { const v = D.vehicle(); return v.vehicle + ' (' + v.how + ': ' + v.why + ')'; })()],
                 ['data status', JSON.stringify(Object.assign({}, D.status(), { raw: undefined }))],
                 // the kW gauges' sources: each of the car's power signals (how often it came, its last value), its fit to

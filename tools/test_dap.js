@@ -57,15 +57,10 @@ check('subscriptions: the decoders for all four events; the state dropped 3 s af
     s.at -= 4000;
     assert.strictEqual(dap.state(), null, 'stale');
 });
-check('Cluster Layouts (0.36.6): the cruise control\'s service alone, the only one declared in app.json', () => {
+check('Cluster Layouts (0.36.7): no driving assistant service declared or subscribed', () => {
     const app = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'app.json'));
-    const dass = Object.keys(app.signals).filter((k) => /^de\.bmw\.dass\./.test(k));
-    assert.deepStrictEqual(dass, ['de.bmw.dass.AssistedDrivingViewFunctionInput']);
-    assert.deepStrictEqual(app.signals[dass[0]]._broadcasts, ['assistedDrivingViewFunctionInputIbVip']);
+    assert.deepStrictEqual(Object.keys(app.signals).filter((k) => /^de\.bmw\.dass\./.test(k)), []);
     const src = require('fs').readFileSync(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'main.js'), 'utf8');
-    assert(/startDap\(ctx, log, \{ only: \['ibvip'\] \}\)/.test(src), 'main.js asks for ibvip alone');
-    const got = [];
-    D.startDap({ spec: {}, signals: { watch: (iface) => { got.push(iface); return Promise.resolve({}); } } }, { info() {}, warn() {} }, { only: ['ibvip'] });
-    assert.deepStrictEqual(got, ['de.bmw.dass.AssistedDrivingViewFunctionInput']);
+    assert(!/startDap\(/.test(src), 'main.js starts no dap');
 });
 console.log(ok + ' passed');

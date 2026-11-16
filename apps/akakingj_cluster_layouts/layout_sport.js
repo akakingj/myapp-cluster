@@ -55,7 +55,6 @@ module.exports = {
     // its own places, set on the page (layouts.js placesFor): the brackets' bars and the bottom bar's halves
     places: [['fuelBar', 'Bar in the speed bracket (fuel)'], ['oilBar', 'Bar in the rev bracket (oil; a plug-in hybrid\'s charge)'], ['half1', 'Bottom bar: left'], ['half2', 'Bottom bar: right']]
         .map(([key, label]) => ({ key, kind: 'gauge', label })),
-    dap: true,          // (the cruise control's icon and set speed: the driving assistant, dap.js)
     palette: pal,
     gearText: C.gearText,
 
@@ -157,7 +156,7 @@ module.exports = {
                 T('gear', [1415, strip ? 230 : 182, 200, 65], 's_gear', gearNum, gearC, 'center'));
         } else {
             // the cruise control, as BMW's: its icon grey, green while it holds a speed, with the set speed beside it
-            // the driving assistant's view (sends nothing on this G05), else the head-up display's set speed (data.js cruise)
+            // the head-up display's set speed (data.js cruise); the driving assistant's (d.dap) only in the previews' sample
             const dapOn = (d) => !!(d.dap && d.dap.acc && d.dap.acc.on);
             const acc = (d) => dapOn(d) || !!(d.cruise && d.cruise.on);
             const setOf = (d) => (dapOn(d) ? d.dap.acc.set : d.cruise ? d.cruise.set : undefined);

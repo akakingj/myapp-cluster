@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.36.6",
+  "version": "0.36.7",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -72,12 +72,6 @@
     "de.bmw.chassis.SteeringAngle": {
       "_optional": "the steering angle (the Steering page)",
       "ActualSteeringAngleDriver": "s"
-    },
-    "de.bmw.dass.AssistedDrivingViewFunctionInput": {
-      "_broadcasts": [
-        "assistedDrivingViewFunctionInputIbVip"
-      ],
-      "_optional": "The driving assistant: the cruise control's state, set speed and gap"
     },
     "de.bmw.infotainment.vehicle.TPMS": {
       "statusTyrePressure": "rs",
