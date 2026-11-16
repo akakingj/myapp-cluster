@@ -2727,6 +2727,25 @@ Centre readout: top left	가운데 표시: 왼쪽 위
 Centre readout: top right	가운데 표시: 오른쪽 위
 Centre readout: under the speed	가운데 표시: 속도 아래
 Centre readout: above the speed	가운데 표시: 속도 위
+Small gauge by the speedometer	속도계 옆 작은 게이지
+Small gauge by the tach	회전계 옆 작은 게이지
+Left gauge: bottom line	왼쪽 게이지: 아래 줄
+Right gauge: bottom line	오른쪽 게이지: 아래 줄
+Left gauge	왼쪽 게이지
+Right gauge	오른쪽 게이지
+Small gauge: right	작은 게이지: 오른쪽
+Small gauge: below	작은 게이지: 아래
+Centre display: bottom left	가운데 표시창: 아래 왼쪽
+Centre display: bottom right	가운데 표시창: 아래 오른쪽
+Centre display: under the speed	가운데 표시창: 속도 아래
+Small gauge between the dials: right	가운데 작은 게이지: 오른쪽
+Small gauge between the dials: left	가운데 작은 게이지: 왼쪽
+Under the speed: left	속도 아래: 왼쪽
+Under the speed: right	속도 아래: 오른쪽
+Above the map: left	지도 위: 왼쪽
+Above the map: right	지도 위: 오른쪽
+Right column: top line	오른쪽 열: 위 줄
+Right column: second line	오른쪽 열: 둘째 줄
 Battery charge (plug-in hybrid)	배터리 잔량 (PHEV)
 Battery temperature (plug-in hybrid)	배터리 온도 (PHEV)
 Battery power (plug-in hybrid)	배터리 출력 (PHEV)

@@ -133,8 +133,6 @@ function display(o, X, Y, W, H, gear) {
 module.exports = {
     id: 'classic',
     title: 'Old M',
-    // (its readouts' places on the page: the main one at the display's top, above the speed; the other under it)
-    slotLabels: { infoMain: 'Centre readout: above the speed', infoLow: 'Centre readout: under the speed' },
     stripFuel: false,   // (its own fuel gauge, in the speedometer)
     ownStripGauges: true,   // (the charge in its amber display: none of the strip's bars)
     palette: pal,

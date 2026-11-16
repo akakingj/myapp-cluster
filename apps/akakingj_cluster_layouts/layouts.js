@@ -189,6 +189,31 @@ function slotsFor(id, o, all) {
     const t = SLOTS[id] || {};
     return SLOT_KEYS.filter((k) => k in t && (all || t[k](o)));
 }
+/*
+ * Each readout's place as the page names it (0.37.4), where the setting's own name (Settings: "Centre readout: top
+ * left", "under the speed", "Small gauge in the speedometer" ...) is not where that layout puts it. With the map in
+ * the centre, readouts 1 and 2 stand above it in these layouts (or in Track's right column).
+ */
+const ABOVE_MAP = { analog_sport: 1, retro: 1, id6m: 1, jdm2: 1, arc_tach: 1 };
+const SLOT_LABELS = {
+    analog_sport: { gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
+    id6m: { gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
+    classic: { infoMain: 'Centre readout: above the speed', infoLow: 'Centre readout: under the speed' },
+    arc_tach: { infoMain: 'Centre readout: above the speed', infoA: 'Left gauge: bottom line', infoB: 'Right gauge: bottom line', gaugeSpeed: 'Left gauge', gaugeRpm: 'Right gauge' },
+    jdm2: { gaugeSpeed: 'Small gauge: right', gaugeRpm: 'Small gauge: below' },
+    twin_cowl: { infoA: 'Centre display: bottom left', infoB: 'Centre display: bottom right', infoLow: 'Centre display: under the speed',
+        gaugeSpeed: 'Small gauge between the dials: right', gaugeRpm: 'Small gauge between the dials: left' },
+    track: { infoA: 'Under the speed: left', infoB: 'Under the speed: right' },
+};
+/** The page's name for readout k of layout id with options o; null: the setting's own. */
+function slotLabel(id, k, o) {
+    const map = o && (o.centre === 'map' || (stripOn(o) && o.centre === 'stock'));
+    if (map && (k === 'infoA' || k === 'infoB')) {
+        if (ABOVE_MAP[id]) return k === 'infoA' ? 'Above the map: left' : 'Above the map: right';
+        if (id === 'track') return k === 'infoA' ? 'Right column: top line' : 'Right column: second line';
+    }
+    return (SLOT_LABELS[id] && SLOT_LABELS[id][k]) || null;
+}
 /** A readout's value for layout id: its own (slotsBy[id][k], when it is one of the setting's values), else the Settings'. */
 function slotValue(get, item, id, k) {
     const by = get('slotsBy'), own = by && typeof by === 'object' && by[id] ? by[id][k] : undefined;
@@ -211,4 +236,4 @@ function layoutFor(get, d) {
     const k = /SPORT|XTRABOOST/.test(m) ? get('layoutSport') : /ECO|ELECTRIC/.test(m) && !/HYBRID|BATTERY/.test(m) ? get('layoutEco') : null;
     return k && k !== 'same' && LAYOUTS.some((l) => l.id === k) ? k : get('layout');
 }
-module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotValue, placesFor, placeItem, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };
+module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotLabel, slotValue, placesFor, placeItem, CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y, bottomCut };

@@ -21,7 +21,7 @@ const clock = require('./clock');
 const mgu = require('./kit/mgu');
 const { ClusterRender } = require('./cluster_render_client');
 const { startCluster, STALE_MS, frozen } = require('./engine');
-const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, placesFor, placeItem } = require('./layouts');
+const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, slotLabel: layoutSlotLabel, placesFor, placeItem } = require('./layouts');
 const menu = require('./menu');
 const { withAlpha } = require('./kit/canvas');
 const { t: tr } = require('./kit/i18n');
@@ -279,9 +279,9 @@ mgu.run({
         const ownSlot = (id, k) => { const by = settings.get('slotsBy'); return by && by[id] && by[id][k] !== undefined ? by[id][k] : undefined; };
         /** a readout setting's item, or a layout's own place's (its kind's values, 'auto': as designed) */
         const itemFor = (id, k) => placeItem(id, k, ctx.spec) || itemOf(k);
-        /** a readout's name on the page: the layout's own where its place differs (layout.slotLabels: Old M's and JDM 1's
-         *  main readout is above the speed, 0.37.3), else the setting's */
-        const slotLabel = (id, k) => { const own = byId(id).slotLabels; return (own && own[k]) || ((itemFor(id, k) || {}).label || k); };
+        /** a readout's name on the page: where that layout puts it (layouts.js slotLabel, 0.37.3 / 0.37.4: Old M's main
+         *  readout is above the speed, JDM 1's readouts 1 and 2 under its side gauges ...), else the setting's */
+        const slotLabel = (id, k) => layoutSlotLabel(id, k, Object.assign({}, options(), { places: placesOf(id) })) || ((itemFor(id, k) || {}).label || k);
         const optLabel = (k, v, id) => { const it = itemFor(id, k), o = it && (it.options || []).find((x) => x[0] === v); return o ? o[1] : String(v); };
         const openSlot = (id, k) => {
             const it = itemFor(id, k), cur = ownSlot(id, k), place = !!placeItem(id, k, ctx.spec);
