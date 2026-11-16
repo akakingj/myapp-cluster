@@ -2,7 +2,7 @@
 /**
  * test_cluster_info_blindspot.js - Cluster Info's lane change warning (blindspot.js, 1.6.25): the door mirror lamps
  * read from the BDC (0x40) as 22 D3 47 and nothing else - never a write (2E D3 47 switches the lamps themselves) -
- * decoded (1 lit, 2..4 flashing, the rest off), flashing 200 ms lit / 200 ms dark from the moment it began, gone 3 s
+ * decoded (1 lit, 2..4 flashing, the rest off), shown steady either way (a car there), gone 3 s
  * after the last good reply, not read while not wanted, a refusal logged once; and the HUD signs it drives.
  *   node kit/tools/test_cluster_info_blindspot.js
  */
@@ -59,16 +59,13 @@ const quiet = { info() {}, warn() {}, error() {} };
         lamps = [0, 0x0D]; await bs.poll();
         assert.deepStrictEqual(bs.state(t), { left: 0, right: 0 });
     });
-    await check('flashing: 200 ms lit, 200 ms dark, from the moment it began, each side apart', async () => {
+    await check('a car there, the turn signal or not: lit, steady (the lamp flashing too); none: off', async () => {
         lamps = [0, 3]; await bs.poll();
-        const t0 = t;
-        assert.strictEqual(bs.state(t0).right, 2);
-        assert.strictEqual(bs.state(t0 + 199).right, 2);
-        assert.strictEqual(bs.state(t0 + 200).right, 3);
-        assert.strictEqual(bs.state(t0 + 400).right, 2);
-        t += 150; lamps = [2, 4]; await bs.poll();       // the right goes on flashing (2 -> 4 is still flashing): same phase
-        assert.strictEqual(bs.state(t0 + 400).right, 2);
-        assert.strictEqual(bs.state(t + 199).left, 2); assert.strictEqual(bs.state(t + 200).left, 3);
+        [0, 199, 200, 400, 1000].forEach((dt) => assert.deepStrictEqual(bs.state(t + dt), { left: 0, right: 1 }, String(dt)));
+        lamps = [2, 1]; await bs.poll();
+        assert.deepStrictEqual(bs.state(t), { left: 1, right: 1 });
+        lamps = [0, 0]; await bs.poll();
+        assert.deepStrictEqual(bs.state(t), { left: 0, right: 0 });
     });
     await check('stale: nothing 3 s after the last good reply', async () => {
         lamps = [1, 1]; await bs.poll();

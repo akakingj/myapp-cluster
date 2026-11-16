@@ -18,7 +18,8 @@
  * here is 22 D3 47 (tests: kit/tools/test_cluster_info_blindspot.js).
  *
  *   const bs = startBlindSpot(ctx, log, { want: () => shown });
- *   bs.state(now)   -> { left, right }: 0 nothing, 1 lit (steady), 2 flashing and lit now, 3 flashing and dark now
+ *   bs.state(now)   -> { left, right }: 0 nothing, 1 a car there (the lamp lit, or flashing with the turn signal
+ *                      towards it: one and the same on the HUD, steady)
  *   bs.status()     -> for the app's page
  */
 const { ReadOnlyDiag } = require('./kit/readonly-diag');
@@ -27,7 +28,6 @@ const BDC = 0x40;
 const DID = 0xD347;
 const POLL_MS = 300;        // (mlurker kPollMs)
 const STALE_MS = 3000;      // no good reply this long: nothing shown (kStaleMs)
-const FLASH_MS = 200;       // flashing: 200 ms lit, 200 ms dark, from the moment it began (kFlashMs)
 const WAKE_MS = 10000;      // the link skips a unit after 5 misses in a row: asked again this often
 
 /** A lamp's byte: 0 off, 1 steady, 2 flashing. */
@@ -77,16 +77,10 @@ function startBlindSpot(ctx, log, opts) {
     const timer = opts.manual ? null : setInterval(() => { poll().catch(() => {}); }, POLL_MS);
     if (timer && timer.unref) timer.unref();
 
-    /** Each side now: 0 nothing, 1 lit, 2 flashing and lit, 3 flashing and dark. */
+    /** Each side now: 0 nothing, 1 a car there (the mirror lamp lit or flashing: shown steady, the turn signal or not). */
     function state(tm0) {
         const tm = tm0 === undefined ? now() : tm0;
-        const one = (side) => {
-            if (!want() || !lamps.last || tm - lamps.last >= STALE_MS) return 0;
-            const l = lamps[side];
-            if (l.s === 1) return 1;
-            if (l.s !== 2) return 0;
-            return Math.floor((tm - l.since) / FLASH_MS) % 2 === 0 ? 2 : 3;
-        };
+        const one = (side) => (!want() || !lamps.last || tm - lamps.last >= STALE_MS ? 0 : lamps[side].s ? 1 : 0);
         return { left: one('left'), right: one('right') };
     }
 
@@ -106,4 +100,4 @@ function startBlindSpot(ctx, log, opts) {
     };
 }
 
-module.exports = { startBlindSpot, decode, BDC, DID, POLL_MS, STALE_MS, FLASH_MS };
+module.exports = { startBlindSpot, decode, BDC, DID, POLL_MS, STALE_MS };

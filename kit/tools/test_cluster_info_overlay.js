@@ -299,34 +299,33 @@ class FakeCR extends EventEmitter {
         assert(rar.x - (lar.x + lar.w) >= 150, 'the two arrows well apart: ' + (rar.x - (lar.x + lar.w)) + ' px');
         assert(lar.y >= 100 && rar.x + rar.w <= 676, 'in what a G20 shows');
     });
-    /* the lane change warning (1.6.25: the door mirror lamps from the BDC, blindspot.js): outside each arrow, amber while
-     * the lamp is lit, red as it flashes (2 lit, 3 dark) */
+    /* the lane change warning (1.6.25: the door mirror lamps from the BDC, blindspot.js): outside each arrow, this car
+     * and the other's bonnet (the sign of 1.6.12-1.6.23), steady while a car is there, the turn signal or not */
     let lw = null;
     lv.blindSpot = () => lw || { left: 0, right: 0 };
     ov._lcwTick();
-    check('lane change warning: nothing beside, no sign made', () => assert(!Object.keys(ov.lcw().refs).some((k) => ov.lcw().refs[k])));
+    check('lane change warning: nothing beside, no sign made', () => assert(!ov.lcw().refs.left && !ov.lcw().refs.right));
     lw = { left: 1, right: 0 }; t += 10; ov._lcwTick();
-    const lst = cr.layers.get(ov.lcw().refs.left_steady);
-    check('a car in the left blind spot (lamp lit): the amber sign, outside the left arrow, at Redline\'s place', () => {
+    const lst = cr.layers.get(ov.lcw().refs.left);
+    check('a car on the left: the left sign on, outside the left arrow, at Redline\'s place', () => {
         assert(lst && lst.target === 'hud' && lst.visible && lst.opacity === 1, JSON.stringify(lst));
         assert(lst.x === 200 && lst.y === 104 && lst.x + lst.w <= lar.x, 'x ' + lst.x + ', y ' + lst.y);
-        assert.strictEqual(ov.lcw().shown.left, 'steady');
+        assert(!ov.lcw().shown.right);
     });
-    lw = { left: 1, right: 2 }; t += 10; ov._lcwTick();
-    const rfl = cr.layers.get(ov.lcw().refs.right_flash);
-    check('flashing on the right (the turn signal towards it): the red sign, outside the right arrow', () => {
-        assert(rfl && rfl.visible && rfl.opacity === 1 && rfl.x >= rar.x + rar.w && rfl.x + rfl.w === 600, 'x ' + (rfl && rfl.x));
-    });
-    lw = { left: 1, right: 3 }; t += 10; ov._lcwTick();
-    check('its dark half: off, the left still on', () => assert(!rfl.visible && lst.visible));
     const nL = cr.log.length;
-    t += 10; ov._lcwTick();
-    check('nothing sent while nothing changes', () => assert.strictEqual(cr.log.length, nL));
-    settings.v.blindSpot = 'off'; lw = { left: 1, right: 2 }; t += 10; ov._lcwTick();
+    ind = 'left'; ov._arrowTick(); ov._lcwTick(); t += 400; ov._arrowTick(); ov._lcwTick();
+    check('turn signal toward it: the sign as it was, steady, nothing sent for it', () => assert(lst.visible && lst.opacity === 1 && !cr.log.slice(nL).some((e) => e[0] === 'set' && e[1] === ov.lcw().refs.left)));
+    lw = { left: 0, right: 1 }; t += 10; ov._lcwTick();
+    const rfl = cr.layers.get(ov.lcw().refs.right);
+    check('the car now on the right: left off, right on, outside the right arrow', () => {
+        assert(!lst.visible && rfl && rfl.visible && rfl.x >= rar.x + rar.w && rfl.x + rfl.w === 600, 'x ' + (rfl && rfl.x));
+    });
+    settings.v.blindSpot = 'off'; lw = { left: 1, right: 1 }; t += 10; ov._lcwTick();
     check('setting off: no sign', () => assert(!lst.visible && !rfl.visible));
     settings.v.blindSpot = 'on'; t += 10; ov._lcwTick();
     lw = null; t += 10; ov._lcwTick();
-    check('the lamps off: no sign', () => assert(!lst.visible && !rfl.visible));
+    check('no car: no sign', () => assert(!lst.visible && !rfl.visible));
+    ind = 'left'; t += 1300; ov._arrowTick(); t += 10; ov._arrowTick();
     lw = { left: 1, right: 0 };
     settings.v.show = 'off'; t += 10; ov._arrowTick(); ov._lcwTick(); t += 1300; ov._arrowTick();
     check('Show the panel Off: no arrows and no sign either (one switch)', () => assert(!ov.arrows().shown && !lst.visible));

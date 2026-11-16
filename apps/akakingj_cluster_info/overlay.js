@@ -51,10 +51,10 @@ const SIGNALS_TOP = 104, SIGNALS_LEFT = 200, SIGNALS_SPAN = 400;    // Redline's
 const ARROW = { w: 30, h: 24, y: SIGNALS_TOP + 10, left: SIGNALS_LEFT + 40, right: SIGNALS_LEFT + SIGNALS_SPAN - 40 - 30 };   // the cluster's proportions (5:4); 40 px in from the tach's ends
 const INDICATOR_GREEN = '#22d046';   // the cluster's indicator green
 // the lane change warning (1.6.25: the door mirror lamps, read from the BDC: blindspot.js) outside each arrow, in the
-// 40 px left there: a car seen from above, amber while a car is in the blind spot (the lamp lit), red flashing as the
-// lamp flashes (the turn signal on towards it)
+// 40 px left there, while a car is beside or coming up behind on that side (the lamp lit or flashing, turn signal or
+// not): the sign of 1.6.12-1.6.23, this car in yellow and the other's bonnet in red behind it, outward
 const LCW = { w: 34, h: 44, y: SIGNALS_TOP, left: SIGNALS_LEFT, right: SIGNALS_LEFT + SIGNALS_SPAN - 34 };
-const LCW_STEADY = '#ff9a1a', LCW_FLASH = '#ff2a1a';
+const LCW_SELF = '#ffd200', LCW_OTHER = '#ff2a1a';
 const EXTRA_COL = 1.0;            // an extra value's column, of the panel's height (fits "188°")             // an extra value's column, of the meter's base width
 const NIGHT_DIM = 0.6;            // the HUD extras at night, of their brightness by day
 // the cluster's own arrow, measured over 39 flashes of a video (G05): 640 ms a flash, lit 335 of them. By the head
@@ -261,24 +261,33 @@ function drawPower(cv, t, pw, outMax, inMax, x, w, h, L, bar) {
 
 /**
  * A car seen from above, nose up, its box at x, y, w x h, in col: the body with its mirrors, the windscreen, side and
- * rear windows in a dark shade of col (dark on the HUD reads as glass).
+ * rear windows in a dark shade of col (dark on the HUD reads as glass). What falls off the canvas is cut off.
  */
 function drawCar(cv, x, y, w, h, col) {
     const rgb = [1, 3, 5].map((i) => parseInt(col.slice(i, i + 2), 16));
     const dark = '#' + rgb.map((v) => ('0' + Math.round(v * 0.22).toString(16)).slice(-2)).join('');
     const X = (f) => x + w * f, Y = (f) => y + h * f;
-    cv.roundRect(X(0.12), Y(0.02), w * 0.76, h * 0.96, w * 0.30, col);                   // the body
-    cv.fillRect(x, Y(0.30), w * 0.14, h * 0.08, col);                                     // the mirrors
-    cv.fillRect(X(0.86), Y(0.30), w * 0.14, h * 0.08, col);
-    cv.convex([[X(0.22), Y(0.30)], [X(0.78), Y(0.30)], [X(0.70), Y(0.43)], [X(0.30), Y(0.43)]], dark);   // windscreen
-    cv.convex([[X(0.30), Y(0.74)], [X(0.70), Y(0.74)], [X(0.76), Y(0.84)], [X(0.24), Y(0.84)]], dark);   // rear window
-    cv.fillRect(X(0.20), Y(0.47), w * 0.05, h * 0.22, dark);                              // the side windows
-    cv.fillRect(X(0.75), Y(0.47), w * 0.05, h * 0.22, dark);
+    const rect = (x0, y0, ww, hh, c) => { const a = Math.max(0, y0), b = Math.min(cv.h, y0 + hh); if (b > a) cv.fillRect(x0, a, ww, b - a, c); };
+    // the body: its rounded nose, down to its tail or to the canvas' foot
+    cv.roundRect(X(0.12), Y(0.02), w * 0.76, Math.min(h * 0.96, cv.h - Y(0.02) + w * 0.30), w * 0.30, col);
+    rect(x, Y(0.30), w * 0.14, h * 0.08, col);                                       // the mirrors
+    rect(X(0.86), Y(0.30), w * 0.14, h * 0.08, col);
+    if (Y(0.43) <= cv.h) cv.convex([[X(0.22), Y(0.30)], [X(0.78), Y(0.30)], [X(0.70), Y(0.43)], [X(0.30), Y(0.43)]], dark);   // windscreen
+    if (Y(0.84) <= cv.h) cv.convex([[X(0.30), Y(0.74)], [X(0.70), Y(0.74)], [X(0.76), Y(0.84)], [X(0.24), Y(0.84)]], dark);   // rear window
+    rect(X(0.20), Y(0.47), w * 0.05, h * 0.22, dark);                                // the side windows
+    rect(X(0.75), Y(0.47), w * 0.05, h * 0.22, dark);
 }
-/** The lane change sign: the car, in col, on a transparent ground. */
-function drawLaneSign(cv, col) {
+/**
+ * The lane change warning's sign for one side, on a transparent ground: this car (yellow) ahead, and the one coming up
+ * in the lane beside (red) behind it and outward - to the left on the left side, to the right on the right - only its
+ * bonnet showing, cut off at the sign's foot.
+ */
+function drawLaneSign(cv, side) {
     cv.clear([0, 0, 0, 0]);
-    drawCar(cv, 0, 0, cv.w, cv.h, col);
+    const cw = Math.round(cv.w * 0.50), ch = Math.round(cv.h * 0.70);
+    const inner = side === 'left' ? cv.w - cw : 0, outer = side === 'left' ? 0 : cv.w - cw;
+    drawCar(cv, inner, 0, cw, ch, LCW_SELF);
+    drawCar(cv, outer, cv.h - Math.round(ch * 0.48), cw, ch, LCW_OTHER);   // its front half: bonnet, mirrors, windscreen
 }
 
 /**
@@ -578,34 +587,31 @@ function startOverlay(ctx, lv, opts) {
     }
     const arrowTimer = si(arrowTick, ARROW_TICK_MS);
 
-    /* ---------- the lane change warning on the HUD (lv.blindSpot(): { left, right }: 0 none, 1 lit, 2 / 3 flashing
-     * lit / dark; blindspot.js) ---------- */
+    /* ---------- the lane change warning on the HUD (lv.blindSpot(): { left, right }, 0 none, else a car there:
+     * blindspot.js) ---------- */
     const lcwShown = {};
     const lcwOn = () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !(lv.parked && lv.parked())
         && typeof lv.blindSpot === 'function' && !hudTaken();
-    function lcwLayer(side, kind) {
-        const k = side + '_' + kind;
-        if (lcwRefs[k] !== undefined || !client()) return lcwRefs[k];
+    function lcwLayer(side) {
+        if (lcwRefs[side] !== undefined || !client()) return lcwRefs[side];
         const c = new Canvas(LCW.w, LCW.h);
-        drawLaneSign(c, kind === 'flash' ? LCW_FLASH : LCW_STEADY);
+        drawLaneSign(c, side);
         const ref = cr.image({ target: 'hud', klass: 'overlay', z: 12, x: LCW[side], y: LCW.y + shiftNow, w: LCW.w, h: LCW.h, iw: LCW.w, ih: LCW.h, visible: false, opacity: 0 });
         if (ref) cr.pixels(ref, null, Buffer.from(c.d.buffer, c.d.byteOffset, c.d.length));
-        lcwRefs[k] = ref || null;
-        return lcwRefs[k];
+        lcwRefs[side] = ref || null;
+        return lcwRefs[side];
     }
-    /** One side's sign: 'off', 'steady' or 'flash' (lit); only a change goes to the renderer. */
-    function lcwSet(side, kind) {
-        if ((lcwShown[side] || 'off') === kind) return;
-        ['steady', 'flash'].forEach((kk) => {
-            const on = kk === kind;
-            const ref = on || lcwRefs[side + '_' + kk] ? lcwLayer(side, kk) : null;
-            if (ref && cr) cr.set(ref, { visible: on, opacity: on ? hudOpacity() : 0 });
-        });
-        lcwShown[side] = kind;
+    /** One side's sign on or off; only a change goes to the renderer. */
+    function lcwSet(side, on) {
+        if (!!lcwShown[side] === on) return;
+        const ref = on || lcwRefs[side] ? lcwLayer(side) : null;
+        if ((on && !ref) || !cr) return;
+        if (ref) cr.set(ref, { visible: on, opacity: on ? hudOpacity() : 0 });
+        lcwShown[side] = on;
     }
     function lcwTick() {
         const w = lcwOn() ? lv.blindSpot() : null;
-        ['left', 'right'].forEach((side) => { const v = w ? w[side] : 0; lcwSet(side, v === 1 ? 'steady' : v === 2 ? 'flash' : 'off'); });
+        ['left', 'right'].forEach((side) => lcwSet(side, !!(w && w[side])));
     }
     const lcwTimer = si(lcwTick, ARROW_TICK_MS);
 
@@ -616,7 +622,7 @@ function startOverlay(ctx, lv, opts) {
         shown: () => visible,
         /** The Waze map as status.json says: { showing, target, pct }. */
         map: () => Object.assign({}, map),
-        stop() { ci(poll); ci(draw); ci(arrowTimer); ci(lcwTimer); if (watcher) watcher.close(); hide(); hideArrows(); ['left', 'right'].forEach((d) => lcwSet(d, 'off')); if (cr) cr.close(); },
+        stop() { ci(poll); ci(draw); ci(arrowTimer); ci(lcwTimer); if (watcher) watcher.close(); hide(); hideArrows(); ['left', 'right'].forEach((d) => lcwSet(d, false)); if (cr) cr.close(); },
         /** For the diagnostics: the renderer link and the Waze map as status.json says. */
         status: () => ({
             renderer: cr ? (cr.ready ? 'connected' : 'connecting') : 'not needed yet',

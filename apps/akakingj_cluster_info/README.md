@@ -20,8 +20,9 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   holds the HUD, Cluster Info's step aside and Redline's show. (The lane change warning beside them, 1.6.12 to 1.6.23,
   read the driving assistant's lane change service, which a G20's and a G21's head unit doesn't have.)
 - Lane change warning on the HUD (1.6.25, Settings > Lane change warning on the HUD, on by default): outside each
-  arrow a car seen from above, amber while the door mirror's lamp on that side is lit (a car in the blind spot), red
-  and flashing as the lamp flashes (the turn signal on towards it). The lamps are read from the body controller (BDC,
+  arrow the sign of 1.6.12-1.6.23 (this car in yellow, the other's bonnet in red behind it, outward), steady while the
+  door mirror's lamp on that side is lit or flashing (a car in the blind spot, the turn signal or not), gone with it
+  (1.6.26). The lamps are read from the body controller (BDC,
   0x40), identifier D347, every 300 ms while the panel is on and the car not locked and left, over the kit's read-only
   diagnostic link (only 22 D3 47 is ever sent: the same identifier written switches the lamps). Gone 3 s after the
   last answer. After mlurker's HUD signals (mlurker/bmw-idrive7-apps, found on a G05), written anew; whether a G20's
