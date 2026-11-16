@@ -17,7 +17,7 @@ const path = require('path');
 const fs = require('fs');
 const { FakeClient } = require('./scene');   // (also points the apps' './kit/' at kit/runtime)
 
-const DEMO_VERSION = '2.5.1';
+const DEMO_VERSION = '2.5.2';
 const ROOT = path.join(__dirname, '..');
 const APPS = { layouts: path.join(ROOT, 'apps', 'akakingj_cluster_layouts'), centre: path.join(ROOT, 'apps', 'akakingj_cluster_centre'), info: path.join(ROOT, 'apps', 'akakingj_cluster_info') };
 const argv = process.argv.slice(2);
@@ -90,6 +90,19 @@ function startLayouts(set) {
         tankLitres: num(set, 'tankLitres', 69),
         powerUnit: set.powerUnit, infoA: set.infoA, infoB: set.infoB, infoMain: set.infoMain, infoLow: set.infoLow, gaugeSpeed: set.gaugeSpeed, gaugeRpm: set.gaugeRpm, leftDial: set.leftDial, gScale: set.gScale, gFlipLat: set.gFlipLat, gFlipLong: set.gFlipLong, places: {}, tempGauge: set.tempGauge, tempTone: set.tempTone, shiftWarn: set.shiftWarn, amberRpm: set.amberRpm, shiftBefore: set.shiftBefore, coldGuard: set.coldGuard, coldLimit: set.coldLimit, warmOil: set.warmOil, hotOil: set.hotOil, hotCoolant: set.hotCoolant, hotGearbox: set.hotGearbox,
     };
+    // each layout's own readouts and places, as main.js options(): Settings > slotsBy[layout] (set on the MGU screen's
+    // page: a readout tapped there), else the Settings' value; the places as designed unless set there (demo 2.5.2:
+    // before, the common Settings' alone, so a readout set for one layout on that screen did nothing here)
+    const L = req('layouts', 'layouts'), items = manifest('layouts').settings || [];
+    const itemOf = (k) => items.find((x) => x.key === k);
+    const own = () => { const by = set.slotsBy; return (by && typeof by === 'object' && by[layout.id]) || {}; };
+    const slotsNow = () => {
+        L.SLOT_KEYS.forEach((k) => { o[k] = L.slotValue((x) => set[x], itemOf, layout.id, k); });
+        const pl = {}, mine = own();
+        L.placesFor(layout.id).forEach((q) => { if (typeof mine[q.key] === 'string') pl[q.key] = mine[q.key]; });
+        o.places = pl;
+    };
+    slotsNow();
     const st = { data: {}, client: new FakeClient() };
     st.look = () => lookNow(set.look, st.data);
     st.engine = startCluster({
@@ -102,7 +115,7 @@ function startLayouts(set) {
         st.data = Object.assign({}, data, { dap: extra.dap && dap && dap.DEMO ? dap.DEMO : null, vehicle: o.vehicle });
         // (the layout for the drive mode: Layout in Sport / in ECO PRO)
         const want = byId(layoutFor((k) => set[k], st.data));
-        if (want !== layout) { layout = want; st.engine.rebuild(); }
+        if (want !== layout) { layout = want; slotsNow(); st.engine.rebuild(); }
         const look = st.look();
         if (look !== st.lastLook) { st.lastLook = look; st.engine.recolour(); }
         st.engine._tick();
