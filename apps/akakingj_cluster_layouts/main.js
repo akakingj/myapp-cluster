@@ -279,12 +279,15 @@ mgu.run({
         const ownSlot = (id, k) => { const by = settings.get('slotsBy'); return by && by[id] && by[id][k] !== undefined ? by[id][k] : undefined; };
         /** a readout setting's item, or a layout's own place's (its kind's values, 'auto': as designed) */
         const itemFor = (id, k) => placeItem(id, k, ctx.spec) || itemOf(k);
+        /** a readout's name on the page: the layout's own where its place differs (layout.slotLabels: Old M's and JDM 1's
+         *  main readout is above the speed, 0.37.3), else the setting's */
+        const slotLabel = (id, k) => { const own = byId(id).slotLabels; return (own && own[k]) || ((itemFor(id, k) || {}).label || k); };
         const optLabel = (k, v, id) => { const it = itemFor(id, k), o = it && (it.options || []).find((x) => x[0] === v); return o ? o[1] : String(v); };
         const openSlot = (id, k) => {
             const it = itemFor(id, k), cur = ownSlot(id, k), place = !!placeItem(id, k, ctx.spec);
             // (a place: its own values, the first back to as designed; a readout: the Settings' value first)
             const opts = place ? it.options.map((x) => (x[0] === 'auto' ? ['', x[1]] : x)) : [['', 'Same as in Settings']].concat(it.options);
-            const sheet = Sheet && menu.pickSheet(Sheet, byId(id).title, it.label, opts, cur === undefined ? '' : cur, (v) => setSlot(id, k, v));
+            const sheet = Sheet && menu.pickSheet(Sheet, byId(id).title, slotLabel(id, k), opts, cur === undefined ? '' : cur, (v) => setSlot(id, k, v));
             // (the kit's sheet is ctx.sheet - mgu.js; 0.29.0-0.37.0 asked ui.sheet, which the kit has not, so on the car a
             // tap only stepped to the next value: 0.37.1 opens the list. ui.sheet stays for the tests' stand-in)
             const showSheet = typeof ctx.sheet === 'function' ? ctx.sheet : ui.sheet;
@@ -337,7 +340,7 @@ mgu.run({
             const COLS = keys.length <= 6 ? 2 : keys.length <= 9 ? 3 : 4, CW = (RW - 12 * (COLS - 1)) / COLS, CH = 48;
             keys.forEach((k, i) => {
                 const x = RX + (i % COLS) * (CW + 12), y = 96 + Math.floor(i / COLS) * (CH + 8), place = !!placeItem(shownId, k, ctx.spec);
-                const own = ownSlot(shownId, k), v = place ? (own === undefined ? 'auto' : own) : slot(k, shownId), lbl = String(tr((itemFor(shownId, k) || {}).label || k)).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M|Old M|ID6 M)\)$/, '');
+                const own = ownSlot(shownId, k), v = place ? (own === undefined ? 'auto' : own) : slot(k, shownId), lbl = String(tr(slotLabel(shownId, k))).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M|Old M|ID6 M)\)$/, '');
                 cv.roundRect(x, y, CW, CH, 10, withAlpha('#ffffff', 0.07));
                 if (own !== undefined) cv.roundRect(x, y, 5, CH, 2, acc);
                 const common = own === undefined && !place && COLS === 2, vs = COLS > 2 ? 16 : 18;
