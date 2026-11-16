@@ -88,7 +88,7 @@ const gearC = (t, d) => ({ color: [C.gearText(d) === 'R' ? t.red : t.text, 1], g
 const powerC = (o) => (t, d) => (C.engineFocus(o) ? white(t) : { color: [C.isNum(d.kw) && d.kw < -0.3 ? t.regen : t.ev, 1], glow: [t.ev, 0.15] });
 /* the tiles' numbers alone (their units in the labels: a unit beside a big number didn't fit a tile) */
 const boostNum = (o) => (d) => {
-    if (C.engineFocus(o)) return C.timingText(d);
+    if (C.engineFocus(o)) return C.focus.charge(o)(d);   // (the timing; a diesel's intake air)
     if (d.engineOn === false) return 'OFF';
     if (!C.isNum(d.boostActual)) return '--';
     return C.pressNum(o, d.boostActual);
@@ -110,7 +110,7 @@ module.exports = {
 
     pieces(o) {
         const engine = C.engineFocus(o);
-        const boostLbl = engine ? 'TIMING' : 'BOOST ' + C.pressLabel(o).toUpperCase(), powerLbl = engine ? 'TORQUE ' + C.torqueUnit(o).toUpperCase() : 'POWER KW';
+        const boostLbl = engine ? C.focus.chargeLabel(o) : 'BOOST ' + C.pressLabel(o).toUpperCase(), powerLbl = engine ? 'TORQUE ' + C.torqueUnit(o).toUpperCase() : 'POWER KW';
         const right = () => [
             ...C.reading('fuel', 1672, 292, 216, 44, (d) => C.distText(o, d.frange), 'FUEL RANGE', white, lbl),
             ...C.reading('elec', 1672, 400, 216, 44, C.focus.range(o), C.focus.rangeLabel(o), engine ? white : (t) => ({ color: [t.ev, 1], glow: [t.ev, 0.2] }), lbl),

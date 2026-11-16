@@ -2705,5 +2705,7 @@
   "Left box: bottom (tyres)": "왼쪽 상자: 아래 (타이어)",
   "Under the gear: left": "기어 아래: 왼쪽",
   "Under the gear: right": "기어 아래: 오른쪽",
-  "Analog clock": "아날로그 시계"
+  "Analog clock": "아날로그 시계",
+  "Petrol (boost, timing, torque, fuel rail)": "가솔린 (부스트, 점화 시기, 토크, 연료 레일)",
+  "Diesel (boost, torque, intake air; no ignition timing)": "디젤 (부스트, 토크, 흡기 온도 · 점화 시기 없음)"
 }

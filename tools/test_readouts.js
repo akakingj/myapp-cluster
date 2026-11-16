@@ -83,7 +83,7 @@ check('the engine unit reads what the readouts show', () => {
 check('the settings offer every readout, and the defaults are this build\'s', () => {
     const s = (k) => SPEC.settings.find((x) => x.key === k);
     ['infoA', 'infoB', 'infoMain'].forEach((k) => Object.keys(C.READOUTS).forEach((r) => assert(s(k).options.some((x) => x[0] === r), k + ' ' + r)));
-    const want = { vehicle: 'ice', tankLitres: 59, speedUnit: 'kmh', tempUnit: 'c', torqueUnit: 'kgm', pressUnit: 'psi', powerUnit: 'hp', timeZone: 'utc+9', infoA: 'iat', infoB: 'gearbox', infoMain: 'torque', redline: 6000, rpmMax: 7000 };
+    const want = { vehicle: 'petrol', tankLitres: 59, speedUnit: 'kmh', tempUnit: 'c', torqueUnit: 'kgm', pressUnit: 'psi', powerUnit: 'hp', timeZone: 'utc+9', infoA: 'iat', infoB: 'gearbox', infoMain: 'torque', redline: 6000, rpmMax: 7000 };
     Object.keys(want).forEach((k) => assert.strictEqual(s(k).default, want[k], k));
     // (a number setting is a drop-down on the car: its steps, the default among them)
     SPEC.settings.filter((x) => x.type === 'number').forEach((x) => assert(Array.isArray(x.steps) && x.steps.indexOf(x.default) >= 0, x.key));
@@ -250,3 +250,17 @@ check('too hot: Settings > Too hot (the Car profile\'s) for the colours, the sma
     });
 });
 console.log(n + ' passed');
+
+/* Settings > Vehicle: Diesel (0.35.7): no ignition timing read or shown; the intake air in its place */
+(() => {
+    const assert = require('assert');
+    const C2 = require('../apps/akakingj_cluster_layouts/layout_common');
+    const base = { vehicle: 'ice', tempUnit: 'c', speedUnit: 'kmh' };
+    const d = { iat: 31, timing: 12.5, boostActual: 0.8, engineOn: true };
+    assert(C2.focus.needs(Object.assign({ fuel: 'diesel' }, base)).indexOf('timing') < 0, 'a diesel reads no timing');
+    assert(C2.focus.needs(Object.assign({ fuel: 'petrol' }, base)).indexOf('timing') >= 0, 'a petrol car reads the timing');
+    assert(C2.focus.chargeLabel(Object.assign({ fuel: 'diesel' }, base)) === 'INTAKE');
+    assert(/31/.test(C2.focus.charge(Object.assign({ fuel: 'diesel' }, base))(d)));
+    assert(C2.focus.chargeLabel(Object.assign({ fuel: 'petrol' }, base)) === 'TIMING');
+    console.log('ok   diesel: the intake air in the timing\'s place, no timing read');
+})();

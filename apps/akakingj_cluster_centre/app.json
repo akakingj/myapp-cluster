@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_centre",
   "title": "AK Cluster Centre",
   "description": "Pages of engine, gearbox and eDrive data, warm-up, turbo cool-down, a shift light and a 0-60 timer in the centre of the factory cluster, drawn by the cluster itself",
-  "version": "0.9.18",
+  "version": "0.9.19",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCC",
@@ -2334,7 +2334,7 @@
       "key": "vehicle",
       "label": "Vehicle",
       "type": "choice",
-      "default": "ice",
+      "default": "petrol",
       "options": [
         [
           "auto",
@@ -2345,8 +2345,12 @@
           "Plug-in hybrid (charge, electric range, battery power)"
         ],
         [
-          "ice",
-          "Petrol or diesel (boost, timing, torque, fuel rail)"
+          "petrol",
+          "Petrol (boost, timing, torque, fuel rail)"
+        ],
+        [
+          "diesel",
+          "Diesel (boost, torque, intake air; no ignition timing)"
         ]
       ],
       "section": "Car"

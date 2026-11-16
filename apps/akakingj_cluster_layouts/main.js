@@ -66,6 +66,8 @@ mgu.run({
         settings.onChange((k) => { if (k === 'timeZone' || k === 'clock') clockNow(); });
         // Three pods and Freedom are gone (akakingj's build): a layout saved as either is Arc tach now
         // layouts taken out: a saved one moves to the nearest kept (0.30.0: Digital round, Modern wide and Digital dash)
+        // (Settings > Vehicle: 'ice', petrol or diesel, became Petrol and Diesel apart in 0.35.7)
+        if (settings.get('vehicle') === 'ice') settings.set('vehicle', 'petrol');
         const GONE = { three_pods: 'arc_tach', freedom: 'arc_tach', digital_round: 'analog_sport', modern_wide: 'pulse', digital_dash: 'track' };
         ['layout', 'layoutSport', 'layoutEco'].forEach((k) => { if (GONE[settings.get(k)]) settings.set(k, GONE[settings.get(k)]); });
         const showing = () => settings.get('show') === 'on';
@@ -104,6 +106,7 @@ mgu.run({
             // are gone with the full-screen form; layouts.js holds them so)
             cluster: 'standard', bottomStrip: 'stock', boxBezel: false,
             vehicle: D.vehicle().vehicle,      // set, or found from the car (Auto)
+            fuel: D.vehicle().fuel,            // (Settings > Vehicle: Diesel, else petrol: no ignition timing on a diesel)
         });
         /** Live: demo data on, or the car's signals answer (a parked car sends nothing new for minutes, so a
          * provider that is there counts), or a value came in the last STALE_MS. */
@@ -395,7 +398,7 @@ mgu.run({
                     y += 6;
                 });
                 const vh = D.vehicle();
-                cv.text('Vehicle: ' + (vh.vehicle === 'ice' ? 'petrol or diesel' : 'plug-in hybrid') + ' (' + vh.how + (vh.how === 'set' ? '' : ': ' + vh.why) + ')', 48, y + 34, 18, t.text, { font: 'bold', literal: true });
+                cv.text('Vehicle: ' + (vh.vehicle === 'ice' ? (vh.fuel === 'diesel' ? 'diesel' : 'petrol') : 'plug-in hybrid') + ' (' + vh.how + (vh.how === 'set' ? '' : ': ' + vh.why) + ')', 48, y + 34, 18, t.text, { font: 'bold', literal: true });
                 cv.text('Read as: ' + (d.driveMode || '-') + ', steering ' + (isNum(d.steer) ? Math.round(d.steer) + '°' : '--') + ', yaw ' + (isNum(d.yaw) ? d.yaw.toFixed(1) : '--') + ', fuel ' + (isNum(d.frange) ? Math.round(d.frange) : '--') + ', electric ' + (isNum(d.erange) ? Math.round(d.erange) : '--'), 48, y + 6, 18, t.text, { font: 'bold', literal: true });
                 return ui.image('MAIN_GFX', cv);
             }

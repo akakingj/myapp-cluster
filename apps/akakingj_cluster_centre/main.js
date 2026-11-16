@@ -61,6 +61,8 @@ const FIND = [
 mgu.run({
     async start(ctx) {
         const { ui, settings, log } = ctx;
+        // (Settings > Vehicle: 'ice', petrol or diesel, became Petrol and Diesel apart in 0.9.19)
+        if (settings.get('vehicle') === 'ice') settings.set('vehicle', 'petrol');
         // the clock's zone and format (clock.js: the unit runs its apps on UTC)
         const clockNow = () => { clock.setZone(settings.get('timeZone')); clock.setTwelve(settings.get('clock') !== '24'); };
         clockNow();

@@ -242,6 +242,8 @@ const erangeText = (o, d) => (isNum(d.erange) && d.erangeEst ? '~' : '') + distT
  * -> boost against its target. Each helper takes o and gives the reading for the choice.
  */
 const engineFocus = (o) => !!o && (o.vehicle === 'ice' || o.focus === 'engine');
+/** Settings > Vehicle: Diesel (o.fuel): no ignition timing to read */
+const diesel = (o) => !!o && o.fuel === 'diesel';
 /**
  * Pressures (boost and fuel rail, bar in the data) in Settings > Pressure unit: psi, bar or kPa, or (the
  * default, 'auto') with the speed unit as before: psi with mph, bar with km/h. Only the figures change: every
@@ -470,15 +472,16 @@ const focus = {
     /** 0..1 for the main readout's bar (the torque to 450 Nm by default), or none (the eDrive layouts draw their own centre-zero bar) */
     mainFrac: (o) => { if (mainOff(o)) return () => 0; const r = readoutOf(mainKey(o)); return (d) => Math.max(0, Math.min(1, r.frac(d) || 0)); },
     torqueFrac: (d) => (isNum(d.torque) ? Math.max(0, Math.min(1, d.torque / 450)) : 0),
-    charge: (o) => (engineFocus(o) ? timingText : socText),
-    chargeLabel: (o) => (engineFocus(o) ? 'TIMING' : 'CHARGE'),
+    // (a diesel has no ignition timing: the intake air temperature in its place, Settings > Vehicle: Diesel)
+    charge: (o) => (!engineFocus(o) ? socText : diesel(o) ? (d) => tempOf('iat')(o, d) : timingText),
+    chargeLabel: (o) => (!engineFocus(o) ? 'CHARGE' : diesel(o) ? 'INTAKE' : 'TIMING'),
     range: (o) => (engineFocus(o) ? (d) => boostText(o, d) : (d) => erangeText(o, d)),
     rangeLabel: (o) => (engineFocus(o) ? 'BOOST' : 'ELECTRIC'),
     /** the electric range and charge on one line, or the boost and timing */
-    both: (o) => (engineFocus(o) ? (d) => boostText(o, d) + '  ' + timingText(d) : (d) => erangeText(o, d) + '  ' + socText(d)),
+    both: (o) => (engineFocus(o) ? (d) => boostText(o, d) + '  ' + focus.charge(o)(d) : (d) => erangeText(o, d) + '  ' + socText(d)),
     bar: (o) => (engineFocus(o) ? boostFrac : (d) => (isNum(d.soc) ? d.soc / 100 : 0)),
     /** what the engine readings need read from the engine unit */
-    needs: (o) => (engineFocus(o) ? ['boostActual', 'boostTarget', 'timing', 'hpfp'].concat(...[o.infoA || 'iat', o.infoB || 'gearbox', mainKey(o), o.infoLow || 'coolant'].map((k) => (readoutOf(k) && readoutOf(k).needs) || []),
+    needs: (o) => (engineFocus(o) ? ['boostActual', 'boostTarget', diesel(o) ? 'iat' : 'timing', 'hpfp'].concat(...[o.infoA || 'iat', o.infoB || 'gearbox', mainKey(o), o.infoLow || 'coolant'].map((k) => (readoutOf(k) && readoutOf(k).needs) || []),
         ...[o.gaugeSpeed, o.gaugeRpm].map((k) => (GAUGES[k] && GAUGES[k].needs) || [])) : []).concat(
         // (and what a layout's own places show: set on the page)
         ...Object.keys((o && o.places) || {}).map((k) => { const v = o.places[k], r = READOUTS[v] || GAUGES[v]; return (r && r.needs) || []; })),

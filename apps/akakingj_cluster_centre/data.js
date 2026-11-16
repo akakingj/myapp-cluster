@@ -164,7 +164,11 @@ function startData(ctx, opts) {
     const detected = { vehicle: null, why: 'not yet known' };
     let dmeAnswered = false;
     const detect = (v, why) => { if (detected.vehicle !== v) { detected.vehicle = v; detected.why = why; log.info('vehicle: ' + v + ' (' + why + ')'); } };
-    const vehicleNow = () => (setting('vehicle') === 'ice' || setting('vehicle') === 'phev' ? setting('vehicle') : detected.vehicle || 'phev');
+    /* Settings > Vehicle: Plug-in hybrid, Petrol, Diesel (0.35.7; 'ice', the petrol-or-diesel of before, as Petrol) or Auto */
+    const setVehicle = () => { const v = setting('vehicle'); return v === 'petrol' || v === 'diesel' || v === 'ice' ? 'ice' : v === 'phev' ? 'phev' : null; };
+    const vehicleNow = () => setVehicle() || detected.vehicle || 'phev';
+    /** the engine's fuel: Diesel as set, else petrol (Auto: the car's engine unit is read as a petrol one) */
+    const fuelNow = () => (setting('vehicle') === 'diesel' ? 'diesel' : 'petrol');
     const ice = () => vehicleNow() === 'ice';
     const fresh_ = () => { for (const f of freshFns) { try { f(); } catch (e) { /* the listener's own */ } } };
     const put = (k, v) => { if (isNum(v)) { const ch = x[k] !== v; x[k] = v; x.at[k] = Date.now(); if (ch) fresh_(); } };
@@ -194,7 +198,7 @@ function startData(ctx, opts) {
         }
         if (!/Switch/.test(name)) return;
         // a plug-in hybrid's mode names identify one
-        if (setting('vehicle') !== 'ice' && /PHEV_/.test(JSON.stringify(v))) detect('phev', 'its drive modes are a plug-in hybrid\'s');
+        if (setVehicle() !== 'ice' && /PHEV_/.test(JSON.stringify(v))) detect('phev', 'its drive modes are a plug-in hybrid\'s');
         const m = modeOf(v, ice());
         // the HMI's switch field is the one the stock cluster names; the other only while that one says nothing
         const fromHmi = /HMI/.test(name);
@@ -456,7 +460,7 @@ function startData(ctx, opts) {
     const fastKw = () => setting('kwFast') !== 'off';
     let shownFor = 0;
     const vehicleTimer = setInterval(() => {
-        if (setting('vehicle') === 'ice' || setting('vehicle') === 'phev') return;
+        if (setVehicle()) return;
         const p = providers.readings();
         if (providers.powerShared() || isNum(p.soc)) return detect('phev', 'eDrive Live shares its battery readings');
         if (fresh('carErange', 120000) && x.carErange > 0) return detect('phev', 'the car gives an electric range');
@@ -530,8 +534,8 @@ function startData(ctx, opts) {
         status: () => Object.assign({ car: awake.why() + (awake.on() ? '' : ' - nothing asked of the car'), diag: link.available ? 'up' : 'down', providers: providers.list().join(', ') || 'none', raw, kwFit: fuse.fit(),
             // which candidate answered for each engine-unit reading ('5814', 'OBD 49' ...), for the app's page
             dme: Object.keys(rd.pick).reduce((m, k) => { const c = (dme[k === 'boostActual' || k === 'boostTarget' ? k : k] || [])[rd.pick[k]]; if (c) m[k] = c.obd ? 'OBD ' + String(c.obd).toUpperCase() : c.did; return m; }, {}) }, status),
-        /** The vehicle in use: { vehicle 'phev' | 'ice', how: 'set' | 'found' | 'assumed', why }. */
-        vehicle: () => ({ vehicle: vehicleNow(), how: setting('vehicle') === 'ice' || setting('vehicle') === 'phev' ? 'set' : detected.vehicle ? 'found' : 'assumed', why: detected.why }),
+        /** The vehicle in use: { vehicle 'phev' | 'ice', fuel 'petrol' | 'diesel' (ice), how: 'set' | 'found' | 'assumed', why }. */
+        vehicle: () => ({ vehicle: vehicleNow(), fuel: vehicleNow() === 'ice' ? fuelNow() : null, how: setVehicle() ? 'set' : detected.vehicle ? 'found' : 'assumed', why: detected.why }),
         /** fn() on each new reading (the car's speed and rpm samples, every changed reading). */
         onFresh(fn) { freshFns.push(fn); },
         /** The car's state (kit/awake.js): { on, parked, why }. */
