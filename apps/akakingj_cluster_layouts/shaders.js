@@ -1742,7 +1742,7 @@ void main() {
  * JDM 2 (layout_jdm2.js), its parts in one program, u_mode picking which: an original drawing after the idea of a
  * Japanese grand tourer's digital cluster.
  *   0  the background: a dark twill weave (carbon fibre), continuous across layers (u_origin: the layer's place)
- *   1  the G meter: a big round window in a thin chrome ring, the meter in its middle (0.46 R: an outer and a half
+ *   1  the G meter: a big round window in a thin chrome ring, the meter in its middle (0.6 R: an outer and a half
  *      ring, a cross past them, a small ring at the centre), the dot at u_g (screen x, y, of the outer ring)
  *   2  a disc for the gear: a chrome ring round a glossy disc of u_disc
  *   3  the tach: a chrome bezel, a broad band of u_band along the sweep with the numerals in it (below 0 u_regen: a
@@ -1869,7 +1869,7 @@ void main() {
     acc = over(acc, chrome(d), span(r / px, (1.0 - bw) / px, 1.0 / px));
     acc = over(acc, vec3(0.0), span(r / px, (1.0 - bw - 0.012) / px, (1.0 - bw) / px) * 0.85);
     if (u_mode < 1.5) {
-        float gr = 0.46;
+        float gr = 0.6;     // (0.37.2: the meter larger in its window, was 0.46)
         float ring = max(span(r / px, gr / px - 1.3, gr / px + 1.3), span(r / px, gr * 0.5 / px - 1.0, gr * 0.5 / px + 1.0));
         ring = max(ring, span(r / px, 0.05 / px - 0.9, 0.05 / px + 0.9));
         float cross = max(span(d.x, -1.0, 1.0), span(d.y, -1.0, 1.0)) * step(r, gr + 0.07) * step(0.05, r);
@@ -1879,8 +1879,8 @@ void main() {
         if (length(g) > 1.12) g = g / length(g) * 1.12;
         vec2 dc = c + g * gr * R;
         float dd = length(p - dc) / R;
-        acc = over(acc, u_dot, exp(-dd * dd / 0.004) * 0.55);
-        acc = over(acc, mix(u_dot, vec3(1.0), 0.25 * clamp(1.0 - dd / 0.03, 0.0, 1.0)), clamp((0.034 - dd) / px + 0.5, 0.0, 1.0));
+        acc = over(acc, u_dot, exp(-dd * dd / 0.006) * 0.55);
+        acc = over(acc, mix(u_dot, vec3(1.0), 0.25 * clamp(1.0 - dd / 0.036, 0.0, 1.0)), clamp((0.042 - dd) / px + 0.5, 0.0, 1.0));
         gl_FragColor = acc;
         return;
     }

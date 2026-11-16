@@ -65,7 +65,8 @@ function tach(o, cx, cy, R) {
  * offset at a standstill, smoothed (data.js gLatZ, gLongZ).
  */
 function gMeter(o, cx, cy, R) {
-    const gr = R * 0.46, h = Math.max(14, Math.round(R * 0.065)), w = Math.round(h * 2.6), max = gScale(o);
+    // (0.37.2: the meter 0.6 R across, was 0.46; its figures larger, and the G now in figures under it)
+    const gr = R * 0.6, h = Math.max(16, Math.round(R * 0.085)), w = Math.round(h * 2.6), max = gScale(o);
     const sx = o.gFlipLat === 'on' ? 1 : -1, sy = o.gFlipLong === 'on' ? 1 : -1;
     const fig = max % 0.5 ? max.toFixed(2) : max.toFixed(1);
     const mark = (k, x, y) => C.text('gMark' + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, fig, white);
@@ -77,6 +78,11 @@ function gMeter(o, cx, cy, R) {
             colors: jdmColours, dyn: (d) => ({ u_g: [r2(sx * gv(d, 'gLat') / max), r2(sy * gv(d, 'gLong') / max)] }),
         },
         mark('T', cx, cy - gr - h * 1.2), mark('B', cx, cy + gr + h * 1.2), mark('L', cx - gr - w * 0.6, cy), mark('R', cx + gr + w * 0.6, cy),
+        // the G now (both ways together), in the meter's lower right quarter
+        C.text('gNow', Math.round(cx + gr * 0.18), Math.round(cy + gr * 0.42), Math.round(gr * 0.78), Math.round(R * 0.13), (d) => {
+            const x = gv(d, 'gLat'), y = gv(d, 'gLong');
+            return C.isNum(x) || C.isNum(y) ? Math.hypot(C.isNum(x) ? x : 0, C.isNum(y) ? y : 0).toFixed(2) + ' G' : '';
+        }, white, { align: 0.5 }),
     ];
 }
 

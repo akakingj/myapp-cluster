@@ -109,9 +109,18 @@ LAYOUTS.forEach((L) => {
             // (each only where the layout doesn't show it already)
             const has = (re) => list.some((p) => re.test(p.key));
             const ice = o.vehicle === 'ice' || C0.engineFocus(o);
+            const pair0 = { clock: list.find((p) => p.key === 'clock'), outside: list.find((p) => p.key === 'outside') };
             const hasGbox = has(/^gbox$/) && (ice || !C0.phevPick(o, 'infoB') ? (o.infoB || 'gearbox') === 'gearbox' : o.infoB === 'gearbox'), hasBatt = o.vehicle !== 'ice' && !C0.engineFocus(o) && !C0.phevPick(o, 'infoA') && has(/^(battT|c_battV|batt)$/);
             list = list.filter((p) => !((p.key === 'outside' && hasGbox) || (p.key === 'clock' && hasBatt)))
                 .map((p) => (p.key === 'clock' ? fitted(L, Object.assign({}, p, { text: C0.stripInfoA(o, p) })) : p.key === 'outside' ? fitted(L, Object.assign({}, p, { text: C0.stripInfoB(o, p) })) : p));
+            // (0.37.2) one of the two side by side alone - the other readout off, or the layout shows that reading
+            // already: the one left in the middle of both places, at the size it had; none: both places go
+            list = list.filter((p) => !((p.key === 'clock' || p.key === 'outside') && p.text === ''));
+            const left = list.filter((p) => p.key === 'clock' || p.key === 'outside'), A = pair0.clock, B = pair0.outside;
+            if (left.length === 1 && A && B && Math.abs(A.y + A.h / 2 - B.y - B.h / 2) < 6) {
+                const x0 = Math.min(A.x, B.x), x1 = Math.max(A.x + A.w, B.x + B.w), one = left[0], src = one.key === 'clock' ? A : B;
+                list = list.map((p) => (p === one ? fitted(L, Object.assign({}, p, { x: x0, w: x1 - x0, y: src.y, h: src.h, align: 0.5 })) : p));
+            }
             // (the two side by side at one size: the smaller of the two)
             const pair = list.filter((p) => p.key === 'clock' || p.key === 'outside');
             if (pair.length === 2 && pair[0].h !== pair[1].h && Math.abs(pair[0].y + pair[0].h / 2 - pair[1].y - pair[1].h / 2) < 4) {
