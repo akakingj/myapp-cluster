@@ -20,6 +20,8 @@ const { startOverlay, drawBadge, badgeRect, mapRect } = require('./overlay');
 const { startProviders, DIR } = require('./providers');
 const IND = require('./indicators');
 const { startBlindSpot } = require('./blindspot');
+const { startHvSoc } = require('./hvsoc');
+const { ReadOnlyDiag } = require('./kit/readonly-diag');
 
 const W = 1600, H = 520;
 const GO = '#2fd27a';
@@ -40,6 +42,7 @@ mgu.run({
         const { ui, settings, log } = ctx;
         const car = new Car(ctx, ['temps', 'rpm', 'torque']);
         const providers = startProviders(log);
+        let hv = null;      // (below: the battery unit's charge)
         /* The car's state (kit/awake.js): told it is switched off, the panel asks no app for anything - their reads go
          * through the car's gateway and kept a locked car from sleeping (Nov 10 2026). */
         const awake = require('./kit/awake').watch(ctx, log);
@@ -159,7 +162,10 @@ mgu.run({
             }
             if ((name === 'oil' || name === 'coolant') && !d.demo && G.isNum(d[name])) return { c: d[name], src: 'car signal' };
             const p = providers.value(name);
-            return p ? { c: p.c, text: typeof p.pct === 'number' ? Math.round(p.pct) + '%' : p.text, label: p.label, src: p.app } : null;
+            if (p) return { c: p.c, text: typeof p.pct === 'number' ? Math.round(p.pct) + '%' : p.text, label: p.label, src: p.app };
+            // (1.8.1) no app shares the charge: the battery unit's own (hvsoc.js)
+            if (name === 'soc' && hv && G.isNum(hv.value()) && !d.demo) return { text: Math.round(hv.value()) + '%', src: 'battery unit' };
+            return null;
         }
         const tempCol = (t, name, c) => {
             if (!G.isNum(c)) return t.dim;
@@ -218,7 +224,14 @@ mgu.run({
         // it can show: the setting on, the panel not off, the car not locked and left (1.6.25)
         // (read only while the sign can show: not while another app holds the HUD, so Redline and this never both poll the BDC)
         let overlay = null, overlayError = null;
-        const bs = startBlindSpot(ctx, log, { want: () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !awake.parked()
+        // (1.8.1) one read-only diagnostic link for the blind spot and the battery's charge: one request at a time
+        const link = new ReadOnlyDiag(ctx.signals, log, { silentAfter: 5 });
+        let linkError = null;
+        link.init().catch((e) => { linkError = String(e); log.warn('diagnostic link: ' + e); });
+        // the battery's charge from the battery unit itself, for the SOC slot while no app shares one (hvsoc.js)
+        hv = startHvSoc(link, log, { want: () => chosen().indexOf('soc') >= 0 && settings.get('show') !== 'off' && awake.on(),
+            shared: () => !!providers.value('soc') || !!providers.power() });
+        const bs = startBlindSpot(ctx, log, { link, want: () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !awake.parked()
             && !(overlay && overlay.lcwWanted && !overlay.lcwWanted()) });
         src.blindSpot = () => bs.state();
         try { overlay = startOverlay(ctx, src); } catch (e) { overlayError = String(e); log.warn('overlay: ' + e); }
@@ -254,7 +267,8 @@ mgu.run({
                 ['Shown', settings.display('show') + (settings.get('show') === 'off' ? '' : ', ' + settings.display('place').toLowerCase())
                     + '   ·   Waze map: ' + (ov ? ov.map : '--') + '   ·   Cluster renderer: ' + (overlayError ? 'error: ' + overlayError : ov ? ov.renderer : 'not started')],
                 ['Apps providing', (pnames.length ? pnames.join(', ') : 'none') + (pw ? '   ·   power ' + pw.text + ' kW' : '') + '   (folder ' + DIR + ')'],
-                ['Values', chosen().map((k) => { const v = valueNow(k); return VALUES[k].label + ' ' + (v ? (G.isNum(v.c) ? temp(v.c) : v.text) + ' from ' + v.src : 'no reading'); }).join('   ·   ') || 'none chosen'],
+                ['Values', (chosen().map((k) => { const v = valueNow(k); return VALUES[k].label + ' ' + (v ? (G.isNum(v.c) ? temp(v.c) : v.text) + ' from ' + v.src : 'no reading'); }).join('   ·   ') || 'none chosen')
+                    + (chosen().indexOf('soc') >= 0 && hv ? '   ·   battery unit: ' + hv.status() : '') + (linkError ? '   ·   diagnostic link: ' + linkError : '')],
                 ['Lane change warning', settings.get('blindSpot') === 'off' ? 'off (settings)' : (() => { const b = bs.status();
                     return (b.refused ? 'the BDC has no D347 (' + b.refused + ')' : b.left !== null ? 'mirror lamps: left ' + b.left + ', right ' + b.right : b.reading ? 'no answer yet' : 'not read now (panel off or parked)')
                         + '   ·   BDC 22 D347: ' + b.good + ' of ' + b.reads + ' answered   ·   link ' + b.link; })()],
@@ -272,6 +286,6 @@ mgu.run({
             return ui.image('MAIN_GFX', cv);
         }
         ctx.loop('MAIN', 2, render);
-        render().then(() => log.info('first frame done')).catch((e) => log.warn('first render: ' + e));
+        Promise.resolve().then(render).then(() => log.info('first frame done')).catch((e) => log.warn('first render: ' + e));
     },
 });

@@ -44,6 +44,32 @@ const HV = { ecu: 7, soc: [
     { did: 'DDBC', bytes: 2, at: 0, factor: 0.1, offset: 0, min: 0.5, max: 100 },
     { did: 'E5CE', bytes: 2, at: 0, factor: 0.01, offset: 0, min: 0, max: 100 }] };
 const HV_EVERY_MS = 15000, HV_ALONE_MS = 10000;
+/* (0.39.1) the engine unit answers in well under 100 ms: a read that hasn't in 1.5 s won't, and the next one shouldn't
+ * wait 4 s (the kit's default) behind it - the pedal and the throttle went stale behind such waits */
+const DME_TIMEOUT_MS = 1500;
+/** One identifier's value out of its record (62 <DID> <data>), as kit/dids.js reads it; null when implausible. */
+function didValue(u, c) {
+    const at = 3 + (c.at || 0), n = c.bytes || 1;
+    if (!u || u.length < at + n) return null;
+    let raw = 0;
+    for (let i = 0; i < n; i++) raw = raw * 256 + u[at + i];
+    if (c.signed && raw >= Math.pow(2, 8 * n - 1)) raw -= Math.pow(2, 8 * n);
+    const v = raw * (c.factor == null ? 1 : c.factor) + (c.offset || 0);
+    return (c.min != null && v < c.min) || (c.max != null && v > c.max) ? null : v;
+}
+/** A reply to several identifiers (62 <DID> <data> <DID> <data> ...) taken apart by each record's length: { did: record } or null. */
+function splitReply(u, lens) {
+    if (!u || u[0] !== 0x62) return null;
+    const out = {};
+    for (let i = 1; i < u.length;) {
+        if (i + 2 > u.length) return null;
+        const did = (u[i] << 8) | u[i + 1], n = lens[did];
+        if (n == null || out[did] || i + 2 + n > u.length) return null;
+        out[did] = [0x62, u[i], u[i + 1]].concat(Array.prototype.slice.call(u, i + 2, i + 2 + n));
+        i += 2 + n;
+    }
+    return out;
+}
 
 /*
  * The driving mode, as the car's FES service sends it: BMW's FES mode table (TAB_FES_MODUS_ARG in the G05's
@@ -359,6 +385,7 @@ function startData(ctx, opts) {
 
     /* ---------- the engine unit, the gearbox unit and the transfer case over UDS ---------- */
     const dme = Object.assign({ ecu: 18 }, cfg.dme || {});
+    Object.keys(dme).forEach((k) => { if (Array.isArray(dme[k])) dme[k] = dme[k].map((c) => Object.assign({ timeoutMs: DME_TIMEOUT_MS }, c)); });
     const link = new Diag(ctx.signals, log);
     link.quiet = true;
     link.init();
@@ -376,6 +403,7 @@ function startData(ctx, opts) {
             && now - hvAt >= (hvMiss >= 5 ? 300000 : HV_EVERY_MS);
     };
     async function readOne(k) {
+        if (k === 'fast') return readFast(fastKeys);
         if (k === 'hvSoc') {
             hvAt = Date.now();
             const v = await rd.value('hvSoc', hv.soc.map((c) => Object.assign({ ecu: hv.ecu }, c)));
@@ -399,9 +427,39 @@ function startData(ctx, opts) {
         // (the throttle: the throttle valve's opening, its lower stop 0 %, as Live Data reads it - not the pedal)
         // (the tank: the engine unit's own fill in %, OBD PID 0x2F, as Live Data's 'Fuel tank level' reads it)
         if (k === 'tank') { if (v !== null) put('fuelPctDme', Math.max(0, Math.min(100, v))); return v; }
-        const pct = k === 'pedal' || k === 'throttle';
-        if (v !== null) put(k === 'egs' ? 'gearbox' : pct ? k + 'Dme' : k, pct ? Math.max(0, Math.min(100, v)) : v);
+        if (v !== null) putDme(k, v);
         return v;
+    }
+    const putDme = (k, v) => { const pct = k === 'pedal' || k === 'throttle'; put(k === 'egs' ? 'gearbox' : pct ? k + 'Dme' : k, pct ? Math.max(0, Math.min(100, v)) : v); };
+    /*
+     * (0.39.1) The pedal and the throttle together, in one request (22 <pedal> <throttle>, as Live Data reads several
+     * at once): once each has answered alone with a DID (its record's length then known). Refused or not taken apart
+     * twice: each alone again. Read every other turn while shown, the engine on or not (on electricity the pedal
+     * still moves): before, one of them a turn, twice a 10 s round, each waiting behind the rest - slow next to the
+     * revs and the boost (the car's own signals), and gone ('--') behind a reading that didn't answer.
+     */
+    let pairOff = 0, fastKeys = [];
+    async function readFast(keys) {
+        const cs = keys.map((k) => (dme[k] || [])[rd.pick[k] || 0]);
+        const raw = (c) => (c ? rd.raws[rd.key(c)] : null);
+        if (keys.length === 2 && pairOff < 2 && cs.every((c, i) => c && c.did && rd.pick[keys[i]] !== undefined && raw(c) && raw(c).ok)) {
+            const dids = cs.map((c) => parseInt(c.did, 16)), lens = {}, data = [];
+            cs.forEach((c, i) => { lens[dids[i]] = raw(c).bytes.split(' ').length - 3; data.push(dids[i] >> 8, dids[i] & 0xFF); });
+            let u = null;
+            try {
+                u = await link.physical(dme.ecu, 0x22, data, DME_TIMEOUT_MS, (r) => (r[0] === 0x62 && dids.indexOf((r[1] << 8) | r[2]) >= 0) || (r[0] === 0x7F && r[1] === 0x22));
+            } catch (e) { u = null; }
+            const parts = splitReply(u, lens);
+            if (parts && dids.every((d) => parts[d])) {
+                let got = 0;
+                keys.forEach((k, i) => { const v = didValue(parts[dids[i]], cs[i]); if (v !== null) { got++; putDme(k, v); } });
+                if (got) return got;
+            }
+            if (u) { pairOff++; log.info('pedal and throttle in one request: ' + (u[0] === 0x7F ? 'refused' : 'not taken apart') + (pairOff >= 2 ? ', each alone from now' : '')); }
+        }
+        let got = 0;
+        for (const k of keys) { if ((await readOne(k)) !== null) got++; }
+        return got || null;
     }
     let slowAt = 0, queue = [];
     /*
@@ -419,12 +477,13 @@ function startData(ctx, opts) {
             /* With the engine off (on electricity) the engine unit's readings don't move: only the every-10 s round.
              * Each read is a request through the car's gateway, the one eDrive Live's battery reads go through. */
             const engineOff = car.data().engineOn === false;
-            queue = wantedNow && !engineOff ? wanted.filter((k) => DME_KEYS.indexOf(k) >= 0) : [];
-            // the pedal and the throttle (when shown) twice a round: at its start and half way
-            const fast = queue.filter((k) => FAST_KEYS.indexOf(k) >= 0), rest = queue.filter((k) => FAST_KEYS.indexOf(k) < 0);
-            if (fast.length && rest.length > 1) { const h = Math.ceil(rest.length / 2); queue = fast.concat(rest.slice(0, h), fast, rest.slice(h)); }
-            if (wantedNow && now - slowAt > 10000) { slowAt = now; DME_KEYS.forEach((k) => { if (queue.indexOf(k) < 0) queue.push(k); }); }
-            queue = queue.filter(usable);
+            // the pedal and the throttle (when shown): every other turn, both in one request (readFast)
+            fastKeys = wantedNow ? wanted.filter((k) => FAST_KEYS.indexOf(k) >= 0).filter(usable) : [];
+            let rest = wantedNow && !engineOff ? wanted.filter((k) => DME_KEYS.indexOf(k) >= 0 && FAST_KEYS.indexOf(k) < 0) : [];
+            if (wantedNow && now - slowAt > 10000) { slowAt = now; DME_KEYS.forEach((k) => { if (FAST_KEYS.indexOf(k) < 0 && rest.indexOf(k) < 0) rest.push(k); }); }
+            rest = rest.filter(usable);
+            queue = [];
+            if (fastKeys.length) { queue.push('fast'); rest.forEach((k) => queue.push(k, 'fast')); } else queue = rest;
         }
         const turn = on && hvDue() ? ['hvSoc'] : on && queue.length ? [queue.shift()] : [];
         let asked = 0;

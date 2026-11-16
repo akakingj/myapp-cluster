@@ -25,6 +25,7 @@ let ok = 0;
 const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name); };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const hvAsks = () => asked.filter((a) => a.k === 'hvSoc');
+const HV_DIDS = ['DDBC', 'E5CE'];
 
 (async () => {
     const spec = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'app.json'), 'utf8'));
@@ -48,7 +49,7 @@ const hvAsks = () => asked.filter((a) => a.k === 'hvSoc');
             for (let i = 0; i < 40 && !hvAsks().length; i++) await wait(250);
             const a = hvAsks()[0];
             assert(a, 'asked');
-            assert.deepStrictEqual(a.cands.map((c) => c.ecu + ':' + c.did), ['7:DDBC', '7:E5CE']);
+            assert.deepStrictEqual(a.cands.map((c) => c.ecu + ':' + c.did), HV_DIDS.map((d) => '7:' + d));
             assert.strictEqual(D.data().soc, 64.3);
         });
         await check('every 15 s, not more', async () => {
@@ -72,6 +73,7 @@ const hvAsks = () => asked.filter((a) => a.k === 'hvSoc');
             delete set.vehicle;
         });
     } finally { D.stop(); }
+
     console.log(ok + ' passed');
     process.exit(0);
 })().catch((e) => { console.error(e); process.exit(1); });
