@@ -276,6 +276,7 @@ const RTACH_FS = `#version 100
 ${HIGHP}${COMMON}
 uniform vec2 u_size;
 uniform vec2 u_off;
+uniform float u_k;        // the layer's scale: its geometry in the layout's design px (0.40.2: JDM 1 drawn bigger)
 uniform vec4 u_geo;
 uniform vec4 u_geo2;      // x of the straight part's end, the bar's thickness, the lines' bottom y, their top y
 uniform vec2 u_ticks;     // thousands on the scale, segments a thousand
@@ -294,7 +295,7 @@ float segd(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clam
 float lead(vec2 p, vec3 l) { return l.z <= l.x ? 1e3 : min(segd(p, l.xy, vec2(l.z, l.y)), segd(p, vec2(l.z, l.y), vec2(l.z + 18.0, l.y + 18.0))); }
 vec4 put(vec4 c, vec3 col, float a) { return vec4(col * a + c.rgb * (1.0 - a), a + c.a * (1.0 - a)); }
 void main() {
-    vec2 p = v_uv * u_size + u_off;
+    vec2 p = v_uv * u_size / u_k + u_off;
     vec2 C = u_geo.xy;
     float R = u_geo.z, a0 = u_geo.w * DEG, T = u_geo2.y;
     float arcL = -a0 * R, L = arcL + (u_geo2.x - C.x);
@@ -327,9 +328,9 @@ void main() {
     float tl = mix(9.0, 18.0, major), tw = mix(0.9, 2.2, major);
     float tick = cov(dj - tw) * step(T * 0.5 + 4.0, dist) * step(dist, T * 0.5 + 4.0 + tl) * step(-0.5, j) * step(j, n + 0.5) * hk;
     c = put(c, j * segL / L >= u_red - 0.001 ? vec3(1.0, 0.2, 0.16) : mix(u_line, u_ink, major), tick);      // (red over the red zone)
-    // the dash's lines: under the bar at each thousand down to the bottom line; over it from the third up to the top
+    // the dash's lines from the third thousand: under the bar down to the bottom line (into the speed's frame), over it up to the top
     float m = floor(s / (segL * u_ticks.y) + 0.5), dm = abs(s - m * segL * u_ticks.y) * k;
-    float under = step(dist, -T * 0.5 - 8.0) * step(p.y, u_geo2.z) * step(0.5, m) * step(m, u_ticks.x + 0.5);
+    float under = step(dist, -T * 0.5 - 8.0) * step(p.y, u_geo2.z) * step(2.5, m) * step(m, u_ticks.x + 0.5);
     float overB = step(T * 0.5 + 74.0, dist) * step(u_geo2.w, p.y) * step(2.5, m) * step(m, u_ticks.x + 0.5);
     c = put(c, u_line, cov(dm - 0.9) * max(under, overB));
     // the leader lines from the left box to the figures
@@ -345,6 +346,7 @@ void main() {
 const RBOX_FS = `#version 100
 ${HIGHP}${COMMON}
 uniform vec2 u_size;
+uniform float u_k;        // the layer's scale (its geometry in design px)
 uniform vec4 u_box;
 uniform vec4 u_fill;
 uniform vec3 u_line;
@@ -354,7 +356,7 @@ uniform float u_seg;
 uniform vec3 u_wcol;
 varying vec2 v_uv;
 void main() {
-    vec2 p = v_uv * u_size, h = u_size * 0.5, q = abs(p - h) - (h - u_box.x - 1.0);
+    vec2 sz = u_size / u_k, p = v_uv * sz, h = sz * 0.5, q = abs(p - h) - (h - u_box.x - 1.0);
     float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - u_box.x;      // < 0 inside
     float inside = clamp(0.5 - dist, 0.0, 1.0);
     vec4 c = u_fill;
@@ -379,6 +381,7 @@ void main() {
 const RSEG_FS = `#version 100
 ${HIGHP}${COMMON}
 uniform vec2 u_size;
+uniform float u_k;        // the layer's scale (its geometry in design px)
 uniform float u_num;
 uniform vec4 u_dig;
 uniform vec3 u_seg2;
@@ -393,7 +396,7 @@ float segD(vec2 q, vec2 a, vec2 b, float th) {
 }
 float bit(float m, float i) { return mod(floor(m / pow(2.0, i)), 2.0); }
 void main() {
-    vec2 p = v_uv * u_size, h = u_size * 0.5, q0 = abs(p - h) - (h - 13.0);
+    vec2 sz = u_size / u_k, p = v_uv * sz, h = sz * 0.5, q0 = abs(p - h) - (h - 13.0);
     float inside = clamp(0.5 - (length(max(q0, 0.0)) + min(max(q0.x, q0.y), 0.0) - 12.0), 0.0, 1.0);
     vec3 c = u_fill;
     float cw = u_dig.z, ch = u_dig.w, th = u_seg2.x, gap = cw * 0.28;
