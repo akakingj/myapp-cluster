@@ -300,10 +300,10 @@ function dash(o) {
  * swap left / right), the surface's tilt the G's angle (atan g, at most about 23 degrees: the water stays in), on a
  * spring that rings down after a change (about 1.5 a second, lightly damped). Worked out every frame here, the tilt
  * sent only when it moves (0.004 rad): nothing while the water lies still. Shader: shaders.js CUP_FS. In px on the
- * panel (after scaled()): over the middle of the left box, between its two gauges (0.41.1), its rim clear of the
+ * panel (after scaled()): over the left box, between its two gauges (0.41.1; 0.41.2 a little right and up), its rim clear of the
  * panel's rounded corner (tools/clearance.js: the cup's outline).
  */
-const CUP = { x: 150, y: 104, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.38 };
+const CUP = { x: 165, y: 96, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.38 };
 function cup(o) {
     const sx = o.gFlipLat === 'on' ? 1 : -1, W = 2 * Math.PI * 1.5, Z = 0.16;
     let th = 0, v = 0, sent = null;
