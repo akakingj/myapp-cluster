@@ -122,13 +122,23 @@ mgu.run({
         }, 'driver profile', { pollMs: 5000 }, 'de.bmw.infotainment.personalization.SessionManager');
 
         /* ---------- boost, from the car's sport display signal ----------
-         * FES statusSwitchDriveDynamicSport2: displayBoostPressure in hundredths of a bar over atmosphere
-         * (tenths read ten times too high against the engine unit and M Vitals, issue #7); 254 and up: none. */
+         * FES statusSwitchDriveDynamicSport2: displayBoostPressure over atmosphere in the car's pressure unit, as
+         * BMW's sport display shows it: hundredths of a bar (or 1 kPa) a step (tenths read ten times too high against
+         * the engine unit and M Vitals, issue #7), but 0.1 psi a step on a car set to psi (1.8.2; idrive7-apps issue
+         * #186: 20 psi, raw 200, read as 2.0 bar, 29 psi); 254 and up: none. Kept in bar. */
+        let carPress = null;
+        watch('de.bmw.infotainment.vehicle.Vehicle', {
+            statusNewCurrentUnitsStatusExt: (v) => {
+                const u = one(v, 'unitOfMeasurementAirPressure'), n = u && typeof u === 'object' ? (u.name || u.value) : u;
+                const p = ({ 1: 'BAR', 2: 'KPA', 3: 'PSI' })[n] || (/BAR|KPA|PSI/.test(String(n)) ? String(n).match(/BAR|KPA|PSI/)[0] : null);
+                if (p && p !== carPress) { carPress = p; log.info('car pressure unit: ' + p); }
+            },
+        }, 'units', { pollMs: 60000 });
         watch('de.bmw.infotainment.drivingexcitement.FES', {
             statusSwitchDriveDynamicSport2: (v) => {
                 live.raw.sport = JSON.stringify(v);
                 const b = one(v, 'displayBoostPressure');
-                if (typeof b === 'number' && b >= 0 && b < 254) { live.boost = b / 100; live.boostT = Date.now(); }
+                if (typeof b === 'number' && b >= 0 && b < 254) { live.boost = carPress === 'PSI' ? b * 0.1 / 14.5038 : b / 100; live.boostT = Date.now(); }
             },
         }, 'boost', { pollMs: 1000 });
 

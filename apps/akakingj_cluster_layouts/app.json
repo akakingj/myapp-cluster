@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.39.2",
+  "version": "0.39.3",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -80,7 +80,7 @@
     },
     "de.bmw.infotainment.vehicle.Vehicle": {
       "statusNewCurrentUnitsStatusExt": "rs",
-      "_optional": "the car's pressure unit, for the tyre pressures"
+      "_optional": "the car's pressure unit, for the tyre pressures and the sport display's boost"
     },
     "de.bmw.infotainment.resetlogic.ResetLogic": {
       "_optional": "the consumption now (a candidate for the fast kW)",

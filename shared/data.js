@@ -168,6 +168,7 @@ function one(v, key, depth) {
 function startData(ctx, opts) {
     const { log } = ctx;
     const cfg = ctx.spec.config || {}, S = cfg.scaling || {};
+    let carPress = null;     // the car's pressure unit (BAR, KPA, PSI: Vehicle statusNewCurrentUnitsStatusExt, below)
     const sc = (k, raw) => {
         const c = S[k];
         if (!c || raw === undefined || raw === null || raw === c.invalid || typeof raw !== 'number' || (c.invalidFrom != null && raw >= c.invalidFrom)) return null;
@@ -244,13 +245,15 @@ function startData(ctx, opts) {
         statusFESVehicleDynamicSwitchHMI: fes('statusFESVehicleDynamicSwitchHMI'),
         // the sport display's boost over atmosphere, boost without diagnostics: hundredths of a bar
         // (config.scaling.boost, factor 0.01: tenths read ten times too high against the engine unit and
-        // M Vitals, issue #7); 254 and up: none. Each raw value goes to the log once a minute.
+        // M Vitals, issue #7); 254 and up: none. Each raw value goes to the log once a minute. (0.39.3) In the car's
+        // pressure unit, as BMW's sport display shows it: 0.01 bar (or 1 kPa) a step, but 0.1 psi a step on a car set
+        // to psi (idrive7-apps issue #186: 20 psi, raw 200, read as 2.0 bar, 29 psi)
         statusSwitchDriveDynamicSport2: (v) => {
             fes('statusSwitchDriveDynamicSport2')(v);
             const b = v && typeof v === 'object' ? v.displayBoostPressure : undefined;
             const bs = S.boost || {}, factor = isNum(bs.factor) ? bs.factor : 0.01, invalid = isNum(bs.invalid) ? bs.invalid : 254;
             if (isNum(b) && Date.now() - (x.at.boostRawLog || 0) > 60000) { x.at.boostRawLog = Date.now(); log.info('raw FES boost ' + b + ' (max ' + (v && v.displayMaximumValueBoostPressure) + ')'); }
-            if (isNum(b) && b >= 0 && b < Math.min(254, invalid)) put('boostCar', b * factor + (bs.offset || 0));
+            if (isNum(b) && b >= 0 && b < Math.min(254, invalid)) put('boostCar', carPress === 'PSI' ? b * 0.1 / 14.5038 : b * factor + (bs.offset || 0));
         },
         // the sport display's powertrain power (+ driving, - recuperating; its unit fitted in kwfuse.js)
         displaySportPowertrain: (v) => {
@@ -334,7 +337,7 @@ function startData(ctx, opts) {
      * reaches is taken as F).
      */
     const TYRES = ['FL', 'FR', 'RL', 'RR'], PRESS_UNITS = { 1: 'BAR', 2: 'KPA', 3: 'PSI' }, PRESS_TO_BAR = { BAR: 1, KPA: 0.01, PSI: 1 / 14.5038 };
-    let carPress = null, tyreRawLogged = false;
+    let tyreRawLogged = false;
     const tyreBar = (raw) => {
         if (!isNum(raw) || raw < 0 || raw >= 65532) return null;
         const v = raw / 10, k = PRESS_TO_BAR[carPress];
@@ -355,7 +358,8 @@ function startData(ctx, opts) {
         statusTyrePressure: tyreRead('tyreP', tyreBar, 'Pressure'),
         statusTyreTemperature: tyreRead('tyreT', tyreC, 'Temperature'),
     }, 'tyres', { pollMs: 10000 });
-    if (opts && opts.tyres) watch('de.bmw.infotainment.vehicle.Vehicle', {
+    // the car's pressure unit: the tyre pressures and the sport display's boost come in it (every app: the boost)
+    watch('de.bmw.infotainment.vehicle.Vehicle', {
         statusNewCurrentUnitsStatusExt: (v) => {
             const u = one(v, 'unitOfMeasurementAirPressure'), n = u && typeof u === 'object' ? (u.name || u.value) : u;
             const p = PRESS_UNITS[n] || (/BAR|KPA|PSI/.test(String(n)) ? String(n).match(/BAR|KPA|PSI/)[0] : null);
