@@ -296,7 +296,8 @@ function dash(o) {
 
 /*
  * The cup of water (0.41.0; Settings > JDM 1: cup of water, or the layout's page): a paper cup standing over the left
- * box, its water sloshing with the car's G. Sideways: higher on the side the G meter's dot goes (JDM 2's, Settings >
+ * box, its water sloshing with the car's G. Sideways: higher on the outside of the bend, where the driver is pushed
+ * (0.41.6; the side JDM 2's G meter's dot goes, Settings >
  * JDM 2: G meter, swap left / right), the surface's tilt the G's angle (atan g, at most about 22 degrees: the water
  * stays in). Fore and aft (0.41.4): braking sends it to the far side (its surface seen taller), accelerating to the near
  * side (flatter). Each on a spring that rings down after a change (about 1.5 a second, lightly damped), worked out
@@ -319,7 +320,7 @@ function spring(lo, hi) {
     };
 }
 function cup(o) {
-    const sx = o.gFlipLat === 'on' ? 1 : -1, lat = spring(-CUP.maxTilt, CUP.maxTilt), lon = spring(CUP.lonMin, CUP.lonMax);
+    const sx = o.gFlipLat === 'on' ? -1 : 1, lat = spring(-CUP.maxTilt, CUP.maxTilt), lon = spring(CUP.lonMin, CUP.lonMax);
     const gOf = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : C.isNum(d[k]) ? d[k] : 0);
     return {
         key: 'cup', kind: 'cup', x: CUP.x, y: CUP.y, w: CUP.w, h: CUP.h, z: 4,

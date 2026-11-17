@@ -61,14 +61,15 @@ function tach(o, cx, cy, R) {
 
 /*
  * The G meter in a big round window at (cx, cy), radius R: the meter in its middle, its size's figures at the ends of
- * its cross. The dot as G Force draws it: left in a right bend (Settings > JDM 2: G meter, swap left / right), up
- * while accelerating (brake on top: Settings > JDM 2: G meter, brake on top); the car's own acceleration less its
+ * its cross. The dot as the driver feels the G (0.41.6, the owner's call; G Force's the other way): right in a left
+ * bend (the car's lateral G > 0 turning left; Settings > JDM 2: G meter, swap left / right), down while accelerating,
+ * up braking (Settings > JDM 2: G meter, accelerating on top); the car's own acceleration less its
  * offset at a standstill, smoothed (data.js gLatZ, gLongZ).
  */
 function gMeter(o, cx, cy, R) {
     // (0.37.2: the meter 0.6 R across, was 0.46; its figures larger, and the G now in figures under it)
     const gr = R * 0.6, h = Math.max(16, Math.round(R * 0.085)), w = Math.round(h * 2.6), max = gScale(o);
-    const sx = o.gFlipLat === 'on' ? 1 : -1, sy = o.gFlipLong === 'on' ? 1 : -1;
+    const sx = o.gFlipLat === 'on' ? -1 : 1, sy = o.gFlipLong === 'on' ? -1 : 1;
     const fig = max % 0.5 ? max.toFixed(2) : max.toFixed(1);
     const mark = (k, x, y) => C.text('gMark' + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, fig, white);
     const gv = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : d[k]);
@@ -237,7 +238,9 @@ module.exports = {
         // no column of readouts at the right any more - readouts 1 and 2 and the main readout, the intake air, the
         // gearbox oil and the torque there - the owner's call; column() stays for a later use)
         // (0.41.0: all of it 110 px to the left, the beginner driver's mark at the right, the owner's)
-        return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 317, 410, 233), tach(o, 790, 387, 259),
+        // (0.41.6: the G meter smaller and higher, clear of the strip's fuel bar under it; the tach a little smaller
+        // and lower, its top clear of the camera's cowl, as seen on the car)
+        return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 335, 385, 215), tach(o, 790, 393, 248),
             gearDisc(o, 1177, 262, 100), small(o, 'rpm', 1187, 526, 112), small(o, 'speed', 1390, 404, 110), [wakaba(1572, 214, 335)]);
     },
 };

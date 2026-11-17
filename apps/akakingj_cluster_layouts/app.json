@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.41.5",
+  "version": "0.41.6",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -780,7 +780,7 @@
     },
     {
       "key": "gFlipLong",
-      "label": "JDM 2: G meter, brake on top",
+      "label": "JDM 2: G meter, accelerating on top",
       "type": "choice",
       "default": "off",
       "options": [
