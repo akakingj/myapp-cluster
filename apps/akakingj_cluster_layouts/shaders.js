@@ -440,13 +440,15 @@ void main() {
  * inside above it - the water's edge riding up the inner wall on the high side.
  *   u_cup:  the cup's middle x, its rim's y, the rim's half width, the bottom's half width (px in the layer)
  *   u_cup2: its height, the ellipses' height to width, the water's level (of the height, from the bottom), the
- *           surface's tilt (radians; > 0: higher on the right)
+ *           surface's tilt sideways (radians; > 0: higher on the right)
+ *   u_lon:  its tilt fore and aft (0.41.4: the tangent; > 0 higher at the far side, braking): its ellipse taller
  */
 const CUP_FS = `#version 100
 ${HIGHP}
 uniform vec2 u_size;
 uniform vec4 u_cup;
 uniform vec4 u_cup2;
+uniform float u_lon;
 uniform vec3 u_wall;
 uniform vec3 u_inner;
 uniform vec3 u_edge;
@@ -466,7 +468,7 @@ void main() {
     float dBot = ell(vec2(x, p.y - by), aB, e * aB), dRim = ell(vec2(x, p.y - ry), aR, e * aR);
     float dBody = min(min(dTrap, dBot), dRim), dMouth = ell(vec2(x, p.y - ry), aR - 5.0, e * (aR - 5.0));
     // the water: its surface a level ellipse at its depth, tilted (sheared) by the slosh
-    float yw = by - u_cup2.z * H, aw = mix(aR, aB, (yw - ry) / H) - 2.0, bw = e * aw, ys = yw - x * tan(u_cup2.w);
+    float yw = by - u_cup2.z * H, aw = mix(aR, aB, (yw - ry) / H) - 2.0, bw = (e + u_lon) * aw, ys = yw - x * tan(u_cup2.w);
     float far = ys - bw * sqrt(max(0.0, 1.0 - (x / aw) * (x / aw)));
     float dSurf = ell(vec2(x, p.y - ys), aw, bw);
     vec4 c = vec4(0.0);

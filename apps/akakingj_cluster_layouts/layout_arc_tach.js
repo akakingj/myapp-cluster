@@ -295,35 +295,41 @@ function dash(o) {
 }
 
 /*
- * The cup of water (0.41.0; Settings > JDM 1: cup of water): a paper cup standing on the left box, its water
- * sloshing with the car's sideways G - higher on the side the G meter's dot goes (JDM 2's, Settings > JDM 2: G meter,
- * swap left / right), the surface's tilt the G's angle (atan g, at most about 23 degrees: the water stays in), on a
- * spring that rings down after a change (about 1.5 a second, lightly damped). Worked out every frame here, the tilt
- * sent only when it moves (0.004 rad): nothing while the water lies still. Shader: shaders.js CUP_FS. In px on the
- * panel (after scaled()): over the left box's second gauge (the fuel's), in line with it (0.41.3), its rim clear of the
- * panel's rounded corner (tools/clearance.js: the cup's outline).
+ * The cup of water (0.41.0; Settings > JDM 1: cup of water, or the layout's page): a paper cup standing over the left
+ * box, its water sloshing with the car's G. Sideways: higher on the side the G meter's dot goes (JDM 2's, Settings >
+ * JDM 2: G meter, swap left / right), the surface's tilt the G's angle (atan g, at most about 22 degrees: the water
+ * stays in). Fore and aft (0.41.4): braking sends it to the far side (its surface seen taller), accelerating to the near
+ * side (flatter). Each on a spring that rings down after a change (about 1.5 a second, lightly damped), worked out
+ * every frame here and sent only when it moves (0.004): nothing while the water lies still. Shader: shaders.js CUP_FS.
+ * In px on the panel (after scaled()): over the left box's second gauge (the fuel's), in line with it (0.41.3), its rim
+ * clear of the panel's rounded corner (tools/clearance.js: the cup's outline).
  */
-const CUP = { x: 233, y: 96, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.38 };
+const CUP = { x: 233, y: 96, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.38, lonMin: -0.2, lonMax: 0.3 };
+/** A spring towards its target: step(target, dt ms) -> where it is (rounded to 0.004). */
+function spring(lo, hi) {
+    const W = 2 * Math.PI * 1.5, Z = 0.16;
+    let th = 0, v = 0;
+    return (want, dt) => {
+        for (let left = Math.min(250, dt || 0); left > 0; left -= 8) {
+            const h = Math.min(8, left) / 1000;
+            v += (-W * W * (th - want) - 2 * Z * W * v) * h;
+            th = Math.max(lo, Math.min(hi, th + v * h));
+        }
+        return Math.round(Math.round(th / 0.004) * 0.004 * 1000) / 1000;
+    };
+}
 function cup(o) {
-    const sx = o.gFlipLat === 'on' ? 1 : -1, W = 2 * Math.PI * 1.5, Z = 0.16;
-    let th = 0, v = 0, sent = null;
-    const gOf = (d) => (C.isNum(d.gLatZ) ? d.gLatZ : C.isNum(d.gLat) ? d.gLat : 0);
+    const sx = o.gFlipLat === 'on' ? 1 : -1, lat = spring(-CUP.maxTilt, CUP.maxTilt), lon = spring(CUP.lonMin, CUP.lonMax);
+    const gOf = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : C.isNum(d[k]) ? d[k] : 0);
     return {
         key: 'cup', kind: 'cup', x: CUP.x, y: CUP.y, w: CUP.w, h: CUP.h, z: 4,
-        params: { u_cup: [CUP.w / 2, CUP.rim, CUP.aR, CUP.aB], u_cup2: [CUP.H, CUP.e, CUP.level, 0] },
+        params: { u_cup: [CUP.w / 2, CUP.rim, CUP.aR, CUP.aB], u_cup2: [CUP.H, CUP.e, CUP.level, 0], u_lon: [0] },
         colors: (t) => ({ wall: t.cupWall, inner: t.cupInner, edge: t.cupEdge, water: t.cupWater, foam: t.cupFoam }),
-        frame: (d, dt) => {
-            const want = Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, Math.atan(sx * gOf(d))));
-            // the spring, in steps of at most 8 ms (steady at any frame rate)
-            for (let left = Math.min(250, dt || 0); left > 0; left -= 8) {
-                const h = Math.min(8, left) / 1000;
-                v += (-W * W * (th - want) - 2 * Z * W * v) * h;
-                th = Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, th + v * h));
-            }
-            const r = Math.round(th / 0.004) * 0.004;
-            if (sent === null || Math.abs(r - sent) > 0.001) sent = r;
-            return { u_cup2: [CUP.H, CUP.e, CUP.level, Math.round(sent * 1000) / 1000] };
-        },
+        frame: (d, dt) => ({
+            u_cup2: [CUP.H, CUP.e, CUP.level, lat(Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, Math.atan(sx * gOf(d, 'gLat')))), dt)],
+            // (the car's longitudinal G: > 0 accelerating, kwfuse.js)
+            u_lon: [lon(Math.max(CUP.lonMin, Math.min(CUP.lonMax, -gOf(d, 'gLong'))), dt)],
+        }),
     };
 }
 /*

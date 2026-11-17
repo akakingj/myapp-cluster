@@ -66,7 +66,7 @@ L.LAYOUTS.forEach((l) => (l.places || []).forEach((p) => check(l.id + ': its pla
     assert(Object.prototype.hasOwnProperty.call(KO, p.label), 'no Korean for ' + p.label);
 })));
 check('all: whatever the car, every place the layout can have', () => {
-    assert.deepStrictEqual(L.slotsFor('arc_tach', base, true), ['infoMain', 'infoA', 'infoB', 'gaugeSpeed', 'gaugeRpm']);
+    assert.deepStrictEqual(L.slotsFor('arc_tach', base, true), ['infoMain', 'infoA', 'infoB', 'gaugeSpeed', 'gaugeRpm', 'jdmCup']);
     assert.deepStrictEqual(L.slotsFor('m', base, true), []);
 });
 
