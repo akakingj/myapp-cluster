@@ -101,8 +101,8 @@ Tyre card	타이어 정보
 Tyre temperatures	타이어 온도
 xDrive card	xDrive 정보
 Intake air temperature	흡기 온도
-High pressure fuel	고압 연료
-Low pressure fuel	저압 연료
+High pressure fuel	고압 연료 압력
+Low pressure fuel	저압 연료 압력
 Ignition timing	점화 시기
 Misfire counter	실화 횟수
 Cold rev limit	냉간 회전수 제한
@@ -1102,7 +1102,7 @@ Gauges	게이지
 Gauge	게이지
 New screen	새 화면
 Trips	주행 기록
-Layout	화면 배치
+Layout	레이아웃
 Browse	찾아보기
 Stop browsing	찾아보기 종료
 Dial + 2 numbers	다이얼 + 숫자 2개
@@ -1257,7 +1257,7 @@ Engine oil in the sump	오일 팬 엔진오일
 Intake air	흡기
 Charge air before throttle	스로틀 전단 과급 공기
 Gearbox	변속기
-Engine unit	엔진 제어기
+Engine unit	엔진 ECU
 Exhaust after catalyst (model)	촉매 후단 배기 (계산값)
 Particulate filter	미립자 필터
 Catalyst, bank 1 sensor 1	촉매, 뱅크 1 센서 1
@@ -1804,7 +1804,7 @@ Crash	충돌
 since reset	초기화 후
 Torque gauge max	토크 게이지 최대값
 Advanced settings	고급 설정
-Tiles	타일
+Tiles	칸 모양
 Over its life	전체 수명 동안
 Capacity and resistance	용량 및 저항
 ENERGY THROUGHPUT	에너지 처리량
@@ -2447,15 +2447,15 @@ Accelerator pedal (0 - 100 %)	가속 페달 (0 - 100 %)
 Alaska	알래스카
 Always on the HUD	HUD에 항상 표시
 Amber zone below the red zone (ID6 M, ID7 M, ID8 M)	레드 존 아래 주황 구간 (ID6 M, ID7 M, ID8 M)
-Arc gauge	아크 게이지
+Arc gauge	원호 게이지
 JDM 1: the gear in the arc (the layout's own strip)	JDM 1: 아크 안 기어 표시 (레이아웃 자체 하단 띠)
 Arizona (no DST)	애리조나 (서머타임 없음)
 Arm 0-60 timer	0-60 타이머 준비
 Atlantic	대서양
-Auto (found from the car)	자동 (차에서 찾음)
+Auto (found from the car)	자동 (차량에서 감지)
 Auto (the shift point)	자동 (변속 시점)
 Background	배경
-Bar after the kW	kW 뒤에 막대
+Bar after the kW	kW 옆 막대
 Battery above (°C)	배터리 경고 (°C 이상)
 Battery charge (%)	배터리 충전량 (%)
 Battery power (kW)	배터리 출력 (kW)
@@ -2468,7 +2468,7 @@ Bottom of the map	지도 아래쪽
 Bottom strip	하단 띠
 C - H, as the car's: the middle is warm	C - H, 순정처럼: 가운데가 정상 온도
 Central Europe	중부 유럽
-Centre of the cluster	계기판 가운데
+Centre of the cluster	계기판 가운데 내용
 Centre readout: bottom line (Old M)	가운데 표시: 아래 줄 (Old M)
 Centre readout: top left (petrol, diesel)	가운데 표시: 왼쪽 위 (가솔린, 디젤)
 Centre readout: top right (petrol, diesel)	가운데 표시: 오른쪽 위 (가솔린, 디젤)
@@ -2480,17 +2480,17 @@ Cold engine: lower the shift point and red zone	냉간 시 변속 시점과 레�
 Cold engine: oil warm at	냉간: 오일 예열 완료 온도
 Cold engine: shift point with the oil at 30 °C	냉간: 오일 30 °C일 때 변속 시점
 Cool-down countdown on every page	모든 페이지에 쿨다운 카운트다운
-Cool-down: hard driving above	쿨다운: 고부하 주행 기준
+Cool-down: hard driving above	쿨다운: 고부하 주행 기준 회전수
 Coolant above (°C)	냉각수 경고 (°C 이상)
 Coolant is too hot at (red)	냉각수 과열 온도 (빨강)
 Custom page 1	사용자 페이지 1
 Custom page 2	사용자 페이지 2
 Display	표시
 Eastern Europe	동유럽
-Efficient	효율
+Efficient	에코
 Electric range	전기 주행 가능 거리
 Electric range when full (until the car's own is found)	완충 시 전기 주행 거리 (차량 값을 찾기 전까지)
-Engine on / off	엔진 켜짐 / 꺼짐
+Engine on / off	엔진 작동 / 정지
 Engine power	엔진 출력
 Engine power (from its torque and speed)	엔진 출력 (토크와 회전수로 계산)
 Engine speed (rpm)	엔진 회전수 (rpm)
@@ -2501,10 +2501,10 @@ Every 30 s	30초마다
 Every 5 s	5초마다
 Every minute	1분마다
 Fast: between eDrive Live's readings from the car's speed and acceleration	빠르게: eDrive Live 값 사이를 차속과 가속도로 채움
-First item	첫째 항목
+First item	첫 번째 항목
 Follow the drive programme (S / M: sport)	주행 모드 따라가기 (S / M: 스포츠)
 Frame behind the gear box	기어 표시 뒤 테두리
-Fuel % from	연료 % 기준
+Fuel % from	연료 % 출처
 Fuel and boost	연료와 부스트
 Fuel level	연료량
 Fuel range	연료 주행 가능 거리
@@ -2518,19 +2518,19 @@ Hawaii	하와이
 Intake air above (°C)	흡기 경고 (°C 이상)
 Korea / Japan (UTC+9)	한국 / 일본 (UTC+9)
 Large	크게
-Lateral g	횡가속도 g
+Lateral g	횡가속도 (G)
 Layout in ECO PRO	ECO PRO 모드 레이아웃
 Layout in Sport	스포츠 모드 레이아웃
-Like the factory cluster (thin, no boxes)	순정 계기판처럼 (얇게, 상자 없음)
-Litres / tank size	리터 / 탱크 크기
-Longitudinal g	종가속도 g
+Like the factory cluster (thin, no boxes)	순정 계기판 스타일 (얇은 글꼴, 테두리 없음)
+Litres / tank size	남은 리터 / 탱크 용량
+Longitudinal g	종가속도 (G)
 Look and size	모양과 크기
 Low pressure fuel below (bar)	저압 연료 경고 (bar 미만)
 M car: two more boxes in the middle, readings moved round them	M 차량: 가운데 상자 2개 추가, 표시값을 그 둘레로 이동
-Modern (glass cards, bold, glowing)	모던 (유리 카드, 굵게, 빛남)
+Modern (glass cards, bold, glowing)	모던 (유리 카드, 굵은 글꼴, 발광)
 Needle sweep when it comes up	켜질 때 바늘 스윕
 Nm	Nm
-No (Next page in the app)	아니요 (앱에서 다음 페이지)
+No (Next page in the app)	끔 (앱의 '다음 화면'으로 넘김)
 Nothing	없음
 Number and bar	숫자와 막대
 Number only	숫자만
@@ -2541,7 +2541,7 @@ Off: background under the box	끔: 상자 아래 배경 표시
 Off: the box blends into the black background	끔: 상자가 검은 배경에 섞임
 Oil above (°C)	오일 경고 (°C 이상)
 Oil is too hot at (red)	오일 과열 온도 (빨강)
-Oil warm at (amber below)	오일 예열 완료 온도 (아래는 주황)
+Oil warm at (amber below)	오일 예열 완료 온도 (이하 주황)
 On (as the Redline app: from the cold rev limit up to the red line as the oil warms)	켬 (Redline 앱처럼: 오일이 데워지면서 냉간 회전수 제한에서 레드라인까지)
 On the cluster and HUD	계기판과 HUD
 On the cluster only	계기판에만
@@ -2565,19 +2565,19 @@ Red zone and shift	레드 존과 변속
 Red zone from	레드 존 시작
 Red zone from (the redline)	레드 존 시작 (레드라인)
 Same as Layout	레이아웃과 같게
-Second item	둘째 항목
-Shift light and gear at the top	위쪽에 시프트 라이트와 기어
+Second item	두 번째 항목
+Shift light and gear at the top	상단에 시프트 라이트와 기어 표시
 Shift light and warm-up	시프트 라이트와 예열
-Shift light: flashes at	시프트 라이트: 깜빡임 시작
-Shift light: starts at	시프트 라이트: 켜짐 시작
-Shift point: below the red zone by	변속 시점: 레드 존보다 낮게
+Shift light: flashes at	시프트 라이트: 깜빡이는 회전수
+Shift light: starts at	시프트 라이트: 켜지는 회전수
+Shift point: below the red zone by	변속 시점: 레드 존보다 낮출 회전수
 Shift warning (layouts without their own)	변속 경고 (자체 경고가 없는 레이아웃)
 Show in the cluster	계기판에 표시
 Show in the cluster centre	계기판 가운데에 표시
 Show on the cluster	계기판에 표시
 Show the panel	패널 표시
 Show this page	이 페이지 표시
-Size in the centre	가운데 크기
+Size in the centre	가운데 표시 크기
 Slot 1	슬롯 1
 Slot 2	슬롯 2
 Slot 3	슬롯 3
@@ -2589,19 +2589,19 @@ Small gauge in the speedometer	속도계 안 작은 게이지
 Small gauge in the tach	회전계 안 작은 게이지
 Speed and distance unit	속도와 거리 단위
 Standard (X5 and other G models)	표준 (X5와 다른 G 모델)
-Steering and yaw	조향과 요
+Steering and yaw	스티어링
 Stock (the stock centre content)	순정 (순정 가운데 내용)
 Temperature colours	온도 색상
 Temperature gauges (analog layouts)	온도 게이지 (아날로그 레이아웃)
 The car's own (ranges, drive mode and gear from the car; the dials centred above it)	차량 순정 (주행 가능 거리, 주행 모드, 기어는 차량 표시; 다이얼은 그 위 가운데)
 The layout's (full screen)	레이아웃 자체 (전체 화면)
-The layout's own	레이아웃 자체
+The layout's own	레이아웃 기본값
 The whole middle (the stock speed and range cover its edges)	가운데 전체 (순정 속도와 주행 거리가 가장자리를 가림)
 Thin kW bar along the bottom	아래쪽 얇은 kW 막대
-Third item	셋째 항목
-Throttle (valve opening)	스로틀 (밸브 열림)
-Throttle (valve opening, 0 - 100 %)	스로틀 (밸브 열림, 0 - 100 %)
-Tiles on the built-in pages	기본 페이지의 타일
+Third item	세 번째 항목
+Throttle (valve opening)	스로틀 (밸브 개도)
+Throttle (valve opening, 0 - 100 %)	스로틀 (밸브 개도, 0 - 100 %)
+Tiles on the built-in pages	기본 페이지의 칸 모양
 Time zone (the clock)	시간대 (시계)
 Tinted, as designed	디자인대로 색 입힘
 Top of the map	지도 위쪽
@@ -2617,7 +2617,7 @@ Units and clock	단위와 시계
 Vehicle	차량
 Warnings	경고
 Waze (Waze on cluster drawn over the layout, else the stock map)	Waze (계기판 Waze를 레이아웃 위에, 없으면 순정 지도)
-Where the Waze map is	Waze 지도 위치
+Where the Waze map is	Waze 지도가 있는 곳
 With the speed unit (psi / bar)	속도 단위에 맞춤 (psi / bar)
 With the temperature unit (psi / bar)	온도 단위에 맞춤 (psi / bar)
 bar	bar
@@ -2633,7 +2633,7 @@ mi	mi
 mph	mph
 mph and miles	mph와 마일
 psi	psi
-Apps providing	값을 주는 앱
+Apps providing	값을 공유하는 앱
 Car data	차량 데이터
 Drive mode (car)	주행 모드 (차량)
 On the cluster	계기판 표시
@@ -2657,9 +2657,9 @@ showing	표시 중
 waiting: a layout shows (set its centre to these pages)	대기: 레이아웃 표시 중 (레이아웃 가운데를 이 페이지로)
 waiting	대기 중
 none chosen	선택 없음
-with Next page	다음 페이지 버튼으로
+with Next page	'다음 화면' 버튼으로
 Colours	색상
-Look	모양
+Look	스타일
 Turbo cool-down	터보 냉각
 rpm	회전수
 Lane change warning on the HUD	HUD에 측후방 경고
@@ -2686,8 +2686,8 @@ GM	GM
 JDM 2	JDM 2
 JDM 2: G meter size	JDM 2: G미터 크기
 JDM 2: G meter, swap left / right	JDM 2: G미터 좌우 바꾸기
-JDM 2: G meter, brake on top	JDM 2: G미터 제동을 위로
-JDM 2: left dial	JDM 2: 왼쪽 원
+JDM 2: G meter, brake on top	JDM 2: G미터 제동 방향을 위로
+JDM 2: left dial	JDM 2: 왼쪽 다이얼
 G meter	G미터
 Speedometer	속도계
 Tyre pressures	타이어 공기압
@@ -2750,10 +2750,10 @@ Above the map: left	지도 위: 왼쪽
 Above the map: right	지도 위: 오른쪽
 Right column: top line	오른쪽 열: 위 줄
 Right column: second line	오른쪽 열: 둘째 줄
-Battery charge (plug-in hybrid)	배터리 잔량 (PHEV)
+Battery charge (plug-in hybrid)	배터리 충전량 (PHEV)
 Battery temperature (plug-in hybrid)	배터리 온도 (PHEV)
 Battery power (plug-in hybrid)	배터리 출력 (PHEV)
-Electric range (plug-in hybrid)	전기 주행 거리 (PHEV)
+Electric range (plug-in hybrid)	전기 주행 가능 거리 (PHEV)
 Auto (by the car: petrol and diesel, intake air; plug-in hybrid, the layout's eDrive reading)	자동 (차량에 따라: 가솔린·디젤은 흡기 온도, PHEV는 레이아웃 기본 전기 값)
 Auto (by the car: petrol and diesel, gearbox oil; plug-in hybrid, the layout's eDrive reading)	자동 (차량에 따라: 가솔린·디젤은 미션 오일 온도, PHEV는 레이아웃 기본 전기 값)
 Auto (by the car: petrol and diesel, torque; plug-in hybrid, the layout's eDrive reading)	자동 (차량에 따라: 가솔린·디젤은 토크, PHEV는 레이아웃 기본 전기 값)

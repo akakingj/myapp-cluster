@@ -226,7 +226,7 @@ mgu.run({
             // (the row names and the states of the first three rows in the build's language; the readings as they are)
             const x = pw + 52, line = (i, a, b) => { cv.text(a, x, 60 + i * 50, 18, t.dim, { font: 'bold' }); cv.text(String(b).slice(0, 34), x, 84 + i * 50, 18, t.text, { font: 'label', literal: i > 2 }); };
             line(0, 'In the cluster', !showing() ? 'off (stock map)' : st.shown ? 'showing' : blockedByLayout() ? 'waiting: a layout shows (set its centre to these pages)' : 'waiting');
-            line(1, 'Page', page ? (list.indexOf(page) + 1) + ' of ' + list.length + ': ' + PAGES[page].title.toLowerCase() : 'none chosen');
+            line(1, 'Page', page ? (list.indexOf(page) + 1) + ' / ' + list.length + ': ' + PAGES[page].title.toLowerCase() : 'none chosen');
             line(2, 'Next page', num('rotate', 0) ? 'every ' + num('rotate', 0) + ' s' : 'with Next page');
             line(3, 'Cluster renderer', st.renderer + ', centre ' + st.target + ', ' + st.layers + ' layers' + (st.refused ? ', refused: ' + st.refused : '') + '   ·   app ' + ((ctx.spec && ctx.spec.version) || ''));
             line(4, 'Engine units (UDS)', ds.diag);
