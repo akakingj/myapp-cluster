@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.41.10",
+  "version": "0.42.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -763,6 +763,8 @@
     },
     {
       "key": "gScale",
+      "profile": "gMax",
+      "profileMap": {"1": "1", "1.5": "1.5", "2": "2"},
       "label": "JDM 2: G meter size",
       "type": "choice",
       "default": "1.5",
@@ -784,6 +786,8 @@
     },
     {
       "key": "gFlipLat",
+      "profile": "gLat",
+      "profileMap": {"out": "off", "in": "on"},
       "label": "JDM 2: G meter, swap left / right",
       "type": "choice",
       "default": "off",
@@ -801,6 +805,8 @@
     },
     {
       "key": "gFlipLong",
+      "profile": "gLong",
+      "profileMap": {"top": "off", "bottom": "on"},
       "label": "JDM 2: G meter, accelerating on top",
       "type": "choice",
       "default": "off",
@@ -1108,22 +1114,32 @@
       "section": "Red zone and shift"
     },
     {
-      "key": "shiftBefore",
-      "profile": "shiftBefore",
-      "label": "Shift point: below the red zone by",
+      "key": "shiftAt",
+      "profile": "shiftAt",
+      "label": "Shift point",
       "type": "number",
       "unit": "rpm",
-      "default": 300,
+      "default": 0,
+      "labels": {
+        "0": "Auto (red zone - 300)"
+      },
       "steps": [
         0,
-        100,
-        200,
-        300,
-        400,
-        500,
-        700,
-        800,
-        1000
+        4000,
+        4500,
+        5000,
+        5500,
+        5800,
+        6000,
+        6200,
+        6500,
+        6800,
+        7000,
+        7200,
+        7500,
+        7800,
+        8000,
+        8500
       ],
       "section": "Red zone and shift"
     },

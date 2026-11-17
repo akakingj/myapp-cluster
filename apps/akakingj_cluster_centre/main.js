@@ -73,13 +73,16 @@ mgu.run({
         let lastSample = 0;
         data.car.onSample(() => { lastSample = Date.now(); });
         const num = (k, dflt) => { const v = Number(settings.get(k)); return isFinite(v) ? v : dflt; };
+        // the shift point so many rpm under the red zone, from Settings > Shift light: flashes at (the Car profile's Shift point;
+        // 0 Auto: the red zone less 300)
+        const beforeOf = () => { const at = num('shiftAt', 0), red = num('redline', 6000); return at > 0 ? Math.max(100, red - at) : 300; };
 
         /* ---------- what is worked out from the readings ---------- */
         const warm = new WarmUp(), cool = new CoolDown(), perf = new PerfTimer();
         const eng = { onMs: 0, driveMs: 0, starts: 0, last: null, was: false, why: null };
         const extra = () => ({ warm: warm.state(data.data()), cool: cool.state(), perf: perf.state(Date.now()), eng: { onMs: eng.onMs, share: eng.driveMs > 60000 ? eng.onMs / eng.driveMs * 100 : null, starts: eng.starts, why: eng.why } });
         const feedOpts = () => {
-            Object.assign(warm.o, { target: num('warmTarget', 80), coldLimit: num('coldLimit', 4500), redline: num('redline', 6000), shiftBefore: num('shiftBefore', 300), coldGuard: settings.get('coldGuard') });
+            Object.assign(warm.o, { target: num('warmTarget', 80), coldLimit: num('coldLimit', 4500), redline: num('redline', 6000), shiftBefore: beforeOf(), coldGuard: settings.get('coldGuard') });
             Object.assign(cool.o, { hardRpm: num('hardRpm', 4500) });
             perf.o.kmh = settings.get('speedUnit') === 'kmh';
         };
@@ -107,7 +110,7 @@ mgu.run({
             warn: { oilWarm: num('warmTarget', 80), oilHigh: num('oilHigh'), coolantHigh: num('coolantHigh'), iatHigh: num('iatHigh'), gearboxHigh: num('gearboxHigh'), battTempHigh: num('battTempHigh'), lpfpLow: num('lpfpLow') },
             // (flashes at: the set rpm, or 0 = Auto, the shift point now: features.js shiftPoint, as Cluster Layouts and Redline)
             shift: { on: settings.get('shift') !== 'off', from: num('shiftFrom', 4000), at: num('shiftAt', 0),
-                auto: { redline: num('redline', 6000), shiftBefore: num('shiftBefore', 300), coldGuard: settings.get('coldGuard'), coldLimit: num('coldLimit', 4500), warmOil: num('warmTarget', 80) } },
+                auto: { redline: num('redline', 6000), shiftBefore: beforeOf(), coldGuard: settings.get('coldGuard'), coldLimit: num('coldLimit', 4500), warmOil: num('warmTarget', 80) } },
             badge: settings.get('badge') !== 'off',
             warmTarget: num('warmTarget', 80), redline: num('redline', 6000),
             custom: [1, 2].map((i) => ({ style: settings.get('c' + i + 'Style'), slots: [1, 2, 3, 4, 5, 6].slice(0, num('c' + i + 'Count', 4)).map((s) => settings.get('c' + i + 's' + s)).filter((k) => k && k !== 'none') })),

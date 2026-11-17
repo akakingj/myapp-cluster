@@ -22,6 +22,13 @@ const mgu = require('./kit/mgu');
 const { ClusterRender } = require('./cluster_render_client');
 const { startCluster, STALE_MS, frozen } = require('./engine');
 const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, slotLabel: layoutSlotLabel, placesFor, placeItem } = require('./layouts');
+
+/** The shift point as layout_common takes it - so many rpm under the red zone - from Settings > Shift point (0.42.0,
+ * the Car profile's: an rpm; 0 Auto, the red zone less 300). */
+function beforeOf(settings) {
+    const at = Number(settings.get('shiftAt')), red = Number(settings.get('redline'));
+    return at > 0 && red > 0 ? Math.max(100, red - at) : 300;
+}
 const menu = require('./menu');
 const { withAlpha } = require('./kit/canvas');
 const { t: tr } = require('./kit/i18n');
@@ -95,7 +102,7 @@ mgu.run({
         const options = () => ({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
             powerUnit: settings.get('powerUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), gFlipLat: settings.get('gFlipLat'), gFlipLong: settings.get('gFlipLong'), jdmCup: slot('jdmCup'), stripBars: settings.get('stripBars'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'), places: placesOf(layout.id),
-            amberRpm: settings.get('amberRpm'), shiftBefore: settings.get('shiftBefore'), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
+            amberRpm: settings.get('amberRpm'), shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
             redline: Number(settings.get('redline')) || 7000, rpmMax: Number(settings.get('rpmMax')) || 8000,
@@ -169,7 +176,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'gFlipLat', 'gFlipLong', 'jdmCup', 'stripBars', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftBefore', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'gFlipLat', 'gFlipLong', 'jdmCup', 'stripBars', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */
