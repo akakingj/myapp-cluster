@@ -296,19 +296,20 @@ function dash(o) {
 
 /*
  * The cup of water (0.41.0; Settings > JDM 1: cup of water, or the layout's page): a paper cup standing over the left
- * box, its water sloshing with the car's G. Sideways: higher on the outside of the bend, where the driver is pushed
- * (0.41.6; the side JDM 2's G meter's dot goes, Settings >
- * JDM 2: G meter, swap left / right), the surface's tilt the G's angle (atan g, at most about 22 degrees: the water
- * stays in). Fore and aft (0.41.4): braking sends it to the far side (its surface seen taller), accelerating to the near
- * side (flatter). Each on a spring that rings down after a change (about 1.5 a second, lightly damped), worked out
- * every frame here and sent only when it moves (0.004): nothing while the water lies still. Shader: shaders.js CUP_FS.
- * In px on the panel (after scaled()): over the left box's second gauge (the fuel's), in line with it (0.41.3), its rim
- * clear of the panel's rounded corner (tools/clearance.js: the cup's outline).
+ * box, its water sloshing with the car's G - wilder than the G alone would tilt it (0.41.8: 2.2 times, the owner's
+ * call), to the rim and down the far wall. Sideways: higher on the outside of the bend, where the driver is pushed
+ * (0.41.6; the side JDM 2's G meter's dot goes, Settings > JDM 2: G meter, swap left / right), at most about 34
+ * degrees. Fore and aft (0.41.4): braking sends it to the far side (its surface seen taller), accelerating to the near
+ * side (flatter). Each on a spring that rings down after a change (about 1.2 a second, little damped: it sloshes back
+ * a few times), worked out every frame here and sent only when it moves (0.004): nothing while the water lies still.
+ * Shader: shaders.js CUP_FS (the water drawn only inside the cup's mouth: never over its rim). In px on the panel
+ * (after scaled()): over the left box's second gauge (the fuel's), in line with it (0.41.3), its rim clear of the
+ * panel's rounded corner (tools/clearance.js: the cup's outline).
  */
-const CUP = { x: 233, y: 96, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.38, lonMin: -0.2, lonMax: 0.3 };
+const CUP = { x: 233, y: 96, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.6, lonMin: -0.22, lonMax: 0.5, gain: 2.2 };
 /** A spring towards its target: step(target, dt ms) -> where it is (rounded to 0.004). */
 function spring(lo, hi) {
-    const W = 2 * Math.PI * 1.5, Z = 0.16;
+    const W = 2 * Math.PI * 1.2, Z = 0.09;
     let th = 0, v = 0;
     return (want, dt) => {
         for (let left = Math.min(250, dt || 0); left > 0; left -= 8) {
@@ -327,9 +328,9 @@ function cup(o) {
         params: { u_cup: [CUP.w / 2, CUP.rim, CUP.aR, CUP.aB], u_cup2: [CUP.H, CUP.e, CUP.level, 0], u_lon: [0] },
         colors: (t) => ({ wall: t.cupWall, inner: t.cupInner, edge: t.cupEdge, water: t.cupWater, foam: t.cupFoam }),
         frame: (d, dt) => ({
-            u_cup2: [CUP.H, CUP.e, CUP.level, lat(Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, Math.atan(sx * gOf(d, 'gLat')))), dt)],
+            u_cup2: [CUP.H, CUP.e, CUP.level, lat(Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, Math.atan(CUP.gain * sx * gOf(d, 'gLat')))), dt)],
             // (the car's longitudinal G: > 0 accelerating, kwfuse.js)
-            u_lon: [lon(Math.max(CUP.lonMin, Math.min(CUP.lonMax, -gOf(d, 'gLong'))), dt)],
+            u_lon: [lon(Math.max(CUP.lonMin, Math.min(CUP.lonMax, -CUP.gain * gOf(d, 'gLong'))), dt)],
         }),
     };
 }
