@@ -67,8 +67,10 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     check('the page: the chosen layout\'s picture and a row of cards, each a picture from previews.wad', () => {
         const ids = Array.from(lastPage.images);
         // (the row the Stock card is on, it being chosen while off: Stock alone there, the twelve layouts filling the two
-        // rows before; the pictures with the car's own bottom strip, the only form)
-        assert(ids.indexOf(0x434c0100) >= 0 && !ids.some((i) => i >= 0x434c0200 && i < 0x434c0300), ids.map((i) => i.toString(16)).join(','));
+        // rows before; the pictures with the car's own bottom strip, the only form; the Stock card its own picture,
+        // the car's cluster drawn, 0.39.6: IMG_CARD + 0x3f)
+        assert(ids.indexOf(0x434c0100) >= 0 && ids.filter((i) => i >= 0x434c0200 && i < 0x434c0300).join() === String(0x434c0200 + 0x3f), ids.map((i) => i.toString(16)).join(','));
+        assert(rec.imageById.get(0x434c0200 + 0x3f).w === 216 && rec.imageById.get(0x434c0200 + 0x3f).data.length === 216 * 81 * 4);
         assert(rec.imageById.get(0x434c0100).w === 600 && rec.imageById.get(0x434c0100).data.length === 600 * 225 * 4);
     });
     await tgt('cards_prev').run();

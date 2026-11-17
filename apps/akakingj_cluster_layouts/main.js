@@ -41,7 +41,7 @@ const path = require('path');
 const W = 1600, H = 520;
 /* the page's pictures (record.js setImage): the large one, and each layout's card (+ its index; + 0x40 with the car's
  * own bottom strip) */
-const IMG_BIG = 0x434c0100, IMG_CARD = 0x434c0200, IMG_STRIP = 0x40;
+const IMG_BIG = 0x434c0100, IMG_CARD = 0x434c0200, IMG_STRIP = 0x40, IMG_STOCK = 0x3f;   // (the Stock card: under the layouts' with the strip)
 const CARDS = 6;   // cards a row
 const isNum = (v) => typeof v === 'number' && isFinite(v);
 const SIGNALS_PER_PAGE = 7;
@@ -360,7 +360,10 @@ mgu.run({
                 cv.roundRect(x, y, CWD, CHT, 10, mine ? acc : withAlpha('#ffffff', 0.08));
                 cv.roundRect(x + 3, y + 3, CWD - 6, CHT - 6, 8, '#0b0d11');
                 const ix = x + Math.round((CWD - menu.TW) / 2), iy = y + 8;
-                if (id === 'stock') { cv.roundRect(ix, iy, menu.TW, menu.TH, 6, '#16191f'); cv.text('Stock', ix + menu.TW / 2, iy + menu.TH / 2 + 8, 24, t.dim, { align: 'center', font: 'bold' }); }
+                // (0.39.6) the Stock card: the car's own cluster, drawn (tools/stock_preview.py), or its name without the picture
+                const stockPx = id === 'stock' ? previews.thumb('stock', strip) : null;
+                if (id === 'stock' && !stockPx) { cv.roundRect(ix, iy, menu.TW, menu.TH, 6, '#16191f'); cv.text('Stock', ix + menu.TW / 2, iy + menu.TH / 2 + 8, 24, t.dim, { align: 'center', font: 'bold' }); }
+                else if (id === 'stock') { if (!picture(cv, IMG_CARD + IMG_STOCK, stockPx, menu.TW, menu.TH, ix, iy, !cardsUp.stock)) cv.fillRect(ix, iy, menu.TW, menu.TH, '#000000'); cardsUp.stock = true; }
                 else {
                     const n = ITEMS.indexOf(id) + (strip ? IMG_STRIP : 0), ck = id + (strip ? ':strip' : '');
                     if (!picture(cv, IMG_CARD + n, previews.thumb(id, strip), menu.TW, menu.TH, ix, iy, !cardsUp[ck])) cv.fillRect(ix, iy, menu.TW, menu.TH, '#000000');

@@ -86,12 +86,13 @@ check('slotsBy: a hidden object setting, empty by default', () => {
     assert(s && s.type === 'object' && s.hidden === true && JSON.stringify(s.default) === '{}');
 });
 
-check('previews.wad: a 600 x 225 picture of every layout, with the car\'s strip', () => {
+check('previews.wad: a 600 x 225 picture of every layout, with the car\'s strip, and of the stock cluster', () => {
     const b = fs.readFileSync(path.join(APP, 'previews.wad'));
     assert.strictEqual(b.slice(0, 4).toString(), 'LPV1');
     const hl = b.readUInt32LE(4), head = JSON.parse(b.slice(8, 8 + hl).toString()), data = 8 + hl;
     assert(head.w === 600 && head.h === 225);
-    L.LAYOUTS.forEach((l) => [1].forEach((strip) => {
+    // (and the Stock card's, the car's own cluster drawn: tools/stock_preview.py, 0.39.6)
+    L.LAYOUTS.concat([{ id: 'stock' }]).forEach((l) => [1].forEach((strip) => {
         const e = head.list.find((x) => x.id === l.id && x.strip === strip);
         assert(e, 'no picture of ' + l.id + (strip ? ' with the car\'s strip' : ''));
         const px = zlib.inflateSync(b.slice(data + e.off, data + e.off + e.len));

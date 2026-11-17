@@ -10,6 +10,8 @@ Each layout with the car's own bottom strip (strip 1: the only form since 0.34.0
 strip drawn in as a stand-in (the KOMBI draws the real one: gear, drive mode, ranges, time,
 outside temperature) so the picture reads as on the car.
 
+And the Stock card's picture, the car's own cluster drawn (tools/stock_preview.py), as 'stock'.
+
 Run again after a layout's look changes:  python3 tools/make_previews.py
 """
 import json, os, struct, subprocess, sys, tempfile, zlib
@@ -64,6 +66,16 @@ def main():
             off += len(data)
             im.save(os.path.join(tmp, '%s_%d_small.png' % (lid, strip)))
             print('%-14s strip %d %6d bytes' % (lid, strip, len(data)))
+    # the Stock card's: the car's own cluster, drawn (stock_preview.py)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import stock_preview
+    png = os.path.join(tmp, 'stock_1.png')
+    stock_preview.main(png)
+    data = zlib.compress(Image.open(png).convert('RGB').resize((PW, PH), Image.LANCZOS).tobytes(), 9)
+    head['list'].append({'id': 'stock', 'strip': 1, 'off': off, 'len': len(data)})
+    blobs.append(data)
+    off += len(data)
+    print('%-14s strip 1 %6d bytes' % ('stock', len(data)))
     hj = json.dumps(head, separators=(',', ':')).encode()
     with open(os.path.join(APP, 'previews.wad'), 'wb') as f:
         f.write(b'LPV1' + struct.pack('<I', len(hj)) + hj + b''.join(blobs))
