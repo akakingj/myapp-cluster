@@ -6,8 +6,14 @@
 require('./scene');
 const path = require('path');
 const C0 = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layout_common'));
-/** What piece p clashes with. o: the layout's options (Settings > Cluster: M car adds the M KOMBI's two boxes). */
+/** What piece p clashes with. o: the layout's options (Settings > Cluster: M car adds the M KOMBI's two boxes).
+ * (A piece marked hairline - JDM 1's thin lines run on to the panel's top, 0.40.4 - may go under the camera cowl and
+ * into the rounded corners: they only hide it there, as on a dash under its hood.) */
 function clashes(p, o) {
+    const c = clashesOf(p, o);
+    return p.hairline ? c.filter((x) => x !== 'under the cowl' && x !== 'in a corner') : c;
+}
+function clashesOf(p, o) {
     const C = C0, out = [];
     // (M's and Sport's whole-view backdrops, bimmer-lab's, count as backgrounds: over the car's strip their layer
     // ends at it, and the KOMBI's own boxes show over them)

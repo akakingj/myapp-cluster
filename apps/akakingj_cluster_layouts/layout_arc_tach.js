@@ -241,9 +241,9 @@ function lead(i, max) {
 function dash(o) {
     const s = C.rpmScale(o), list = [C.flat('bg', 0, 0, 1920, 720, 'bg')];
     // the dash's lines: the bottom one from the left upright to the right one, the uprights standing on it
-    // (0.40.3: the uprights up to the panel's rounded corners)
-    list.push(C.flat('lnBase', 150, CURVE.base, 1672, 2, 'line'), C.flat('lnL', 150, 198, 2, CURVE.base - 198, 'line'),
-        C.flat('lnR1', 1772, 170, 2, CURVE.base - 170, 'line'), C.flat('lnR2', 1820, 198, 2, CURVE.base - 198, 'line'),
+    // (0.40.4: the uprights up to the panel's top, into its rounded corners: hairlines, tools/clearance.js)
+    const up = (key, x) => Object.assign(C.flat(key, x, 18, 2, CURVE.base - 18, 'line'), { hairline: true });
+    list.push(C.flat('lnBase', 150, CURVE.base, 1672, 2, 'line'), up('lnL', 150), up('lnR1', 1772), up('lnR2', 1820),
         // (the stubs from the left upright to the box)
         C.flat('lnS1', 152, 300, 16, 2, 'line'), C.flat('lnS2', 152, 420, 16, 2, 'line'));
     // the rev bar (the engine speed eased; on electricity the battery's power), its figures
@@ -257,13 +257,12 @@ function dash(o) {
         dyn: (d) => (elec(d) ? { u_red: [2], u_orange: [2], u_shift: [0] }
             : ((m) => ({ u_red: [m[0]], u_orange: [m[1]], u_shift: [B.shiftNow(o, d) ? 1 : 0] }))(B.redMarks(o, s.max * 1000, d))),
     });
-    // the lines over the bar on up to the panel's top (0.40.3), as on the dash they're after: two more layers of the
-    // same drawing above the main one, either side of the camera cowl (under it they end at its edge, the main
-    // layer's top; layout_common.NOTCH: design x 777..1196); only these lines reach up there
-    const top = (key, x, w) => ({ key, kind: 'rtach', x, y: 18, w, h: CURVE.lineTop - 18, z: -10,
-        params: Object.assign({}, list[list.length - 1].params, { u_off: [x, 18], u_geo2: [CURVE.xe, CURVE.T, CURVE.base, 18] }),
+    // the lines over the bar on up to the panel's top (0.40.4), as on the dash they're after, under the camera cowl
+    // too (the camera hides them there): one more layer of the same drawing above the main one; only these lines
+    // reach up there (hairlines, tools/clearance.js)
+    list.push({ key: 'rtachTop', kind: 'rtach', x: X, y: 18, w: W, h: CURVE.lineTop - 18, z: -10, hairline: true,
+        params: Object.assign({}, list[list.length - 1].params, { u_off: [X, 18], u_geo2: [CURVE.xe, CURVE.T, CURVE.base, 18] }),
         colors: (t) => ({ ink: t.ink, dim: t.slat, line: t.line }) });
-    list.push(top('rtachTopL', X, 777 - X), top('rtachTopR', 1196, X + W - 1196));
     for (let i = 0; i <= s.max; i++) {
         const [x, y] = tachAt(i / s.max, 50), w = 60, h = 44;
         list.push(C.text('n' + i, Math.round(x - w / 2), Math.round(y - h / 2), w, h, String(i), (t, d) => (i * 1000 >= C.shiftPoint(o, d).red ? inkHot(t) : ink(t))));   // (red in the red zone)
