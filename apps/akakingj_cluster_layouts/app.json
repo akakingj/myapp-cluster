@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.41.8",
+  "version": "0.41.9",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -744,15 +744,19 @@
       "key": "jdmCup",
       "label": "JDM 1: cup of water",
       "type": "choice",
-      "default": "on",
+      "default": "clear",
       "options": [
         [
-          "off",
-          "Off"
+          "clear",
+          "Clear cup"
         ],
         [
           "on",
-          "On"
+          "Paper cup"
+        ],
+        [
+          "off",
+          "Off"
         ]
       ],
       "section": "Readouts and gauges"

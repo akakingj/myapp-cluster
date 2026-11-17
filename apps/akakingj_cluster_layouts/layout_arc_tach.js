@@ -187,7 +187,7 @@ function tachAlone(o, cx, cy, R, withGear) {
 /* ---------- 0.40.0: the digital dash ---------- */
 /* after an 80s digital dash: white figures and slats, grey lines on black, the speed and the bars in green on dark
  * LCDs (the 0.40.0 draft was all red) */
-const DASH = { cupWall: '#f3f1ec', cupInner: '#d4d6da', cupEdge: '#5e504a', cupWater: '#3f8fd4', cupFoam: '#86c4f2', ink: '#f1efe8', line: '#6c6f74', slat: '#383b40', lcd: '#5be596', lcdOff: '#13241a', panel: '#0b0e0d', lamp: '#e2302c', hot: '#e2302c', dark: '#000000' };
+const DASH = { cupWall: '#f3f1ec', cupInner: '#d4d6da', cupEdge: '#5e504a', cupGlass: '#e4ecf4', cupWater: '#3f8fd4', cupFoam: '#86c4f2', ink: '#f1efe8', line: '#6c6f74', slat: '#383b40', lcd: '#5be596', lcdOff: '#13241a', panel: '#0b0e0d', lamp: '#e2302c', hot: '#e2302c', dark: '#000000' };
 /* the LCDs' colour by the look (0.40.2): green in Comfort (and Adaptive), red in Sport, ECO PRO's green-blue in the
  * efficient modes; in Sport the gear goes white at the shift point */
 const LCD = { comfort: {}, sport: { lcd: '#ff3a2e', lcdOff: '#2c0c0a', hot: '#fff1e4' }, efficient: { lcd: '#2fd0bb', lcdOff: '#0b2521' } };
@@ -291,12 +291,12 @@ function dash(o) {
     const left = boxBar(o, 'speed', C.engineFocus(o) ? 'boost' : 'soc'), fuel = boxBar(Object.assign({}, o, { gaugeSpeed: 'fuel' }), 'speed', 'fuel');
     const cool = boxBar(Object.assign({}, o, { gaugeRpm: 'coolant' }), 'rpm', 'coolant'), right = boxBar(o, 'rpm', 'oil');
     return scaled(list.concat(gaugeBox('boxL', 168, 236, [left, fuel]), gaugeBox('boxR', 1442, 236, [cool, right])))
-        .concat(o.jdmCup === 'off' ? [] : [cup(o)]);
+        .concat(o.jdmCup === 'off' ? [] : [cup(o, o.jdmCup !== 'on')]);
 }
 
 /*
- * The cup of water (0.41.0; Settings > JDM 1: cup of water, or the layout's page): a paper cup standing over the left
- * box, its water sloshing with the car's G - wilder than the G alone would tilt it (0.41.8: 2.2 times, the owner's
+ * The cup of water (0.41.0; Settings > JDM 1: cup of water, or the layout's page): a clear cup (0.41.9, the default)
+ * or a paper one standing over the left box, its water sloshing with the car's G - wilder than the G alone would tilt it (0.41.8: 2.2 times, the owner's
  * call), to the rim and down the far wall. Sideways: higher on the outside of the bend, where the driver is pushed
  * (0.41.6; the side JDM 2's G meter's dot goes, Settings > JDM 2: G meter, swap left / right), at most about 34
  * degrees. Fore and aft (0.41.4): braking sends it to the far side (its surface seen taller), accelerating to the near
@@ -306,7 +306,7 @@ function dash(o) {
  * (after scaled()): over the left box's second gauge (the fuel's), in line with it (0.41.3), its rim clear of the
  * panel's rounded corner (tools/clearance.js: the cup's outline).
  */
-const CUP = { x: 233, y: 96, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.6, lonMin: -0.22, lonMax: 0.5, gain: 2.2 };
+const CUP = { x: 233, y: 96, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.6, lonMin: -0.22, lonMax: 0.32, gain: 2.2, clearLevel: 0.5 };
 /** A spring towards its target: step(target, dt ms) -> where it is (rounded to 0.004). */
 function spring(lo, hi) {
     const W = 2 * Math.PI * 1.2, Z = 0.09;
@@ -320,15 +320,18 @@ function spring(lo, hi) {
         return Math.round(Math.round(th / 0.004) * 0.004 * 1000) / 1000;
     };
 }
-function cup(o) {
+function cup(o, clear) {
     const sx = o.gFlipLat === 'on' ? -1 : 1, lat = spring(-CUP.maxTilt, CUP.maxTilt), lon = spring(CUP.lonMin, CUP.lonMax);
+    // (the clear cup half full: its water seen whole through the glass, room for the slosh; the paper cup's fuller, its
+    // surface seen through its mouth)
+    const level = clear ? CUP.clearLevel : CUP.level;
     const gOf = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : C.isNum(d[k]) ? d[k] : 0);
     return {
         key: 'cup', kind: 'cup', x: CUP.x, y: CUP.y, w: CUP.w, h: CUP.h, z: 4,
-        params: { u_cup: [CUP.w / 2, CUP.rim, CUP.aR, CUP.aB], u_cup2: [CUP.H, CUP.e, CUP.level, 0], u_lon: [0] },
-        colors: (t) => ({ wall: t.cupWall, inner: t.cupInner, edge: t.cupEdge, water: t.cupWater, foam: t.cupFoam }),
+        params: { u_cup: [CUP.w / 2, CUP.rim, CUP.aR, CUP.aB], u_cup2: [CUP.H, CUP.e, level, 0], u_lon: [0], u_clear: [clear ? 1 : 0] },
+        colors: (t) => ({ wall: t.cupWall, inner: t.cupInner, edge: clear ? t.cupGlass : t.cupEdge, water: t.cupWater, foam: t.cupFoam }),
         frame: (d, dt) => ({
-            u_cup2: [CUP.H, CUP.e, CUP.level, lat(Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, Math.atan(CUP.gain * sx * gOf(d, 'gLat')))), dt)],
+            u_cup2: [CUP.H, CUP.e, level, lat(Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, Math.atan(CUP.gain * sx * gOf(d, 'gLat')))), dt)],
             // (the car's longitudinal G: > 0 accelerating, kwfuse.js)
             u_lon: [lon(Math.max(CUP.lonMin, Math.min(CUP.lonMax, -CUP.gain * gOf(d, 'gLong'))), dt)],
         }),

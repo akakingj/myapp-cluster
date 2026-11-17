@@ -435,8 +435,8 @@ void main() {
  *   u_span  start and end angle (degrees, clockwise from the top; end > start)
  */
 /*
- * CUP_FS (kind 'cup', JDM 1 0.41.0): a paper cup of water seen a little from above, the water sloshing with the car's
- * sideways G: the cup white and opaque, the water seen through its mouth - its surface a tilted ellipse, the cup's
+ * CUP_FS (kind 'cup', JDM 1 0.41.0): a paper cup (u_clear: a clear one, 0.41.9) of water seen a little from above,
+ * the water sloshing with the car's sideways G: the paper cup white and opaque, the water seen through its mouth - its surface a tilted ellipse, the cup's
  * inside above it - the water's edge riding up the inner wall on the high side.
  *   u_cup:  the cup's middle x, its rim's y, the rim's half width, the bottom's half width (px in the layer)
  *   u_cup2: its height, the ellipses' height to width, the water's level (of the height, from the bottom), the
@@ -449,6 +449,7 @@ uniform vec2 u_size;
 uniform vec4 u_cup;
 uniform vec4 u_cup2;
 uniform float u_lon;
+uniform float u_clear;     // 1: a clear glass cup (0.41.9), the water seen through its wall
 uniform vec3 u_wall;
 uniform vec3 u_inner;
 uniform vec3 u_edge;
@@ -472,6 +473,21 @@ void main() {
     float far = ys - bw * sqrt(max(0.0, 1.0 - (x / aw) * (x / aw)));
     float dSurf = ell(vec2(x, p.y - ys), aw, bw);
     vec4 c = vec4(0.0);
+    if (u_clear > 0.5) {
+        // a clear cup: its far wall a faint tint, the water body under its surface's far edge (inside the glass, a
+        // little in from it), the surface, a veil and a sheen for the near wall, the lip a ring, the outline
+        float dIn = min(min(dTrap, dBot), dMouth) + 3.0, wi = cov(dIn);
+        c = put(c, u_edge * 0.5, 0.1 * cov(dBody));
+        c = put(c, u_water, 0.85 * wi * cov(far - p.y));
+        c = put(c, u_foam, 0.9 * wi * cov(dSurf));
+        c = put(c, mix(u_foam, vec3(1.0), 0.5), 0.8 * wi * cov(abs(dSurf) - 0.9) * step(p.y, ys));
+        c = put(c, vec3(1.0), 0.06 * cov(dBody) * step(ry, p.y));
+        c = put(c, vec3(1.0), 0.22 * cov(abs(x + 0.55 * w) - 3.0) * cov(dBody) * step(ry + e * aR, p.y));
+        c = put(c, u_edge, 0.9 * cov(abs(dRim + 2.0) - 1.6));
+        c = put(c, u_edge, 0.85 * cov(abs(dBody) - 0.8));
+        gl_FragColor = vec4(c.rgb / max(c.a, 0.0001), c.a);
+        return;
+    }
     // the paper, a little darker towards its sides
     c = put(c, u_wall * (0.8 + 0.2 * (1.0 - abs(x / w + 0.3))), cov(dBody));
     // through the mouth: the far inner wall (darker deeper), the water under its surface's far edge, the surface
