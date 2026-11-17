@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.40.4",
+  "version": "0.41.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -719,6 +719,23 @@
         [
           "temps",
           "Temperatures: oil, coolant, gearbox, intake"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "jdmCup",
+      "label": "JDM 1: cup of water",
+      "type": "choice",
+      "default": "on",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "on",
+          "On"
         ]
       ],
       "section": "Readouts and gauges"

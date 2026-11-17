@@ -7,7 +7,8 @@
  * rings, the coolant (C-H) and the fuel (E-F), their marks along the left of each (Settings > Tach gauge /
  * Speedometer gauge, or the page, put another reading in either). The ranges and the main readout in the column right
  * of the KOMBI's dark box. No maker's marks or names. The parts are one shader's (shaders.js JDM_FS, kind 'jdm').
- * With the map the tach stands left of it and the disc and small gauges right of it; with the stock centre the tach
+ * Over the car's own strip (0.41.0) the beginner driver's mark at the right (a traffic sign of Japan's; the owner's
+ * call). With the map the tach stands left of it and the disc and small gauges right of it; with the stock centre the tach
  * left of the KOMBI's content.
  */
 const C = require('./layout_common');
@@ -235,7 +236,14 @@ module.exports = {
         // over its edge, the disc above right of the tach, the coolant under it and the fuel right of both. (0.37.0:
         // no column of readouts at the right any more - readouts 1 and 2 and the main readout, the intake air, the
         // gearbox oil and the torque there - the owner's call; column() stays for a later use)
-        return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 427, 410, 233), tach(o, 900, 387, 259),
-            gearDisc(o, 1287, 262, 100), small(o, 'rpm', 1297, 526, 112), small(o, 'speed', 1500, 404, 110));
+        // (0.41.0: all of it 110 px to the left, the beginner driver's mark at the right, the owner's)
+        return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 317, 410, 233), tach(o, 790, 387, 259),
+            gearDisc(o, 1177, 262, 100), small(o, 'rpm', 1187, 526, 112), small(o, 'speed', 1390, 404, 110), [wakaba(1572, 214, 335)]);
     },
 };
+
+/** The beginner driver's mark (shoshinsha, "wakaba"), h px tall at (x, y): shaders.js WAKABA_FS (its picture 1901 x 2121). */
+function wakaba(x, y, h) {
+    const s = 2121 / h;
+    return { key: 'wakaba', kind: 'wakaba', x, y, w: Math.round(1901 / s), h, z: 2, params: { u_s: [s] }, colors: () => ({ yellow: '#ffee00', green: '#00ad56', edge: '#000000' }) };
+}

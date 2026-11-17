@@ -161,7 +161,8 @@ const SLOTS = {
     gt3: {}, m: {}, sport: {},
     classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE }, DIALS),
     // (no readouts beside its dials; with the map, readouts 1 and 2 above it over the car's strip)
-    id6m: Object.assign({ infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o) }, DIALS),
+    // (0.41.0: the display between the dials, as 20's)
+    id6m: Object.assign({ infoMain: (o) => !MAPFORM(o) }, DIALS, STRIP2),
     // (0.40.0: the main readout under the speed, the boxes' first and last bars; with the map, readouts 1 and 2
     // above it over the car's strip)
     arc_tach: Object.assign({ infoMain: ALWAYS, infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o) }, DIALS),
@@ -198,7 +199,8 @@ function slotsFor(id, o, all) {
 const ABOVE_MAP = { analog_sport: 1, retro: 1, id6m: 1, jdm2: 1, arc_tach: 1 };
 const SLOT_LABELS = {
     analog_sport: { gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
-    id6m: { gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
+    id6m: { infoA: 'Centre display: top left', infoB: 'Centre display: top right', infoMain: 'Centre display: under the speed',
+        gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
     classic: { infoMain: 'Centre readout: above the speed', infoLow: 'Centre readout: under the speed' },
     arc_tach: { infoMain: 'Centre readout: under the speed', gaugeSpeed: 'Left box: first bar', gaugeRpm: 'Right box: second bar' },
     jdm2: { gaugeSpeed: 'Small gauge: right', gaugeRpm: 'Small gauge: below' },

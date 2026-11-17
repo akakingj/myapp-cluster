@@ -187,7 +187,7 @@ function tachAlone(o, cx, cy, R, withGear) {
 /* ---------- 0.40.0: the digital dash ---------- */
 /* after an 80s digital dash: white figures and slats, grey lines on black, the speed and the bars in green on dark
  * LCDs (the 0.40.0 draft was all red) */
-const DASH = { ink: '#f1efe8', line: '#6c6f74', slat: '#383b40', lcd: '#5be596', lcdOff: '#13241a', panel: '#0b0e0d', lamp: '#e2302c', hot: '#e2302c', dark: '#000000' };
+const DASH = { cupWall: '#f3f1ec', cupInner: '#d4d6da', cupEdge: '#5e504a', cupWater: '#3f8fd4', cupFoam: '#86c4f2', ink: '#f1efe8', line: '#6c6f74', slat: '#383b40', lcd: '#5be596', lcdOff: '#13241a', panel: '#0b0e0d', lamp: '#e2302c', hot: '#e2302c', dark: '#000000' };
 /* the LCDs' colour by the look (0.40.2): green in Comfort (and Adaptive), red in Sport, ECO PRO's green-blue in the
  * efficient modes; in Sport the gear goes white at the shift point */
 const LCD = { comfort: {}, sport: { lcd: '#ff3a2e', lcdOff: '#2c0c0a', hot: '#fff1e4' }, efficient: { lcd: '#2fd0bb', lcdOff: '#0b2521' } };
@@ -290,7 +290,40 @@ function dash(o) {
     // the boxes: left a reading and the fuel, right the coolant and a reading
     const left = boxBar(o, 'speed', C.engineFocus(o) ? 'boost' : 'soc'), fuel = boxBar(Object.assign({}, o, { gaugeSpeed: 'fuel' }), 'speed', 'fuel');
     const cool = boxBar(Object.assign({}, o, { gaugeRpm: 'coolant' }), 'rpm', 'coolant'), right = boxBar(o, 'rpm', 'oil');
-    return scaled(list.concat(gaugeBox('boxL', 168, 236, [left, fuel]), gaugeBox('boxR', 1442, 236, [cool, right])));
+    return scaled(list.concat(gaugeBox('boxL', 168, 236, [left, fuel]), gaugeBox('boxR', 1442, 236, [cool, right])))
+        .concat(o.jdmCup === 'off' ? [] : [cup(o)]);
+}
+
+/*
+ * The cup of water (0.41.0; Settings > JDM 1: cup of water): a paper cup standing on the left box, its water
+ * sloshing with the car's sideways G - higher on the side the G meter's dot goes (JDM 2's, Settings > JDM 2: G meter,
+ * swap left / right), the surface's tilt the G's angle (atan g, at most about 23 degrees: the water stays in), on a
+ * spring that rings down after a change (about 1.5 a second, lightly damped). Worked out every frame here, the tilt
+ * sent only when it moves (0.004 rad): nothing while the water lies still. Shader: shaders.js CUP_FS. In px on the
+ * panel (after scaled()): over the box's top left, clear of the panel's rounded corner (tools/clearance.js).
+ */
+const CUP = { x: 270, y: 82, w: 180, h: 158, rim: 29, aR: 66, aB: 46, H: 104, e: 0.42, level: 0.72, maxTilt: 0.38 };
+function cup(o) {
+    const sx = o.gFlipLat === 'on' ? 1 : -1, W = 2 * Math.PI * 1.5, Z = 0.16;
+    let th = 0, v = 0, sent = null;
+    const gOf = (d) => (C.isNum(d.gLatZ) ? d.gLatZ : C.isNum(d.gLat) ? d.gLat : 0);
+    return {
+        key: 'cup', kind: 'cup', x: CUP.x, y: CUP.y, w: CUP.w, h: CUP.h, z: 4,
+        params: { u_cup: [CUP.w / 2, CUP.rim, CUP.aR, CUP.aB], u_cup2: [CUP.H, CUP.e, CUP.level, 0] },
+        colors: (t) => ({ wall: t.cupWall, inner: t.cupInner, edge: t.cupEdge, water: t.cupWater, foam: t.cupFoam }),
+        frame: (d, dt) => {
+            const want = Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, Math.atan(sx * gOf(d))));
+            // the spring, in steps of at most 8 ms (steady at any frame rate)
+            for (let left = Math.min(250, dt || 0); left > 0; left -= 8) {
+                const h = Math.min(8, left) / 1000;
+                v += (-W * W * (th - want) - 2 * Z * W * v) * h;
+                th = Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, th + v * h));
+            }
+            const r = Math.round(th / 0.004) * 0.004;
+            if (sent === null || Math.abs(r - sent) > 0.001) sent = r;
+            return { u_cup2: [CUP.H, CUP.e, CUP.level, Math.round(sent * 1000) / 1000] };
+        },
+    };
 }
 /*
  * The dash is drawn in design px (x 150..1822, y 132..602) and shown bigger (0.40.2): K times, its middle at x 960, its

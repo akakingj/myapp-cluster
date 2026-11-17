@@ -434,6 +434,109 @@ void main() {
  *   u_geo   the circle's centre (px in this layer), radius, the ring's thickness
  *   u_span  start and end angle (degrees, clockwise from the top; end > start)
  */
+/*
+ * CUP_FS (kind 'cup', JDM 1 0.41.0): a paper cup of water seen a little from above, the water sloshing with the car's
+ * sideways G: the cup white and opaque, the water seen through its mouth - its surface a tilted ellipse, the cup's
+ * inside above it - the water's edge riding up the inner wall on the high side.
+ *   u_cup:  the cup's middle x, its rim's y, the rim's half width, the bottom's half width (px in the layer)
+ *   u_cup2: its height, the ellipses' height to width, the water's level (of the height, from the bottom), the
+ *           surface's tilt (radians; > 0: higher on the right)
+ */
+const CUP_FS = `#version 100
+${HIGHP}
+uniform vec2 u_size;
+uniform vec4 u_cup;
+uniform vec4 u_cup2;
+uniform vec3 u_wall;
+uniform vec3 u_inner;
+uniform vec3 u_edge;
+uniform vec3 u_water;
+uniform vec3 u_foam;
+varying vec2 v_uv;
+float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
+/* an ellipse's signed distance, near enough for its edge's antialiasing (< 0 inside) */
+float ell(vec2 q, float a, float b) { return (length(q / vec2(a, b)) - 1.0) * min(a, b); }
+vec4 put(vec4 c, vec3 col, float a) { return vec4(col * a + c.rgb * (1.0 - a), a + c.a * (1.0 - a)); }
+void main() {
+    vec2 p = v_uv * u_size;
+    float cx = u_cup.x, ry = u_cup.y, aR = u_cup.z, aB = u_cup.w, H = u_cup2.x, e = u_cup2.y, by = ry + H;
+    float x = p.x - cx, t = clamp((p.y - ry) / H, 0.0, 1.0), w = mix(aR, aB, t);
+    // the cup: its sides, its bottom's ellipse, its rim's; its mouth inside the rolled lip
+    float dTrap = max(abs(x) - w, max(ry - p.y, p.y - by));
+    float dBot = ell(vec2(x, p.y - by), aB, e * aB), dRim = ell(vec2(x, p.y - ry), aR, e * aR);
+    float dBody = min(min(dTrap, dBot), dRim), dMouth = ell(vec2(x, p.y - ry), aR - 5.0, e * (aR - 5.0));
+    // the water: its surface a level ellipse at its depth, tilted (sheared) by the slosh
+    float yw = by - u_cup2.z * H, aw = mix(aR, aB, (yw - ry) / H) - 2.0, bw = e * aw, ys = yw - x * tan(u_cup2.w);
+    float far = ys - bw * sqrt(max(0.0, 1.0 - (x / aw) * (x / aw)));
+    float dSurf = ell(vec2(x, p.y - ys), aw, bw);
+    vec4 c = vec4(0.0);
+    // the paper, a little darker towards its sides
+    c = put(c, u_wall * (0.8 + 0.2 * (1.0 - abs(x / w + 0.3))), cov(dBody));
+    // through the mouth: the far inner wall (darker deeper), the water under its surface's far edge, the surface
+    float m = cov(dMouth);
+    c = put(c, u_inner * (1.0 - 0.3 * clamp((p.y - ry) / (e * aR * 2.0 + 0.6 * H), 0.0, 1.0)), m);
+    c = put(c, u_water, m * cov(far - p.y));
+    c = put(c, u_foam, m * cov(dSurf));
+    c = put(c, mix(u_foam, vec3(1.0), 0.5), 0.8 * m * cov(abs(dSurf) - 0.9) * step(p.y, ys));   // the far edge's glint
+    c = put(c, u_edge, 0.6 * cov(abs(dMouth) - 0.7));                    // the lip's inner edge
+    c = put(c, u_edge, cov(abs(dBody) - 1.0));                           // the outline
+    gl_FragColor = vec4(c.rgb / max(c.a, 0.0001), c.a);
+}`;
+
+/*
+ * WAKABA_FS (kind 'wakaba', JDM 2 0.41.0): the beginner driver's mark (shoshinsha, "wakaba": a young leaf, yellow
+ * and green, in a thick black edge; a traffic sign of Japan's), from its outline traced off the owner's picture: each
+ * leaf a polygon in the picture's px (its edge's box 1901 x 2121), the edge the leaves' outline grown 92 px.
+ *   u_s: the picture's px a layer px
+ */
+const WAKABA_FS = `#version 100
+${HIGHP}
+uniform vec2 u_size;
+uniform float u_s;
+uniform vec3 u_yellow;
+uniform vec3 u_green;
+uniform vec3 u_edge;
+varying vec2 v_uv;
+/* a polygon's signed distance, edge by edge (after Inigo Quilez's): d the nearest squared, s the inside's sign */
+void edge(vec2 p, vec2 a, vec2 b, inout float d, inout float s) {
+    vec2 e = b - a, w = p - a, q = w - e * clamp(dot(w, e) / dot(e, e), 0.0, 1.0);
+    d = min(d, dot(q, q));
+    bool c1 = p.y >= a.y, c2 = p.y < b.y, c3 = e.x * w.y > e.y * w.x;
+    if ((c1 && c2 && c3) || (!c1 && !c2 && !c3)) s = -s;
+}
+float yLeaf(vec2 p) {
+    float d = 1e12, s = 1.0;
+    edge(p, vec2(841.0, 100.0), vec2(771.0, 94.0), d, s);
+    edge(p, vec2(771.0, 94.0), vec2(709.0, 130.0), d, s);
+    edge(p, vec2(709.0, 130.0), vec2(94.0, 941.0), d, s);
+    edge(p, vec2(94.0, 941.0), vec2(94.0, 2025.0), d, s);
+    edge(p, vec2(94.0, 2025.0), vec2(947.0, 908.0), d, s);
+    edge(p, vec2(947.0, 908.0), vec2(908.0, 169.0), d, s);
+    edge(p, vec2(908.0, 169.0), vec2(886.0, 132.0), d, s);
+    edge(p, vec2(886.0, 132.0), vec2(841.0, 100.0), d, s);
+    return s * sqrt(d);
+}
+float gLeaf(vec2 p) {
+    float d = 1e12, s = 1.0;
+    edge(p, vec2(1788.0, 821.0), vec2(1740.0, 782.0), d, s);
+    edge(p, vec2(1740.0, 782.0), vec2(1687.0, 774.0), d, s);
+    edge(p, vec2(1687.0, 774.0), vec2(949.0, 906.0), d, s);
+    edge(p, vec2(949.0, 906.0), vec2(96.0, 2024.0), d, s);
+    edge(p, vec2(96.0, 2024.0), vec2(1097.0, 1790.0), d, s);
+    edge(p, vec2(1097.0, 1790.0), vec2(1799.0, 924.0), d, s);
+    edge(p, vec2(1799.0, 924.0), vec2(1808.0, 878.0), d, s);
+    edge(p, vec2(1808.0, 878.0), vec2(1788.0, 821.0), d, s);
+    return s * sqrt(d);
+}
+void main() {
+    vec2 p = v_uv * u_size * u_s;
+    float dy = yLeaf(p), dg = gLeaf(p), du = min(dy, dg), aa = u_s;
+    vec4 c = vec4(u_edge, clamp((92.0 - du) / aa + 0.5, 0.0, 1.0));
+    c.rgb = mix(c.rgb, u_yellow, clamp(0.5 - dy / aa, 0.0, 1.0));
+    c.rgb = mix(c.rgb, u_green, clamp(0.5 - dg / aa, 0.0, 1.0));
+    gl_FragColor = c;
+}`;
+
 const RING_FS = `#version 100
 ${HIGHP}${COMMON}
 uniform vec2 u_size;
@@ -2368,4 +2471,4 @@ const byMode = (fs, n) => Array.from({ length: n }, (_, m) => fs.replace('unifor
 const JDM_FS_MODES = byMode(JDM_FS, 8);
 const MROUND_FS_MODES = byMode(MROUND_FS, 3);
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, JDM_FS_MODES, MROUND_FS_MODES };
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, JDM_FS_MODES, MROUND_FS_MODES };

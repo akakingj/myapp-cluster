@@ -2,7 +2,8 @@
 /**
  * layout_id6m.js - "ID6 M": round dials after the M cars' analog clusters of the mid 2010s, an original drawing. Two
  * big dials, each with a thin white ring round its top (open at the bottom), a dark band, white marks and large
- * numerals (the speed in figures at the bottom of the middle, between the dials), a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of
+ * numerals, a darker disc in the middle and a long red-orange needle; between the dials a display (0.41.0, as 20's: readouts
+ * 1 and 2, the speed in big figures, the main readout); the tach's shift lights along the outside of
  * its top end (amber Settings > Amber zone below the red zone, then red; lower while the oil is cold, as the red zone);
  * the gear under the tach in a white arc; the M tricolour under the speedometer (no lettering); a small fuel gauge
  * left of the speedometer and a small engine oil gauge right of the tach (Settings > Speedometer gauge / Tach gauge,
@@ -11,9 +12,9 @@
 const C = require('./layout_common');
 
 const PALETTES = {
-    comfort: { bg: '#000000', face: '#1d1e21', ring: '#f2f3f4', tick: '#ffffff', needle: '#ff4a1c', amber: '#ffb01a', red: '#ff2a1a', text: '#ffffff', dim: '#9ca0a6', glow: '#ffffff', accent: '#ff4a1c', track: '#1a1b1d', ev: '#4ab4ff', num: '#ffffff' },
-    sport: { bg: '#000000', face: '#1f1d1e', ring: '#f4f2f2', tick: '#ffffff', needle: '#ff2a14', amber: '#ffa014', red: '#ff1a10', text: '#ffffff', dim: '#a49c9c', glow: '#ff6a4a', accent: '#ff2a14', track: '#1d1819', ev: '#4ab4ff', num: '#ffffff' },
-    efficient: { bg: '#000000', face: '#1b1e21', ring: '#e8f0f6', tick: '#f2f8ff', needle: '#ff6a1c', amber: '#ffb01a', red: '#ff2a1a', text: '#f2f8ff', dim: '#98a4ae', glow: '#6ab8ff', accent: '#3aa0ff', track: '#151a1e', ev: '#4ab4ff', num: '#ffffff' },
+    comfort: { bg: '#000000', face: '#1d1e21', ring: '#f2f3f4', tick: '#ffffff', needle: '#ff4a1c', amber: '#ffb01a', red: '#ff2a1a', text: '#ffffff', dim: '#9ca0a6', glow: '#ffffff', accent: '#ff4a1c', track: '#1a1b1d', ev: '#4ab4ff', num: '#ffffff', lcdTop: '#17181b', lcdBottom: '#0a0a0c', lcdEdge: '#4b4e54' },
+    sport: { bg: '#000000', face: '#1f1d1e', ring: '#f4f2f2', tick: '#ffffff', needle: '#ff2a14', amber: '#ffa014', red: '#ff1a10', text: '#ffffff', dim: '#a49c9c', glow: '#ff6a4a', accent: '#ff2a14', track: '#1d1819', ev: '#4ab4ff', num: '#ffffff', lcdTop: '#17181b', lcdBottom: '#0a0a0c', lcdEdge: '#4b4e54' },
+    efficient: { bg: '#000000', face: '#1b1e21', ring: '#e8f0f6', tick: '#f2f8ff', needle: '#ff6a1c', amber: '#ffb01a', red: '#ff2a1a', text: '#f2f8ff', dim: '#98a4ae', glow: '#6ab8ff', accent: '#3aa0ff', track: '#151a1e', ev: '#4ab4ff', num: '#ffffff', lcdTop: '#17181b', lcdBottom: '#0a0a0c', lcdEdge: '#4b4e54' },
 };
 const roundColours = (t) => ({ face: t.face, ring: t.ring, tick: t.tick, needle: t.needle, amber: t.amber, red: t.red });
 const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.12] });
@@ -133,9 +134,26 @@ module.exports = {
         // feet and over the strip; no readouts beside them (the strip shows the time, temperature and ranges)
         return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 470, 330, 300), tach(o, 1450, 330, 300, true),
             small(o, 'speed', 140, 562, 80), small(o, 'rpm', 1780, 562, 80), [
-                // the speed in figures at the bottom of the middle, between the dials' feet ('88 km/h')
-                C.text('speedDigits', 852, 546, 120, 62, (d) => C.speedText(o, d), white, { align: 1 }),
-                C.text('speedDigitsUnit', 982, 574, 110, 30, C.speedUnit(o), white, { align: 0 }),
-            ]);
+            ], centreDisplay(o, 812, 168, 296, 446));
     },
 };
+
+/*
+ * The display between the dials (0.41.0, as 20's): readouts 1 and 2 at its top, the speed in big figures, the main
+ * readout under it, in a dark panel with a thin ring-white edge; under the camera's cowl's foot, above the warning
+ * lights (tools/clearance.js).
+ */
+function centreDisplay(o, X, Y, W, H) {
+    const sy = H / 470;
+    return [
+        { key: 'lcd', kind: 'panel', x: X, y: Y, w: W, h: H, params: { u_box: [20, 2, 0.5, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },
+        C.text('clock', X + 16, Y + 18, (W - 38) / 2, 30, C.clock, white, { align: 0 }),
+        C.text('outside', X + W / 2 + 3, Y + 18, (W - 38) / 2, 30, (d) => C.outsideText(o, d.outside), white, { align: 1 }),
+        C.flat('rule1', X + 24, Y + Math.round(62 * sy), W - 48, 2, 'lcdEdge'),
+        C.text('speedDigits', X, Y + Math.round(104 * sy), W, 140, (d) => C.speedText(o, d), white),
+        C.text('speedDigitsUnit', X, Y + Math.round(254 * sy), W, 22, C.speedUnit(o), lbl, { tracking: 0.12 }),
+        C.flat('rule2', X + 24, Y + Math.round(312 * sy), W - 48, 2, 'lcdEdge'),
+        C.text('kwNow', X, Y + Math.round(338 * sy), W, 54, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
+        C.text('kwNowLbl', X, Y + Math.round(400 * sy), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+    ];
+}
