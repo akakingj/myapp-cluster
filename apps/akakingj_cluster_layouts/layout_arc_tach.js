@@ -227,6 +227,13 @@ function gaugeBox(id, x, y, bars) {
     return list;
 }
 /** A gauge as the boxes draw it: the one picked for `which` (Small gauge in the speedometer / tach), else `def`. */
+/** The boxes' four bars, left to right: the outer two Settings > Small gauge in the speedometer / in the tach (or the
+ * page's), the inner two the layout's own places (0.41.10: boxL2, boxR1; the fuel and the coolant as designed). */
+function boxBars(o) {
+    const inner = (k, def) => { const v = C.placeOf(o, k); return v && C.gaugeOf(Object.assign({}, o, { gaugeSpeed: v }), 'speed') ? v : def; };
+    return [boxBar(o, 'speed', C.engineFocus(o) ? 'boost' : 'soc'), boxBar(Object.assign({}, o, { gaugeSpeed: inner('boxL2', 'fuel') }), 'speed', 'fuel'),
+        boxBar(Object.assign({}, o, { gaugeRpm: inner('boxR1', 'coolant') }), 'rpm', 'coolant'), boxBar(o, 'rpm', 'oil')];
+}
 function boxBar(o, which, def) {
     const g = C.gaugeOf(o, which) || C.gaugeOf(Object.assign({}, o, which === 'speed' ? { gaugeSpeed: def } : { gaugeRpm: def }), which);
     const temp = ['coolant', 'oil', 'gearbox', 'iat', 'battTemp'].indexOf(g.key) >= 0;
@@ -287,9 +294,9 @@ function dash(o) {
     // the main readout under the display (Settings > Main readout; a plug-in hybrid's battery power)
     const pv = C.focus.power(o), pl = C.focus.powerLabel(o, true);
     if (pv) list.push(Object.assign(C.text('kwNow', sp.x + 24, sp.y + 202, sp.w - 48, 30, (d) => (typeof pv === 'function' ? pv(d) : pv) + (pl ? '   ' + pl : ''), ink), { z: 22 }));
-    // the boxes: left a reading and the fuel, right the coolant and a reading
-    const left = boxBar(o, 'speed', C.engineFocus(o) ? 'boost' : 'soc'), fuel = boxBar(Object.assign({}, o, { gaugeSpeed: 'fuel' }), 'speed', 'fuel');
-    const cool = boxBar(Object.assign({}, o, { gaugeRpm: 'coolant' }), 'rpm', 'coolant'), right = boxBar(o, 'rpm', 'oil');
+    // the boxes: left a reading and the fuel, right the coolant and a reading (each of the four set on the page:
+    // Settings > Small gauge in the speedometer / in the tach for the outer two, the layout's places for the inner)
+    const [left, fuel, cool, right] = boxBars(o);
     return scaled(list.concat(gaugeBox('boxL', 168, 236, [left, fuel]), gaugeBox('boxR', 1442, 236, [cool, right])))
         .concat(o.jdmCup === 'off' ? [] : [cup(o, o.jdmCup !== 'on')]);
 }
@@ -362,7 +369,12 @@ module.exports = {
     font: 'wide',     // (0.40.0: the dash's lettering, Michroma)
     gearText: C.gearText,
     // (its own fuel gauge, the right dial - unless Small gauge in the tach puts another reading there: then the strip's)
-    stripFuel: (o) => { if (o.centre !== 'map') return false; const g = C.gaugeOf(o, 'rpm'); return !!g && g.key !== 'fuel'; },   // (the dash: its fuel bar in the left box)
+    // (the dash: its fuel bar in the left box, unless another reading is set there: no strip bar, which would sit on
+    // the box's foot)
+    stripFuel: (o) => { if (o.centre !== 'map') return false; const g = C.gaugeOf(o, 'rpm'); return !!g && g.key !== 'fuel'; },
+    // its own places, set on the page (layouts.js placesFor): the boxes' inner bars (0.41.10)
+    places: [{ key: 'boxL2', kind: 'gauge', label: 'Left box: second bar', when: (o) => (o.centre || 'info') === 'info' },
+        { key: 'boxR1', kind: 'gauge', label: 'Right box: first bar', when: (o) => (o.centre || 'info') === 'info' }],
     speedGauge: false,  // (the speed in figures only)
 
     pieces(o) {
