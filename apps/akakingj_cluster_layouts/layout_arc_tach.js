@@ -1,19 +1,18 @@
 'use strict';
 /**
- * layout_arc_tach.js - "Arc tach": three round dials under chrome rings, the big tach in the middle in front, a
- * smaller dial either side tucked behind it (each side ring ends where it goes behind the middle one's). The tach:
- * a needle round numerals inside a dark ring, the red zone along the ring (from where the shift point puts it, lower
- * while the oil is cold), the main readout above the hub, the digital speed and its unit at the bottom right where
- * the scale leaves off, the gear at the bottom left (Settings > Arc tach: the gear in the arc; not over the car's own
- * strip, which shows it). Each side dial: one gauge along its outer top (left: Small gauge in the speedometer, Auto
- * the coolant, C - H; right: Small gauge in the tach, Auto the fuel, F at the top and E below), and a readout at its
- * foot (the time and the outside temperature; over the car's strip Readout 1 and 2). An original design after the
- * idea of a three-ring sports-car cluster (akakingj's build).
+ * layout_arc_tach.js - "JDM 1" (0.40.0): after the idea of an 80s Japanese digital dash, an original drawing (its lines
+ * after akakingj's vector of the look, its colours after the dashes of the time: white figures and slats, grey lines
+ * on black, green LCDs). The rev bar rises along a curve from the bottom left, over to the right along the top, in
+ * thin slats (ten a thousand) with the thousands' ticks and figures outside it; the dash's lines fan out under it and
+ * over it, two leaders run from the left box to its figures; the speed in green seven-segment figures on a dark LCD
+ * in a framed display under the bar's top, a red lamp by its name; a box either side with two bar gauges (after a
+ * race logger's), each a dark panel with a window filling green from the bottom, its name, its ends and its figures:
+ * left a reading (Small gauge in the speedometer; the boost on a petrol or diesel car, the charge on a plug-in
+ * hybrid) and the fuel, right the coolant and a reading (Small gauge in the tach; the engine oil); the gear big and
+ * green at the bottom left, as a race logger shows it; the main readout under the display. Shaders: shaders.js
+ * RTACH_FS, RBOX_FS, RSEG_FS.
  *
- * The car's own bottom strip (the default): the three centred, the tach's ring from just under the camera's cowl to
- * just over the strip. The layout's own strip: the three left of the KOMBI's gear box, the ranges right of it (an M
- * car: the tach left and the side dials apart, under its boxes). The map: the tach left of it, a dial right. The
- * stock centre: the tach left, a dial right of the KOMBI's centre.
+ * With the Waze map in the middle (and so far only then) the previous JDM 1: the tach left of the map, a dial right.
  */
 const C = require('./layout_common');
 const B = require('./bimmer');
@@ -53,7 +52,7 @@ function tach(o, cx, cy, R, withGear) {
             max: s.max, sweep: true, value: C.tachValue(o), range: C.tachRange(o, s), dyn: C.tachDyn(o, s, s.red),
         },
         // the speed bottom right, where the scale leaves off; its unit and the scale's under it
-        C.text('speedDigits', cx + Math.round(0.02 * R), cy + Math.round(0.25 * R), Math.round(0.5 * R), Math.round(0.27 * R), (d) => C.speedText(o, d), lit, { align: 1 }),
+        C.text('speedDigits', cx + Math.round(0.02 * R), cy + Math.round(0.31 * R), Math.round(0.5 * R), Math.round(0.21 * R), (d) => C.speedText(o, d), lit, { align: 1 }),
         C.text('speedDigitsUnit', cx + Math.round(0.02 * R), cy + Math.round(0.54 * R), Math.round(0.5 * R), Math.round(0.07 * R), C.speedUnit(o), lbl, { align: 1, tracking: 0.12 }),
         C.text('rpmUnit', cx + Math.round(0.12 * R), cy + Math.round(0.65 * R), Math.round(0.4 * R), Math.round(0.055 * R), (d) => (evOff(d) ? C.POWER_UNIT : 'x1000 rpm'), (t, d) => (evOff(d) ? elecTxt(t) : lbl(t)), { align: 1, tracking: 0.1 }),
         // the main readout above the hub
@@ -185,14 +184,113 @@ function tachAlone(o, cx, cy, R, withGear) {
     return tach(o, cx, cy, R, withGear).concat(rims([{ x: cx, y: cy, r: R + w, front: true }], w));
 }
 
+/* ---------- 0.40.0: the digital dash ---------- */
+/* after an 80s digital dash: white figures and slats, grey lines on black, the speed and the bars in green on dark
+ * LCDs (the 0.40.0 draft was all red) */
+const DASH = { ink: '#f1efe8', line: '#6c6f74', slat: '#383b40', lcd: '#5be596', lcdOff: '#13241a', panel: '#0b0e0d', lamp: '#e2302c', dark: '#000000' };
+const ink = (t) => ({ color: [t.ink, 1], glow: [t.ink, 0.12] });
+const inkHot = (t) => ({ color: [t.lamp, 1], glow: [t.lamp, 0.45] });
+const grn = (t) => ({ color: [t.lcd, 1], glow: [t.lcd, 0.25] });
+/* the rev bar's curve (panel px): a quarter circle from the bottom left up to the top at x CX, then straight on to XE */
+const CURVE = { cx: 1152, R: 750, top: 232, a0: -54.9, xe: 1372, T: 30, base: 600, lineTop: 136 };
+CURVE.cy = CURVE.top + CURVE.R;
+const tachLen = () => -CURVE.a0 * Math.PI / 180 * CURVE.R + (CURVE.xe - CURVE.cx);
+/** The point a share u along the curve, `out` px outside its middle line (panel px). */
+function tachAt(u, out) {
+    const arcL = -CURVE.a0 * Math.PI / 180 * CURVE.R, s = u * tachLen();
+    if (s >= arcL) return [CURVE.cx + (s - arcL), CURVE.top - out];
+    const a = (CURVE.a0 * Math.PI / 180) + s / CURVE.R;
+    return [CURVE.cx + Math.sin(a) * (CURVE.R + out), CURVE.cy - Math.cos(a) * (CURVE.R + out)];
+}
+/*
+ * A box of two bar gauges at x, y (w 310, h 330): each a dark panel with its name at the top, its window filling green
+ * from the bottom, its ends' letters beside it, its figures under it. bars: [{ key, label, frac(d), txt(d), lo, hi, hot(d) }].
+ */
+function gaugeBox(id, x, y, bars) {
+    const W = 310, H = 330, PW = 136, PH = 298, list = [
+        { key: id, kind: 'rbox', x, y, w: W, h: H, params: { u_box: [14, 3, 0, 0], u_win: [0, 0, 0, 0], u_seg: [0] }, colors: (t) => ({ fill: [t.dark, 1], line: t.line, wcol: t.dark }) },
+    ];
+    bars.forEach((b, i) => {
+        const px = x + 16 + i * (PW + 10), py = y + 16, wx = 56, wy = 50, ww = 50, wh = 170;
+        list.push(
+            { key: id + i, kind: 'rbox', x: px, y: py, w: PW, h: PH, z: 2, params: { u_box: [10, 2, 0, 0], u_win: [wx, wy, ww, wh], u_seg: [17] },
+                colors: (t) => ({ fill: [t.panel, 1], line: t.line, wcol: t.lcd }), value: (d) => Math.max(0, Math.min(1, b.frac(d) || 0)), max: 1, sweep: true },
+            C.text(id + i + 'Lbl', px + 6, py + 14, PW - 12, 20, b.label, ink, { z: 22 }),
+            C.text(id + i + 'Hi', px + 16, py + wy, 30, 24, b.hi, ink, { z: 22 }),
+            C.text(id + i + 'Lo', px + 16, py + wy + wh - 24, 30, 24, b.lo, ink, { z: 22 }),
+            Object.assign(C.text(id + i + 'Num', px + 3, py + wy + wh + 25, PW - 6, 28, b.txt, (t, d) => (b.hot && b.hot(d) ? inkHot(t) : ink(t)), { z: 22 }), b.tone ? { tone: b.tone } : {}));
+    });
+    return list;
+}
+/** A gauge as the boxes draw it: the one picked for `which` (Small gauge in the speedometer / tach), else `def`. */
+function boxBar(o, which, def) {
+    const g = C.gaugeOf(o, which) || C.gaugeOf(Object.assign({}, o, which === 'speed' ? { gaugeSpeed: def } : { gaugeRpm: def }), which);
+    const temp = ['coolant', 'oil', 'gearbox', 'iat', 'battTemp'].indexOf(g.key) >= 0;
+    return { key: g.key, label: g.label, frac: g.frac, txt: g.txt, hot: g.hot, lo: g.key === 'fuel' ? 'E' : temp ? 'C' : 'L', hi: g.key === 'fuel' ? 'F' : temp ? 'H' : 'H' };
+}
+/** A leader line from the left box (x 480) to figure i's upper left: [from x, at y, to x], then 45 degrees down. */
+function lead(i, max) {
+    if (i > max) return [0, 0, 0];
+    const [x, y] = tachAt(i / max, 50);
+    return [480, Math.round(y - 38), Math.round(x - 44)];
+}
+function dash(o) {
+    const s = C.rpmScale(o), list = [C.flat('bg', 0, 0, 1920, 720, 'bg')];
+    // the dash's lines: the bottom one, and the uprights either side
+    list.push(C.flat('lnBase', 140, CURVE.base, 1680, 2, 'line'), C.flat('lnL', 150, 210, 2, CURVE.base - 210, 'line'),
+        C.flat('lnR1', 1772, 180, 2, CURVE.base - 180, 'line'), C.flat('lnR2', 1820, 180, 2, CURVE.base - 180, 'line'),
+        // (the stubs from the left upright to the box)
+        C.flat('lnS1', 152, 300, 16, 2, 'line'), C.flat('lnS2', 152, 420, 16, 2, 'line'));
+    // the rev bar (the engine speed eased; on electricity the battery's power), its figures
+    const X = 480, Y = CURVE.lineTop - 4, W = CURVE.xe + 40 - X, H = CURVE.base + 4 - Y;
+    const elec = (d) => C.electric(o, d);
+    list.push({
+        key: 'rtach', kind: 'rtach', x: X, y: Y, w: W, h: H, z: -10,
+        params: { u_off: [X, Y], u_geo: [CURVE.cx, CURVE.cy, CURVE.R, CURVE.a0], u_geo2: [CURVE.xe, CURVE.T, CURVE.base, CURVE.lineTop], u_ticks: [s.max, 10], u_ld1: lead(1, s.max), u_ld2: lead(2, s.max) },
+        colors: (t) => ({ ink: t.ink, dim: t.slat, line: t.line }),
+        value: (d) => (elec(d) ? C.powerFrac(d) : C.isNum(d.rpm) ? Math.max(0, Math.min(1, d.rpm / (s.max * 1000))) : 0), max: 1, sweep: true,
+        dyn: (d) => (elec(d) ? { u_red: [2], u_orange: [2], u_shift: [0] }
+            : ((m) => ({ u_red: [m[0]], u_orange: [m[1]], u_shift: [B.shiftNow(o, d) ? 1 : 0] }))(B.redMarks(o, s.max * 1000, d))),
+    });
+    for (let i = 0; i <= s.max; i++) {
+        const [x, y] = tachAt(i / s.max, 50), w = 60, h = 44;
+        list.push(C.text('n' + i, Math.round(x - w / 2), Math.round(y - h / 2), w, h, String(i), ink));
+    }
+    list.push(Object.assign(C.flat('tachBg', 684, 466, 196, 64, 'bg'), { z: -5 }),
+        C.text('tachLbl', 690, 470, 170, 28, (d) => (elec(d) ? 'POWER' : 'TACH'), ink, { align: 0, tracking: 0.06 }),
+        C.text('tachUnit', 690, 502, 190, 22, (d) => (elec(d) ? C.POWER_UNIT : 'x1000 r/min'), ink, { align: 0 }));
+    // the gear, as a race logger shows it, at the bottom left (a black box behind it over the lines)
+    list.push(Object.assign(C.flat('gearBg', 640, 522, 250, 76, 'bg'), { z: -5 }),
+        C.text('gearLbl', 646, 554, 90, 24, 'GEAR', ink, { align: 0 }),
+        C.text('dashGear', 740, 520, 150, 76, C.gearText, (t, d) => (B.shiftNow(o, d) ? inkHot(t) : grn(t)), { align: 0 }));
+    // the speed: a framed display under the bar's top, green figures on a dark LCD, a red lamp by its name
+    const sp = { x: 880, y: 330, w: 530, h: 190 };
+    list.push({ key: 'spFrame', kind: 'rbox', x: sp.x, y: sp.y, w: sp.w, h: sp.h, params: { u_box: [10, 3, 0, 0], u_win: [0, 0, 0, 0], u_seg: [0] }, colors: (t) => ({ fill: [t.dark, 1], line: t.line, wcol: t.dark }) },
+        Object.assign(C.flat('spMark', sp.x + 22, sp.y + 72, 52, 12, 'lamp'), { z: 5 }),
+        C.text('spLbl', sp.x + 14, sp.y + 94, 94, 18, 'SPEED', ink, { align: 0 }),
+        { key: 'spLcd', kind: 'rseg', x: sp.x + 108, y: sp.y + 18, w: sp.w - 126, h: sp.h - 36, z: 2,
+            params: { u_dig: [sp.w - 126 - 110, 22, 62, 110], u_seg2: [13, 0.14, 3] },
+            colors: (t) => ({ fill: t.panel, on: t.lcd, off: t.lcdOff }),
+            dyn: (d) => ({ u_num: [C.isNum(d.speed) ? Math.max(0, Math.min(999, Math.round(C.speedIn(o, d.speed)))) : 0] }) },
+        C.text('spUnit', sp.x + sp.w - 112, sp.y + 112, 90, 30, C.speedUnit(o), grn, { align: 0, z: 22 }));
+    // the main readout under the display (Settings > Main readout; a plug-in hybrid's battery power)
+    const pv = C.focus.power(o), pl = C.focus.powerLabel(o, true);
+    if (pv) list.push(Object.assign(C.flat('kwBg', sp.x + 30, sp.y + sp.h + 8, sp.w - 30, 46, 'bg'), { z: -5 }), C.text('kwNow', sp.x + 40, sp.y + sp.h + 16, sp.w - 40, 30, (d) => (typeof pv === 'function' ? pv(d) : pv) + (pl ? '   ' + pl : ''), ink));
+    // the boxes: left a reading and the fuel, right the coolant and a reading
+    const left = boxBar(o, 'speed', C.engineFocus(o) ? 'boost' : 'soc'), fuel = boxBar(Object.assign({}, o, { gaugeSpeed: 'fuel' }), 'speed', 'fuel');
+    const cool = boxBar(Object.assign({}, o, { gaugeRpm: 'coolant' }), 'rpm', 'coolant'), right = boxBar(o, 'rpm', 'oil');
+    return list.concat(gaugeBox('boxL', 168, 236, [left, fuel]), gaugeBox('boxR', 1442, 236, [cool, right]));
+}
+
 module.exports = {
     id: 'arc_tach',
     title: 'JDM 1',
     // one look in every drive mode (0.35.4)
-    palette: () => PALETTES.comfort,
+    palette: () => Object.assign({}, PALETTES.comfort, DASH),
+    font: 'wide',     // (0.40.0: the dash's lettering, Michroma)
     gearText: C.gearText,
     // (its own fuel gauge, the right dial - unless Small gauge in the tach puts another reading there: then the strip's)
-    stripFuel: (o) => { const g = C.gaugeOf(o, 'rpm'); return !!g && g.key !== 'fuel'; },
+    stripFuel: (o) => { if (o.centre !== 'map') return false; const g = C.gaugeOf(o, 'rpm'); return !!g && g.key !== 'fuel'; },   // (the dash: its fuel bar in the left box)
     speedGauge: false,  // (the speed in figures only)
 
     pieces(o) {
@@ -217,6 +315,7 @@ module.exports = {
         // G05's NOTCH; now its chrome from y 150, the bottom where it was)
         // (0.39.5) The dials behind it larger, 210 (176 before): the tach can't grow (the cowl above, the strip below),
         // they can, out to the sides
-        return bg.concat(three(o, 960, 399, 233, false, [['speed', 'clock', 210], ['rpm', 'outside', 210]], 72));
+        // (0.40.0) the digital dash (above); the three dials stay for the map
+        return dash(o);
     },
 };

@@ -262,6 +262,166 @@ void main() {
  *   u_zero    (an arc) where the fill starts, 0..1 (0 unless set): a power gauge's 0, lit from it to u_value either
  *             way, below it in u_neg (regeneration); its marks counted from it, one more at the start
  */
+/*
+ * (Layouts 0.40.0) JDM 1's parts, after an 80s Japanese digital dash (an original drawing of the idea): one colour
+ * on black, panels lit in it with their readings dark on them as a lit LCD's.
+ *
+ * RTACH_FS: the rev bar along a curve - a quarter of a circle (centre u_geo.xy, radius u_geo.z, from u_geo.w degrees
+ * left of its top round to the top), then straight on to x u_geo2.x - lit in segments from 0 to u_value (0..1), the
+ * amber run-up from u_orange and the red zone from u_red brighter, ticks outside it every segment (the thousands
+ * longer), and the dash's lines: radial under the bar down to y u_geo2.z, over it (from the third thousand) up to
+ * y u_geo2.w. u_off: the layer's place on the panel (the geometry is in panel px).
+ */
+const RTACH_FS = `#version 100
+${HIGHP}${COMMON}
+uniform vec2 u_size;
+uniform vec2 u_off;
+uniform vec4 u_geo;
+uniform vec4 u_geo2;      // x of the straight part's end, the bar's thickness, the lines' bottom y, their top y
+uniform vec2 u_ticks;     // thousands on the scale, segments a thousand
+uniform float u_value;
+uniform float u_red;
+uniform float u_orange;
+uniform float u_shift;
+uniform vec3 u_ink;
+uniform vec3 u_dim;
+uniform vec3 u_line;      // the dash's lines and the small ticks
+uniform vec3 u_ld1;       // two leader lines (panel px): from x, at y, along to x; then down at 45 degrees for 18 px
+uniform vec3 u_ld2;
+varying vec2 v_uv;
+float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
+float segd(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0); return length(pa - ba * h); }
+float lead(vec2 p, vec3 l) { return l.z <= l.x ? 1e3 : min(segd(p, l.xy, vec2(l.z, l.y)), segd(p, vec2(l.z, l.y), vec2(l.z + 18.0, l.y + 18.0))); }
+vec4 put(vec4 c, vec3 col, float a) { return vec4(col * a + c.rgb * (1.0 - a), a + c.a * (1.0 - a)); }
+void main() {
+    vec2 p = v_uv * u_size + u_off;
+    vec2 C = u_geo.xy;
+    float R = u_geo.z, a0 = u_geo.w * DEG, T = u_geo2.y;
+    float arcL = -a0 * R, L = arcL + (u_geo2.x - C.x);
+    float s, dist, k = 1.0;                  // along the bar from 0 (px at its middle line), out from it, px a px of s here
+    if (p.x < C.x) {
+        vec2 v = p - C;
+        float r = length(v);
+        s = (atan(v.x, -v.y) - a0) * R;
+        dist = r - R;
+        k = r / R;
+    } else {
+        s = arcL + (p.x - C.x);
+        dist = C.y - R - p.y;
+    }
+    float t = s / L;
+    vec4 c = vec4(0.0);
+    // the bar: thin slats with a dark gap between (a vacuum display's), lit to the value
+    float n = u_ticks.x * u_ticks.y, segL = L / n;
+    float along = clamp(s + 0.5, 0.0, 1.0) * clamp(L - s + 0.5, 0.0, 1.0);
+    float sg = fract(s / segL) * segL;
+    float bar = cov(abs(dist) - T * 0.5) * along * clamp(min(sg, segL - sg) * k - segL * 0.21, 0.0, 1.0);
+    float lit = step(t, u_value);
+    vec3 col = mix(u_dim, u_shift > 0.5 ? vec3(1.0, 0.28, 0.2) : u_ink, lit);
+    if (t >= u_orange && t < u_red) col = mix(mix(u_dim, vec3(0.32, 0.2, 0.05), 0.3), u_shift > 0.5 ? vec3(1.0, 0.28, 0.2) : vec3(1.0, 0.68, 0.16), lit);
+    if (t >= u_red) col = mix(mix(u_dim, vec3(0.4, 0.06, 0.05), 0.35), vec3(1.0, 0.2, 0.16), lit);
+    c = put(c, col, bar);
+    // ticks outside it: the thousands long and white, the halves short in the lines' colour
+    float j = floor(s / segL + 0.5), dj = abs(s - j * segL) * k;
+    float major = step(mod(j + 0.5, u_ticks.y), 1.0), hk = step(mod(j + 0.5, u_ticks.y * 0.5), 1.0);
+    float tl = mix(9.0, 18.0, major), tw = mix(0.9, 2.2, major);
+    float tick = cov(dj - tw) * step(T * 0.5 + 4.0, dist) * step(dist, T * 0.5 + 4.0 + tl) * step(-0.5, j) * step(j, n + 0.5) * hk;
+    c = put(c, mix(u_line, u_ink, major), tick);
+    // the dash's lines: under the bar at each thousand down to the bottom line; over it from the third up to the top
+    float m = floor(s / (segL * u_ticks.y) + 0.5), dm = abs(s - m * segL * u_ticks.y) * k;
+    float under = step(dist, -T * 0.5 - 8.0) * step(p.y, u_geo2.z) * step(0.5, m) * step(m, u_ticks.x + 0.5);
+    float overB = step(T * 0.5 + 74.0, dist) * step(u_geo2.w, p.y) * step(2.5, m) * step(m, u_ticks.x + 0.5);
+    c = put(c, u_line, cov(dm - 0.9) * max(under, overB));
+    // the leader lines from the left box to the figures
+    c = put(c, u_line, cov(min(lead(p, u_ld1), lead(p, u_ld2)) - 0.9));
+    gl_FragColor = vec4(c.rgb / max(c.a, 0.0001), c.a);
+}`;
+
+/*
+ * RBOX_FS: a rounded box (u_box: corner radius, border width) filled u_fill (rgba), its border u_line; and in it, when
+ * u_win.z > 0, a bar gauge's window (u_win: x, y, w, h in the layer): outlined in u_wcol, filled with it from the bottom
+ * to u_value (0..1) in segments u_seg px apart (0: solid).
+ */
+const RBOX_FS = `#version 100
+${HIGHP}${COMMON}
+uniform vec2 u_size;
+uniform vec4 u_box;
+uniform vec4 u_fill;
+uniform vec3 u_line;
+uniform vec4 u_win;
+uniform float u_value;
+uniform float u_seg;
+uniform vec3 u_wcol;
+varying vec2 v_uv;
+void main() {
+    vec2 p = v_uv * u_size, h = u_size * 0.5, q = abs(p - h) - (h - u_box.x - 1.0);
+    float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - u_box.x;      // < 0 inside
+    float inside = clamp(0.5 - dist, 0.0, 1.0);
+    vec4 c = u_fill;
+    if (u_box.y > 0.0) c = mix(c, vec4(u_line, 1.0), clamp(dist + u_box.y + 0.5, 0.0, 1.0));
+    if (u_win.z > 0.0) {
+        vec2 w = p - u_win.xy;
+        float inW = clamp(w.x + 0.5, 0.0, 1.0) * clamp(u_win.z - w.x + 0.5, 0.0, 1.0) * clamp(w.y + 0.5, 0.0, 1.0) * clamp(u_win.w - w.y + 0.5, 0.0, 1.0);
+        float edge = inW * (1.0 - clamp(w.x - 2.5, 0.0, 1.0) * clamp(u_win.z - 2.5 - w.x, 0.0, 1.0) * clamp(w.y - 2.5, 0.0, 1.0) * clamp(u_win.w - 2.5 - w.y, 0.0, 1.0));
+        float top = u_win.w * (1.0 - clamp(u_value, 0.0, 1.0));
+        float fill = inW * clamp(w.y - top + 0.5, 0.0, 1.0);
+        if (u_seg > 0.0) { float g = mod(u_win.w - w.y, u_seg); fill *= clamp(g - 2.0, 0.0, 1.0) * clamp(u_seg - g, 0.0, 1.0); }
+        c = mix(c, vec4(u_wcol, 1.0), max(edge, fill * clamp(w.x - 5.5, 0.0, 1.0) * clamp(u_win.z - 5.5 - w.x, 0.0, 1.0)));
+    }
+    gl_FragColor = vec4(c.rgb, c.a * inside);
+}`;
+
+/*
+ * RSEG_FS: a lit LCD (a rounded box in u_fill) with u_num in seven-segment figures, dark (u_on) over the unlit
+ * segments' faint shape (u_off): the figures right-aligned to x u_dig.x, from y u_dig.y, each u_dig.z wide and u_dig.w
+ * high, u_seg2: the segments' thickness, their slant, how many figures (leading zeros left blank).
+ */
+const RSEG_FS = `#version 100
+${HIGHP}${COMMON}
+uniform vec2 u_size;
+uniform float u_num;
+uniform vec4 u_dig;
+uniform vec3 u_seg2;
+uniform vec3 u_fill;
+uniform vec3 u_on;
+uniform vec3 u_off;
+varying vec2 v_uv;
+float segD(vec2 q, vec2 a, vec2 b, float th) {
+    vec2 d = b - a; float L = length(d); vec2 u = d / L;
+    float al = dot(q - a, u), ac = abs(dot(q - a, vec2(-u.y, u.x)));
+    return max(ac - th * 0.5, abs(al - L * 0.5) - L * 0.5 + ac);      // a long hexagon, pointed ends
+}
+float bit(float m, float i) { return mod(floor(m / pow(2.0, i)), 2.0); }
+void main() {
+    vec2 p = v_uv * u_size, h = u_size * 0.5, q0 = abs(p - h) - (h - 13.0);
+    float inside = clamp(0.5 - (length(max(q0, 0.0)) + min(max(q0.x, q0.y), 0.0) - 12.0), 0.0, 1.0);
+    vec3 c = u_fill;
+    float cw = u_dig.z, ch = u_dig.w, th = u_seg2.x, gap = cw * 0.28;
+    float idx = floor((u_dig.x - p.x) / (cw + gap));                    // 0: the rightmost figure
+    if (idx >= 0.0 && idx < u_seg2.z && p.y > u_dig.y - 4.0 && p.y < u_dig.y + ch + 4.0) {
+        vec2 q = vec2(p.x - (u_dig.x - (idx + 1.0) * (cw + gap) + gap), p.y - u_dig.y);
+        q.x -= (ch - q.y) * u_seg2.y;                                    // the figures' slant
+        float n = floor(u_num + 0.5), dg = mod(floor(n / pow(10.0, idx)), 10.0);
+        float show = (idx == 0.0 || n >= pow(10.0, idx)) ? 1.0 : 0.0;
+        float m = dg < 0.5 ? 63.0 : dg < 1.5 ? 6.0 : dg < 2.5 ? 91.0 : dg < 3.5 ? 79.0 : dg < 4.5 ? 102.0 : dg < 5.5 ? 109.0 : dg < 6.5 ? 125.0 : dg < 7.5 ? 7.0 : dg < 8.5 ? 127.0 : 111.0;
+        float e = th * 0.5 + 1.0, mid = ch * 0.5;
+        float d[7];
+        d[0] = segD(q, vec2(e, th * 0.5), vec2(cw - e, th * 0.5), th);
+        d[1] = segD(q, vec2(cw - th * 0.5, e), vec2(cw - th * 0.5, mid - 1.0), th);
+        d[2] = segD(q, vec2(cw - th * 0.5, mid + 1.0), vec2(cw - th * 0.5, ch - e), th);
+        d[3] = segD(q, vec2(e, ch - th * 0.5), vec2(cw - e, ch - th * 0.5), th);
+        d[4] = segD(q, vec2(th * 0.5, mid + 1.0), vec2(th * 0.5, ch - e), th);
+        d[5] = segD(q, vec2(th * 0.5, e), vec2(th * 0.5, mid - 1.0), th);
+        d[6] = segD(q, vec2(e, mid), vec2(cw - e, mid), th);
+        for (int i = 0; i < 7; i++) {
+            float a = clamp(0.5 - d[i], 0.0, 1.0);
+            c = mix(c, u_off, a * 0.55);
+            c = mix(c, u_on, a * bit(m, float(i)) * show);
+        }
+    }
+    gl_FragColor = vec4(c, inside);
+}`;
+
 /**
  * (Layouts 0.39.5) A ring along an arc, as BAND_FS draws one full in a single colour (u_soft 1): brighter at its
  * middle, soft edges; for the rims round JDM 1's dials. The band's whole shader (fill, glow, tip, marks, numerals)
@@ -2203,4 +2363,4 @@ const byMode = (fs, n) => Array.from({ length: n }, (_, m) => fs.replace('unifor
 const JDM_FS_MODES = byMode(JDM_FS, 8);
 const MROUND_FS_MODES = byMode(MROUND_FS, 3);
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, JDM_FS_MODES, MROUND_FS_MODES };
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, JDM_FS_MODES, MROUND_FS_MODES };

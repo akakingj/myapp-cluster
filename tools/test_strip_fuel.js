@@ -1,5 +1,5 @@
 'use strict';
-// The car's own strip's fuel bar: left out where the layout shows the fuel itself (Arc tach's right dial, Twin
+// The car's own strip's fuel bar: left out where the layout shows the fuel itself (JDM 1's left box, Twin
 // cowl's right gauge), back when Small gauge in the tach / speedometer puts another reading there.
 //   node tools/test_strip_fuel.js
 const assert = require('assert');
@@ -17,7 +17,9 @@ const keys = (layout, set) => {
     return k;
 };
 let n = 0;
-[['arc_tach', 'gaugeRpm'], ['twin_cowl', 'gaugeSpeed'], ['analog_sport', 'gaugeSpeed']].forEach(([id, setting]) => {
+// (JDM 1 since 0.40.0: its fuel bar in the left box whatever the gauges show; the strip's bar only with the map)
+assert(keys('arc_tach', {}).indexOf('stripFuel') < 0 && keys('arc_tach', { gaugeRpm: 'boost', gaugeSpeed: 'boost' }).indexOf('stripFuel') < 0, 'arc_tach: its own fuel bar, no strip bar'); n++;
+[['twin_cowl', 'gaugeSpeed'], ['analog_sport', 'gaugeSpeed']].forEach(([id, setting]) => {
     assert(keys(id, {}).indexOf('stripFuel') < 0, id + ': its own fuel gauge, no strip bar'); n++;
     assert(keys(id, { [setting]: 'fuel' }).indexOf('stripFuel') < 0, id + ': the fuel picked there, no strip bar'); n++;
     assert(keys(id, { [setting]: 'boost' }).indexOf('stripFuel') >= 0, id + ': another reading there, the strip bar back'); n++;

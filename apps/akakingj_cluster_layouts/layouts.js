@@ -162,8 +162,9 @@ const SLOTS = {
     classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE }, DIALS),
     // (no readouts beside its dials; with the map, readouts 1 and 2 above it over the car's strip)
     id6m: Object.assign({ infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o) }, DIALS),
-    // (its own strip's middle: the main readout; a plug-in's, with the cluster's strip, its battery's power)
-    arc_tach: Object.assign({ infoMain: (o) => ENGINE(o) || !STRIP(o) }, DIALS, STRIP2),
+    // (0.40.0: the main readout under the speed, the boxes' first and last bars; with the map, readouts 1 and 2
+    // above it over the car's strip)
+    arc_tach: Object.assign({ infoMain: ALWAYS, infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o) }, DIALS),
     // (its left dial: the G meter, a speedometer, the tyres or the temperatures; not with the map or the stock centre)
     // (0.37.0: no readouts at the right beside the strip; with the map, readouts 1 and 2 above it over the car's strip)
     jdm2: Object.assign({ infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o), leftDial: (o) => (o.centre || 'info') === 'info' }, DIALS),
@@ -199,7 +200,7 @@ const SLOT_LABELS = {
     analog_sport: { gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
     id6m: { gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
     classic: { infoMain: 'Centre readout: above the speed', infoLow: 'Centre readout: under the speed' },
-    arc_tach: { infoMain: 'Centre readout: above the speed', infoA: 'Left gauge: bottom line', infoB: 'Right gauge: bottom line', gaugeSpeed: 'Left gauge', gaugeRpm: 'Right gauge' },
+    arc_tach: { infoMain: 'Centre readout: under the speed', gaugeSpeed: 'Left box: first bar', gaugeRpm: 'Right box: second bar' },
     jdm2: { gaugeSpeed: 'Small gauge: right', gaugeRpm: 'Small gauge: below' },
     twin_cowl: { infoA: 'Centre display: bottom left', infoB: 'Centre display: bottom right', infoLow: 'Centre display: under the speed',
         gaugeSpeed: 'Small gauge between the dials: right', gaugeRpm: 'Small gauge between the dials: left' },

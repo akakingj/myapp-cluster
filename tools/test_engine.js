@@ -64,7 +64,9 @@ LAYOUTS.forEach((L) => {
         const t = textsOf(s);
         // (the car's strip shows the gear, so only the
         // layouts made round a big gear show it too: L.stripGear)
-        [...(L.stripGear ? [L.gearNumber ? '3' : 'D3'] : []), '50'].forEach((x) => assert(t.indexOf(x) >= 0, x + ' in ' + JSON.stringify(t)));
+        // (JDM 1's speed in seven-segment figures: its LCD layer's u_num)
+        const segNum = [...s.client.layers.values()].some((l) => l.uniforms.u_num && l.uniforms.u_num.v[0] === 50);
+        [...(L.stripGear ? [L.gearNumber ? '3' : 'D3'] : []), '50'].forEach((x) => assert(t.indexOf(x) >= 0 || (x === '50' && segNum), x + ' in ' + JSON.stringify(t)));
         const vals = s.engine._pieces().filter((p) => p.value !== null).map((p) => p.value);
         // (on the scale's 160 mph, or a layout's own scale: L._speedFrac; M's and Sport's speed not a value: L.speedGauge)
         assert(L.speedGauge === false || vals.some((v) => Math.abs(v - 50) < 0.3 || Math.abs(v - 50 / 160) < 0.003 || (L._speedFrac && Math.abs(v - L._speedFrac(50)) < 0.003)), 'speed ' + vals);
