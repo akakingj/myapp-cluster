@@ -130,7 +130,8 @@ LAYOUTS.forEach((L) => {
             // the gauges above everything but the backgrounds
             // (only with the readings in the centre: with the map or the stock centre the side columns reach
             // down to the strip, and keep their own charge and fuel bars)
-            if (!L.ownStripGauges && (o.centre || 'info') === 'info') list = list.concat(C0.stripGauges(o, { fuel: typeof L.stripFuel === 'function' ? L.stripFuel(o) : L.stripFuel !== false }));
+            // (Settings > Fuel and charge bars at the bottom: off, none, 0.41.7)
+            if (!L.ownStripGauges && (o.centre || 'info') === 'info' && o.stripBars !== 'off') list = list.concat(C0.stripGauges(o, { fuel: typeof L.stripFuel === 'function' ? L.stripFuel(o) : L.stripFuel !== false }));
             list = bottomCut(list);
             // the band goes in with the backgrounds (under everything)
             let i = 0;

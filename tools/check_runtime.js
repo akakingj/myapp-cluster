@@ -52,6 +52,7 @@ SETS.push({ tag: 'stock centre', centre: 'stock' });
 ['speed', 'tyres', 'temps'].forEach((w) => SETS.push({ tag: 'JDM 2 left dial ' + w, leftDial: w }));
 SETS.push({ tag: 'G meter swapped, 1 g', gScale: '1', gFlipLat: 'on', gFlipLong: 'on' });
 SETS.push({ tag: 'JDM 1 without its cup', jdmCup: 'off' });
+SETS.push({ tag: 'no bars at the bottom', stripBars: 'off' });
 // each layout's own places set (0.35.0): every gauge place to one reading, every readout place to another
 {
     const { LAYOUTS: LS } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));

@@ -25,4 +25,7 @@ assert(keys('arc_tach', {}).indexOf('stripFuel') < 0 && keys('arc_tach', { gauge
     assert(keys(id, { [setting]: 'boost' }).indexOf('stripFuel') >= 0, id + ': another reading there, the strip bar back'); n++;
 });
 assert(keys('track', {}).indexOf('stripFuel') >= 0, 'a layout without its own: the strip bar'); n++;
+// (Settings > Fuel and charge bars at the bottom: off, neither bar, 0.41.7)
+assert(keys('track', { stripBars: 'off' }).indexOf('stripFuel') < 0 && keys('track', { stripBars: 'off', vehicle: 'phev' }).indexOf('stripSoc') < 0, 'bars off: none'); n++;
+assert(keys('track', { vehicle: 'phev' }).indexOf('stripSoc') >= 0, 'a plug-in hybrid: the charge bar'); n++;
 console.log(n + ' passed');
