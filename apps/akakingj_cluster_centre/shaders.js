@@ -318,15 +318,15 @@ void main() {
     float bar = cov(abs(dist) - T * 0.5) * along * clamp(min(sg, segL - sg) * k - segL * 0.21, 0.0, 1.0);
     float lit = step(t, u_value);
     vec3 col = mix(u_dim, u_shift > 0.5 ? vec3(1.0, 0.28, 0.2) : u_ink, lit);
-    if (t >= u_orange && t < u_red) col = mix(mix(u_dim, vec3(0.32, 0.2, 0.05), 0.3), u_shift > 0.5 ? vec3(1.0, 0.28, 0.2) : vec3(1.0, 0.68, 0.16), lit);
-    if (t >= u_red) col = mix(mix(u_dim, vec3(0.4, 0.06, 0.05), 0.35), vec3(1.0, 0.2, 0.16), lit);
+    if (t >= u_orange && t < u_red) col = mix(mix(u_dim, vec3(0.55, 0.33, 0.06), 0.6), u_shift > 0.5 ? vec3(1.0, 0.28, 0.2) : vec3(1.0, 0.68, 0.16), lit);
+    if (t >= u_red) col = mix(mix(u_dim, vec3(0.62, 0.1, 0.08), 0.7), vec3(1.0, 0.2, 0.16), lit);
     c = put(c, col, bar);
     // ticks outside it: the thousands long and white, the halves short in the lines' colour
     float j = floor(s / segL + 0.5), dj = abs(s - j * segL) * k;
     float major = step(mod(j + 0.5, u_ticks.y), 1.0), hk = step(mod(j + 0.5, u_ticks.y * 0.5), 1.0);
     float tl = mix(9.0, 18.0, major), tw = mix(0.9, 2.2, major);
     float tick = cov(dj - tw) * step(T * 0.5 + 4.0, dist) * step(dist, T * 0.5 + 4.0 + tl) * step(-0.5, j) * step(j, n + 0.5) * hk;
-    c = put(c, mix(u_line, u_ink, major), tick);
+    c = put(c, j * segL / L >= u_red - 0.001 ? vec3(1.0, 0.2, 0.16) : mix(u_line, u_ink, major), tick);      // (red over the red zone)
     // the dash's lines: under the bar at each thousand down to the bottom line; over it from the third up to the top
     float m = floor(s / (segL * u_ticks.y) + 0.5), dm = abs(s - m * segL * u_ticks.y) * k;
     float under = step(dist, -T * 0.5 - 8.0) * step(p.y, u_geo2.z) * step(0.5, m) * step(m, u_ticks.x + 0.5);
@@ -397,10 +397,12 @@ void main() {
     float inside = clamp(0.5 - (length(max(q0, 0.0)) + min(max(q0.x, q0.y), 0.0) - 12.0), 0.0, 1.0);
     vec3 c = u_fill;
     float cw = u_dig.z, ch = u_dig.w, th = u_seg2.x, gap = cw * 0.28;
-    float idx = floor((u_dig.x - p.x) / (cw + gap));                    // 0: the rightmost figure
+    // (the slant taken out before the figure is picked: picked from the upright x, a figure's slanted top ran into
+    // its neighbour's cell and was cut off there, 0.40.1)
+    float xu = p.x - (ch - (p.y - u_dig.y)) * u_seg2.y;
+    float idx = floor((u_dig.x - xu) / (cw + gap));                     // 0: the rightmost figure
     if (idx >= 0.0 && idx < u_seg2.z && p.y > u_dig.y - 4.0 && p.y < u_dig.y + ch + 4.0) {
-        vec2 q = vec2(p.x - (u_dig.x - (idx + 1.0) * (cw + gap) + gap), p.y - u_dig.y);
-        q.x -= (ch - q.y) * u_seg2.y;                                    // the figures' slant
+        vec2 q = vec2(xu - (u_dig.x - (idx + 1.0) * (cw + gap) + gap), p.y - u_dig.y);
         float n = floor(u_num + 0.5), dg = mod(floor(n / pow(10.0, idx)), 10.0);
         float show = (idx == 0.0 || n >= pow(10.0, idx)) ? 1.0 : 0.0;
         float m = dg < 0.5 ? 63.0 : dg < 1.5 ? 6.0 : dg < 2.5 ? 91.0 : dg < 3.5 ? 79.0 : dg < 4.5 ? 102.0 : dg < 5.5 ? 109.0 : dg < 6.5 ? 125.0 : dg < 7.5 ? 7.0 : dg < 8.5 ? 127.0 : 111.0;

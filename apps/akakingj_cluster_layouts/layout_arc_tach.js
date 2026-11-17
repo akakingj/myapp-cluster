@@ -254,7 +254,7 @@ function dash(o) {
     });
     for (let i = 0; i <= s.max; i++) {
         const [x, y] = tachAt(i / s.max, 50), w = 60, h = 44;
-        list.push(C.text('n' + i, Math.round(x - w / 2), Math.round(y - h / 2), w, h, String(i), ink));
+        list.push(C.text('n' + i, Math.round(x - w / 2), Math.round(y - h / 2), w, h, String(i), (t, d) => (i * 1000 >= C.shiftPoint(o, d).red ? inkHot(t) : ink(t))));   // (red in the red zone)
     }
     list.push(Object.assign(C.flat('tachBg', 684, 466, 196, 64, 'bg'), { z: -5 }),
         C.text('tachLbl', 690, 470, 170, 28, (d) => (elec(d) ? 'POWER' : 'TACH'), ink, { align: 0, tracking: 0.06 }),
