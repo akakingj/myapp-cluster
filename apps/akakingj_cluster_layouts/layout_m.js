@@ -22,14 +22,15 @@ const C = require('./layout_common');
 const B = require('./bimmer');
 
 /* their theme (hud_themes.js mdash), following the drive mode (themes.js lookNow) as the M8's does: in comfort
- * theirs (silver glass, the red marker); in a sport mode the blades' glass lit red and the bars' fill warm; in ECO
- * PRO and on electricity alone blue */
+ * theirs; in a sport mode the bars' fill warm; in ECO PRO and on electricity alone blue. (0.39.5) The blades filled
+ * as ID8 M's rev band, in its colours: dark glass (band), lit up to the rpm in white (comfort), red (sport), teal
+ * (ECO PRO), a white marker line */
 const PAL = { bg: '#000000', text: '#eef1f6', fg: '#eef1f6', dim: '#848c98', faint: '#606876', red: '#e2242c', regen: '#3ddc84', glow: '#e2242c', track: '#5c6068', ev: '#4ab4ff',
-    mark: '#e2242c', lit: '#dce0ea', fill: '#eef1f6' };
+    mark: '#ffffff', lit: '#e8edf5', band: '#262c38', fill: '#eef1f6' };
 const LOOKS = {
     comfort: {},
-    sport: { lit: '#ff4650', mark: '#ff2a2a', fill: '#ffd9db', dim: '#a8868a' },
-    efficient: { lit: '#8fcaff', mark: '#4ab4ff', fill: '#d4ecff', dim: '#7f93a8' },
+    sport: { lit: '#ed1a26', band: '#540f1a', fill: '#ffd9db', dim: '#a8868a' },
+    efficient: { lit: '#25bcab', band: '#0b3532', fill: '#d4ecff', dim: '#7f93a8' },
 };
 const pal = (look) => Object.assign({}, PAL, LOOKS[look] || LOOKS.comfort);
 const isNum = C.isNum;
@@ -172,7 +173,7 @@ module.exports = {
             params: { u_side: [right ? 1 : -1], u_geoA: [BLADE.y0 - BLADE.y, BLADE.y8 - BLADE.y, BLADE.ym - BLADE.y, BLADE.xm - BLADE.x0],
                 u_geoB: [BLADE.kTop, BLADE.kBot, BLADE.round], u_wid: [BLADE.wBot, BLADE.wTop, BLADE.wBend], u_ticks: [RPM_MAX / 1000],
                 u_orange: [orange], u_redFrom: [redFrom], u_zero: [0] },
-            colors: (t, d) => ({ red: t.red, regen: t.regen, lit: t.lit, mark: !elec(d) ? t.mark : isNum(d.kw) && d.kw < -0.3 ? t.regen : t.ev }),
+            colors: (t, d) => ({ red: t.red, regen: t.regen, lit: t.lit, band: t.band, mark: !elec(d) ? t.mark : isNum(d.kw) && d.kw < -0.3 ? t.regen : t.ev }),
             dyn: (d) => (elec(d) ? { u_shiftNow: [0], u_zero: [KW_ZERO], u_orange: [2], u_redFrom: [2] }
                 : ((m) => ({ u_shiftNow: [B.shiftNow(o, d) ? 1 : 0], u_zero: [0], u_orange: [m[1]], u_redFrom: [m[0]] }))(B.redMarks(o, RPM_MAX, d))),
             value: (d) => (elec(d) ? C.powerFrac(d) : isNum(d.rpm) ? clamp01(d.rpm / RPM_MAX) : 0), max: 1, sweep: true,

@@ -128,10 +128,11 @@ module.exports = {
                 C.readingUp('elec', 1100, bot + 2, 300, 30, C.focus.both(o), C.focus.rangeLabel(o), C.engineFocus(o) ? white : elecTxt, lbl),
             );
         }
-        // the car's own strip: the two dials either side of the middle under the camera's cowl, the small gauges
-        // at their outer feet; no readouts beside them (the strip shows the time, temperature and ranges)
-        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 655, 372, 250), tach(o, 1265, 372, 250, true),
-            small(o, 'speed', 303, 535, 100), small(o, 'rpm', 1617, 535, 100), [
+        // the car's own strip: the two dials either side of the camera's cowl, as big as Old M's (0.39.5; radius 250
+        // before, close in under the cowl), the small gauges in the outer bottom corners, clear of the dials' open
+        // feet and over the strip; no readouts beside them (the strip shows the time, temperature and ranges)
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 470, 330, 300), tach(o, 1450, 330, 300, true),
+            small(o, 'speed', 140, 562, 80), small(o, 'rpm', 1780, 562, 80), [
                 // the speed in figures at the bottom of the middle, between the dials' feet ('88 km/h')
                 C.text('speedDigits', 852, 546, 120, 62, (d) => C.speedText(o, d), white, { align: 1 }),
                 C.text('speedDigitsUnit', 982, 574, 110, 30, C.speedUnit(o), white, { align: 0 }),

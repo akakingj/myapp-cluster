@@ -14,7 +14,7 @@ function clashes(p, o) {
     const isBg = /^bg|^boxBezel$/.test(p.key) || (p.kind === 'flat' && /bg/.test(String(p.colour || p.key))) || /^(mdash|sdash)$/.test(p.kind);
     if (isBg) return out;
     // a band along an arc (u_geo: centre in the layer, radius, thickness): the points of its ink, every 3 degrees
-    const g = p.kind === 'band' && p.params && p.params.u_geo, sp = p.params && p.params.u_span;
+    const g = (p.kind === 'band' || p.kind === 'ring') && p.params && p.params.u_geo, sp = p.params && p.params.u_span;
     if (g && g[2] > 0 && sp) {
         const pts = [];
         const a0 = Math.min(sp[0], sp[1]), a1 = Math.max(sp[0], sp[1]);

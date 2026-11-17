@@ -262,6 +262,34 @@ void main() {
  *   u_zero    (an arc) where the fill starts, 0..1 (0 unless set): a power gauge's 0, lit from it to u_value either
  *             way, below it in u_neg (regeneration); its marks counted from it, one more at the start
  */
+/**
+ * (Layouts 0.39.5) A ring along an arc, as BAND_FS draws one full in a single colour (u_soft 1): brighter at its
+ * middle, soft edges; for the rims round JDM 1's dials. The band's whole shader (fill, glow, tip, marks, numerals)
+ * ran over every pixel of each ring's box for this.
+ *   u_geo   the circle's centre (px in this layer), radius, the ring's thickness
+ *   u_span  start and end angle (degrees, clockwise from the top; end > start)
+ */
+const RING_FS = `#version 100
+${HIGHP}${COMMON}
+uniform vec2 u_size;
+uniform vec4 u_geo;
+uniform vec4 u_span;
+uniform vec3 u_fill1;
+varying vec2 v_uv;
+void main() {
+    vec2 p = v_uv * u_size;
+    vec2 d = p - u_geo.xy;
+    float r = length(d), R = u_geo.z, T = u_geo.w;
+    float sweep = u_span.y - u_span.x;
+    float da = atan(d.x, -d.y) / DEG - u_span.x;
+    if (da < -180.0) da += 360.0;
+    if (da > 180.0 + sweep) da -= 360.0;
+    float lenPx = sweep * DEG * r;
+    float inBand = span(r, R - T * 0.5, R + T * 0.5) * span(da / sweep * lenPx, 0.0, lenPx);
+    float across = 1.0 - abs(r - R) / (T * 0.5);
+    gl_FragColor = vec4(u_fill1 * (0.75 + 0.35 * across), inBand);
+}`;
+
 const BAND_FS = `#version 100
 ${HIGHP}${COMMON}${GLYPH}
 uniform vec2 u_size;
@@ -1159,7 +1187,8 @@ uniform float u_zero;     // 0..1: where 0 sits (a power gauge; 0 for the engine
 uniform vec3 u_red;
 uniform vec3 u_mark;      // the marker's colour
 uniform vec3 u_regen;
-uniform vec3 u_lit;       // the lit glass (the look's: comfort silver, sport red, efficient blue)
+uniform vec3 u_lit;       // the lit glass (the look's: comfort white, sport red, efficient teal, as ID8 M's)
+uniform vec3 u_band;      // (0.39.5) the glass not lit: dark, in the look's tint (ID8 M's band)
 
 float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
 vec4 over(vec4 top, vec4 under) {
@@ -1186,25 +1215,32 @@ void main() {
         float inBand = clamp(d + 0.5, 0.0, 1.0) * clamp(w - d + 0.5, 0.0, 1.0);
         float across = clamp(d / w, 0.0, 1.0);
         float yn = y0 - u_value * (y0 - y8);
-        vec4 g = vec4(0.62, 0.67, 0.74, mix(0.42, 0.06, across));          // empty glass (bright at the outer edge, as the M8's)
-        if (t < u_zero) g = vec4(mix(u_regen, vec3(0.62, 0.67, 0.74), 0.55), mix(0.3, 0.05, across));   // the regeneration's part
-        // lit from the 0 (the foot, or a power gauge's 0) to the value
-        if (t >= min(u_zero, u_value) && t <= max(u_zero, u_value))
-            g = u_shiftNow > 0.5 ? vec4(u_red * 0.8, 0.6) : t < u_zero ? vec4(u_regen, mix(0.6, 0.35, across))
-                : vec4(mix(u_lit, u_lit * 0.72, across), mix(0.34, 0.22, across));
-        // the run-up to the redline: the whole glass amber (brighter where the rpm has reached it)
-        if (u_shiftNow < 0.5 && t >= u_orange && t < u_redFrom) g = t <= u_value && u_zero <= 0.0 ? vec4(1.0, 0.72, 0.2, mix(0.92, 0.75, across))
-            : vec4(1.0, 0.6, 0.1, mix(0.62, 0.4, across));
-        // the red zone: the whole glass red from the redline (brighter where the rpm has reached it)
-        if (t >= u_redFrom) g = t <= u_value && u_zero <= 0.0 ? vec4(mix(u_red, vec3(1.0, 0.45, 0.4), 0.3), mix(0.95, 0.8, across))
-            : vec4(u_red, mix(0.82, 0.55, across));
+        /*
+         * (0.39.5) As ID8 M's band: the glass dark in the look's tint, lit from the 0 to the value in the look's colour
+         * (comfort white, sport red, efficient teal; brighter towards the outer edge), the amber run-up and the red
+         * zone dim until the rpm reaches them, bright where it has. Before: grey glass barely lit, and the amber gone
+         * at the shift point (the whole lit part red then, the amber cells grey).
+         */
+        vec4 g = vec4(mix(u_band * 1.25, u_band, across), mix(0.92, 0.72, across));      // the glass not lit
+        if (t < u_zero) g = vec4(mix(u_regen * 0.35, u_band, 0.4), mix(0.85, 0.65, across));   // the regeneration's part
+        // lit from the 0 (the foot, or a power gauge's 0) to the value; at the shift point red (the shift light)
+        bool lit = t >= min(u_zero, u_value) && t <= max(u_zero, u_value);
+        vec3 lc = u_shiftNow > 0.5 ? vec3(1.0, 0.16, 0.12) : u_lit;
+        if (lit) g = t < u_zero ? vec4(u_regen, mix(0.95, 0.8, across)) : vec4(mix(lc + (vec3(1.0) - lc) * 0.3, lc, across), mix(0.98, 0.88, across));
+        // the run-up to the redline amber, the red zone red: dim, bright where the rpm has reached them (an engine
+        // speed only: a power gauge's are off)
+        bool reached = lit && u_zero <= 0.0;
+        if (t >= u_orange && t < u_redFrom) g = reached ? vec4(mix(vec3(1.0, 0.92, 0.55), vec3(1.0, 0.76, 0.12), across), mix(0.98, 0.9, across))
+            : vec4(mix(vec3(0.8, 0.6, 0.08), vec3(0.55, 0.4, 0.04), across), mix(0.9, 0.7, across));
+        if (t >= u_redFrom) g = reached ? vec4(mix(vec3(1.0, 0.5, 0.45), vec3(0.95, 0.12, 0.12), across), mix(0.98, 0.9, across))
+            : vec4(mix(vec3(0.85, 0.1, 0.1), vec3(0.62, 0.04, 0.05), across), mix(0.9, 0.7, across));
         // the foot: the bottom 20 px as an outlined grey block, as the M8 draws it
         if (p.y > y0 - 20.0) g = over(vec4(0.7, 0.72, 0.78, 0.22), g);
         g = over(vec4(0.9, 0.92, 0.95, 0.7 * cov(min(abs(p.y - (y0 - 19.0)), abs(p.y - (y0 - 1.5))) - 0.8)), g);
-        // the marker: a red block at the rpm with a glow either side of it
+        // the marker: a white line at the rpm (ID8 M's), a soft glow either side (on electricity in its colour)
         float dm = abs(p.y - yn);
-        g = over(vec4(u_mark, 0.5 * exp(-dm / 26.0)), g);
-        g = over(vec4(mix(u_mark, vec3(1.0), 0.3 * cov(dm - 5.0)), cov(dm - 14.0)), g);
+        g = over(vec4(u_mark, 0.35 * exp(-dm / 18.0)), g);
+        g = over(vec4(mix(u_mark, vec3(1.0), 0.5), cov(dm - 3.0)), g);
         c = vec4(g.rgb, g.a * inBand);
         c = over(vec4(0.93, 0.95, 0.98, cov(abs(d) - 1.6)), c);               // outer edge
         c = over(vec4(1.0, 1.0, 1.0, 0.3 * cov(abs(d - 4.0) - 0.6)), c);       // its bevel
@@ -1216,7 +1252,9 @@ void main() {
     float yk = y0 - kk / u_ticks * (y0 - y8);
     if (kk >= 0.0 && kk <= u_ticks && d > -2.0 && d < 24.0) {
         float ty = abs(p.y - yk) - 1.5;
-        c = over(vec4(0.93, 0.95, 0.98, cov(ty)), c);
+        // (0.39.5) dark on the lit glass, white on the dark: seen on both
+        bool onLit = d > 2.0 && t >= min(u_zero, u_value) && t <= max(u_zero, u_value);
+        c = over(vec4(onLit ? vec3(0.08, 0.09, 0.11) : vec3(0.93, 0.95, 0.98), onLit ? 0.55 * cov(ty) : cov(ty)), c);
     }
     gl_FragColor = c;
 }
@@ -2165,4 +2203,4 @@ const byMode = (fs, n) => Array.from({ length: n }, (_, m) => fs.replace('unifor
 const JDM_FS_MODES = byMode(JDM_FS, 8);
 const MROUND_FS_MODES = byMode(MROUND_FS, 3);
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, JDM_FS_MODES, MROUND_FS_MODES };
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, JDM_FS_MODES, MROUND_FS_MODES };

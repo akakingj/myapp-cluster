@@ -146,11 +146,12 @@ function rims(circles, w) {
             const X = Math.floor(Math.min(...xs) - 4), Y = Math.floor(Math.min(...ys) - 4);
             const W = Math.ceil(Math.max(...xs) + 4) - X, H = Math.min(C.STRIP_Y, Math.ceil(Math.max(...ys) + 4)) - Y;
             if (H <= 0) return;
+            // (0.39.5) a plain ring (shaders.js RING_FS), not the gauge band drawn full: the band's whole shader ran over
+            // every pixel of each ring's box, 140 of the layout's 280 ms (SwiftShader) with the side dials grown to 210
             out.push({
-                key: 'rim' + i + '_' + n, kind: 'band', x: X, y: Y, w: W, h: H,
-                params: { u_geo: [c.x - X, c.y - Y, c.r, w], u_span: [sp[0], sp[1], 0, 0], u_marks: [0, 0, 0, 0], u_red: [2], u_zero: [0], u_soft: [1] },
-                colors: (t) => ({ track: t.bezel2, fill0: t.bezel, fill1: t.bezel, redc: t.bezel, tip: t.bezel2, tick: t.bezel, num: t.bezel }),
-                value: () => 1, max: 1,
+                key: 'rim' + i + '_' + n, kind: 'ring', x: X, y: Y, w: W, h: H,
+                params: { u_geo: [c.x - X, c.y - Y, c.r, w], u_span: [sp[0], sp[1], 0, 0] },
+                colors: (t) => ({ fill1: t.bezel }),
             });
         });
     });
@@ -214,6 +215,8 @@ module.exports = {
         // its ring from clear of the camera's cowl to just over the strip, a dial behind it either side. (2026-11-15,
         // a G20 with the driver camera: the ring's top, at y 125, touched the cowl, lower in the middle than the
         // G05's NOTCH; now its chrome from y 150, the bottom where it was)
-        return bg.concat(three(o, 960, 399, 233, false, [['speed', 'clock', 176], ['rpm', 'outside', 176]], 72));
+        // (0.39.5) The dials behind it larger, 210 (176 before): the tach can't grow (the cowl above, the strip below),
+        // they can, out to the sides
+        return bg.concat(three(o, 960, 399, 233, false, [['speed', 'clock', 210], ['rpm', 'outside', 210]], 72));
     },
 };
