@@ -37,6 +37,20 @@ function clashesOf(p, o) {
         if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
         return out;
     }
+    // a cup (JDM 1's, CUP_FS): the points of its outline - its rim's and bottom's ellipses and its sides - every 6 degrees
+    if (p.kind === 'cup' && p.params && p.params.u_cup) {
+        const [cx, ry, aR, aB] = p.params.u_cup, [H, e] = p.params.u_cup2, pts = [];
+        for (let a = 0; a < 360; a += 6) {
+            const t = a * Math.PI / 180;
+            pts.push([p.x + cx + (aR + 1) * Math.cos(t), p.y + ry + e * (aR + 1) * Math.sin(t)], [p.x + cx + (aB + 1) * Math.cos(t), p.y + ry + H + e * (aB + 1) * Math.sin(t)]);
+        }
+        const inB = (b) => pts.some(([x, y]) => x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h);
+        if (inB(C.NOTCH)) out.push('under the cowl');
+        if (C.strip(o) && pts.some(([, y]) => y > C.STRIP_Y)) out.push('over the strip');
+        if (inB(C.TELLTALES)) out.push('over the warning lights');
+        if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
+        return out;
+    }
     // a chevron (two straight segments, A to B to C, in the layer): the points of its ink, every 6 px along it,
     // from its inner line out to its ticks, and its numerals (a box round each centre)
     if (p.kind === 'chevron' && p.params && p.params.u_ab) {
