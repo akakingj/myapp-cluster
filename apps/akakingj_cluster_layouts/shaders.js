@@ -499,36 +499,37 @@ uniform vec3 u_yellow;
 uniform vec3 u_green;
 uniform vec3 u_edge;
 varying vec2 v_uv;
-/* a polygon's signed distance, edge by edge (after Inigo Quilez's): d the nearest squared, s the inside's sign */
-void edge(vec2 p, vec2 a, vec2 b, inout float d, inout float s) {
+/* a polygon's signed distance, edge by edge (after Inigo Quilez's): ds.x the nearest squared, ds.y the inside's sign
+ * (handed back, not through out-parameters: 0.41.5, only the plainest GLSL on the KOMBI) */
+vec2 edge(vec2 p, vec2 a, vec2 b, vec2 ds) {
     vec2 e = b - a, w = p - a, q = w - e * clamp(dot(w, e) / dot(e, e), 0.0, 1.0);
-    d = min(d, dot(q, q));
-    bool c1 = p.y >= a.y, c2 = p.y < b.y, c3 = e.x * w.y > e.y * w.x;
-    if ((c1 && c2 && c3) || (!c1 && !c2 && !c3)) s = -s;
+    float c1 = step(a.y, p.y), c2 = 1.0 - step(b.y, p.y), c3 = 1.0 - step(e.x * w.y, e.y * w.x);
+    float flip = c1 * c2 * c3 + (1.0 - c1) * (1.0 - c2) * (1.0 - c3);
+    return vec2(min(ds.x, dot(q, q)), ds.y * (1.0 - 2.0 * flip));
 }
 float yLeaf(vec2 p) {
-    float d = 1e12, s = 1.0;
-    edge(p, vec2(841.0, 100.0), vec2(771.0, 94.0), d, s);
-    edge(p, vec2(771.0, 94.0), vec2(709.0, 130.0), d, s);
-    edge(p, vec2(709.0, 130.0), vec2(94.0, 941.0), d, s);
-    edge(p, vec2(94.0, 941.0), vec2(94.0, 2025.0), d, s);
-    edge(p, vec2(94.0, 2025.0), vec2(947.0, 908.0), d, s);
-    edge(p, vec2(947.0, 908.0), vec2(908.0, 169.0), d, s);
-    edge(p, vec2(908.0, 169.0), vec2(886.0, 132.0), d, s);
-    edge(p, vec2(886.0, 132.0), vec2(841.0, 100.0), d, s);
-    return s * sqrt(d);
+    vec2 ds = vec2(1e12, 1.0);
+    ds = edge(p, vec2(841.0, 100.0), vec2(771.0, 94.0), ds);
+    ds = edge(p, vec2(771.0, 94.0), vec2(709.0, 130.0), ds);
+    ds = edge(p, vec2(709.0, 130.0), vec2(94.0, 941.0), ds);
+    ds = edge(p, vec2(94.0, 941.0), vec2(94.0, 2025.0), ds);
+    ds = edge(p, vec2(94.0, 2025.0), vec2(947.0, 908.0), ds);
+    ds = edge(p, vec2(947.0, 908.0), vec2(908.0, 169.0), ds);
+    ds = edge(p, vec2(908.0, 169.0), vec2(886.0, 132.0), ds);
+    ds = edge(p, vec2(886.0, 132.0), vec2(841.0, 100.0), ds);
+    return ds.y * sqrt(ds.x);
 }
 float gLeaf(vec2 p) {
-    float d = 1e12, s = 1.0;
-    edge(p, vec2(1788.0, 821.0), vec2(1740.0, 782.0), d, s);
-    edge(p, vec2(1740.0, 782.0), vec2(1687.0, 774.0), d, s);
-    edge(p, vec2(1687.0, 774.0), vec2(949.0, 906.0), d, s);
-    edge(p, vec2(949.0, 906.0), vec2(96.0, 2024.0), d, s);
-    edge(p, vec2(96.0, 2024.0), vec2(1097.0, 1790.0), d, s);
-    edge(p, vec2(1097.0, 1790.0), vec2(1799.0, 924.0), d, s);
-    edge(p, vec2(1799.0, 924.0), vec2(1808.0, 878.0), d, s);
-    edge(p, vec2(1808.0, 878.0), vec2(1788.0, 821.0), d, s);
-    return s * sqrt(d);
+    vec2 ds = vec2(1e12, 1.0);
+    ds = edge(p, vec2(1788.0, 821.0), vec2(1740.0, 782.0), ds);
+    ds = edge(p, vec2(1740.0, 782.0), vec2(1687.0, 774.0), ds);
+    ds = edge(p, vec2(1687.0, 774.0), vec2(949.0, 906.0), ds);
+    ds = edge(p, vec2(949.0, 906.0), vec2(96.0, 2024.0), ds);
+    ds = edge(p, vec2(96.0, 2024.0), vec2(1097.0, 1790.0), ds);
+    ds = edge(p, vec2(1097.0, 1790.0), vec2(1799.0, 924.0), ds);
+    ds = edge(p, vec2(1799.0, 924.0), vec2(1808.0, 878.0), ds);
+    ds = edge(p, vec2(1808.0, 878.0), vec2(1788.0, 821.0), ds);
+    return ds.y * sqrt(ds.x);
 }
 void main() {
     vec2 p = v_uv * u_size * u_s;
