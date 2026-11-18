@@ -48,5 +48,7 @@ module.exports = {
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
     ownStripGauges: true,   // (its own fuel arc, and a plug-in hybrid's charge; no bars over the car's strip)
+    // its own places, set on the page (layouts.js placesFor): the trip computer's two lines
+    places: [1, 2].map((n) => ({ key: 'koRow' + n, kind: 'readout', label: 'Trip computer: line ' + n, when: (o) => o.centre !== 'map' && o.centre !== 'stock' })),
     pieces(o) { return K.build(o, dial, 'ko2'); },
 };

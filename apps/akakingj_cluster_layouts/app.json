@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.45.0",
+  "version": "0.45.1",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -502,6 +502,14 @@
         [
           "tripTime",
           "Driving time (the car's trip computer)"
+        ],
+        [
+          "frange",
+          "Fuel range"
+        ],
+        [
+          "clock",
+          "Clock (the time of day)"
         ]
       ],
       "section": "Readouts and gauges"
@@ -591,6 +599,14 @@
         [
           "tripTime",
           "Driving time (the car's trip computer)"
+        ],
+        [
+          "frange",
+          "Fuel range"
+        ],
+        [
+          "clock",
+          "Clock (the time of day)"
         ]
       ],
       "section": "Readouts and gauges"
@@ -680,6 +696,14 @@
         [
           "tripTime",
           "Driving time (the car's trip computer)"
+        ],
+        [
+          "frange",
+          "Fuel range"
+        ],
+        [
+          "clock",
+          "Clock (the time of day)"
         ]
       ],
       "section": "Readouts and gauges"
@@ -769,6 +793,14 @@
         [
           "tripTime",
           "Driving time (the car's trip computer)"
+        ],
+        [
+          "frange",
+          "Fuel range"
+        ],
+        [
+          "clock",
+          "Clock (the time of day)"
         ]
       ],
       "section": "Readouts and gauges"

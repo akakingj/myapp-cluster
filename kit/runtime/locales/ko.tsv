@@ -2779,13 +2779,17 @@ Sloshes with the car's G, as the cup on the cluster	차의 G에 따라 계기판
 KO 1	KO 1
 KO 2	KO 2
 Centre display: the large reading	가운데 표시창: 큰 표시값
-Arc under the speedometer	속도계 아래 호
-Arc under the tach	회전계 아래 호
+Arc under the speedometer	속도계 하단 게이지
+Arc under the tach	회전계 하단 게이지
 Fuel economy unit	연비 단위
-As the car's trip computer	차량 트립 컴퓨터와 같게
+As the car's trip computer	차량 트립 컴퓨터 설정 따름
 km/L	km/L
 L/100km	L/100km
 Average fuel economy (the car's trip computer)	평균 연비 (차량 트립 컴퓨터)
-Trip distance (the car's trip computer)	트립 거리 (차량 트립 컴퓨터)
+Trip distance (the car's trip computer)	트립 주행 거리 (차량 트립 컴퓨터)
 Driving time (the car's trip computer)	주행 시간 (차량 트립 컴퓨터)
 Centre display: bottom	가운데 표시창: 아래
+Clock (the time of day)	시계 (현재 시각)
+Trip computer: line 1	트립 창: 첫째 줄
+Trip computer: line 2	트립 창: 둘째 줄
+Trip computer: line 3	트립 창: 셋째 줄

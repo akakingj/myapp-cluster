@@ -146,14 +146,21 @@ function dial(o, which, cx, cy, R) {
  * unit Settings > Fuel economy unit sets) and the main readout under it. KO 2's: the speed in figures first, then the
  * distance and the average economy.
  */
+const barOf = (k) => { const r = C.READOUTS[k]; return r ? (d) => Math.max(0, Math.min(1, r.frac(d) || 0)) : () => 0; };
 function centre(o, X, Y, W, H, look) {
     const sy = H / 446, at = (y) => Y + Math.round(y * sy), hh = (h) => Math.round(h * sy);
     const kw = (t, d) => (C.engineFocus(o) || C.phevPick(o, 'infoMain') ? white(t) : C.isNum(d.kw) && d.kw < -0.3 ? { color: ['#3ddc84', 1], glow: ['#3ddc84', 0.2] } : { color: [t.ev, 1], glow: [t.ev, 0.2] });
-    // a row of the trip computer: its name at the left, its figures at the right
+    // a line of the trip computer: its name at the left, its figures at the right; each line a place on the page
+    // (0.45.0: koRow1-3, any readout or nothing; as designed: the distance, the driving time, the average economy)
+    const line = (k, place, own, y, h) => {
+        const r = C.placeReadout(o, C.placeOf(o, place) || own);
+        return row(k, y, h, r.short, r.value);
+    };
     const row = (k, y, h, name, value) => [
         // (a space before the name: a capital's stem starts at the box's very edge, half a pixel of it cut off there)
         C.text(k + 'Lbl', X + 16, at(y) + Math.round(hh(h) * 0.22), Math.round(W * 0.3), Math.round(hh(h) * 0.6), ' ' + name, lbl, { align: 0, tracking: 0.06 }),
-        C.text(k, X + Math.round(W * 0.3), at(y), W - Math.round(W * 0.3) - 22, hh(h), value, white, { align: 1 }),
+        // (made to hold its reading's widest figures: '25.5 L/100km')
+        C.fitText(C.text(k, X + Math.round(W * 0.3), at(y), W - Math.round(W * 0.3) - 22, hh(h), value, white, { align: 1 }), 'light'),
     ];
     const head = [
         { key: 'lcd', kind: 'panel', x: X, y: Y, w: W, h: H, params: { u_box: [18, 2, 0.4, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },
@@ -167,7 +174,7 @@ function centre(o, X, Y, W, H, look) {
             C.text('speedDigits', X, at(84), W, hh(96), (d) => C.speedText(o, d), white),
             C.text('speedDigitsUnit', X, at(184), W, 20, C.speedUnit(o), lbl, { tracking: 0.12 }),
             C.flat('rule2', X + 22, at(218), W - 44, 2, 'lcdEdge'),
-        ], row('koTrip', 230, 34, 'TRIP', (d) => C.tripText(o, d)), row('koAvg', 270, 34, 'AVG', (d) => C.econText(o, d)), [
+        ], line('koTrip', 'koRow1', 'trip', 230, 34), line('koAvg', 'koRow2', 'avgFuel', 270, 34), [
             C.flat('rule3', X + 22, at(316), W - 44, 2, 'lcdEdge'),
             C.text('kwNow', X, at(330), W, hh(50), C.focus.power(o), kw),
             C.text('kwNowLbl', X, at(388), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
@@ -176,9 +183,9 @@ function centre(o, X, Y, W, H, look) {
     const P = 's';
     return head.concat([
         C.text('koTripHead', X, at(80), W, 16, 'TRIP COMPUTER', lbl, { tracking: 0.14 }),
-    ], row('koTrip', 104, 36, 'TRIP', (d) => C.tripText(o, d)), row('koTime', 144, 36, 'TIME', (d) => C.tripTimeText(d)), row('koAvg', 184, 36, 'AVG', (d) => C.econText(o, d)), [
-        // (the average economy as a bar, 0 to 30 km/L, in the speedometer's arc colours)
-        C.bar('koAvgBar', X + 18, at(230), W - 36, 16, C.econFrac, (t) => ({ track: t[P + 'Track'], fill0: t[P + 'Arc0'], fill1: t[P + 'Arc1'], redc: t.red, tip: t[P + 'Arc1'], tick: t.dim, num: t.dim })),
+    ], line('koTrip', 'koRow1', 'trip', 104, 36), line('koTime', 'koRow2', 'tripTime', 144, 36), line('koAvg', 'koRow3', 'avgFuel', 184, 36), [
+        // (the third line's reading as a bar - the average economy, 0 to 30 km/L - in the speedometer's arc colours)
+        C.bar('koAvgBar', X + 18, at(230), W - 36, 16, barOf(C.placeOf(o, 'koRow3') || 'avgFuel'), (t) => ({ track: t[P + 'Track'], fill0: t[P + 'Arc0'], fill1: t[P + 'Arc1'], redc: t.red, tip: t[P + 'Arc1'], tick: t.dim, num: t.dim })),
         C.flat('rule2', X + 22, at(268), W - 44, 2, 'lcdEdge'),
         C.text('kwNow', X, at(284), W, hh(70), C.focus.power(o), kw),
         C.text('kwNowLbl', X, at(362), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
@@ -208,6 +215,8 @@ module.exports = {
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
     ownStripGauges: true,   // (its own fuel arc, and a plug-in hybrid's charge; no bars over the car's strip)
+    // its own places, set on the page (layouts.js placesFor): the trip computer's three lines
+    places: [1, 2, 3].map((n) => ({ key: 'koRow' + n, kind: 'readout', label: 'Trip computer: line ' + n, when: (o) => o.centre !== 'map' && o.centre !== 'stock' })),
     pieces(o) { return build(o, dial, 'ko1'); },
     // (KO 2's)
     parts: { arc, foot, centre, build, PALETTES, white, lbl, A0, A1 },

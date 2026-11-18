@@ -29,12 +29,15 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 ### The car's trip computer (0.45.0)
 
 Every readout place (Readout 1 / 2, the main readout, the bottom line, and each layout's own readout places on the page)
-can show the car's own trip computer: **Average fuel economy**, **Trip distance** and **Driving time** - read-only,
+can show the car's own trip computer: **Average fuel economy**, **Trip distance** and **Driving time** - and (0.45.1)
+the **Fuel range** and the **Clock** (the time of day) - read-only,
 from the cluster's KombiIF (`statusBordcomputerAverage`: trip 1's average economy and the unit the car shows it in;
 `statusBordcomputerTravelData`: the distance and the driving time; as Live Data reads them), every 15 s and on each
 change. **Settings > Fuel economy unit**: as the car's trip computer (the default; km/L with km/h, mpg with mph while
 the car hasn't said), km/L, L/100km or mpg (US). KO 1's display shows all three (and the economy as a bar, 0 to 30
-km/L), KO 2's the distance and the economy. A car that doesn't send them shows `--`.
+km/L), KO 2's the distance and the economy. A car that doesn't send them shows `--`. Each line of KO 1's and KO 2's
+trip computer is a place on the page (0.45.1: *Trip computer: line 1-3*): any readout there, or nothing; KO 1's bar
+follows its third line.
 
 ### KO 1 and KO 2 (0.44.0)
 
