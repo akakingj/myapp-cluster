@@ -60,7 +60,8 @@ function tile(key, x, y, w, h, label, value, colours, valueH) {
     return [
         { key: key + 'Card', kind: 'panel', x, y, w, h, params: { u_box: [10, 2, 0.3, 1] }, colors: (t) => ({ top: t.tileTop, bottom: t.tileBottom, border: t.tileEdge }) },
         C.text(key + 'Lbl', x + 14, y + 10, w - 28, 18, label, lbl, { align: 0, tracking: 0.12 }),
-        C.text(key, x + 14, y + 34, w - 28, vh, value, colours || white, { align: 0 }),
+        // (the figures from 10 px in, to 10 px of the right edge: IBM Plex's are wider than Barlow's were)
+        C.text(key, x + 10, y + 34, w - 20, vh, value, colours || white, { align: 0 }),
     ];
 }
 /** The shift lights: from 2200 rpm under the shift point (layout_common.shiftPoint: the red line less 300 rpm by

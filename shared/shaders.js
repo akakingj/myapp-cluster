@@ -48,6 +48,14 @@ float digitOf(float v, float i, float n) {
     float div = p < 0.5 ? 1.0 : p < 1.5 ? 10.0 : 100.0;
     return mod(floor(v / div + 0.001), 10.0);
 }
+/* how many figures v has (up to three) */
+float figuresOf(float v) { return v >= 99.5 ? 3.0 : v >= 9.5 ? 2.0 : 1.0; }
+/* how far a numeral's centre goes in from its ring (dir: the unit direction out from the dial's centre; n figures of
+   advance adv, the cell h tall) so the side of its box towards the ticks keeps the gap twelve o'clock's has: its half
+   width along dir's sideways part, less what its half height there gives back (the figures' ink about 0.6 h tall) -
+   a wide '220' at three o'clock in from its tick, a '4' at twelve where it was. Only for the narrow faces (IBM Plex:
+   a figure 0.5 wide): the wide ones' layouts - JDM 1's Michroma, 0.88 - are drawn for their own figures, kept as they are */
+float numeralIn(vec2 dir, float n, float adv, float h) { return adv > 0.6 ? 0.0 : max(0.0, abs(dir.x) * n * adv * 0.5 - (1.0 - abs(dir.y)) * 0.3) * h; }
 `;
 
 /** A flat colour over the layer. */
@@ -202,9 +210,10 @@ void main() {
     if (u_arc.z > 0.0) {
         float vk = clamp(floor(v / u_scale.y + 0.5) * u_scale.y, 0.0, u_scale.x);
         float ak = angleOf(vk) * DEG;
-        vec2 pc = vec2(sin(ak), -cos(ak)) * u_arc.w;
         float h = u_arc.z, adv = u_digit_adv;
         float n = vk >= 99.5 ? 3.0 : vk >= 9.5 ? 2.0 : 1.0;
+        vec2 dk = vec2(sin(ak), -cos(ak));
+        vec2 pc = dk * (u_arc.w - numeralIn(dk, n, adv, h));    /* (clear of the ticks however wide: numeralIn) */
         vec2 q = (d - pc) / h;
         float x = q.x + n * adv * 0.5;
         float i = floor(x / adv);
@@ -693,9 +702,11 @@ void main() {
         if (u_marks.z > 0.0) {
             float vk = m * u_marks.y;
             float am = (a0 + sweep * tm) * DEG;
-            vec2 pc = u_geo.xy + vec2(sin(am), -cos(am)) * (R + u_marks.w);
             float h = u_marks.z, adv = u_digit_adv;
             float n = vk >= 99.5 ? 3.0 : vk >= 9.5 ? 2.0 : 1.0;
+            vec2 dm = vec2(sin(am), -cos(am));
+            /* (clear of the arc however wide: out from it outside, in inside) */
+            vec2 pc = u_geo.xy + dm * (R + u_marks.w + sign(u_marks.w) * numeralIn(dm, n, adv, h));
             vec2 q = (p - pc) / h;
             float x = q.x + n * adv * 0.5;
             float i = floor(x / adv);
@@ -1918,7 +1929,7 @@ void main() {
         float kn = clamp(floor(v / u_scale.y + 0.5) * u_scale.y, 0.0, floor(mx / u_scale.y + 0.001) * u_scale.y);
         if (kn >= 0.0 && kn <= mx + 0.001 && v > -0.5 * u_scale.y) {
             float an = a0 + sw * fracOf(kn), h = u_arc.w * R;
-            vec2 cn = c + dirOf(an) * R * (0.725 - u_arc.w * 0.45);
+            vec2 cn = c + dirOf(an) * (R * (0.725 - u_arc.w * 0.45) - numeralIn(dirOf(an), figuresOf(kn), u_digit_adv, h));
             acc = over(acc, kn >= u_arc.z && u_arc.z < mx ? u_red : u_tick, numeral(p, cn, h, kn));
         }
     }
@@ -2267,7 +2278,8 @@ void main() {
         if (k5 >= -0.001 && k5 <= mx5 + 0.001) acc = over(acc, maj ? u_tick : u_tick * 0.6, clamp(R * (maj ? 0.011 : 0.007) - o5 + 0.5, 0.0, 1.0) * span(r / px, (maj ? 0.84 : 0.88) / px, 0.955 / px));
         float kn5 = clamp(floor(v5 / u_scale.y + 0.5) * u_scale.y, 0.0, floor(mx5 / u_scale.y + 0.001) * u_scale.y);
         if (t > -0.06 && t < 1.06) {
-            vec2 cn = c + dirOf(a0 + sw * kn5 / mx5) * R * 0.74;
+            vec2 d5 = dirOf(a0 + sw * kn5 / mx5);
+            vec2 cn = c + d5 * (R * 0.74 - numeralIn(d5, figuresOf(kn5), u_digit_adv, u_arc.z * R));
             acc = over(acc, u_tick, numeral(p, cn, u_arc.z * R, kn5));
         }
         acc = needle(acc, p, c, a0 + sw * clamp(u_value / mx5, -0.01, 1.01), R * 0.1, R * 0.86, R * 0.2, R * 0.024);
@@ -2439,7 +2451,8 @@ void main() {
         }
         if (!neg && v > -0.5 * sn) {
             float kn = clamp(floor(v / sn + 0.5) * sn, 0.0, floor(mx / sn + 0.001) * sn);
-            vec2 cn = c + dirOf(a0 + sw * fracOf(kn)) * R * (0.8 - u_arc.z * 0.62);
+            vec2 dn = dirOf(a0 + sw * fracOf(kn));
+            vec2 cn = c + dn * (R * (0.8 - u_arc.z * 0.62) - numeralIn(dn, figuresOf(kn), u_digit_adv, u_arc.z * R));
             acc = over(acc, u_tick, numeral(p, cn, u_arc.z * R, kn));
         }
     }

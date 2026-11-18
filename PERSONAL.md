@@ -184,6 +184,16 @@ first, checked on the car, then moved to `personal-kr`.
   200 ms apart (3.2 s) on to the dot, each piece fading smoothly with age and the oldest shrinking away; worked out
   only inside the trail's bounding circle (sent with it: a parked car's trail is a point, nothing worked out).
   JDM 2: G meter size 1.2 g too (the Car profile's G-force circle up to: 1, 1.2, 1.5, 2).
+- Layouts 0.48.0, Centre 0.13.0, Info 1.9.0 (Nov 18 2026): IBM Plex Sans Condensed (SIL OFL 1.1, from Google Fonts) in
+  place of Barlow Semi Condensed - SemiBold for the 'bold' atlas (every layout but ID7 M, ID8 M and JDM 1, kept in
+  Orbitron and Michroma; Centre's modern look), Regular for 'light' (KO 1, KO 2; Centre's native look); Info's panel on
+  the cluster and the HUD in its own Plex SemiBold atlas (plex_font.js, tools/bake_info_font.py; kit fonts.register),
+  its iDrive pages in the kit's faces as before. Plex's figures are about 6 % wider: 20's trip names a third of the box
+  (was 0.3), Track's figures 10 px from the tiles' edges, Centre's figures no taller than '-888' / '88.8' / '8888' and
+  their unit fit across a tile, Info's value columns 1.06 of the panel's height (was 1.0). Every dial's numerals now
+  keep clear of the ticks: each goes in from its ring by how much wider than tall it is towards the ticks
+  (shaders.js numeralIn: a '220' at three o'clock in, a '4' at twelve as it was), for the narrow faces only (JDM 1's
+  Michroma dial unchanged). The layout pictures on the page made again (tools/make_previews.py).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

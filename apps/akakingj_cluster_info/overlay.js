@@ -20,6 +20,10 @@ const fs = require('fs');
 const path = require('path');
 const { Canvas, withAlpha } = require('./kit/canvas');
 const G = require('./kit/gauges');
+// the panel's text in IBM Plex Sans Condensed SemiBold, as the cluster's other apps' (plex_font.js: its own atlas,
+// tools/bake_info_font.py); the iDrive pages keep the kit's faces
+const PLEX = require('./plex_font');
+require('./kit/fonts').register(PLEX.family, PLEX);
 
 const STATUS = process.env.WOC_STATUS || '/run/waze-on-cluster/status.json';   // (the variable: tests)
 const UPDATE_MS = 250;            // the badge redrawn at least this often while up (the clock, the theme)
@@ -55,7 +59,7 @@ const INDICATOR_GREEN = '#22d046';   // the cluster's indicator green
 // not): the sign of 1.6.12-1.6.23, this car in yellow and the other's bonnet in red behind it, outward
 const LCW = { w: 34, h: 44, y: SIGNALS_TOP, left: SIGNALS_LEFT, right: SIGNALS_LEFT + SIGNALS_SPAN - 34 };
 const LCW_SELF = '#ffd200', LCW_OTHER = '#ff2a1a';
-const EXTRA_COL = 1.0;            // an extra value's column, of the panel's height (fits "188°")             // an extra value's column, of the meter's base width
+const EXTRA_COL = 1.06;           // an extra value's column, of the panel's height (fits "188°" in IBM Plex, 1.02 of it: was 1.0 with Ubuntu)
 const NIGHT_DIM = 0.6;            // the HUD extras at night, of their brightness by day
 // the cluster's own arrow, measured over 39 flashes of a video (G05): 640 ms a flash, lit 335 of them. By the head
 // unit's clock that is 638 (its clock ran ~0.3 % behind the cluster's flasher there), and the car tells the head unit
@@ -124,8 +128,8 @@ const colW = (h) => Math.round(h * EXTRA_COL);
 function layout(h, bar) {
     if (bar === undefined) bar = true;
     const pad = Math.round(h * 0.2), gap = Math.round(h * 0.1);
-    const numW = Math.ceil(measure.textWidth('-188', Math.round(h * 0.54), { font: 'bold', literal: true }));
-    const unitW = Math.ceil(measure.textWidth('kW', Math.round(h * 0.25), { font: 'bold', literal: true }));
+    const numW = Math.ceil(measure.textWidth('-188', Math.round(h * 0.54), { font: 'plex', literal: true }));
+    const unitW = Math.ceil(measure.textWidth('kW', Math.round(h * 0.25), { font: 'plex', literal: true }));
     const numR = pad + numW, unitX = numR + Math.round(h * 0.05), bx = unitX + unitW + gap, bw = Math.round(h * 1.05);
     // (without the bar: the kW and its unit only)
     return { w: bar ? bx + bw + pad : unitX + unitW + pad, pad, numR, unitX, bx, bw };
@@ -214,8 +218,8 @@ function drawBadge(cv, t, pw, outMax, inMax, extras, powerAt, under, ph) {
         if (i === at) { drawPower(cv, t, pw, outMax, inMax, x, pwW, h, L, bar); x += pwW; continue; }
         const e = extras[vi++];
         const cx = Math.round(x + cw * (pw && i === at + 1 ? 0.42 : pw && i === at - 1 ? 0.58 : 0.5));
-        cv.text(e.label, cx, Math.round(h * 0.33), Math.round(h * 0.22), t.dim, { font: 'bold', align: 'center', literal: true });
-        cv.text(e.text, cx, Math.round(h * 0.84), Math.round(h * 0.5), e.col || t.text, { font: 'bold', align: 'center', literal: true });
+        cv.text(e.label, cx, Math.round(h * 0.33), Math.round(h * 0.22), t.dim, { font: 'plex', align: 'center', literal: true });
+        cv.text(e.text, cx, Math.round(h * 0.84), Math.round(h * 0.5), e.col || t.text, { font: 'plex', align: 'center', literal: true });
         x += cw;
     }
     // (under: { kw } whenever the setting is on, above every slot, whether or not one of them is the kW meter)
@@ -244,8 +248,8 @@ function drawUnderline(cv, t, kw, outMax, inMax, W, h, top) {
 function drawPower(cv, t, pw, outMax, inMax, x, w, h, L, bar) {
     // (the block is at least as wide as its layout; rounding up to a multiple of 4 goes to the bar)
     const base = Math.round(h * 0.69);
-    cv.text(pw.text, x + L.numR, base, Math.round(h * 0.54), pw.col, { font: 'bold', align: 'right', literal: true });
-    cv.text('kW', x + L.unitX, base, Math.round(h * 0.25), t.dim, { font: 'bold', literal: true });
+    cv.text(pw.text, x + L.numR, base, Math.round(h * 0.54), pw.col, { font: 'plex', align: 'right', literal: true });
+    cv.text('kW', x + L.unitX, base, Math.round(h * 0.25), t.dim, { font: 'plex', literal: true });
     if (!bar) return;
     const bx = x + L.bx, bw = Math.max(L.bw, w - L.bx - L.pad), bh = Math.max(6, Math.round(h * 0.2)), by = Math.round((h - bh) / 2);
     const span = outMax + inMax, x0 = bx + bw * inMax / span;

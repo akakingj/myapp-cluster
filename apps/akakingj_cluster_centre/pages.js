@@ -13,6 +13,7 @@
  *      shift: { on, from, at }, badge, custom, warmTarget, redline }.
  */
 const { view, READINGS } = require('./readings');
+const FONT = require('./font');
 const { shiftPoint } = require('./features');
 
 const W = 1088, H = 480;
@@ -98,7 +99,11 @@ function tile(group, key, x, y, w, h, reading, style, o, sub) {
         return out;
     }
     const big = style === 'number';
-    const valH = Math.round(Math.min(h * (big ? 0.5 : 0.44), big ? 120 : 96) * k);
+    // (no taller than the widest figures and their unit fit across the tile: '-888', '88.8' or '8888', the unit at 0.46 of
+    // their size after a gap of 0.08 - a narrow tile of six, the large size; '8888': the fuel pressure in psi)
+    const fam = o.look === 'modern' ? 'bold' : 'light', unit0 = view(reading, {}, o.units).unit || '';
+    const across = Math.max(FONT.width('-888', fam), FONT.width('88.8', fam), FONT.width('8888', fam)) + 0.08 + 0.46 * FONT.width(unit0, fam) * 1.04;
+    const valH = Math.round(Math.min(h * (big ? 0.5 : 0.44) * k, (big ? 120 : 96) * k, (w - 28) / across));
     const vy = y + 44;
     out.push(text(id + '.val', group, x + 14, vy, w - 28, valH, (d) => v(d).text, (t, d) => ({ color: [levelColour(t, v(d).level), 1], glow: [accentOf(t, d), 0.3 * ST.glow] }), { align: 0 }));
     // the unit just after the figures (engine.js lead: however many there are), on their baseline (the glyphs'

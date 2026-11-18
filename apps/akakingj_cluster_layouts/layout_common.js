@@ -357,7 +357,7 @@ function tripRows(o, X, Y, W, H, n, nameC, valueC, fam, head) {
     const out = [], top = head === false ? 0 : Math.max(14, Math.round(H * 0.1)), rh = (H - top - (head === false ? 0 : 6)) / n;
     if (head !== false) out.push(text('tripHead', X, Y, W, top, 'TRIP COMPUTER', nameC, { tracking: 0.14 }));
     for (let i = 0; i < n; i++) {
-        const r = placeReadout(o, placeOf(o, 'tripRow' + (i + 1)) || TRIP_OWN[n][i]), y = Math.round(Y + H - rh * (n - i)), vh = Math.round(Math.min(rh * 0.78, 46)), lw = Math.round(W * 0.3);
+        const r = placeReadout(o, placeOf(o, 'tripRow' + (i + 1)) || TRIP_OWN[n][i]), y = Math.round(Y + H - rh * (n - i)), vh = Math.round(Math.min(rh * 0.78, 46)), lw = Math.round(W * 0.34);   // (0.34: IBM Plex's names wider than Barlow's)
         // (a space before the name: a capital's stem at the box's very edge loses half a pixel there)
         out.push(text('tripLbl' + (i + 1), X, y + Math.round((rh - vh * 0.6) / 2), lw, Math.round(vh * 0.6), ' ' + r.short, nameC, { align: 0, tracking: 0.06 }),
             Object.assign(fitText(text('tripRow' + (i + 1), X + lw, y + Math.round((rh - vh) / 2), W - lw, vh, r.value, valueC, { align: 1 }), fam), r.tone ? { tone: r.tone } : {}));
