@@ -202,6 +202,8 @@ first, checked on the car, then moved to `personal-kr`.
   tight; the preprocessor's lines whole; tools/test_tight.js: every program's words and signs the same). The renderer
   takes no shared program, so each piece sends its own: the start-up 16-67 KB less a layout, the most now 487 KB
   (ID8 M, plug-in hybrid; was 555), every layout's picture pixel for pixel the same.
+- Layouts 0.48.3: 90's and 20's numerals their dials' share as Old M's and ID6 M's (0.11 of the radius the
+  speedometer's, 0.13 the tach's; they were 0.14 / 0.18-0.2, crowded), a little further out for it.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

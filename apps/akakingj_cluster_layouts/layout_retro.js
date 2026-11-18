@@ -70,6 +70,8 @@ function dialSet(o, which, cx, size, cy) {
     const k = size / 640, s = which === 'speed' ? C.speedScale(o) : C.rpmScale(o);
     const red = which === 'speed' ? s.max + 1 : s.red;
     // km/h: 14 numerals, most of three figures (mph: 9); at mph's size 100-160 ran together, so smaller and further out
+    // (0.48.3: the numerals about Old M's and ID6 M's share of the dial - 0.11 of its radius the speedometer's, 0.13 the
+    // tach's; they were 0.14 and 0.2: crowded - a little further out for it)
     const dense = which === 'speed' && o.speedUnit === 'kmh';
     const sub = Math.round(176 * k), subY = cy + Math.round(170 * k);
     // Settings > Speedometer gauge / Tach gauge: another reading in the small gauge (its scale 0..100 here)
@@ -86,7 +88,7 @@ function dialSet(o, which, cx, size, cy) {
     return [
         Object.assign({
             key: which, kind: 'dial', x: cx - size / 2, y: cy - size / 2, w: size, h: size,
-            params: Object.assign({ u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 44 : 62) * k + 2), (dense ? 230 : 214) * k], u_needle_dim: [292 * k, 62 * k, 13 * k, 4] }, look(k, 0.75)),
+            params: Object.assign({ u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 33 : 40) * k + 2), (dense ? 234 : 224) * k], u_needle_dim: [292 * k, 62 * k, 13 * k, 4] }, look(k, 0.75)),
             colors: dialColours, max: s.max, sweep: true,
             value: which === 'speed' ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : C.tachValue(o), range: which === 'speed' ? undefined : C.tachRange(o, s),
             dyn: which === 'speed' ? undefined : C.tachDyn(o, s, red),

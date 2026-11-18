@@ -44,14 +44,15 @@ const powerTxt = (t, d) => ({ color: [kwNow(d) < -0.3 ? t.regen || '#3ddc84' : t
 function bigDial(o, which, cx, size, cy) {
     const k = size / 640, speed = which === 'speed', s = speed ? C.speedScale(o) : C.rpmScale(o);
     const red = speed ? s.max + 1 : s.red;
-    // km/h: 14 numerals, most of three figures (mph: 9): smaller and further out
+    // km/h: 14 numerals, most of three figures (mph: 9): smaller and further out. (0.48.3: both about Old M's and ID6 M's
+    // share of the dial - 0.11 of its radius the speedometer's, 0.13 the tach's - they were 0.14 and 0.18: crowded)
     const dense = speed && o.speedUnit === 'kmh';
     // (Show: Engine: no power meter; none while the tach itself is the Power % meter: layout_common.electric)
     const extra = !speed && !C.engineFocus(o) ? C.powerMeter(cx, size, cy, lbl, o).map((p) => Object.assign(p, { visible: (d) => !C.electric(o, d) })) : [];
     const list = extra.concat([
         {
             key: which, kind: 'dial', x: cx - size / 2, y: cy - size / 2, w: size, h: size,
-            params: { u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 40 : 54) * k + 2), (dense ? 222 : 210) * k], u_needle_dim: [290 * k, 56 * k, 14 * k, 4], u_look: [0.22, 1, 0, 0], u_look2: [Math.round(20 * k), k, 0.9, 1] },
+            params: { u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 33 : 40) * k + 2), (dense ? 226 : 218) * k], u_needle_dim: [290 * k, 56 * k, 14 * k, 4], u_look: [0.22, 1, 0, 0], u_look2: [Math.round(20 * k), k, 0.9, 1] },
             colors: dialColours, max: s.max, sweep: true,
             // the tach reads the battery's power in an electric eDrive mode (layout_common.electric)
             value: speed ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : C.tachValue(o), range: speed ? undefined : C.tachRange(o, s),
