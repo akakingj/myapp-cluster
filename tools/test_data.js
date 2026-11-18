@@ -49,5 +49,10 @@ check('ranges by field name: electric, total, fuel, the tank level; invalid valu
     assert.deepStrictEqual(rangesOf({ rangeElectric: 29, rangeTotal: 540, rangeFuel: 511, fuelTankLevel: 42 }), { carErange: 29, carTrange: 540, carFrange: 511, fuelLevel: 42 });
     assert.deepStrictEqual(rangesOf({ s: { reichweiteHV: 18, reichweite: 400 } }), { carErange: 18, carFrange: 400 });
     assert.deepStrictEqual(rangesOf({ rangeEv: 65535, counter: 3 }), {});
+    // a 12-bit range's "no value" marks (4093 electric on a plug-in hybrid at 8 % charge), and no electric range past 1000 km
+    assert.deepStrictEqual(rangesOf({ rangeElectric: 4093, range: 417 }), { carFrange: 417 });
+    assert.deepStrictEqual(rangesOf({ rangeElectric: 4095, rangeTotal: 4094, range: 4093 }), {});
+    assert.deepStrictEqual(rangesOf({ rangeElectric: 1200, range: 417 }), { carFrange: 417 });
+    assert.deepStrictEqual(rangesOf({ rangeElectric: 0, range: 417 }), { carErange: 0, carFrange: 417 });
 });
 console.log(ok + ' passed');

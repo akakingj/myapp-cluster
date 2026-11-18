@@ -208,6 +208,9 @@ first, checked on the car, then moved to `personal-kr`.
   0.19, was 0.22), and its ends' margins alike: the kW's figures right-aligned in a column for "188" / "-88" (the
   widest a battery gives; a rarer "-1xx" reaches into the padding), a value at the far end centred with as much room
   outside it as the meter's padding (edgePad). On the cluster 192-428 px wide, was 220-448.
+- Layouts 0.48.4, Centre 0.13.3 (Nov 19 2026, from a G-series plug-in hybrid): a range signal's 12-bit "no value"
+  marks (0xFFD-0xFFF) left out - the car sent an electric range of 4093 at 8 % charge, and the layouts showed it as
+  4093 km - and no electric range past 1000 km taken, from the car or an app (shared/data.js rangeOk).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

@@ -132,13 +132,20 @@ function modeOf(v, ice) {
  * Reichweite with electric (elec, ev, hv, bev, batt) -> carErange, total -> carTrange, else carFrange; a fuel
  * level -> fuelLevel. Kilometres; 0xFFFE and up are invalid. Returns { name: number }.
  */
+/* A range no car gives: a range signal's 12-bit "no value" marks (0xFFD-0xFFF: 4093 km on a G-series plug-in hybrid
+ * at 8 % charge, Nov 2026), and an electric range past MAX_ERANGE km. */
+const RANGE_NONE = 0xFFD, MAX_ERANGE = 1000;
+const rangeOk = (n, electric) => typeof n === 'number' && isFinite(n) && n >= 0 && n < RANGE_NONE && (!electric || n <= MAX_ERANGE);
+
 function rangesOf(v) {
     const out = {};
     leaves(v).forEach((l) => {
         const n = l.v, key = String(l.key).toLowerCase();
         if (typeof n !== 'number' || !isFinite(n) || n < 0 || n >= 0xFFFE) return;
         if (/range|reichweite/.test(key)) {
-            if (/elec|(^|[^a-z])ev|hv|bev|batt|edrive/.test(key)) out.carErange = n;
+            const electric = /elec|(^|[^a-z])ev|hv|bev|batt|edrive/.test(key);
+            if (!rangeOk(n, electric)) return;
+            if (electric) out.carErange = n;
             else if (/total|gesamt|overall|sum/.test(key)) out.carTrange = n;
             else out.carFrange = n;
         } else if (/level|fill|inhalt|volume|liter/.test(key) && /fuel|tank|kraftstoff/.test(key)) {
@@ -398,7 +405,7 @@ function startData(ctx, opts) {
             fes('displayRangeElectricVehicle')(v);
             const n = numberIn(v, /^displayRangeElectricVehicle$/);
             const miles = !(ctx.settings && ctx.settings.get && ctx.settings.get('speedUnit') === 'kmh');
-            if (isNum(n) && n >= 0 && n < 0xFFFE) put('carErange', miles ? n * 1.609344 : n);
+            if (isNum(n) && rangeOk(n) && rangeOk(miles ? n * 1.609344 : n, true)) put('carErange', miles ? n * 1.609344 : n);
         },
         statusDisplayElectricalPowerDistribution: (v) => {
             const e = entries(v, 'displayRepartitionDriveElectricPower')[0];
@@ -601,8 +608,8 @@ function startData(ctx, opts) {
             const fz = !d.demo && fastKw() ? fuse.now(tNow) : null;
             const o = Object.assign({}, d, { mode: x.mode, soc: isNum(p.soc) ? p.soc : !d.demo && fresh('socSme', 60000) ? x.socSme : undefined,
                 kw: fz ? fz.kw : isNum(p.kw) ? p.kw : undefined, kwRead: isNum(p.kw) ? p.kw : undefined, kwFused: !!(fz && fz.fused), kwModel: fz && fz.model ? fz.model : undefined, kwOut: endsOf(p).out || undefined, kwIn: kwEnds.in || undefined, driveMode: x.driveMode,
-                erange: isNum(p.erange) ? p.erange : fresh('carErange', 120000) ? x.carErange : undefined,
-                frange: isNum(p.frange) ? p.frange : fresh('carFrange', 120000) ? x.carFrange : undefined,
+                erange: isNum(p.erange) && rangeOk(p.erange, true) ? p.erange : fresh('carErange', 120000) ? x.carErange : undefined,
+                frange: isNum(p.frange) && rangeOk(p.frange) ? p.frange : fresh('carFrange', 120000) ? x.carFrange : undefined,
                 trange: fresh('carTrange', 120000) ? x.carTrange : undefined, fuelLevel: fresh('fuelLevel', 120000) ? x.fuelLevel : undefined });
             // the tyres: { p: { FL.. } bar, t: { FL.. } C }, each fresh for a minute (read every 10 s)
             o.tyres = { p: {}, t: {} };
