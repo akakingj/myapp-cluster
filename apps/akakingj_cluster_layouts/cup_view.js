@@ -99,7 +99,7 @@ function view(geo) {
         step(d, o, now) {
             const dt = last === null ? 0 : now - last;
             last = now;
-            const gOf = (k) => (isNum(d[k + 'Z']) ? d[k + 'Z'] : isNum(d[k]) ? d[k] : 0), sx = o && o.gFlipLat === 'on' ? -1 : 1;
+            const gOf = (k) => (isNum(d[k + 'Z']) ? d[k + 'Z'] : isNum(d[k]) ? d[k] : 0), sx = 1;
             const wLat = clamp(Math.atan(GAIN * sx * gOf('gLat')), -MAX_TILT, MAX_TILT), wLon = clamp(-GAIN * gOf('gLong'), LON_MIN, LON_MAX);
             // (back after a gap - the page hidden, a slow frame: start where the G is now, no slosh from the gap)
             if (!dt || dt > 1000) { lat.reset(wLat); lon.reset(wLon); }

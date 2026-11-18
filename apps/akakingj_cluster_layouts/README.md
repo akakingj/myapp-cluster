@@ -107,7 +107,7 @@ follows the mode (blue, red in sport, teal in ECO PRO).
   designed. With more than six the cards go three or four a row.
 - **JDM 1's water cup, large (0.43.0):** JDM 1's page has a **Water cup view** button: the cup of water on the
   head unit's screen, as the Water Cup app draws it (no other app needed), sloshing with the same G as the cup on the
-  cluster (2.2 times it, Settings > JDM 2: G meter, swap left / right for its side). **Back** (or Signals, Logs) leaves
+  cluster (2.2 times it, higher on the outside of the bend). **Back** (or Signals, Logs) leaves
   it. Worked out every frame, sent only when the water moved and at most 30 frames a second (`cup_view.js`,
   `tools/test_cup_view.js`).
 - **Status, raw values, the renderer and the signal list** moved behind the **Signals** button (its first page).
@@ -225,8 +225,9 @@ default, a **speedometer** with its marks round the edge, the **tyres** - the ca
 temperature at its corner, a low one in red - or four **temperatures** - engine oil, coolant, gearbox oil and intake
 air, an arc each, red when too hot) with the G meter (the car's own lateral and
 longitudinal acceleration, read as G Force and Car Vitals read it: each axis's offset learned while the car stands,
-smoothed over about 150 ms; the dot left in a right bend and up while accelerating, as G Force draws it; Settings >
-JDM 2: G meter size, swap left / right, brake on top); over its edge a big tach whose scale is a broad coloured band
+smoothed over about 150 ms; the dot as the driver feels the G - right in a left bend, down accelerating, up braking,
+as every app since 0.47.0, no setting - with its trail behind it, where it was over the last 2 s, fading; Settings >
+JDM 2: G meter size); over its edge a big tach whose scale is a broad coloured band
 with the numerals in it, a notched dark rim round it and a dotted line inside it (red, the shift zone orange; Sport
 crimson and amber, Efficient blue), a glowing needle reaching the band over a chrome ring hub, the digital speed in
 its open lower right; a glossy disc with the gear; two small chrome-ringed gauges, the coolant (C-H) and the fuel

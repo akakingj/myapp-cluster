@@ -171,6 +171,12 @@ first, checked on the car, then moved to `personal-kr`.
   name in every place. The trip computer's 0.0 (a trip just reset) shown as 0.0, not -- nor the last trip's figure; the
   car's economy unit changed on the MGU with no figure yet drops the old figure. The fuel gauge marked 0, 1/2, 1 as the
   car's own (KO's foot, a fuel gauge set in a place; M's bar 0 and 1).
+- Layouts 0.47.0, Centre 0.12.4 (Nov 18 2026): the G as the driver feels it everywhere, with no setting (the Car profile
+  1.6.0 dropped its G direction too; G-Force, M Vitals and Water Cup the same): JDM 2's G meter and JDM 1's cup lost
+  their swaps (gFlipLat, gFlipLong). JDM 2's dot has a trail, as the iDrive G-Force app's: where it was over the last
+  2 s (16 places, 125 ms apart) joined by a thin line fading with age, drawn in the meter's own shader (no new piece;
+  only inside the meter). Shared engine: a piece's dyn uniforms sent one by one when each changes (the trail's 32
+  numbers not with every move of the dot), more than 4 numbers as an array of vec4.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

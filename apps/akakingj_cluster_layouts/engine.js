@@ -25,7 +25,8 @@
  *     range(d) -> [min, max]              instead, the lowest and highest now (a tach that reads kW in an electric drive),
  *     sweep: true                         part of the start-up sweep,
  *     group: 'name'                       built only while that group is active (setGroup: a page),
- *     dyn(d, t) -> { u_name: [numbers] }  more uniforms, sent when they change (at the text rate),
+ *     dyn(d, t) -> { u_name: [numbers] }  more uniforms, each sent when it changes (at the text rate; more than 4
+ *                                         numbers: an array of vec4),
  *     frame(d, dtMs) -> { u_name: [numbers] }  uniforms worked out every frame (motion: the road's distance
  *                                         run), sent when they change,
  *     sample(d) -> 0..1, every            a trend line's samples (kind spark), every `every` ms (2 s),
@@ -210,7 +211,18 @@ function startCluster(opts) {
             }
             if (s.dyn) {
                 const u = s.dyn(d, t) || {}, key = JSON.stringify(u);
-                if (force || key !== p.dyn) { p.dyn = key; Object.keys(u).forEach((n) => cr.uniform(p.ref, n, u[n])); }
+                if (force || key !== p.dyn) {
+                    p.dyn = key;
+                    // (only the ones that changed: a trail's 32 numbers not sent again with every move of its dot; more
+                    // than 4 numbers: an array of vec4)
+                    const was = p.dynEach || (p.dynEach = {});
+                    Object.keys(u).forEach((n) => {
+                        const k = JSON.stringify(u[n]);
+                        if (!force && was[n] === k) return;
+                        was[n] = k;
+                        cr.uniform(p.ref, n, u[n], u[n] && u[n].length > 4 ? { type: 'vec4' } : undefined);
+                    });
+                }
             }
             if (s.sample) {
                 // a trend line (sampled by samples(), for every page): sent when it has a new sample

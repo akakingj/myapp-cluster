@@ -42,11 +42,11 @@ check('a bend: the surface tilts towards atan(2.2 g), higher on the outside; fra
     run(v, { gLatZ: 0.3 }, {}, 1016, 8000);
     assert(Math.abs(v.state.lat - Math.atan(2.2 * 0.3)) < 0.01, 'lat ' + v.state.lat);
 });
-check('swapped (Settings > JDM 2: G meter, swap left / right): the other way', () => {
+check('no swap any more (every app\'s G as the driver feels it): an old gFlipLat left in a setting changes nothing', () => {
     const v = CV.view();
     v.step({ gLatZ: 0 }, {}, 0);
     run(v, { gLatZ: 0.3 }, { gFlipLat: 'on' }, 16, 8000);
-    assert(v.state.lat < -0.5, 'lat ' + v.state.lat);
+    assert(v.state.lat > 0.5, 'lat ' + v.state.lat);
 });
 check('hard: at most its tilt; braking to the far side, accelerating to the near', () => {
     const v = CV.view();

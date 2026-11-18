@@ -328,7 +328,7 @@ function spring(lo, hi) {
     };
 }
 function cup(o, clear) {
-    const sx = o.gFlipLat === 'on' ? -1 : 1, lat = spring(-CUP.maxTilt, CUP.maxTilt), lon = spring(CUP.lonMin, CUP.lonMax);
+    const sx = 1, lat = spring(-CUP.maxTilt, CUP.maxTilt), lon = spring(CUP.lonMin, CUP.lonMax);
     // (the clear cup half full: its water seen whole through the glass, room for the slosh; the paper cup's fuller, its
     // surface seen through its mouth)
     const level = clear ? CUP.clearLevel : CUP.level;

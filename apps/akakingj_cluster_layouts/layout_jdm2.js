@@ -61,15 +61,32 @@ function tach(o, cx, cy, R) {
 
 /*
  * The G meter in a big round window at (cx, cy), radius R: the meter in its middle, its size's figures at the ends of
- * its cross. The dot as the driver feels the G (0.41.6, the owner's call; G Force's the other way): right in a left
- * bend (the car's lateral G > 0 turning left; Settings > JDM 2: G meter, swap left / right), down while accelerating,
- * up braking (Settings > JDM 2: G meter, accelerating on top); the car's own acceleration less its
- * offset at a standstill, smoothed (data.js gLatZ, gLongZ).
+ * its cross. The dot as the driver feels the G (0.41.6; every app's since 0.47.0, no setting): right in a left bend
+ * (the car's lateral G > 0 turning left), down while accelerating, up braking; the car's own acceleration less its
+ * offset at a standstill, smoothed (data.js gLatZ, gLongZ). Behind the dot its trail (0.47.0, as the iDrive G-Force
+ * app's): where it was over the last 2 s, a place every TRAIL_MS, TRAIL_N of them (the shader's u_trail).
  */
+const TRAIL_MS = 125, TRAIL_N = 16;
+/** The trail's places from the dot's: a new one every TRAIL_MS (now: ms), TRAIL_N kept, the oldest first. */
+function trailOf() {
+    const pts = [];
+    let at = 0;
+    return (g, now) => {
+        if (!(now - at < TRAIL_MS) && C.isNum(g[0]) && C.isNum(g[1])) {
+            at = now;
+            const l = Math.hypot(g[0], g[1]), k = l > 1.12 ? 1.12 / l : 1;
+            pts.push([r2(g[0] * k), r2(g[1] * k)]);
+            if (pts.length > TRAIL_N) pts.shift();
+        }
+        const flat = [];
+        for (let i = 0; i < TRAIL_N; i++) { const q = pts[i] || pts[pts.length - 1] || [0, 0]; flat.push(q[0], q[1]); }
+        return { u_trail: flat, u_trail_n: [pts.length] };
+    };
+}
 function gMeter(o, cx, cy, R) {
     // (0.37.2: the meter 0.6 R across, was 0.46; its figures larger, and the G now in figures under it)
     const gr = R * 0.6, h = Math.max(16, Math.round(R * 0.085)), w = Math.round(h * 2.6), max = gScale(o);
-    const sx = o.gFlipLat === 'on' ? -1 : 1, sy = o.gFlipLong === 'on' ? -1 : 1;
+    const trail = trailOf();
     const fig = max % 0.5 ? max.toFixed(2) : max.toFixed(1);
     const mark = (k, x, y) => C.text('gMark' + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, fig, white);
     const gv = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : d[k]);
@@ -77,7 +94,7 @@ function gMeter(o, cx, cy, R) {
         {
             key: 'gMeter', kind: 'jdm', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R,
             params: { u_mode: [1], u_origin: [cx - R, cy - R], u_g: [0, 0] },
-            colors: jdmColours, dyn: (d) => ({ u_g: [r2(sx * gv(d, 'gLat') / max), r2(sy * gv(d, 'gLong') / max)] }),
+            colors: jdmColours, dyn: (d) => { const g = [r2(gv(d, 'gLat') / max), r2(gv(d, 'gLong') / max)]; return Object.assign({ u_g: g }, trail(g, Date.now())); },
         },
         mark('T', cx, cy - gr - h * 1.2), mark('B', cx, cy + gr + h * 1.2), mark('L', cx - gr - w * 0.6, cy), mark('R', cx + gr + w * 0.6, cy),
         // the G now (both ways together), in the meter's lower right quarter

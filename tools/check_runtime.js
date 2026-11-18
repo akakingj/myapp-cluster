@@ -50,7 +50,7 @@ SETS.push({ tag: 'profile bottom', redline: 4000, rpmMax: 5000, shiftBefore: 800
 SETS.push({ tag: 'map', centre: 'map' });
 SETS.push({ tag: 'stock centre', centre: 'stock' });
 ['speed', 'tyres', 'temps'].forEach((w) => SETS.push({ tag: 'JDM 2 left dial ' + w, leftDial: w }));
-SETS.push({ tag: 'G meter swapped, 1 g', gScale: '1', gFlipLat: 'on', gFlipLong: 'on' });
+SETS.push({ tag: 'G meter at 1 g', gScale: '1' });
 SETS.push({ tag: 'JDM 1 without its cup', jdmCup: 'off' });
 SETS.push({ tag: 'JDM 1 with the paper cup', jdmCup: 'on' });
 SETS.push({ tag: 'no bars at the bottom', stripBars: 'off' });

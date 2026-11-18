@@ -39,7 +39,7 @@ const clear = () => { try { fs.unlinkSync(FILE); } catch (e) { /* none */ } };
 
 // the Car profile's names (profile.js KEYS) and the values it can set
 const PROFILE_VALUES = {
-    engine: ['app', 'auto', 'diesel', 'petrol', 'phev'], redline: [0, 4000, 6000, 7000, 9000], shiftAt: [0, 4000, 6500, 8500], gMax: [1, 1.5, 2], gLat: ['out', 'in'], gLong: ['top', 'bottom'], rpmScale: [0, 5000, 7000, 10000],
+    engine: ['app', 'auto', 'diesel', 'petrol', 'phev'], redline: [0, 4000, 6000, 7000, 9000], shiftAt: [0, 4000, 6500, 8500], gMax: [1, 1.5, 2], rpmScale: [0, 5000, 7000, 10000],
     coldLimit: [0, 2000, 4500, 5500], lightMode: ['shift', 'rev'], lightStart: [2000, 4000, 6000], coldGuard: ['on', 'off'], warmOil: [60, 80, 100],
     warmCoolant: [60, 90], hotOil: [110, 125, 140], hotCoolant: [110, 125, 140], hotGearbox: [80, 100, 130], speedUnit: ['kmh', 'mph'], distUnit: ['km', 'mi'], tempUnit: ['c', 'f'],
     pressUnit: ['bar', 'psi', 'kpa'], fuelUnit: ['l100', 'kml', 'mpguk', 'mpgus'], torqueUnit: ['nm', 'lbft', 'kgm'],
@@ -48,11 +48,11 @@ const PROFILE_VALUES = {
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
-    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', gFlipLat: 'gLat', gFlipLong: 'gLong', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', timeZone: 'timeZone', clock: 'clock', tankLitres: 'tankLitres', eFull: 'eFull' },
+    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', timeZone: 'timeZone', clock: 'clock', tankLitres: 'tankLitres', eFull: 'eFull' },
     centre: { vehicle: 'engine', redline: 'redline', shiftAt: 'shiftAt', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', timeZone: 'timeZone', clock: 'clock', tankLitres: 'tankLitres', eFull: 'eFull' },
     info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin', theme: 'theme', layout: 'layout', renderer: 'renderer', demo: 'demo' },
 };
-const MINE = { vehicle: 'petrol', skin: 'idrive7', theme: 'm_tricolour', layout: 'standard', renderer: 'software', demo: 'on', clock: '24', timeZone: 'utc', tankLitres: 60, eFull: 30, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftAt: 6500, _reset_shiftAt: 1, gScale: '1', gFlipLat: 'on', gFlipLong: 'on', coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
+const MINE = { vehicle: 'petrol', skin: 'idrive7', theme: 'm_tricolour', layout: 'standard', renderer: 'software', demo: 'on', clock: '24', timeZone: 'utc', tankLitres: 60, eFull: 30, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftAt: 6500, _reset_shiftAt: 1, gScale: '1', coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
     hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120 };
 
 const cases = {
@@ -154,13 +154,14 @@ const cases = {
         writeProfile({ coldGuard: 'on' }); L._pollProfile();
         assert.strictEqual(L.get('shiftAt'), 6500, 'left out: the own value');
     },
-    'the G meter: the Car profile\'s absolute choices to JDM 2\'s own swaps (out / top: as it was, off)'() {
+    'the G meter: its size from the Car profile; no direction setting (every app\'s G as the driver feels it), an old profile\'s left alone'() {
         clear();
         writeProfile({ gLat: 'in', gLong: 'bottom', gMax: 2 });
         const L = settingsIn('layouts', MINE);
-        assert.deepStrictEqual([L.get('gFlipLat'), L.get('gFlipLong'), L.get('gScale')], ['on', 'on', '2']);
-        writeProfile({ gLat: 'out', gLong: 'top', gMax: 1 }); L._pollProfile();
-        assert.deepStrictEqual([L.get('gFlipLat'), L.get('gFlipLong'), L.get('gScale')], ['off', 'off', '1']);
+        assert.strictEqual(L.get('gScale'), '2');
+        assert.strictEqual(L.get('gFlipLat'), undefined); assert.strictEqual(L.get('gFlipLong'), undefined);
+        writeProfile({ gMax: 1 }); L._pollProfile();
+        assert.strictEqual(L.get('gScale'), '1');
     },
     'held: not changed here (cycle, the drawn list), the own value as it was'() {
         clear();
