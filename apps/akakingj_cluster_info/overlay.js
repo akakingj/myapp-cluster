@@ -61,7 +61,6 @@ const LCW = { w: 34, h: 44, y: SIGNALS_TOP, left: SIGNALS_LEFT, right: SIGNALS_L
 const LCW_SELF = '#ffd200', LCW_OTHER = '#ff2a1a';
 // the panel's text, of its height (1.9.1: smaller, the panel's height kept: was 0.54 / 0.25 / 0.22 / 0.5)
 const TXT = { num: 0.46, unit: 0.21, label: 0.19, value: 0.42 };
-const BOX = { num: 0.54, unit: 0.25 };   // the kW's room, measured at 1.9.0's sizes: the panel as wide as it was
 const EXTRA_COL = 1.06;           // an extra value's column, of the panel's height (as 1.9.0: the text smaller in it leaves the right edge room)
 const NIGHT_DIM = 0.6;            // the HUD extras at night, of their brightness by day
 // the cluster's own arrow, measured over 39 flashes of a video (G05): 640 ms a flash, lit 335 of them. By the head
@@ -122,20 +121,23 @@ function parseStatus(s) {
 
 /**
  * The meter's own layout for a height h, left to right with no unused room: padding, the kW number
- * right-aligned in a column just wide enough for "-188" (the widest reading it shows), "kW", the bar,
+ * right-aligned in a column as wide as "188" or "-88" (the widest readings a battery gives), "kW", the bar,
  * padding. { w, pad, numR, unitX, bx, bw }.
  */
 const measure = new Canvas(1, 1);
 /** An extra value's column width for a panel h high. */
 const colW = (h) => Math.round(h * EXTRA_COL);
-/** The room after the last value, inside the rounded right edge (1.9.1), for a panel h high with n values: on the
- *  cluster (the HUD's panel no wider: its map leaves no room there; the smaller text gives it some). */
-const rightPad = (h, n) => n ? Math.round(h * 0.1) : 0;
+/** The room a value at the panel's end needs added, for the widest value ("188°") to stand as far in from that end
+ *  as the kW meter's figures from the other (its padding): the two ends' margins the same (1.9.1). */
+const edgePad = (h) => Math.max(0, Math.round(h * 0.2 - (colW(h) - measure.textWidth('188°', Math.round(h * TXT.value), { font: 'plex', literal: true })) / 2));
 function layout(h, bar) {
     if (bar === undefined) bar = true;
     const pad = Math.round(h * 0.2), gap = Math.round(h * 0.1);
-    const numW = Math.ceil(measure.textWidth('-188', Math.round(h * BOX.num), { font: 'plex', literal: true }));
-    const unitW = Math.ceil(measure.textWidth('kW', Math.round(h * BOX.unit), { font: 'plex', literal: true }));
+    // (1.9.1: as wide as the widest reading a battery gives, "188" or "-88": then the figures as far in from the left
+    // end as the last value from the right; a rarer "-1xx" reaches into the padding, inside the panel still)
+    const fw = (str) => measure.textWidth(str, Math.round(h * TXT.num), { font: 'plex', literal: true });
+    const numW = Math.ceil(Math.max(fw('188'), fw('-88')));
+    const unitW = Math.ceil(measure.textWidth('kW', Math.round(h * TXT.unit), { font: 'plex', literal: true }));
     const numR = pad + numW, unitX = numR + Math.round(h * 0.05), bx = unitX + unitW + gap, bw = Math.round(h * 1.05);
     // (without the bar: the kW and its unit only)
     return { w: bar ? bx + bw + pad : unitX + unitW + pad, pad, numR, unitX, bx, bw };
@@ -170,7 +172,7 @@ function badgeRect(r, where, target, extras, hasPower, underOn) {
     let s = target === 'hud' ? Math.max(0.62, Math.min(HUD_MAX_H / 56, r.w / 400)) : 1.3;   // (HUD: up to HUD_MAX_H high)
     const size = (sc) => {
         const hh = Math.round(56 * sc / 2) * 2;
-        const L = layout(hh, hasPower !== 'number'), ww = (hasPower ? L.w : L.pad) + (extras || 0) * colW(hh) + (target === 'hud' ? 0 : rightPad(hh, extras || 0)) + (hasPower ? 0 : L.pad);
+        const L = layout(hh, hasPower !== 'number'), ww = (hasPower ? L.w : L.pad) + (extras || 0) * colW(hh) + (hasPower && extras ? edgePad(hh) : 0) + (hasPower ? 0 : L.pad);
         return [hh, Math.min(Math.ceil(ww / 4) * 4, r.w & ~3)];
     };
     let [h, w] = size(s);
@@ -211,7 +213,8 @@ function drawBadge(cv, t, pw, outMax, inMax, extras, powerAt, under, ph) {
     // (ph: the panel's height; the thin kW bar along the bottom, setting underline, goes in the strip under it)
     const bar = !!pw && pw.bar !== false;
     const W = cv.w, h = ph || cv.h, L = layout(h, bar), need = (pw ? L.w : 2 * L.pad) + extras.length * colW(h),
-        rp = Math.max(0, Math.min(rightPad(h, extras.length), W - need)), pwW = pw ? Math.max(L.w, W - extras.length * colW(h) - rp) : 0;
+        ep = pw && extras.length ? Math.max(0, Math.min(edgePad(h), W - need)) : 0,
+        pwW = pw ? Math.max(L.w, W - extras.length * colW(h) - ep) : 0;
     // the thin kW bar's strip at the top of the layer (when it has the room), the panel below it
     const strip = !!under && cv.h >= h + underStrip(h).total, top = strip ? cv.h - h : 0, real = cv;
     cv.clear([0, 0, 0, 0]);
@@ -219,12 +222,14 @@ function drawBadge(cv, t, pw, outMax, inMax, extras, powerAt, under, ph) {
     cv.roundRect(0, 0, W, h, h * 0.32, [8, 9, 12, 190]);
     // the items left to right: the kW meter at its slot (powerAt among them), the values in the room left
     const n = extras.length + (pw ? 1 : 0), at = pw ? Math.min(Math.max(0, powerAt || 0), extras.length) : -1;
-    const cw = extras.length ? (W - pwW - rp) / extras.length : 0;
-    let x = 0, vi = 0;
+    const cw = extras.length ? (W - pwW - ep) / extras.length : 0;
+    // (ep at the end a value takes, the kW meter at the other: both ends' margins alike; the meter between values: half each end)
+    let x = at === extras.length ? ep : at > 0 ? ep / 2 : 0, vi = 0;
     for (let i = 0; i < n; i++) {
         if (i === at) { drawPower(cv, t, pw, outMax, inMax, x, pwW, h, L, bar); x += pwW; continue; }
         const e = extras[vi++];
-        const cx = Math.round(x + cw * (pw && i === at + 1 ? 0.42 : pw && i === at - 1 ? 0.58 : 0.5));
+        const edge = i === 0 || i === n - 1;   // (a value at an end centred in its column: ep keeps it in from the edge)
+        const cx = Math.round(x + cw * (pw && !edge && i === at + 1 ? 0.42 : pw && !edge && i === at - 1 ? 0.58 : 0.5));
         cv.text(e.label, cx, Math.round(h * 0.34), Math.round(h * TXT.label), t.dim, { font: 'plex', align: 'center', literal: true });
         cv.text(e.text, cx, Math.round(h * 0.80), Math.round(h * TXT.value), e.col || t.text, { font: 'plex', align: 'center', literal: true });
         x += cw;

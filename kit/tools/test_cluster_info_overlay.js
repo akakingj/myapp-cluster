@@ -46,9 +46,10 @@ check('badge inside the map, bottom and top', () => {
         assert(b.x >= r.x && b.y >= r.y && b.x + b.w <= r.x + r.w && b.y + b.h <= r.y + r.h, tg + ' ' + pct + ' ' + w);
         assert(b.w % 4 === 0 && b.h % 2 === 0 && b.w >= 100);
     })));
-    // (1.9.0: 12 px wider than with Ubuntu, the kW's figures in IBM Plex measured wider)
-    assert.deepStrictEqual(badgeRect(mapRect('map', 0), 'bottom', 'map'), { x: 434, y: 376, w: 220, h: 72, ph: 72 });   // 1.3x, near the map's bottom (below the car's arrow, above the dimmed edge)
-    assert.deepStrictEqual(badgeRect(mapRect('hud', 0), 'bottom', 'hud'), { x: 437, y: 276, w: 184, h: 60, ph: 60 });   // the HUD's, at the map's right edge
+    // (1.9.0: 12 px wider than with Ubuntu, the kW's figures in IBM Plex measured wider; 1.9.1: 28 px narrower,
+    // its text smaller and its figures' column for "188" / "-88")
+    assert.deepStrictEqual(badgeRect(mapRect('map', 0), 'bottom', 'map'), { x: 448, y: 376, w: 192, h: 72, ph: 72 });   // 1.3x, near the map's bottom (below the car's arrow, above the dimmed edge)
+    assert.deepStrictEqual(badgeRect(mapRect('hud', 0), 'bottom', 'hud'), { x: 461, y: 276, w: 160, h: 60, ph: 60 });   // the HUD's, at the map's right edge
 });
 
 /* ---------- drawing and diffs ---------- */
@@ -116,7 +117,7 @@ class FakeCR extends EventEmitter {
         assert(cr && cr.app === 'akakingj_cluster_info');
         const l = [...cr.layers.values()][0];
         assert.strictEqual(l.target, 'map'); assert.strictEqual(l.klass, 'overlay');
-        assert.deepStrictEqual([l.x, l.y, l.w, l.h], [434, 376, 220, 72]);
+        assert.deepStrictEqual([l.x, l.y, l.w, l.h], [448, 376, 192, 72]);
         assert.strictEqual(l.visible, true); assert(ov.shown()); assert(fast > 0);
         assert(cr.log.some((e) => e[0] === 'pixels' && e[2] === null), 'whole image first');
     });

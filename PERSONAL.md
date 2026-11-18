@@ -204,9 +204,10 @@ first, checked on the car, then moved to `personal-kr`.
   (ID8 M, plug-in hybrid; was 555), every layout's picture pixel for pixel the same.
 - Layouts 0.48.3: 90's and 20's numerals their dials' share as Old M's and ID6 M's (0.11 of the radius the
   speedometer's, 0.13 the tach's; they were 0.14 / 0.18-0.2, crowded), a little further out for it.
-- Info 1.9.1: the panel's text smaller, its height, columns and kW room kept (the kW 0.46 of it, was 0.54; a value
-  0.42, was 0.5; its label 0.19, was 0.22), and with values a tenth of its height more room inside the rounded right
-  edge after the last one (on the cluster 8 px wider with three values; alone the kW meter as it was).
+- Info 1.9.1: the panel's text smaller, its height kept (the kW 0.46 of it, was 0.54; a value 0.42, was 0.5; its label
+  0.19, was 0.22), and its ends' margins alike: the kW's figures right-aligned in a column for "188" / "-88" (the
+  widest a battery gives; a rarer "-1xx" reaches into the padding), a value at the far end centred with as much room
+  outside it as the meter's padding (edgePad). On the cluster 192-428 px wide, was 220-448.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.
