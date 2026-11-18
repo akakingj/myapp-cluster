@@ -72,6 +72,11 @@ follows the mode (blue, red in sport, teal in ECO PRO).
   readings under the gear - are cards on the page too, set for that layout alone (a gauge place any small gauge's
   reading, with its scale, red zone and figures; a readout place any readout). *The layout's own* keeps it as
   designed. With more than six the cards go three or four a row.
+- **JDM 1's water cup, large (0.43.0):** JDM 1's page has a **Water cup view** button: the cup of water on the
+  head unit's screen, as the Water Cup app draws it (no other app needed), sloshing with the same G as the cup on the
+  cluster (2.2 times it, Settings > JDM 2: G meter, swap left / right for its side). **Back** (or Signals, Logs) leaves
+  it. Worked out every frame, sent only when the water moved and at most 30 frames a second (`cup_view.js`,
+  `tools/test_cup_view.js`).
 - **Status, raw values, the renderer and the signal list** moved behind the **Signals** button (its first page).
 
 ### 90's

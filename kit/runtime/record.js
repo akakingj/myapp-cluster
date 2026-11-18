@@ -244,6 +244,21 @@ class Recorder {
         this.u[i++] = pack(c);
         this.n = i; return this;
     }
+    /**
+     * A filled convex polygon (any number of points, in order), sent as a fan of triangles and played back as one
+     * shape (Layouts' water cup: the glass, the water, its surface). Convex only: a concave one comes out wrong.
+     */
+    fill(pts, c) {
+        const k = pts ? pts.length - 2 : 0;
+        if (k < 1) return this;
+        const col = pack(c);
+        this._grow(2 + k * 9); const f = this.f, u = this.u; let i = this.n;
+        u[i++] = OP.TRIS; u[i++] = k;
+        for (let s = 1; s <= k; s++) [pts[0], pts[s], pts[s + 1]].forEach((p) => { f[i++] = p[0]; f[i++] = p[1]; u[i++] = col; });
+        this.n = i; return this;
+    }
+    /** A thick path: its segments as lines. */
+    stroke(pts, width, c) { return this.polyline(pts, width, c); }
     /** Area under a trace down to baseY (two triangles per segment). */
     fillUnder(pts, baseY, c) {
         if (pts.length < 2) return this;
@@ -350,6 +365,25 @@ const NOP = new Proxy({}, { get: () => () => 0 });
  * Execute recorded words onto a canvas.js Canvas. Parts drawn under an xf() transform (the
  * GPU screen chrome, in screen pixels) are skipped: they don't belong on the app's image.
  */
+/** The TRIS op's k triangles at f[i...] as one convex polygon when they are a fan of one colour (record.js fill), else null. */
+function fanOf(f, u, i, k) {
+    if (k < 2) return null;
+    const P = (t, v) => [f[i + t * 9 + v * 3], f[i + t * 9 + v * 3 + 1]], same = (a, b) => a[0] === b[0] && a[1] === b[1], c0 = u[i + 2];
+    const pts = [P(0, 0), P(0, 1), P(0, 2)];
+    for (let t = 1; t < k; t++) {
+        if (!same(P(t, 0), pts[0]) || !same(P(t, 1), pts[pts.length - 1])) return null;
+        for (let v = 0; v < 3; v++) if (u[i + t * 9 + v * 3 + 2] !== c0) return null;
+        pts.push(P(t, 2));
+    }
+    let sign = 0;
+    for (let j = 0; j < pts.length; j++) {
+        const a = pts[j], b = pts[(j + 1) % pts.length], c = pts[(j + 2) % pts.length];
+        const z = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
+        if (Math.abs(z) < 1e-9) continue;
+        if (!sign) sign = Math.sign(z); else if (Math.sign(z) !== sign) return null;
+    }
+    return pts;
+}
 function play(words, real) {
     let cv = real;
     const u = words instanceof Uint32Array ? words : new Uint32Array(words);
@@ -387,6 +421,9 @@ function play(words, real) {
         case OP.QUAD: cv.quad([[f[i], f[i + 1]], [f[i + 2], f[i + 3]], [f[i + 4], f[i + 5]], [f[i + 6], f[i + 7]]], col(u[i + 8])); i += 9; break;
         case OP.TRIS: {
             const k = u[i++];
+            // (a fan round its first point - fill()'s convex polygon: as one shape, no seams where its triangles meet)
+            const fan = fanOf(f, u, i, k);
+            if (fan) { cv.convex(fan, col(u[i + 2])); i += k * 9; break; }
             for (let t = 0; t < k; t++) {
                 const b = i + t * 9;
                 cv.triangle([[f[b], f[b + 1]], [f[b + 3], f[b + 4]], [f[b + 6], f[b + 7]]], col(u[b + 2]));

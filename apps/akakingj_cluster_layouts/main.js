@@ -30,6 +30,7 @@ function beforeOf(settings) {
     return at > 0 && red > 0 ? Math.max(100, red - at) : 300;
 }
 const menu = require('./menu');
+const CupView = require('./cup_view');
 const { withAlpha } = require('./kit/canvas');
 const { t: tr } = require('./kit/i18n');
 let record = null, Sheet = null;
@@ -192,7 +193,7 @@ mgu.run({
         const pages = () => 4 + Math.ceil(found.list.length / SIGNALS_PER_PAGE);
 
         ui.onClick('BTN_SHOW', () => { settings.set('show', showing() ? 'off' : 'on'); return render(); });
-        ui.onClick('BTN_SIGNALS', () => { logView = null; page = (page + 1) % Math.max(1, pages()); return render(); });
+        ui.onClick('BTN_SIGNALS', () => { logView = null; cupOpen = false; page = (page + 1) % Math.max(1, pages()); return render(); });
 
         /* ---------- Logs: what's needed to find a problem, as QR codes to photograph and as a file on a USB stick ---------- */
         let logView = null;   // { codes, page, saved, bytes }
@@ -244,7 +245,7 @@ mgu.run({
             ]);
         }
         ui.onClick('BTN_LOGS', () => {
-            page = 0;
+            page = 0; cupOpen = false;
             if (!logView) {
                 const saved = logs.save(logBundle(true), ctx.dataDir);
                 saved.forEach((r) => log.info('logs: ' + (r.file ? 'saved ' + r.file : r.dir + ': ' + r.error)));
@@ -389,12 +390,39 @@ mgu.run({
             arrow(20, -1); arrow(W - 64, 1);
             for (let i = 0; i < pages; i++) cv.circle(W / 2 - (pages - 1) * 10 + i * 20, CY + CHT + 16, 4, i === cardPage ? t.text : '#3a3f48');
             cv.text('Tap a layout: it shows on the cluster at once. Tap a readout to choose it for this layout.', 48, 444, 17, t.dim);
+            // JDM 1: its cup of water on this page, large (cup_view.js; 0.43.0)
+            if (shownId === 'arc_tach') {
+                const PX = W - 24 - 300, PY = 418, PW = 300, PH = 44;
+                cv.roundRect(PX, PY, PW, PH, PH / 2, acc);
+                cv.text('Water cup view', PX + PW / 2, PY + 29, 20, '#ffffff', { align: 'center', font: 'bold' });
+                tap(cv, PX, PY, PW, PH, () => openCup(true), 'cup_open');
+            }
             creditFooter(cv, t);
+            return ui.image('MAIN_GFX', cv);
+        }
+
+        /* ---------- JDM 1's cup of water, large on this page (cup_view.js): Back, Signals or Logs leave it ---------- */
+        let cupOpen = false;
+        const cupV = CupView.view();
+        const openCup = (on) => { cupOpen = on; cupV.reset(); return render(); };
+        function drawCup() {
+            const key = cupV.step(data(), options(), Date.now());
+            if (key === null) return null;                     // (the water still, or under 30 ms since the last: no frame)
+            const t = ctx.theme(), cv = ctx.canvas(W, H).clear(t.bg), acc = t.sel || t.accent || '#3d8bff';
+            cv.text('JDM 1', 48, 52, 30, t.text, { font: 'bold', literal: true });
+            cv.text('Water cup', 48, 82, 18, t.dim, { font: 'bold' });
+            cv.text('Sloshes with the car\'s G, as the cup on the cluster', 48, 108, 15, t.dim);
+            const BX = W - 24 - 220, BY = 24, BW = 220, BH = 44;
+            cv.roundRect(BX, BY, BW, BH, BH / 2, withAlpha('#ffffff', 0.1));
+            cv.text('Back', BX + BW / 2, BY + 29, 20, t.text, { align: 'center', font: 'bold' });
+            tap(cv, BX, BY, BW, BH, () => openCup(false), 'cup_back');
+            cupV.draw(cv, t);
             return ui.image('MAIN_GFX', cv);
         }
 
         const rawOf = (name) => { const r = D.status().raw || {}; return r[name] ? r[name].slice(0, 70) : 'nothing yet'; };
         function render() {
+            if (cupOpen && !logView) return drawCup();
             const t = ctx.theme();
             const cv = ctx.canvas(W, H).clear(t.bg);
             if (logView) {

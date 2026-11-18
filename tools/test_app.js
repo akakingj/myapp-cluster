@@ -101,6 +101,23 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     sheets[0].focus = 0; sheets[0].press();
     check('"Same as in Settings": the Settings\' value again (nothing kept for the layout)', () => assert.deepStrictEqual(S.slotsBy, {}));
     sheets = null;
+    // (0.43.0) JDM 1's page: its cup of water large on the page (cup_view.js), Back to the layouts
+    await tgt('cup_open').run();
+    check('JDM 1: the water cup view on the page, drawn with the kit\'s shapes, Back to leave it', () => {
+        tgt('cup_back');
+        assert(!lastPage.targets.some((q) => /^card_/.test(q.key)), 'the cards are not on the cup view');
+        const u = lastPage.words(); let tris = false;
+        for (let i = 0; i < u.length; i++) if (u[i] === rec.OP.TRIS) { tris = true; break; }
+        assert(tris, 'the water a filled shape');
+    });
+    await tgt('cup_back').run();
+    check('Back: the layouts again', () => { tgt('card_arc_tach'); tgt('cup_open'); });
+    await tgt('cup_open').run();
+    await clicks.BTN_SIGNALS();
+    check('Signals: the cup view left for the next page', () => assert(!lastPage.targets.some((q) => q.key === 'cup_back')));
+    // (round the pages to the layouts again: 4 with no signal catalog here)
+    for (let i = 0; i < 3; i++) await clicks.BTN_SIGNALS();
+    check('round to the layouts: the cup view stays shut', () => tgt('cup_open'));
     await tgt('cards_next').run();
     await tgt('card_stock').run();
     check('Stock: the layout off, the stock cluster back', () => assert.strictEqual(S.show, 'off'));

@@ -391,6 +391,10 @@ class Canvas {
     }
     quad(pts, c) { return this.convex(pts, c); }
     triangle(pts, c) { return this.convex(pts, c); }
+    /** A filled convex polygon (record.js fill: convex only). */
+    fill(pts, c) { return pts && pts.length >= 3 ? this.convex(pts, c) : this; }
+    /** A thick path: its segments as lines. */
+    stroke(pts, width, c) { return this.polyline(pts, width, c); }
 
     /** Polyline (e.g. a history trace). pts = [[x,y],...] */
     polyline(pts, width, c) {
