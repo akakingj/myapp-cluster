@@ -67,11 +67,12 @@ function tach(o, cx, cy, R, gear) {
 
 /*
  * A small gauge at (cx, cy), radius R: by the speedometer the fuel (0, 1/2, 1), by the tach the engine oil (70 to 170
- * °C, 160 to 340 °F, red from Settings > Too hot); another reading there (Settings > Speedometer gauge / Tach
+ * °C, 160 to 340 °F, red from Settings > Too hot) - on a plug-in hybrid the battery's charge (0 to 100 %; 0.42.1, as
+ * the other layouts show it); another reading there (Settings > Speedometer gauge / Tach
  * gauge): its name and figures under the hub (a temperature as the car's own: C and H at the ends).
  */
 function small(o, which, cx, cy, R) {
-    const g = C.gaugeOf(o, which), own = which === 'speed' ? 'fuel' : 'oil', id = which === 'speed' ? 'fuelSmall' : 'oilSmall';
+    const g = C.gaugeOf(o, which), own = which === 'speed' ? 'fuel' : !C.engineFocus(o) ? 'soc' : 'oil', id = which === 'speed' ? 'fuelSmall' : 'oilSmall';
     const f = o.tempUnit === 'c', h = Math.max(13, Math.round(R * 0.2));
     const pos = (a, rr) => [cx + Math.sin(a * Math.PI / 180) * R * rr, cy - Math.cos(a * Math.PI / 180) * R * rr];
     const mark = (k, a, txt, col) => { const [x, y] = pos(a, 0.5), w = Math.round(h * 2.4); return C.text(id + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, txt, col || white); };
@@ -80,13 +81,16 @@ function small(o, which, cx, cy, R) {
         if (own === 'fuel') {
             value = (d) => (C.isNum(d.fuelPct) ? Math.max(0, Math.min(100, d.fuelPct)) : 0); red = 101;
             marks = [mark('Lo', -105, '0'), mark('Mid', 0, '1/2'), mark('Hi', 105, '1')];
+        } else if (own === 'soc') {
+            value = (d) => (C.isNum(d.soc) ? Math.max(0, Math.min(100, d.soc)) : 0); red = 101;
+            marks = [mark('Lo', -105, '0'), mark('Mid', 0, '50'), mark('Hi', 105, '100')];
         } else {
             const hot = C.hotAt(o, 'oil');
             value = (d) => (C.isNum(d.oil) ? Math.max(0, Math.min(100, d.oil - 70)) : 0); red = Math.max(0, Math.min(101, hot - 70));
             marks = [mark('Lo', -105, f ? '70' : '160'), mark('Mid', 0, f ? '120' : '250'), mark('Hi', 105, f ? '170' : '340')];
         }
         const [ix, iy] = pos(own === 'fuel' ? -140 : 140, 0.55), is = Math.round(R * 0.26);
-        under = [{ key: id + 'Icon', kind: 'icon', x: Math.round(ix - is / 2), y: Math.round(iy - is / 2), w: is, h: is, params: { u_icon: [own === 'fuel' ? 4 : 1], u_line: [0] }, colors: (t) => ({ color: [t.text, 1] }) }];
+        under = [{ key: id + 'Icon', kind: 'icon', x: Math.round(ix - is / 2), y: Math.round(iy - is / 2), w: is, h: is, params: { u_icon: [own === 'fuel' ? 4 : own === 'soc' ? 6 : 1], u_line: [0] }, colors: (t) => ({ color: [t.text, 1] }) }];
     } else {
         const ch = C.chOf(o, g.key);
         value = ch ? (d) => C.chFrac(ch, d[ch]) * 100 : (d) => g.frac(d) * 100;
