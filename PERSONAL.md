@@ -137,5 +137,32 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
   Red at that temperature and above everywhere. Its choices: oil and coolant 110-140 °C, gearbox 80-130 (in 5s);
   each app's list takes all of them.
 
+## Since 0.36 (Nov 16-18 2026)
+Branches: `personal-kr` is what the Store installs (other drivers use it too); every change goes to `personal-kr-test`
+first, checked on the car, then moved to `personal-kr`.
+- Safety first: the cluster must never go dark. Each layout at most 60 layers, under 600 KB at start
+  (tools/test_engine.js), GPU cost measured in the demo (swiftshader) against the other layouts, nothing cut off at a
+  layer's edge, no clash with the cowl, the corners, the warning lights or the strip (tools/clearance.js), every text in
+  its box at its widest figures (tools/check_fit.js), Node 8.16 (tools/test_node8.js).
+- Layouts 0.37-0.41: JDM 1 redrawn as an 80s Japanese digital dash (wide font, its colours by drive mode: comfort green,
+  sport red, ECO teal; the rev bar's lines to the panel's top), a cup of water over its left box sloshing with the G
+  (clear by default, paper, or off: Settings > JDM 1: cup of water, or the page); JDM 2 moved left with a beginner's
+  mark (wakaba, an original drawing) on its right; ID6 M's centre display as 20's; Settings > Fuel and charge bars at
+  the bottom; the G one way for every app (driver-felt: accelerating moves the dot down, a left turn to the right).
+- Layouts 0.42: a plug-in hybrid's battery charge on every layout by default (ID6 M's and Old M's small gauge by the
+  tach shows the charge, as the others' bars); the Car profile's shift point (an rpm), G maximum and swaps.
+- Layouts 0.43: JDM 1's page has a Water cup view: the cup large on the head unit's screen (cup_view.js, no other app
+  needed). Kit: Recorder/Canvas fill() for convex shapes; the software path plays a fan as one shape.
+- Layouts 0.44: KO 1 (digital round dials, a glowing arc, ECO a fan of slats) and KO 2 (analog), originals after the
+  look of mid 2020s Korean saloons' screens; GM's speed in the middle of its display; the battery icon's nub inside its
+  square.
+- Layouts 0.45-0.46: the car's own trip computer (KombiIF statusBordcomputerAverage / TravelData, read-only; confirmed
+  on the car Nov 18 2026): Average fuel economy, Trip distance, Driving time, and the Fuel range and the Clock, in
+  every readout place; Settings > Fuel economy unit (as the car, km/L, L/100km, mpg). KO 1 / KO 2 show a trip
+  computer whose lines are set on the page (Trip computer: line 1-3); 20's, ID6 M, Old M and GM: Settings > Centre
+  display: Speed or Trip computer (per layout on the page; with Speed the lines' places are hidden).
+- Centre 0.12: the shift light flashes at the Car profile's shift point (an rpm). Info 1.8: the blind spot sign from
+  the door mirror lamps (BDC D347, read only, never written).
+
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.
