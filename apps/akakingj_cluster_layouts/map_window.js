@@ -6,7 +6,9 @@
  * vignette), which showed through the window.
  *
  * The file is /dev/shm/cluster-info/map_window.txt (the folder every app shares, providers.js), one line:
- *   panel <x> <y> <w> <h>
+ *   panel <x> <y> <w> <h> [under]
+ * ("under", 0.49.0: the map below the layout, in the renderer's ambient class, for a layout drawn over it with its
+ * background left clear: KO 2 Map; read by akakingj/idrive-apps extend-map's waze-on-cluster)
  * rewritten every second while the layout shows with the Waze centre; removed as soon as it doesn't. Waze on cluster
  * takes it while it is fresh (written in the last 3 s) and goes back to its own place when it is gone or stale, so a
  * stopped app leaves nothing behind for long.
@@ -30,13 +32,13 @@ function startMapWindow(log, opts) {
     /** r: { x, y, w, h } to hold, or null to let go. */
     function set(r) {
         if (!r) return release();
-        const line = 'panel ' + [r.x, r.y, r.w, r.h].map((v) => Math.round(v)).join(' ') + '\n';
+        const line = 'panel ' + [r.x, r.y, r.w, r.h].map((v) => Math.round(v)).join(' ') + (r.under ? ' under' : '') + '\n';
         try {
             try { fs.mkdirSync(dir); fs.chmodSync(dir, 0o1777); } catch (e) { if (e.code !== 'EEXIST') throw e; }
             const tmp = f + '.' + process.pid + '.tmp';
             fs.writeFileSync(tmp, line, { mode: 0o644 });
             fs.renameSync(tmp, f);
-            if (line !== lastLine) log.info('map window: ' + line.trim() + ' (Waze on cluster draws there, over the layout)');
+            if (line !== lastLine) log.info('map window: ' + line.trim() + ' (Waze on cluster draws there, ' + (r.under ? 'under' : 'over') + ' the layout)');
             holding = true; lastLine = line; warned = false;
         } catch (e) { if (!warned) { warned = true; log.warn('map window: ' + e.message); } }
     }

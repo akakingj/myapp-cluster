@@ -78,7 +78,7 @@ LAYOUTS.forEach((L) => {
         assert(textsOf(s).indexOf(L.gearNumber ? '3' : 'S3') >= 0);
         s.stop();
     });
-    check(id + ': centre left to the stock cluster: nothing over the middle', () => {
+    if (!L.mapAlways) check(id + ': centre left to the stock cluster: nothing over the middle', () => {
         const s = makeScene({ layout: id, options: { centre: 'stock' }, data: { speed: 0 } });
         s.engine._tick();
         // (a whole-view backdrop, M's and Sport's, with that area cut see-through: u_hole)
@@ -90,7 +90,8 @@ LAYOUTS.forEach((L) => {
         assert(!over.length, 'a piece over x 820-1100: ' + over.map((l) => l.key).join(' '));
         s.stop();
     });
-    check(id + ': map in the centre: nothing over the map window, the readings round it', () => {
+    // (KO 2 Map: the map under the layout, whatever the centre - its own checks below)
+    if (!L.mapAlways) check(id + ': map in the centre: nothing over the map window, the readings round it', () => {
         const C = require(path.join(APP, 'layout_common'));
         const s = makeScene({ layout: id, options: { centre: 'map' }, data: { speed: 0 } });
         s.engine._tick();
@@ -113,6 +114,48 @@ LAYOUTS.forEach((L) => {
             Object.keys(c).forEach((k) => { const v = Array.isArray(c[k]) ? c[k][0] : c[k]; assert(/^#[0-9a-f]{6}$/i.test(v), p.key + '.' + k + ' = ' + v); });
         });
     }));
+});
+
+/*
+ * KO 2 Map (0.49.0): the map under the layout, whatever the centre: its window "under" (main.js, map_window.js), a
+ * black base in the ambient class (below Waze on cluster's map there, so the stock cluster never shows through), and
+ * over the map only the veil, the readouts' plates and figures, and the dials' edges.
+ */
+check('ko2map: the map window under the layout, whatever the centre', () => {
+    const L = require(path.join(APP, 'layouts')).byId('ko2map');
+    assert(L.mapAlways && L.mapWindow.under === true);
+    const W = L.mapWindow;
+    assert.strictEqual(W.w % 4, 0);
+    assert(W.y + W.h <= 646, 'above the car\'s strip');
+    assert(Math.abs(W.w / W.h - 1088 / 480) < 0.01, 'the phone\'s proportions');
+    ['info', 'map', 'stock'].forEach((centre) => {
+        const s = makeScene({ layout: 'ko2map', options: { centre }, data: { speed: 0 } });
+        s.engine._tick();
+        const layers = [...s.client.layers.values()];
+        const ambient = layers.filter((l) => l.opts.klass === 'ambient').map((l) => l.opts);
+        assert.strictEqual(ambient.length, 1, centre + ': one layer in the ambient class (the base)');
+        assert(ambient[0].x === 0 && ambient[0].y === 0 && ambient[0].w === 1920 && ambient[0].h >= W.y + W.h, centre + ': the base under the whole map');
+        const over = s.engine._pieces().filter((l) => l.x < W.x + W.w && l.x + l.w > W.x && l.y < W.y + W.h && l.y + l.h > W.y);
+        // (the dials' own pieces: within a dial's square, its foot's arc and figures a little below it)
+        const dials = s.engine._pieces().filter((l) => l.kind === 'dial');
+        const inDial = (l) => dials.some((d) => l.x >= d.x - 40 && l.x + l.w <= d.x + d.w + 40 && l.y >= d.y - 40 && l.y + l.h <= d.y + d.h + 60);
+        const allowed = (l) => /^(bgMap|clock|outside|speed)/.test(l.key) || inDial(l);
+        assert(over.every(allowed), centre + ': over the map: ' + over.filter((l) => !allowed(l)).map((l) => l.key).join(' '));
+        s.stop();
+    });
+});
+check('map_window.js: "under" at the line\'s end', () => {
+    const fs = require('fs'), os = require('os');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mw-'));
+    const log = { info() {}, warn() {} };
+    const mw = require(path.join(APP, 'map_window')).startMapWindow(log, { dir });
+    mw.set({ x: 280, y: 46, w: 1360, h: 600, under: true });
+    assert.strictEqual(fs.readFileSync(path.join(dir, 'map_window.txt'), 'utf8'), 'panel 280 46 1360 600 under\n');
+    mw.set({ x: 416, y: 120, w: 1088, h: 480 });
+    assert.strictEqual(fs.readFileSync(path.join(dir, 'map_window.txt'), 'utf8'), 'panel 416 120 1088 480\n');
+    mw.release();
+    assert(!fs.existsSync(path.join(dir, 'map_window.txt')));
+    fs.rmdirSync(dir);
 });
 
 /*

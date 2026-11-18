@@ -94,6 +94,8 @@ const SETTLE_MS = 1200;
  *   opts.data()   the car's data now ({ speed km/h, rpm, gear, stage, mode, oil, coolant, demo, ... })
  *   opts.live(), opts.enabled(), opts.sweep() (optional: the start-up sweep wanted), opts.log
  *   opts.settleMs how long the layout must be wanted before it shows (SETTLE_MS; the tests: 0)
+ *   (a piece's klass: its class on the target, 'content' if none - 'ambient' under another client's content: KO 2 Map's
+ *   base under the map)
  *   opts.font() the glyph family ('bold' default, 'light'; font.js), opts.target ('panel' default, 'map', 'hud'), opts.contend (take the slot over from the stock HMI), opts.z
  *   (added to every layer's z: above another client's layers on the same target)
  */
@@ -180,7 +182,7 @@ function startCluster(opts) {
             // is never left empty (which would hand it back to the stock HMI)
             // (shown only if it shows now: visible(d), a piece that comes and goes with the car's state)
             const vis = s.visible ? !!s.visible(opts.data()) : true;
-            const ref = cr.effect({ target: TARGET, klass: 'content', z: zShift + (s.z !== undefined ? s.z : Z[s.kind]), x: s.x, y: s.y, w: s.w, h: s.h, fs: fsOf(s), visible: shown && vis, contend });
+            const ref = cr.effect({ target: TARGET, klass: s.klass || 'content', z: zShift + (s.z !== undefined ? s.z : Z[s.kind]), x: s.x, y: s.y, w: s.w, h: s.h, fs: fsOf(s), visible: shown && vis, contend });
             if (!ref) { warnOnce('piece ' + s.key + ' refused here'); return; }
             const p = { ref, spec: s, colours: '', text: null, value: 0, sent: -1, anim: 0, dyn: '', histSent: -1, vis, clock: !!(s.time || TIMED[s.kind]) };
             if (s.kind !== 'flat') cr.uniform(ref, 'u_size', [s.w, s.h]);

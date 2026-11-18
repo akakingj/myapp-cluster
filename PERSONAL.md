@@ -204,6 +204,10 @@ first, checked on the car, then moved to `personal-kr`.
   (ID8 M, plug-in hybrid; was 555), every layout's picture pixel for pixel the same.
 - Layouts 0.48.3: 90's and 20's numerals their dials' share as Old M's and ID6 M's (0.11 of the radius the
   speedometer's, 0.13 the tach's; they were 0.14 / 0.18-0.2, crowded), a little further out for it.
+- Layouts 0.49.0 (branch personal-kr-extend, a trial, not on personal-kr-test yet): KO 2 Map, KO 2's dials over the
+  CarPlay map laid under the whole layout (map_window.js "panel 280 46 1360 600 under", read by akakingj/idrive-apps
+  extend-map's waze-on-cluster; a black base under the map in the ambient class, engine.js: a piece's klass). The
+  Store follows personal-kr-extend while it is tried: Settings > the source's branch, back to personal-kr after.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.
