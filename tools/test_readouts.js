@@ -269,3 +269,30 @@ console.log(n + ' passed');
     assert(C2.focus.chargeLabel(Object.assign({ fuel: 'petrol' }, base)) === 'TIMING');
     console.log('ok   diesel: the intake air in the timing\'s place, no timing read');
 })();
+
+// (the clock with AM / PM on a 12-hour clock; the average economy's 0.0 and its name; the fuel gauge's marks 0, 1/2, 1)
+check('the clock: AM / PM on a 12-hour clock, none on a 24-hour one', () => {
+    const clk = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'clock.js'));
+    clk.setZone('utc+9');
+    const at = (h, m) => Date.UTC(2026, 10, 18, (h - 9 + 24) % 24, m);
+    assert.deepStrictEqual([[0, 5], [7, 37], [12, 0], [19, 37]].map(([h, m]) => clk.hm(at(h, m), true)), ['12:05 AM', '7:37 AM', '12:00 PM', '7:37 PM']);
+    assert.strictEqual(clk.hm(at(19, 37)), '7:37', 'without ampm: as before (the Centre\'s AT 7:05)');
+    clk.setTwelve(false);
+    assert.strictEqual(clk.hm(at(19, 37), true), '19:37');
+    clk.setTwelve(true);
+    assert(/^\d{1,2}:\d\d [AP]M$/.test(C.READOUTS.clock.num({}, {})));
+    // (no TIME before it: the time alone)
+    assert(/^\d{1,2}:\d\d [AP]M$/.test(C.readout({ tempUnit: 'c' }, 'clock', { w: 400, h: 30 })({})), 'readout: ' + C.readout({ tempUnit: 'c' }, 'clock', { w: 400, h: 30 })({}));
+    assert.strictEqual(C.READOUTS.clock.short, '');
+});
+check('the average economy: 0.0 when the trip is reset, its name AVG', () => {
+    assert.strictEqual(C.READOUTS.avgFuel.num({}, { avgCons: 0, avgConsUnit: 'l100' }), '0.0 L/100km');
+    assert.strictEqual(C.READOUTS.avgFuel.num({ econUnit: 'kml' }, { avgCons: 0, avgConsUnit: 'l100' }), '0.0 km/L');
+    assert.strictEqual(C.READOUTS.avgFuel.num({}, { avgCons: 8.5, avgConsUnit: 'l100' }), '8.5 L/100km');
+    assert.strictEqual(C.READOUTS.avgFuel.num({}, {}), '--');
+    assert.strictEqual(C.READOUTS.avgFuel.long, 'AVG');
+});
+check('the fuel gauge: 0, 1/2, 1 as the car\'s own', () => {
+    assert.deepStrictEqual(C.placeGauge({ tempUnit: 'c' }, 'fuel').marks, ['0', '1/2', '1']);
+    assert.deepStrictEqual(C.placeGauge({ tempUnit: 'c' }, 'coolant').marks, ['40', '90', '140']);
+});

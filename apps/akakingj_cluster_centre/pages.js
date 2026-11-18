@@ -94,14 +94,18 @@ function tile(group, key, x, y, w, h, reading, style, o, sub) {
         out.push(arc(id + '.arc', group, x, y + 34, w, h - 34, w / 2, cy, R, T, -118, 118, (d) => v(d).frac, barColours(accentOf), { segments: 0, mark: (d) => v(d).warnAt }));
         const valH = Math.round(Math.min(R * 0.58, 60) * k), vy = y + 34 + cy - valH * 0.62;
         out.push(text(id + '.val', group, x, vy, w, valH, (d) => v(d).text, (t, d) => ({ color: [levelColour(t, v(d).level), 1], glow: [accentOf(t, d), 0.35 * ST.glow] })));
-        out.push(text(id + '.unit', group, x, vy + valH + 6, w, 14, (d) => v(d).unit, plain('dim'), { tracking: 0.16 }));
+        out.push(text(id + '.unit', group, x, vy + valH + 4, w, 20, (d) => v(d).unit, plain('dim'), { tracking: 0.1 }));
         return out;
     }
-    out.push(text(id + '.unit', group, x + w * 0.62, y + 14, w * 0.38 - 14, 20, (d) => v(d).unit, plain('dim'), { align: 1, tracking: 0.08 }));
     const big = style === 'number';
     const valH = Math.round(Math.min(h * (big ? 0.5 : 0.44), big ? 120 : 96) * k);
     const vy = y + 44;
     out.push(text(id + '.val', group, x + 14, vy, w - 28, valH, (d) => v(d).text, (t, d) => ({ color: [levelColour(t, v(d).level), 1], glow: [accentOf(t, d), 0.3 * ST.glow] }), { align: 0 }));
+    // the unit just after the figures (engine.js lead: however many there are), on their baseline (the glyphs'
+    // at 0.79 of a cell: tools/bake_font.py BASE), at 0.46 of their size
+    const uh = Math.max(20, Math.round(valH * 0.46)), uy = Math.round(vy + 0.79 * (valH - uh));
+    out.push(text(id + '.unit', group, x + 14, uy, w - 28, uh, (d) => v(d).unit, plain('dim'),
+        { align: 0, tracking: 0.04, lead: (d) => v(d).text, leadK: valH / uh, leadGap: valH * 0.08 / uh }));
     if (sub) out.push(text(id + '.sub', group, x + 14, vy + valH + 6, w - 28, 18, sub, plain('dim'), { align: 0, tracking: 0.08 }));
     const sy = vy + valH + (sub ? 30 : 8), sh = y + h - (big ? 10 : 26) - sy;
     if (sh >= 18) out.push(spark(id + '.spark', group, x + 10, sy, w - 20, sh, (d) => (v(d).value === null ? null : v(d).frac), accentOf));
@@ -308,8 +312,9 @@ function pieces(o) {
     o.pages.forEach((id) => {
         const pg = PAGES[id];
         if (!pg) return;
-        const tw = pg.title.length * 12 + 24;
-        list.push(text(id + '.title', id, BOX.x, 70, BOX.w, 22, pg.title, ST.title === 'accent' ? glowing('accent', 0.5) : plain('dim'), { tracking: 0.3 }));
+        // (the page's name read at a glance: 30 px, the rules either side clear of it)
+        const tw = pg.title.length * 11 + 30;
+        list.push(text(id + '.title', id, BOX.x, 66, BOX.w, 30, pg.title, ST.title === 'accent' ? glowing('accent', 0.5) : plain('dim'), { tracking: 0.12 }));
         list.push({ key: id + '.tl', group: id, kind: 'flat', x: Math.round(W / 2 - tw - 120), y: 82, w: 120, h: 1, colors: (t) => ({ color: [t.accentDim, 1] }) });
         list.push({ key: id + '.tr', group: id, kind: 'flat', x: Math.round(W / 2 + tw), y: 82, w: 120, h: 1, colors: (t) => ({ color: [t.accentDim, 1] }) });
         list.push(...pg.build(o, id));

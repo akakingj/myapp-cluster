@@ -53,7 +53,7 @@ from its start to the reading (in ECO PRO a fan of fine slats over the face) and
 between the dials a display as 20's with readouts 1 and 2, the car's trip computer (distance, driving time, average
 fuel economy with a bar; 0.45.0) and the main readout. **KO 2** is analog: thin numerals, fine ticks, a slim needle, the face
 tinted and lit along its edge to the needle; between the dials 20's display (the speed in figures, the trip
-distance and average economy, the main readout). Both have a thin arc across each dial's foot: the fuel (E to F, with the range) under the speedometer, the
+distance and average economy, the main readout). Both have a thin arc across each dial's foot: the fuel (0, 1/2, 1, with the range) under the speedometer, the
 coolant (C to H; a plug-in hybrid's charge, 0 to 100) under the tach; Settings > Speedometer gauge / Tach gauge (or
 the page) put another reading in either. Shaders: BAND_FS (KO 1's arcs, both feet), RING_FS (KO 1's face and rim),
 DIAL_FS (KO 2's dials, as 20's). 0.44.0 also puts GM's speed in the middle of its display (the car's strip shows the

@@ -42,10 +42,10 @@ function local(ms) {
 let twelve = true;
 /** 12-hour (true, the default) or 24-hour clock. */
 function setTwelve(on) { twelve = on !== false; }
-/** '7:05' (12-hour, no AM/PM: there's no room for it) or '19:05' (24-hour). */
-function hm(ms) {
+/** '7:05' (12-hour; ampm: '7:05 PM') or '19:05' (24-hour). */
+function hm(ms, ampm) {
     const t = local(ms), mm = ('0' + t.m).slice(-2);
-    return (twelve ? (t.h % 12) || 12 : t.h) + ':' + mm;
+    return (twelve ? (t.h % 12) || 12 : t.h) + ':' + mm + (twelve && ampm ? (t.h < 12 ? ' AM' : ' PM') : '');
 }
 
 module.exports = { ZONES, setZone, setTwelve, local, hm, inDst };

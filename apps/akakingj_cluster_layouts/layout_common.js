@@ -60,7 +60,7 @@ const modeText = (d, t) => {
     return t.mode;
 };
 /* the local time (clock.js: the unit's apps run on UTC; the Time zone setting says where the car is) */
-const clock = () => require('./clock').hm();
+const clock = () => require('./clock').hm(undefined, true);   // (12-hour: with AM / PM)
 
 /* ---------- the map window and the extra readings ---------- */
 
@@ -326,8 +326,10 @@ const ECON_K = { l100: 1, kml: 100, mpg: 235.215, mpguk: 282.481 };   // (x to l
 const econUnitOf = (o, d) => { const u = o && o.econUnit; return ECON_K[u] ? u : d && ECON_K[d.avgConsUnit] ? d.avgConsUnit : o && o.speedUnit === 'mph' ? 'mpg' : 'kml'; };
 /** The average fuel economy in unit u (econUnitOf), or null. */
 function econ(o, d) {
-    if (!d || !isNum(d.avgCons) || d.avgCons <= 0) return null;
+    if (!d || !isNum(d.avgCons) || d.avgCons < 0) return null;
     const src = ECON_K[d.avgConsUnit] ? d.avgConsUnit : 'l100', u = econUnitOf(o, d);
+    // (0.0: a trip just reset, nothing to average yet - 0.0 in any unit, as the car's own trip computer shows it)
+    if (d.avgCons === 0) return { v: 0, u };
     const l100 = src === 'l100' ? d.avgCons : ECON_K[src] / d.avgCons, v = u === 'l100' ? l100 : ECON_K[u] / l100;
     return isNum(v) && v > 0 && v < 1000 ? { v, u } : null;
 }
@@ -382,12 +384,13 @@ const READOUTS = {
     // the gear as the selector has it: P R N, or D / S / M with its number (gearText; '-' while unknown)
     gear: { short: 'GEAR', long: 'GEAR', num: (o, d) => gearText(d), frac: (d) => (isNum(d.gear) && d.gear > 0 ? d.gear / 8 : 0) },
     // the car's trip computer (0.45.0): its average fuel economy (with its unit), distance and driving time
-    avgFuel: { short: 'AVG', long: 'AVG ECONOMY', num: econText, frac: econFrac },
+    avgFuel: { short: 'AVG', long: 'AVG', num: econText, frac: econFrac },
     trip: { short: 'TRIP', long: 'TRIP', num: tripText, frac: (d) => (isNum(d.tripKm) ? Math.min(1, d.tripKm / 1000) : 0) },
     tripTime: { short: 'DRIVE', long: 'DRIVE TIME', num: (o, d) => tripTimeText(d), frac: (d) => (isNum(d.tripMin) ? Math.min(1, d.tripMin / 600) : 0) },
     // (0.45.0) the fuel range (the car's, as the strip shows it) and the time of day (Settings > Time zone), anywhere
     frange: { short: 'RANGE', long: 'FUEL RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
-    clock: { short: 'TIME', long: 'TIME', num: () => clock(), frac: () => 0 },
+    // (no name: '7:37 PM' says what it is)
+    clock: { short: '', long: '', num: () => clock(), frac: () => 0 },
 };
 const readoutOf = (k) => READOUTS[k] || null;
 /*
@@ -476,7 +479,8 @@ function readout(o, key, box, longAlways) {
     // (about 0.6 of the height a character, as the bold face sets capitals and figures)
     const room = box && box.w && box.h ? box.w / (box.h * 0.6) : 0;
     const long = longAlways || room >= nameOf(r, o, true).length + 10;
-    return (d) => nameOf(r, o, long) + ' ' + r.num(o, d) + (long && r.unit && r.num(o, d) !== '--' && r.num(o, d) !== 'OFF' ? ' ' + r.unit(o) : '');
+    const name = nameOf(r, o, long);
+    return (d) => (name ? name + ' ' : '') + r.num(o, d) + (long && r.unit && r.num(o, d) !== '--' && r.num(o, d) !== 'OFF' ? ' ' + r.unit(o) : '');
 }
 /*
  * The small gauges set into the analog dials (Settings > Speedometer gauge / Tach gauge; 'auto': the layout's
@@ -548,7 +552,8 @@ function placeGauge(o, key0) {
         : kind === 'torque' ? torqueUnit(o) : kind === 'pct' ? '%' : '°';
     const num = (d) => { const v = g.v(d); return key === 'boost' && d.engineOn === false ? 'OFF' : isNum(v) ? f(o, v) : '--'; };
     return Object.assign({}, g, { unit, num, icon: GAUGE_ICON[key][0], bIcon: GAUGE_ICON[key][1],
-        marks: [g.min, (g.min + g.max) / 2, g.max].map((v) => f(o, v)), tone: TEMP_TONES[key] ? key : null });
+        // (the fuel's as the car's own gauge: 0, 1/2, 1)
+        marks: key === 'fuel' ? ['0', '1/2', '1'] : [g.min, (g.min + g.max) / 2, g.max].map((v) => f(o, v)), tone: TEMP_TONES[key] ? key : null });
 }
 /*
  * Settings > Readout 1 / 2, Main readout, Centre readout: bottom line: 'Auto' (0.36.1, the default) by the car (Settings >

@@ -163,6 +163,14 @@ first, checked on the car, then moved to `personal-kr`.
   display: Speed or Trip computer (per layout on the page; with Speed the lines' places are hidden).
 - Centre 0.12: the shift light flashes at the Car profile's shift point (an rpm). Info 1.8: the blind spot sign from
   the door mirror lamps (BDC D347, read only, never written).
+- Layouts 0.46.1, Centre 0.12.3 (Nov 18 2026, from the car): Centre - a page's name at 30 px (was 22), each tile's
+  unit right after its figures on their baseline at 0.46 of their size (was small at the tile's top right; engine.js
+  text `lead`: the unit starts after the figures as set, however many). KO 1 / KO 2 - the arc across each dial's foot
+  inside the open foot (212-148 degrees, was 228-132: on KO 2 it ran over the 0, the last numeral and the needle at
+  rest), its end marks just outside its ends. The clock readout with AM / PM (12-hour clock), and no TIME before it. AVG: the average economy's
+  name in every place. The trip computer's 0.0 (a trip just reset) shown as 0.0, not -- nor the last trip's figure; the
+  car's economy unit changed on the MGU with no figure yet drops the old figure. The fuel gauge marked 0, 1/2, 1 as the
+  car's own (KO's foot, a fuel gauge set in a place; M's bar 0 and 1).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

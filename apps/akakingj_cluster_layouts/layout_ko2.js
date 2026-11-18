@@ -3,7 +3,7 @@
  * layout_ko2.js - "KO 2" (0.44.0): KO 1's analog sibling, an original drawing after the same look: two round dials
  * with thin numerals inside a ring of fine ticks, a slim white needle over a dark hub, the face tinted by the drive mode
  * and lit from the scale's start to the needle along its edge (comfort: the speedometer blue, the tach amber; ECO PRO
- * teal; sport red under a bright bezel), and KO 1's thin arc across each dial's open foot (the fuel, E to F, with the
+ * teal; sport red under a bright bezel), and KO 1's thin arc across each dial's open foot (the fuel, 0 to 1, with the
  * range; the coolant, C to H, or a plug-in hybrid's charge; Settings > Speedometer gauge / Tach gauge, or the page).
  * Between them the display as 20's: readouts 1 and 2, the speed in figures, the main readout. Shaders: DIAL_FS (the
  * dials, as 20's), BAND_FS (the foot's arcs), texts.

@@ -374,11 +374,15 @@ function startData(ctx, opts) {
     watch('de.bmw.infotainment.KombiIF', {
         statusRangeTankStatus: (v) => { fes('statusRangeTankStatus')(v); pickRanges(v); },
         // the trip computer (0.45.0): trip 1's average fuel economy, tenths, in the unit the car's trip computer
-        // shows (l/100 km, km/l, mpg); 65535 (no value) and 0 (nothing driven yet) left out
+        // shows (l/100 km, km/l, mpg); 65535 left out (no value). 0 kept (a trip just reset: the car shows 0.0, so
+        // does the cluster - not the last trip's figure). The unit taken from every reply: the car's own unit changed
+        // (on the MGU) with no figure in it drops the old figure, which was in the old unit.
         statusBordcomputerAverage: (v) => {
             fes('statusBordcomputerAverage')(v);
             const c = numAt(v, 'consumptionAverage1BC1'), u = one(v, 'statusUnitOfMeasurementConsumptionBC'), n = u && typeof u === 'object' ? (u.name || u.value) : u;
-            if (c !== null && c > 0) { put('avgCons', c / 10); x.avgConsUnit = CONS_UNITS[n] || x.avgConsUnit || null; }
+            const unit = CONS_UNITS[n] || null;
+            if (unit && unit !== x.avgConsUnit) { if (c === null) x.avgCons = undefined; x.avgConsUnit = unit; }
+            if (c !== null && c >= 0) put('avgCons', c / 10);
         },
         // the distance (km) and the driving time on the trip computer
         statusBordcomputerTravelData: (v) => {

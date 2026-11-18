@@ -100,7 +100,9 @@ function gauges(o, engine) {
  * scale's start, middle and end, red from its red zone. */
 function placed(o, key) {
     const g = C.placeGauge(o, key);
-    return { icon: g.bIcon, unit: g.unit, read: g.num, labels: [[0, g.marks[0]], [0.5, g.marks[1]], [1, g.marks[2]]], value: g.frac, zero: 0, lo: -1, hi: g.redFrac < 1 ? g.redFrac : 2 };
+    // (the fuel's as its own: 0 and 1, no half - the bar's numbers are figures alone)
+    const labels = key === 'fuel' ? [[0, '0'], [-1, '0'], [1, '1']] : [[0, g.marks[0]], [0.5, g.marks[1]], [1, g.marks[2]]];
+    return { icon: g.bIcon, unit: g.unit, read: g.num, labels, value: g.frac, zero: 0, lo: -1, hi: g.redFrac < 1 ? g.redFrac : 2 };
 }
 /** One gauge at (x, y), w wide: its icon, its unit and its bar (MBAR_FS, which draws the scale's numbers too: one
  * layer, not three text pieces). */

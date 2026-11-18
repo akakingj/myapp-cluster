@@ -31,7 +31,10 @@
  *     sample(d) -> 0..1, every            a trend line's samples (kind spark), every `every` ms (2 s),
  *     time: true                          u_time, seconds, sent every frame (TIMED kinds always),
  *     visible(d) -> bool                  shown only while true (sent when it changes),
- *     text: 'fixed' | (d, t) -> string, align (0 left .. 1 right), tracking (glyph heights)   texts }
+ *     text: 'fixed' | (d, t) -> string, align (0 left .. 1 right), tracking (glyph heights)   texts
+ *     lead: (d, t) -> string, leadK, leadGap: the text starts after that string as set leadK times this piece's
+ *           height (another piece's, e.g. a reading's figures: its unit just after them, however many there are)
+ *           and leadGap of this piece's heights more (ratios: they hold when a page is scaled to fit) }
  *
  * One small shader per piece, each over only its own rectangle: the shaders the KOMBI is known to run. (One
  * big generated shader drawing many pieces over a large area made the cluster restart: never again.)
@@ -222,9 +225,13 @@ function startCluster(opts) {
             }
             if (s.kind === 'text') {
                 const txt = typeof s.text === 'function' ? String(s.text(d, t)) : String(s.text);
-                if (force || txt !== p.text) {
-                    p.text = txt;
-                    const ln = font.line(txt, s.w / s.h, s.align, s.tracking, fam());
+                const lead = s.lead ? String(s.lead(d, t)) : '';
+                if (force || txt !== p.text || lead !== p.lead) {
+                    p.text = txt; p.lead = lead;
+                    // (after a lead: moved right by its width, in this piece's glyph heights)
+                    const off = lead ? font.width(lead, fam()) * (s.leadK || 1) + (s.leadGap || 0) : 0;
+                    const ln = font.line(txt, Math.max(0.5, s.w / s.h - off), s.align, s.tracking, fam());
+                    if (off) ln.centres = ln.centres.map((c, i) => (ln.codes[i] < 0 ? c : Math.round((c + off) * 1000) / 1000));
                     cr.uniform(p.ref, 'u_text', ln.codes, { type: 'vec4' });
                     cr.uniform(p.ref, 'u_x', ln.centres, { type: 'vec4' });
                 }

@@ -3,7 +3,7 @@
  * layout_ko1.js - "KO 1" (0.44.0): two round digital dials after the look of the mid 2020s' Korean saloons' screens,
  * an original drawing of the idea, not a copy of any one: no needles - each dial a dark disc with a glowing arc from
  * its start to the reading, the reading in large thin figures in its middle, and a thin arc across its open foot
- * (the speedometer's the fuel, E to F, with the fuel range; the tach's the coolant, C to H - on a plug-in hybrid the
+ * (the speedometer's the fuel, 0 to 1, with the fuel range; the tach's the coolant, C to H - on a plug-in hybrid the
  * battery's charge; Settings > Speedometer gauge / Tach gauge, or the page, put another reading in either). Between
  * the dials a display as 20's: readouts 1 and 2 at its top, the car's trip computer (distance, driving time, average
  * fuel economy) and the main readout.
@@ -17,7 +17,9 @@
 const C = require('./layout_common');
 
 const A0 = -135, A1 = 135;          // the dials' sweep (degrees from twelve, clockwise)
-const FOOT = [228, 132];            // the foot's arc: from the lower left (its start) to the lower right
+// the foot's arc: from the lower left (its start) to the lower right, inside the dial's open foot (its scale ends at
+// 225 and 135: KO 2's 0 and its last numeral, and its needle at rest, 13 degrees clear of the arc's ends)
+const FOOT = [212, 148];
 /* each look's colours, and the arcs' shape (as fractions of the dial's radius: radius, thickness; slats; the rim's
  * thickness px) */
 const PALETTES = {
@@ -59,9 +61,10 @@ function arc(key, cx, cy, r, T, a0, a1, pad, extra) {
 }
 
 /*
- * The thin arc across a dial's open foot (cx, cy, radius R): `which` 'speed' (the fuel, E to F, the fuel range by its
- * pump) or 'rpm' (the coolant, C to H; a plug-in hybrid's charge, 0 to 100); Settings > Speedometer gauge / Tach gauge
- * (or the page) another reading, its name and figures. Over the dial (KO 2's: its face).
+ * The thin arc across a dial's open foot (cx, cy, radius R): `which` 'speed' (the fuel, 0 - 1/2 - 1 as the car's own
+ * gauge, the fuel range by its pump) or 'rpm' (the coolant, C to H; a plug-in hybrid's charge, 0 to 100); Settings >
+ * Speedometer gauge / Tach gauge (or the page) another reading, its name and figures. Over the dial (KO 2's: its face).
+ * Its end marks just outside its ends (clear of KO 2's numerals), the fuel's half under its middle.
  */
 function foot(o, which, cx, cy, R, z) {
     const pick = C.gaugeOf(o, which);
@@ -80,13 +83,17 @@ function foot(o, which, cx, cy, R, z) {
     band.params.u_marks = [4, 0, 0, -1];
     band.params.u_soft = [1];
     const at = (a, rr) => [cx + Math.sin(a * Math.PI / 180) * rr, cy - Math.cos(a * Math.PI / 180) * rr];
-    const ends = ch ? ['C', 'H'] : key === 'fuel' ? ['E', 'F'] : key === 'soc' ? ['0', '100'] : null;
+    const ends = ch ? ['C', 'H'] : key === 'fuel' ? ['0', '1'] : key === 'soc' ? ['0', '100'] : null;
     const out = [band];
     if (ends) {
         [0, 1].forEach((i) => {
-            const [x, y] = at(FOOT[i] + (i ? 13 : -13), r + h * 1.05), w = Math.round(h * 2.4);
-            out.push(C.text(id + (i ? 'Hi' : 'Lo'), Math.round(x - w / 2), Math.round(y - h / 2), w, h, ends[i], i && (ch || key === 'fuel') ? (ch ? (t) => ({ color: [t.red, 1], glow: [t.red, 0.2] }) : lbl) : lbl));
+            const [x, y] = at(FOOT[i], r + h * 1.15), w = Math.round(h * 2.4);
+            out.push(C.text(id + (i ? 'Hi' : 'Lo'), Math.round(x - w / 2), Math.round(y - h / 2), w, h, ends[i], i && ch ? (t) => ({ color: [t.red, 1], glow: [t.red, 0.2] }) : lbl));
         });
+        if (key === 'fuel') {
+            const [x, y] = at(180, r + h * 1.15), w = Math.round(h * 2.4);
+            out.push(C.text(id + 'Mid', Math.round(x - w / 2), Math.round(y - h / 2), w, h, '1/2', lbl));
+        }
     }
     // its icon and figures under the dial's middle, over the arc: the fuel its range, the rest the reading
     const fy = Math.round(cy + r - h * 2.4), is = Math.round(h * 1.25), fw = Math.round(R * 0.8);

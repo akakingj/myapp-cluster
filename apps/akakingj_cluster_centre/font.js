@@ -119,11 +119,17 @@ function digitAdvance(fam) { return atlas(fam).adv[0]; }
  * in glyph heights from the layer's left, placed by each glyph's own advance. boxW: the layer's width in
  * glyph heights; align 0 left, 0.5 centre, 1 right; tracking: extra space between glyphs (glyph heights).
  */
-function line(s, boxW, align, tracking, fam) {
+/** Each glyph's code and advance (glyph heights) in a line: a space at least a third of a glyph height (the unit's
+ * fonts report next to nothing for it, which ran 'F 0   R 100' together on the car), an unknown glyph 0.3. */
+function advances(s, fam) {
     const a = atlas(fam), chars = Array.from(String(s)).slice(0, 32);
-    // a space at least a third of a glyph height: the unit's fonts report next to nothing for it, which ran
-    // 'F 0   R 100' together on the car
     const codes = chars.map(a.code), advs = codes.map((c, i) => (c < 0 ? 0.3 : chars[i] === ' ' ? Math.max(a.adv[c], 0.32) : a.adv[c]));
+    return { chars, codes, advs };
+}
+/** A line's width in glyph heights, as line() sets it with no tracking (a text piece's lead: engine.js). */
+function width(s, fam) { return advances(s, fam).advs.reduce((x, v) => x + v, 0); }
+function line(s, boxW, align, tracking, fam) {
+    const { chars, codes, advs } = advances(s, fam);
     // a line too long for its box: first no tracking, then the glyphs set closer (to 85% of their advance at
     // most), so it fits instead of being cut at the box's edge
     const gaps = Math.max(0, chars.length - 1), sum = advs.reduce((x, v) => x + v, 0);
@@ -153,4 +159,4 @@ function codes(s) {
     return out;
 }
 
-module.exports = { atlas, codes, codeOf, smallPrint, line, digitAdvance, CHARS, CELL_W, CELL_H, SPREAD, FAMILIES };
+module.exports = { atlas, codes, codeOf, smallPrint, line, width, digitAdvance, CHARS, CELL_W, CELL_H, SPREAD, FAMILIES };

@@ -154,9 +154,27 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         ['78 mi', '2:30', '8.5 L/100km'].forEach((t) => assert(texts.indexOf(t) >= 0, t + ' in ' + JSON.stringify(texts)));
     });
     ctx.settings.set('econUnit', 'kml');
-    await sleep(300);
+    await sleep(180);
     check('Fuel economy unit km/L: 100 / 8.5', () => assert(eng()._pieces().some((p) => p.text === '11.8 km/L')));
     ctx.settings.set('econUnit', 'auto');
+    // (a trip just reset: 0.0, as the car shows it, not the last trip's figure; the car's unit changed on the MGU with
+    // no figure yet: the old figure gone, the new unit's when it comes)
+    handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 0, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_L_S_100KM' });
+    await sleep(40);
+    check('the average economy 0: 0.0 shown, not the last figure', () => {
+        const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
+        assert(texts.indexOf('0.0 L/100km') >= 0 && texts.indexOf('8.5 L/100km') < 0, JSON.stringify(texts));
+    });
+    handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 85, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_L_S_100KM' });
+    handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 65535, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_KM_S_L' });
+    await sleep(40);
+    check('the car\'s economy unit changed with no figure: the old figure dropped', () => {
+        const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
+        assert(texts.indexOf('8.5 L/100km') < 0 && texts.indexOf('11.8 km/L') < 0, JSON.stringify(texts));
+    });
+    handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 118, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_KM_S_L' });
+    await sleep(40);
+    check('then the new unit\'s figure', () => assert(eng()._pieces().some((p) => p.text === '11.8 km/L')));
     handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 65535 });
     S.layout = 'analog_sport'; changes.forEach((f) => f('layout', 'analog_sport'));
     await sleep(300);
