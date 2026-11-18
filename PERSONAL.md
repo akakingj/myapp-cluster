@@ -180,6 +180,10 @@ first, checked on the car, then moved to `personal-kr`.
   Shared engine: a piece's dyn uniforms sent one by one when each changes (the trail's numbers not with every move of
   the dot), more than 4 numbers as an array of vec4.
 - Layouts 0.47.1: the gear readout without its name (D1, S2, M3, R, P), in every place and under a main readout.
+- Layouts 0.47.2: JDM 2's trail a thin line again (the owner's choice after weighing the load), through 16 places
+  200 ms apart (3.2 s) on to the dot, each piece fading smoothly with age and the oldest shrinking away; worked out
+  only inside the trail's bounding circle (sent with it: a parked car's trail is a point, nothing worked out).
+  JDM 2: G meter size 1.2 g too (the Car profile's G-force circle up to: 1, 1.2, 1.5, 2).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

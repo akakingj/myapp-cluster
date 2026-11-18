@@ -2040,10 +2040,12 @@ void main() {
  *   0  the background: a dark twill weave (carbon fibre), continuous across layers (u_origin: the layer's place)
  *   1  the G meter: a big round window in a thin chrome ring, the meter in its middle (0.6 R: an outer and a half
  *      ring, a cross past them, a small ring at the centre), the dot at u_g (screen x, y, of the outer ring), and
- *      behind it its trail as the iDrive G-Force app's, a stream of small dots fading with age: u_trail, up to 16 of
- *      its past places, four a vec4, each place one number ((x * 100 + 128) * 256 + y * 100 + 128, x and y as u_g:
- *      the uniforms kept within what the cluster already runs), the oldest first; u_trail_np: (how many set, how
- *      far on, 0..1, to the next: each dot fades smoothly, the oldest gone just as a new one comes)
+ *      behind it its trail as the iDrive G-Force app's: a thin line through up to 16 of its past places on to the dot,
+ *      fading with age. u_trail: the places, four a vec4, each one number ((x * 100 + 128) * 256 + y * 100 + 128, x
+ *      and y as u_g: the uniforms kept within what the cluster already runs), the oldest first; u_trail_np: (how
+ *      many set, how far on to the next 0..1 - each piece fades smoothly and the oldest shrinks away just as a new
+ *      one comes -, the trail's bounding circle: its centre packed as a place, its radius; outside it nothing is
+ *      worked out: a parked car's trail is a point)
  *   2  a disc for the gear: a chrome ring round a glossy disc of u_disc
  *   3  the tach: a chrome bezel, a broad band of u_band along the sweep with the numerals in it (below 0 u_regen: a
  *      plug-in's regeneration as E9X), a notched dark grey rim round its outside with the red line marked on it in
@@ -2073,7 +2075,7 @@ uniform float u_value;
 uniform float u_digit_adv;
 uniform vec2 u_g;
 uniform vec4 u_trail[4];
-uniform vec2 u_trail_np;
+uniform vec4 u_trail_np;
 uniform vec3 u_face;
 uniform vec3 u_bezel;
 uniform vec3 u_band;
@@ -2147,6 +2149,10 @@ vec4 tempArc(vec4 acc, vec2 d, float r, float px, float R, float am, float f, fl
     acc = over(acc, u_tick * 0.6, clamp(1.2 - e, 0.0, 1.0) * span(r / px, 0.72 / px, 0.9 / px));
     return acc;
 }
+/* a place of the G trail from its number (shaders.js JDM_FS: x, y in hundredths, 128 on, x the high byte) */
+vec2 trailAt(float v) { float xi = floor(v / 256.0 + 0.001); return (vec2(xi, v - xi * 256.0) - 128.0) / 100.0; }
+/* how far p is from the segment a-b (a zero-length one: from a) */
+float trailD(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-6), 0.0, 1.0); return length(pa - ba * h); }
 /* a box (centre c, half size b, corner k): < 0 inside */
 float boxD(vec2 p, vec2 b, float k) { vec2 q = abs(p) - b + k; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - k; }
 vec3 tyreCol(float st) { return st > 1.5 ? u_warn : st > 0.5 ? u_tick : vec3(0.3); }
@@ -2179,24 +2185,32 @@ void main() {
         acc = over(acc, vec3(0.0), clamp((gr - r) / px + 0.5, 0.0, 1.0) * 0.25);
         vec2 g = u_g;
         if (length(g) > 1.12) g = g / length(g) * 1.12;
-        /* the trail: only inside the meter (where it can be); each dot's age from its place in the list and the phase
-           (the newest 1, the oldest fading to 0 as the next comes), as G-Force's: 0.08 to 0.63 */
-        if (u_trail_np.x > 0.5 && r < gr * 1.16) {
-            float tr = 0.0;
+        /* the trail: only inside its bounding circle (in the meter's units), a line from the oldest place on to the
+           dot; each piece's age from its place and the phase (the newest 1), the oldest piece shrinking away from its
+           old end as the phase goes on; as G-Force's, 0.08 to 0.63 */
+        vec2 m = d / (gr * R);
+        if (u_trail_np.x > 0.5 && length(m - trailAt(u_trail_np.z)) < u_trail_np.w + 0.05) {
+            float tr = 0.0, n = u_trail_np.x, ph = u_trail_np.y;
+            vec2 prev = vec2(0.0);
             for (int i = 0; i < 4; i++) {
                 vec4 q = u_trail[i];
                 for (int j = 0; j < 4; j++) {
                     float k = float(i * 4 + j);
-                    float v = j == 0 ? q.x : j == 1 ? q.y : j == 2 ? q.z : q.w;
-                    float xi = floor(v / 256.0 + 0.001);
-                    vec2 pt = (vec2(xi, v - xi * 256.0) - 128.0) / 100.0;
-                    if (k < u_trail_np.x) {
-                        float age = clamp((k + 1.0 - u_trail_np.y) / u_trail_np.x, 0.0, 1.0);
-                        float dd2 = length(p - (c + pt * gr * R)) / R;
-                        tr = max(tr, (0.08 + 0.55 * age) * age * clamp((0.016 - dd2) / px + 0.5, 0.0, 1.0));
+                    vec2 pt = trailAt(j == 0 ? q.x : j == 1 ? q.y : j == 2 ? q.z : q.w);
+                    if (k < n) {
+                        if (k > 0.5) {
+                            vec2 a = k < 1.5 && n > 15.5 ? mix(prev, pt, ph) : prev;   /* (shrinking once full: the oldest then goes) */
+                            float age = clamp((k - ph) / n, 0.0, 1.0);
+                            float sd = trailD(m, a, pt) * gr;
+                            tr = max(tr, (0.08 + 0.55 * age) * clamp((0.009 - sd) / px + 0.5, 0.0, 1.0));
+                        }
+                        prev = pt;
                     }
                 }
             }
+            /* the newest piece: the last place to the dot */
+            float sd = trailD(m, prev, g) * gr;
+            tr = max(tr, 0.63 * clamp((0.009 - sd) / px + 0.5, 0.0, 1.0));
             acc = over(acc, u_dot, tr);
         }
         vec2 dc = c + g * gr * R;

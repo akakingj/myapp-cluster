@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.47.1",
+  "version": "0.47.2",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -890,6 +890,7 @@
       "profile": "gMax",
       "profileMap": {
         "1": "1",
+        "1.2": "1.2",
         "1.5": "1.5",
         "2": "2"
       },
@@ -900,6 +901,10 @@
         [
           "1",
           "1.0 g"
+        ],
+        [
+          "1.2",
+          "1.2 g"
         ],
         [
           "1.5",

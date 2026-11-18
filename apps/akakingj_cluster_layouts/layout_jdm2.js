@@ -63,11 +63,13 @@ function tach(o, cx, cy, R) {
  * The G meter in a big round window at (cx, cy), radius R: the meter in its middle, its size's figures at the ends of
  * its cross. The dot as the driver feels the G (0.41.6; every app's since 0.47.0, no setting): right in a left bend
  * (the car's lateral G > 0 turning left), down while accelerating, up braking; the car's own acceleration less its
- * offset at a standstill, smoothed (data.js gLatZ, gLongZ). Behind the dot its trail (0.47.0; 0.47.1 a stream of
- * small dots as the iDrive G-Force app's): where it was over the last 1.6 s, a place every TRAIL_MS, TRAIL_N of them,
- * each fading smoothly with its age (the shader's u_trail, four places a vec4, one number each: packOf; u_trail_np).
+ * offset at a standstill, smoothed (data.js gLatZ, gLongZ). Behind the dot its trail (0.47.0; 0.47.2 as the iDrive
+ * G-Force app's, flowing): a thin line through where it was over the last 3.2 s, a place every TRAIL_MS, TRAIL_N of
+ * them, on to the dot, each piece fading smoothly with its age and the oldest shrinking away (the shader's u_trail,
+ * four places a vec4, one number each: packOf; u_trail_np: how many, the phase, the trail's bounding circle - the
+ * shader works nothing out outside it).
  */
-const TRAIL_MS = 100, TRAIL_N = 16;
+const TRAIL_MS = 200, TRAIL_N = 16;
 /** A place (x, y of the meter's ring, within 1.12) as one number: x and y in hundredths, 128 on, x the high byte. */
 const packOf = (q) => (Math.round(q[0] * 100) + 128) * 256 + Math.round(q[1] * 100) + 128;
 /** The trail from the dot's places: a new one every TRAIL_MS (now: ms), TRAIL_N kept, the oldest first; the phase to
@@ -87,14 +89,18 @@ function trailOf() {
         const flat = [];
         for (let i = 0; i < TRAIL_N; i++) flat.push(packOf(pts[i] || pts[pts.length - 1] || [0, 0]));
         const phase = still ? 0 : Math.min(1, Math.round((now - at) / TRAIL_MS * 20) / 20);
-        return { u_trail: flat, u_trail_np: [pts.length, phase] };
+        // (the bounding circle of the places and the dot: its centre a place, its radius in the meter's units)
+        const all = pts.concat([here]), xs = all.map((q) => q[0]), ys = all.map((q) => q[1]);
+        const mid = [r2((Math.min(...xs) + Math.max(...xs)) / 2), r2((Math.min(...ys) + Math.max(...ys)) / 2)];
+        const rad = Math.ceil(Math.max(...all.map((q) => Math.hypot(q[0] - mid[0], q[1] - mid[1]))) * 100 + 1) / 100;
+        return { u_trail: flat, u_trail_np: [pts.length, phase, packOf(mid), rad] };
     };
 }
 function gMeter(o, cx, cy, R) {
     // (0.37.2: the meter 0.6 R across, was 0.46; its figures larger, and the G now in figures under it)
     const gr = R * 0.6, h = Math.max(16, Math.round(R * 0.085)), w = Math.round(h * 2.6), max = gScale(o);
     const trail = trailOf();   // (module.exports.parts: its tests)
-    const fig = max % 0.5 ? max.toFixed(2) : max.toFixed(1);
+    const fig = Math.abs(max * 10 - Math.round(max * 10)) > 1e-6 ? max.toFixed(2) : max.toFixed(1);   // (1.2: '1.2')
     const mark = (k, x, y) => C.text('gMark' + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, fig, white);
     const gv = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : d[k]);
     return [

@@ -299,15 +299,18 @@ check('the fuel gauge: 0, 1/2, 1 as the car\'s own', () => {
     assert.deepStrictEqual(C.placeGauge({ tempUnit: 'c' }, 'coolant').marks, ['40', '90', '140']);
 });
 
-check('JDM 2\'s G trail: a place every 100 ms, 16 kept, packed one number each; it flows (the phase) and stops while parked', () => {
+check('JDM 2\'s G trail: a place every 200 ms, 16 kept, packed one number each; it flows (the phase) and stops while parked', () => {
     const J = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'layout_jdm2.js')).trailParts;
     const unpack = (v) => { const xi = Math.floor(v / 256 + 0.001); return [(xi - 128) / 100, (v - xi * 256 - 128) / 100]; };
     [[0, 0], [1.12, -1.12], [-0.37, 0.5], [0.01, -0.01]].forEach((q) => assert.deepStrictEqual(unpack(J.packOf(q)), q, String(q)));
     const tr = J.trailOf();
     let t = 1000, u = tr([0.1, 0.2], t);
-    assert.deepStrictEqual(u.u_trail_np, [1, 0]);
+    assert.deepStrictEqual(u.u_trail_np.slice(0, 2), [1, 0]);
     u = tr([0.2, 0.2], t + J.TRAIL_MS / 2);
-    assert.deepStrictEqual(u.u_trail_np, [1, 0.5], 'between places: the phase on, no new place');
+    assert.deepStrictEqual(u.u_trail_np.slice(0, 2), [1, 0.5], 'between places: the phase on, no new place');
+    // (the bounding circle holds the places and the dot)
+    const mid = unpack(u.u_trail_np[2]);
+    [[0.1, 0.2], [0.2, 0.2]].forEach((q) => assert(Math.hypot(q[0] - mid[0], q[1] - mid[1]) <= u.u_trail_np[3] + 1e-9, 'in the circle: ' + q));
     for (let i = 1; i <= 40; i++) u = tr([0.1 * (i % 5), -0.05 * (i % 3)], t + i * J.TRAIL_MS);
     assert.strictEqual(u.u_trail.length, 16); assert.strictEqual(u.u_trail_np[0], 16);
     assert.deepStrictEqual(unpack(u.u_trail[15]), [0, -0.05], 'the newest last');

@@ -8,7 +8,7 @@
  *                         [--black] [--speed 62] [--rpm 3200] [--gear 4] [--stage D] [--mode S] [--oil 96] [--coolant 90]
  *                         [--celsius] [--mcar] [--strip] [--dap] [--hotOil 125] [--hotCoolant 112] [--hotGearbox 120] [--tempGauge scale]
  *                         [--gtrail 1] [--out preview.png]
- * --gtrail: the G over the last 2 s through a bend (JDM 2's trail)
+ * --gtrail: the G over the last 3.2 s through a bend (JDM 2's trail)
  * --mcar: the M KOMBI's two dark boxes drawn over the layout (as it left them over the full-screen form, gone in 0.34.0:
  *         the layouts always keep the car's strip now, so --strip changes nothing either)
  */
@@ -140,11 +140,11 @@ if (require.main === module) {
     }
     s.setData(base);
     for (let i = 0; i < 40; i++) { fake += 40; s.engine._tick(); }
-    // (--gtrail: the last 2 s a drive through a bend - braking, a left bend, out of it accelerating - for JDM 2's G trail)
+    // (--gtrail: the last 3.2 s a drive through a bend - braking, a left bend, out of it accelerating - for JDM 2's G trail)
     if (a.gtrail) {
-        for (let i = 0; i <= 50; i++) {
+        for (let i = 0; i <= 80; i++) {
             fake += 40;
-            const f = i / 50, lat = 0.75 * Math.sin(Math.PI * Math.min(1, f * 1.15)), lon = -0.7 * Math.cos(Math.PI * f) * (f < 0.5 ? 1 : 0.6);
+            const f = i / 80, lat = 0.75 * Math.sin(Math.PI * Math.min(1, f * 1.15)), lon = -0.7 * Math.cos(Math.PI * f) * (f < 0.5 ? 1 : 0.6);
             s.setData(Object.assign({}, base, { gLat: lat, gLong: lon, gLatZ: lat, gLongZ: lon }));
             s.engine._tick();
         }
