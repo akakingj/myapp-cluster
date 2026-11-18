@@ -225,6 +225,6 @@ module.exports = {
     // its own places, set on the page (layouts.js placesFor): the trip computer's three lines
     places: C.tripPlaces(3, (o) => o.centre !== 'map' && o.centre !== 'stock'),
     pieces(o) { return build(o, dial, 'ko1'); },
-    // (KO 2's; dial: KO 1 Map's)
-    parts: { arc, foot, centre, build, dial, PALETTES, white, lbl, A0, A1 },
+    // (KO 2's)
+    parts: { arc, foot, centre, build, PALETTES, white, lbl, A0, A1 },
 };

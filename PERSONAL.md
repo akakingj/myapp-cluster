@@ -9,6 +9,7 @@ noncommercial use only), with PR #8 (lb-ft and a pressure unit setting).
 | cluster_layouts | akakingj_cluster_layouts | AK Cluster Layouts |
 | cluster_centre | akakingj_cluster_centre | AK Cluster Centre |
 | cluster_info | akakingj_cluster_info | AK Cluster Info |
+| (none: a trial, branch personal-kr-extend only) | akakingj_map_test | AK Map Test |
 
 The `akakingj_` prefix is used by no other app in the Store's known sources (cauliflowermossgrape/idrive7-apps,
 robertnisipeanu/idrive-apps, eroobeeroo/idrive7-apps, IterioDev/car-apps; checked 11 Nov 2026).
@@ -204,11 +205,11 @@ first, checked on the car, then moved to `personal-kr`.
   (ID8 M, plug-in hybrid; was 555), every layout's picture pixel for pixel the same.
 - Layouts 0.48.3: 90's and 20's numerals their dials' share as Old M's and ID6 M's (0.11 of the radius the
   speedometer's, 0.13 the tach's; they were 0.14 / 0.18-0.2, crowded), a little further out for it.
-- Layouts 0.49.0-0.49.1 (branch personal-kr-extend, a trial, not on personal-kr-test yet): KO 1 Map (0.49.0 had
-  KO 2 Map, on KO 2's dials: replaced), KO 1's dials over the CarPlay map laid under the whole layout (map_window.js
-  "panel 280 46 1360 600 under", read by akakingj/idrive-apps extend-map's waze-on-cluster; a black base under the map
-  in the ambient class, engine.js: a piece's klass). The Store follows personal-kr-extend while it is tried: Settings >
-  the source's branch, back to personal-kr after.
+- AK Map Test 0.1.0 (branch personal-kr-extend only, a trial): a copy of Cluster Layouts with one layout, KO 1 Map -
+  KO 1's dials over the CarPlay map laid under the whole layout (map_window.js "panel 280 46 1360 600 under", read by
+  akakingj/idrive-apps extend-map's waze-on-cluster; a black base under the map in the ambient class, its own engine.js
+  with a piece's klass). Cluster Layouts and Centre untouched. Show Off by default: Cluster Layouts' Show off first.
+  tools/test_map_test.js.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

@@ -9,7 +9,7 @@ const EventEmitter = require('events');
 const Module = require('module');
 
 const ROOT = path.join(__dirname, '..');
-const APP = path.join(ROOT, 'apps', 'akakingj_cluster_layouts');
+const APP = process.env.LAYOUTS_APP ? path.resolve(process.env.LAYOUTS_APP) : path.join(ROOT, 'apps', 'akakingj_cluster_layouts');
 /** The kit's runtime (canvas, fonts): KIT_DIR, else this repo's kit/runtime. */
 const KIT = process.env.KIT_DIR || path.join(ROOT, 'kit', 'runtime');
 const load = Module._load;

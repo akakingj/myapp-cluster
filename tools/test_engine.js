@@ -78,6 +78,7 @@ LAYOUTS.forEach((L) => {
         assert(textsOf(s).indexOf(L.gearNumber ? '3' : 'S3') >= 0);
         s.stop();
     });
+    // (AK Map Test's KO 1 Map: the map under the layout, whatever the centre - tools/test_map_test.js)
     if (!L.mapAlways) check(id + ': centre left to the stock cluster: nothing over the middle', () => {
         const s = makeScene({ layout: id, options: { centre: 'stock' }, data: { speed: 0 } });
         s.engine._tick();
@@ -90,7 +91,6 @@ LAYOUTS.forEach((L) => {
         assert(!over.length, 'a piece over x 820-1100: ' + over.map((l) => l.key).join(' '));
         s.stop();
     });
-    // (KO 1 Map: the map under the layout, whatever the centre - its own checks below)
     if (!L.mapAlways) check(id + ': map in the centre: nothing over the map window, the readings round it', () => {
         const C = require(path.join(APP, 'layout_common'));
         const s = makeScene({ layout: id, options: { centre: 'map' }, data: { speed: 0 } });
@@ -114,48 +114,6 @@ LAYOUTS.forEach((L) => {
             Object.keys(c).forEach((k) => { const v = Array.isArray(c[k]) ? c[k][0] : c[k]; assert(/^#[0-9a-f]{6}$/i.test(v), p.key + '.' + k + ' = ' + v); });
         });
     }));
-});
-
-/*
- * KO 1 Map (0.49.1): the map under the layout, whatever the centre: its window "under" (main.js, map_window.js), a
- * black base in the ambient class (below Waze on cluster's map there, so the stock cluster never shows through), and
- * over the map only the veil, the readouts' plates and figures, and the dials (each on its black disc).
- */
-check('ko1map: the map window under the layout, whatever the centre', () => {
-    const L = require(path.join(APP, 'layouts')).byId('ko1map');
-    assert(L.mapAlways && L.mapWindow.under === true);
-    const W = L.mapWindow;
-    assert.strictEqual(W.w % 4, 0);
-    assert(W.y + W.h <= 646, 'above the car\'s strip');
-    assert(Math.abs(W.w / W.h - 1088 / 480) < 0.01, 'the phone\'s proportions');
-    ['info', 'map', 'stock'].forEach((centre) => {
-        const s = makeScene({ layout: 'ko1map', options: { centre }, data: { speed: 0 } });
-        s.engine._tick();
-        const layers = [...s.client.layers.values()];
-        const ambient = layers.filter((l) => l.opts.klass === 'ambient').map((l) => l.opts);
-        assert.strictEqual(ambient.length, 1, centre + ': one layer in the ambient class (the base)');
-        assert(ambient[0].x === 0 && ambient[0].y === 0 && ambient[0].w === 1920 && ambient[0].h >= W.y + W.h, centre + ': the base under the whole map');
-        const over = s.engine._pieces().filter((l) => l.x < W.x + W.w && l.x + l.w > W.x && l.y < W.y + W.h && l.y + l.h > W.y);
-        // (the dials' own pieces: within a dial's black disc's square, its arc's glow and its foot's figures a little round it)
-        const dials = s.engine._pieces().filter((l) => /Disc$/.test(l.key));
-        const inDial = (l) => dials.some((d) => l.x >= d.x - 40 && l.x + l.w <= d.x + d.w + 40 && l.y >= d.y - 40 && l.y + l.h <= d.y + d.h + 60);
-        const allowed = (l) => /^(bgMap|clock|outside)/.test(l.key) || inDial(l);
-        assert(over.every(allowed), centre + ': over the map: ' + over.filter((l) => !allowed(l)).map((l) => l.key).join(' '));
-        s.stop();
-    });
-});
-check('map_window.js: "under" at the line\'s end', () => {
-    const fs = require('fs'), os = require('os');
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mw-'));
-    const log = { info() {}, warn() {} };
-    const mw = require(path.join(APP, 'map_window')).startMapWindow(log, { dir });
-    mw.set({ x: 280, y: 46, w: 1360, h: 600, under: true });
-    assert.strictEqual(fs.readFileSync(path.join(dir, 'map_window.txt'), 'utf8'), 'panel 280 46 1360 600 under\n');
-    mw.set({ x: 416, y: 120, w: 1088, h: 480 });
-    assert.strictEqual(fs.readFileSync(path.join(dir, 'map_window.txt'), 'utf8'), 'panel 416 120 1088 480\n');
-    mw.release();
-    assert(!fs.existsSync(path.join(dir, 'map_window.txt')));
-    fs.rmdirSync(dir);
 });
 
 /*
@@ -220,6 +178,10 @@ LAYOUTS.forEach((L) => check(L.id + ': an update takes well under 5 ms (60 a sec
     assert(avg < 1.5 && p99 < 4, 'avg ' + avg.toFixed(2) + ' ms, 99% ' + p99.toFixed(2) + ' ms');
     s.stop();
 }));
+
+// (another app's layouts, LAYOUTS_APP: AK Map Test - only the checks above, every layout's own; the ones below are
+// Cluster Layouts' named layouts)
+if (process.env.LAYOUTS_APP) { console.log(ok + ' passed'); process.exit(0); }
 
 check('start-up sweep: played by the cluster (one animation per needle and band), stopped after', () => {
     const s = makeScene({ layout: 'analog_sport', data: { speed: 0, rpm: 0 }, sweep: true });

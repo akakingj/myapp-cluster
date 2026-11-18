@@ -1,0 +1,2044 @@
+{
+  "id": "akakingj_map_test",
+  "title": "AK Map Test",
+  "description": "A trial: KO 1 dials over the CarPlay map laid under them on the whole instrument cluster (needs waze-on-cluster from akakingj/idrive-apps extend-map)",
+  "version": "0.1.0",
+  "startType": "autostart",
+  "vendor": "custom",
+  "loggingId": "AKMT",
+  "iconGlyph": "krgauge-T",
+  "signals": {
+    "de.bmw.infrastructure.VehicleCondition": {
+      "VehicleCondition": "s"
+    },
+    "de.bmw.infotainment.vehicle.CDS": {
+      "statusEngineSpeed2": "rs",
+      "statusEngineTemperature": "rs",
+      "statusEngineStatus": "rs"
+    },
+    "de.bmw.infotainment.vehicle.CDS2": {
+      "statusLongitudinalAccelerationMassCenter": "rs",
+      "statusLateralAccelerationMassCenter": "rs",
+      "statusYawVelocityVehicle": "rs"
+    },
+    "de.bmw.infotainment.vehicle.Vehicle2": {
+      "statusCarSpeed2": "rs",
+      "statusVehiclePartType": "rs"
+    },
+    "de.bmw.infotainment.drivingexcitement.FES": {
+      "statusSwitchDriveDynamicSport2": "rs",
+      "statusVehicleDynamicEngine": "rs",
+      "statusActualValueTorque2": "rs",
+      "statusFESVehicleDynamicSwitchHMI": "rs",
+      "displaySportPowertrain": "s"
+    },
+    "de.bmw.infrastructure.analytics.BasicDataSet": {
+      "_optional": "gearbox oil temperature",
+      "basicDataSet": "s"
+    },
+    "de.bmw.infrastructure.EnvironmentalInformation": {
+      "ExteriorTemperature": "s",
+      "UnitBN2020": "rs"
+    },
+    "de.bmw.infotainment.misc.MDrive": {
+      "statusMSystem": "rs",
+      "dataDisplayGearbox": "s"
+    },
+    "de.bmw.infrastructure.VehicleInformation": {
+      "statusGearboxDrive": "s",
+      "DataPowerTrain2": "s",
+      "Range": "s"
+    },
+    "com.harman.infotainment.systemfunctions.tasu.tasu.InternalTasu": {
+      "_instances": "SystemFunctionsInternalTasuInst1",
+      "_methods": [
+        "sendTasuRequest"
+      ],
+      "_broadcasts": [
+        "sendTasuResponse"
+      ]
+    },
+    "de.bmw.infotainment.drivingexcitement.Efficiencytainment2": {
+      "_optional": "the battery's temperature (eDrive Live's is used instead)",
+      "statusBatteryTemperature": "rs",
+      "statusPowerRelativHybrid": "rs"
+    },
+    "de.bmw.infotainment.KombiIF": {
+      "_optional": "the car's power distribution figures, its fuel and electric ranges, and its trip computer (average fuel economy, distance, driving time)",
+      "statusBordcomputerAverage": "rs",
+      "statusBordcomputerTravelData": "rs",
+      "statusDisplayElectricalPowerDistribution": "rs",
+      "statusRangeTankStatus": "rs",
+      "displayRangeElectricVehicle": "rs"
+    },
+    "de.bmw.chassis.SteeringAngle": {
+      "_optional": "the steering angle (the Steering page)",
+      "ActualSteeringAngleDriver": "s"
+    },
+    "de.bmw.infotainment.vehicle.TPMS": {
+      "statusTyrePressure": "rs",
+      "statusTyreTemperature": "rs",
+      "_optional": "the tyres' pressures and temperatures (GT3)"
+    },
+    "de.bmw.infotainment.vehicle.Vehicle": {
+      "statusNewCurrentUnitsStatusExt": "rs",
+      "_optional": "the car's pressure unit, for the tyre pressures and the sport display's boost"
+    },
+    "de.bmw.infotainment.resetlogic.ResetLogic": {
+      "_optional": "the consumption now (a candidate for the fast kW)",
+      "currentConsumption": "rs"
+    },
+    "de.bmw.infotainment.displaydataserver.DisplayDataServer": {
+      "_optional": "the cruise control's set speed",
+      "functionalLibraryData": "rs"
+    }
+  },
+  "screens": [
+    {
+      "name": "MAIN",
+      "kind": "canvas",
+      "title": "AK Map Test",
+      "buttons": [
+        [
+          "BTN_SHOW",
+          "Show on the cluster"
+        ],
+        [
+          "BTN_SIGNALS",
+          "Signals"
+        ],
+        [
+          "BTN_LOGS",
+          "Logs"
+        ],
+        [
+          "BTN_SETTINGS",
+          "Settings"
+        ]
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "key": "show",
+      "label": "Show on the cluster",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "on",
+          "On"
+        ],
+        [
+          "off",
+          "Off (stock cluster)"
+        ]
+      ]
+    },
+    {
+      "key": "layout",
+      "label": "Layout",
+      "type": "choice",
+      "default": "ko1map",
+      "options": [
+        [
+          "ko1map",
+          "KO 1 Map"
+        ]
+      ]
+    },
+    {
+      "key": "look",
+      "label": "Colours",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "Follow the drive programme (S / M: sport)"
+        ],
+        [
+          "comfort",
+          "Comfort"
+        ],
+        [
+          "sport",
+          "Sport"
+        ],
+        [
+          "efficient",
+          "Efficient"
+        ]
+      ]
+    },
+    {
+      "key": "layoutSport",
+      "label": "Layout in Sport",
+      "type": "choice",
+      "default": "same",
+      "options": [
+        [
+          "same",
+          "Same as Layout"
+        ],
+        [
+          "ko1map",
+          "KO 1 Map"
+        ]
+      ],
+      "section": "Display"
+    },
+    {
+      "key": "layoutEco",
+      "label": "Layout in ECO PRO",
+      "type": "choice",
+      "default": "same",
+      "options": [
+        [
+          "same",
+          "Same as Layout"
+        ],
+        [
+          "ko1map",
+          "KO 1 Map"
+        ]
+      ],
+      "section": "Display"
+    },
+    {
+      "key": "centre",
+      "label": "Centre of the cluster",
+      "type": "choice",
+      "default": "info",
+      "options": [
+        [
+          "info",
+          "Readings (gear, ranges, temperatures)"
+        ],
+        [
+          "map",
+          "Waze (Waze on cluster drawn over the layout, else the stock map)"
+        ],
+        [
+          "stock",
+          "Stock (the stock centre content)"
+        ]
+      ],
+      "section": "Display"
+    },
+    {
+      "key": "sweep",
+      "label": "Needle sweep when it comes up",
+      "type": "choice",
+      "default": "on",
+      "options": [
+        [
+          "on",
+          "On"
+        ],
+        [
+          "off",
+          "Off"
+        ]
+      ],
+      "section": "Display"
+    },
+    {
+      "key": "demo",
+      "profile": "demo",
+      "label": "Demo data",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "on",
+          "Always"
+        ],
+        [
+          "off",
+          "Never"
+        ]
+      ],
+      "section": "Display"
+    },
+    {
+      "key": "infoA",
+      "label": "Centre readout: top left",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "Auto (by the car: petrol and diesel, intake air; plug-in hybrid, the layout's eDrive reading)"
+        ],
+        [
+          "off",
+          "Nothing"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "power",
+          "Engine power (from its torque and speed)"
+        ],
+        [
+          "torque",
+          "Engine torque"
+        ],
+        [
+          "pedal",
+          "Accelerator pedal (0 - 100 %)"
+        ],
+        [
+          "throttle",
+          "Throttle (valve opening, 0 - 100 %)"
+        ],
+        [
+          "timing",
+          "Ignition timing"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ],
+        [
+          "kw",
+          "Battery power (plug-in hybrid)"
+        ],
+        [
+          "erange",
+          "Electric range (plug-in hybrid)"
+        ],
+        [
+          "gear",
+          "Gear (D / S / M and its number)"
+        ],
+        [
+          "avgFuel",
+          "Average fuel economy (the car's trip computer)"
+        ],
+        [
+          "trip",
+          "Trip distance (the car's trip computer)"
+        ],
+        [
+          "tripTime",
+          "Driving time (the car's trip computer)"
+        ],
+        [
+          "frange",
+          "Fuel range"
+        ],
+        [
+          "clock",
+          "Clock (the time of day)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "infoB",
+      "label": "Centre readout: top right",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "Auto (by the car: petrol and diesel, gearbox oil; plug-in hybrid, the layout's eDrive reading)"
+        ],
+        [
+          "off",
+          "Nothing"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "power",
+          "Engine power (from its torque and speed)"
+        ],
+        [
+          "torque",
+          "Engine torque"
+        ],
+        [
+          "pedal",
+          "Accelerator pedal (0 - 100 %)"
+        ],
+        [
+          "throttle",
+          "Throttle (valve opening, 0 - 100 %)"
+        ],
+        [
+          "timing",
+          "Ignition timing"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ],
+        [
+          "kw",
+          "Battery power (plug-in hybrid)"
+        ],
+        [
+          "erange",
+          "Electric range (plug-in hybrid)"
+        ],
+        [
+          "gear",
+          "Gear (D / S / M and its number)"
+        ],
+        [
+          "avgFuel",
+          "Average fuel economy (the car's trip computer)"
+        ],
+        [
+          "trip",
+          "Trip distance (the car's trip computer)"
+        ],
+        [
+          "tripTime",
+          "Driving time (the car's trip computer)"
+        ],
+        [
+          "frange",
+          "Fuel range"
+        ],
+        [
+          "clock",
+          "Clock (the time of day)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "infoMain",
+      "label": "Centre readout: under the speed",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "Auto (by the car: petrol and diesel, torque; plug-in hybrid, the layout's eDrive reading)"
+        ],
+        [
+          "off",
+          "Nothing"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "power",
+          "Engine power (from its torque and speed)"
+        ],
+        [
+          "torque",
+          "Engine torque"
+        ],
+        [
+          "pedal",
+          "Accelerator pedal (0 - 100 %)"
+        ],
+        [
+          "throttle",
+          "Throttle (valve opening, 0 - 100 %)"
+        ],
+        [
+          "timing",
+          "Ignition timing"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ],
+        [
+          "kw",
+          "Battery power (plug-in hybrid)"
+        ],
+        [
+          "erange",
+          "Electric range (plug-in hybrid)"
+        ],
+        [
+          "gear",
+          "Gear (D / S / M and its number)"
+        ],
+        [
+          "avgFuel",
+          "Average fuel economy (the car's trip computer)"
+        ],
+        [
+          "trip",
+          "Trip distance (the car's trip computer)"
+        ],
+        [
+          "tripTime",
+          "Driving time (the car's trip computer)"
+        ],
+        [
+          "frange",
+          "Fuel range"
+        ],
+        [
+          "clock",
+          "Clock (the time of day)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "infoLow",
+      "label": "Centre readout: bottom line (Old M)",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "Auto (by the car: petrol and diesel, coolant; plug-in hybrid, the layout's eDrive reading)"
+        ],
+        [
+          "off",
+          "Nothing"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "power",
+          "Engine power (from its torque and speed)"
+        ],
+        [
+          "torque",
+          "Engine torque"
+        ],
+        [
+          "pedal",
+          "Accelerator pedal (0 - 100 %)"
+        ],
+        [
+          "throttle",
+          "Throttle (valve opening, 0 - 100 %)"
+        ],
+        [
+          "timing",
+          "Ignition timing"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ],
+        [
+          "kw",
+          "Battery power (plug-in hybrid)"
+        ],
+        [
+          "erange",
+          "Electric range (plug-in hybrid)"
+        ],
+        [
+          "gear",
+          "Gear (D / S / M and its number)"
+        ],
+        [
+          "avgFuel",
+          "Average fuel economy (the car's trip computer)"
+        ],
+        [
+          "trip",
+          "Trip distance (the car's trip computer)"
+        ],
+        [
+          "tripTime",
+          "Driving time (the car's trip computer)"
+        ],
+        [
+          "frange",
+          "Fuel range"
+        ],
+        [
+          "clock",
+          "Clock (the time of day)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "centreView",
+      "label": "Centre display: speed or trip computer (20's, ID6 M, Old M, GM)",
+      "type": "choice",
+      "default": "speed",
+      "options": [
+        [
+          "speed",
+          "Speed"
+        ],
+        [
+          "trip",
+          "Trip computer"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "leftDial",
+      "label": "JDM 2: left dial",
+      "type": "choice",
+      "default": "gmeter",
+      "options": [
+        [
+          "gmeter",
+          "G meter"
+        ],
+        [
+          "speed",
+          "Speedometer"
+        ],
+        [
+          "tyres",
+          "Tyre pressures"
+        ],
+        [
+          "temps",
+          "Temperatures: oil, coolant, gearbox, intake"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "stripBars",
+      "label": "Fuel and charge bars at the bottom",
+      "type": "choice",
+      "default": "on",
+      "options": [
+        [
+          "on",
+          "On"
+        ],
+        [
+          "off",
+          "Off"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "jdmCup",
+      "label": "JDM 1: cup of water",
+      "type": "choice",
+      "default": "clear",
+      "options": [
+        [
+          "clear",
+          "Clear cup"
+        ],
+        [
+          "on",
+          "Paper cup"
+        ],
+        [
+          "off",
+          "Off"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "gScale",
+      "profile": "gMax",
+      "profileMap": {
+        "1": "1",
+        "1.2": "1.2",
+        "1.5": "1.5",
+        "2": "2"
+      },
+      "label": "JDM 2: G meter size",
+      "type": "choice",
+      "default": "1.5",
+      "options": [
+        [
+          "1",
+          "1.0 g"
+        ],
+        [
+          "1.2",
+          "1.2 g"
+        ],
+        [
+          "1.5",
+          "1.5 g"
+        ],
+        [
+          "2",
+          "2.0 g"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "gaugeSpeed",
+      "label": "Small gauge in the speedometer",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "The layout's own"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "power",
+          "Engine power"
+        ],
+        [
+          "torque",
+          "Engine torque"
+        ],
+        [
+          "pedal",
+          "Accelerator pedal (0 - 100 %)"
+        ],
+        [
+          "throttle",
+          "Throttle (valve opening, 0 - 100 %)"
+        ],
+        [
+          "timing",
+          "Ignition timing"
+        ],
+        [
+          "fuel",
+          "Fuel level"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "gaugeRpm",
+      "label": "Small gauge in the tach",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "The layout's own"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "boost",
+          "Boost"
+        ],
+        [
+          "power",
+          "Engine power"
+        ],
+        [
+          "torque",
+          "Engine torque"
+        ],
+        [
+          "pedal",
+          "Accelerator pedal (0 - 100 %)"
+        ],
+        [
+          "throttle",
+          "Throttle (valve opening, 0 - 100 %)"
+        ],
+        [
+          "timing",
+          "Ignition timing"
+        ],
+        [
+          "fuel",
+          "Fuel level"
+        ],
+        [
+          "soc",
+          "Battery charge (plug-in hybrid)"
+        ],
+        [
+          "battTemp",
+          "Battery temperature (plug-in hybrid)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "slotsBy",
+      "label": "Readouts per layout",
+      "type": "object",
+      "default": {},
+      "hidden": true
+    },
+    {
+      "key": "tempGauge",
+      "label": "Temperature gauges (analog layouts)",
+      "type": "choice",
+      "default": "ch",
+      "options": [
+        [
+          "ch",
+          "C - H, as the car's: the middle is warm"
+        ],
+        [
+          "scale",
+          "A scale and figures (40 - 140 °C)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "tempTone",
+      "label": "Temperature colours",
+      "type": "choice",
+      "default": "on",
+      "options": [
+        [
+          "on",
+          "On: blue while cold, red when too hot"
+        ],
+        [
+          "off",
+          "Off"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "hotOil",
+      "profile": "hotOil",
+      "label": "Oil is too hot at",
+      "type": "number",
+      "unit": "°C",
+      "default": 130,
+      "steps": [
+        110,
+        115,
+        120,
+        125,
+        130,
+        135,
+        140
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "hotCoolant",
+      "profile": "hotCoolant",
+      "label": "Coolant is too hot at",
+      "type": "number",
+      "unit": "°C",
+      "default": 118,
+      "steps": [
+        110,
+        115,
+        118,
+        120,
+        125,
+        130,
+        135,
+        140
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "hotGearbox",
+      "profile": "hotGearbox",
+      "label": "Gearbox is too hot at",
+      "type": "number",
+      "unit": "°C",
+      "default": 115,
+      "steps": [
+        80,
+        85,
+        90,
+        95,
+        100,
+        105,
+        110,
+        115,
+        120,
+        125,
+        130
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "redline",
+      "profile": "redline",
+      "label": "Red zone from",
+      "type": "number",
+      "unit": "rpm",
+      "default": 6000,
+      "steps": [
+        4000,
+        4500,
+        5000,
+        5500,
+        5800,
+        6000,
+        6200,
+        6500,
+        6800,
+        7000,
+        7200,
+        7500,
+        7800,
+        8000,
+        8500,
+        9000
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "rpmMax",
+      "profile": "rpmScale",
+      "label": "Rev scale up to",
+      "type": "number",
+      "unit": "rpm",
+      "default": 7000,
+      "steps": [
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "amberRpm",
+      "label": "Amber zone below the red zone (ID6 M, ID7 M, ID8 M)",
+      "type": "number",
+      "unit": "rpm",
+      "default": 700,
+      "steps": [
+        0,
+        300,
+        500,
+        700,
+        1000,
+        1500,
+        2000
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "shiftAt",
+      "profile": "shiftAt",
+      "label": "Shift point",
+      "type": "number",
+      "unit": "rpm",
+      "default": 0,
+      "labels": {
+        "0": "Auto (red zone - 300)"
+      },
+      "steps": [
+        0,
+        4000,
+        4500,
+        5000,
+        5500,
+        5800,
+        6000,
+        6200,
+        6500,
+        6800,
+        7000,
+        7200,
+        7500,
+        7800,
+        8000,
+        8500
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "shiftWarn",
+      "label": "Shift warning (layouts without their own)",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "on",
+          "On: the digital speed and the gear red at the shift point"
+        ]
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "coldGuard",
+      "profile": "coldGuard",
+      "label": "Cold engine: lower the shift point and red zone",
+      "type": "choice",
+      "default": "on",
+      "options": [
+        [
+          "on",
+          "On (as the Redline app: from the cold rev limit up to the red line as the oil warms)"
+        ],
+        [
+          "off",
+          "Off (the red zone where it is set)"
+        ]
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "coldLimit",
+      "profile": "coldLimit",
+      "label": "Cold engine: shift point with the oil at 30 °C",
+      "type": "number",
+      "unit": "rpm",
+      "default": 4500,
+      "steps": [
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        4500,
+        5000,
+        5500
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "warmOil",
+      "profile": "warmOil",
+      "label": "Cold engine: oil warm at",
+      "type": "number",
+      "unit": "°C",
+      "default": 80,
+      "steps": [
+        60,
+        70,
+        75,
+        80,
+        85,
+        90,
+        95,
+        100
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "speedUnit",
+      "profile": "speedUnit",
+      "label": "Speed unit",
+      "type": "choice",
+      "default": "kmh",
+      "options": [
+        [
+          "mph",
+          "mph"
+        ],
+        [
+          "kmh",
+          "km/h"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
+      "key": "tempUnit",
+      "profile": "tempUnit",
+      "label": "Temperature unit",
+      "type": "choice",
+      "default": "c",
+      "options": [
+        [
+          "f",
+          "Fahrenheit"
+        ],
+        [
+          "c",
+          "Celsius"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
+      "key": "torqueUnit",
+      "profile": "torqueUnit",
+      "label": "Torque unit",
+      "type": "choice",
+      "default": "kgm",
+      "options": [
+        [
+          "nm",
+          "Nm"
+        ],
+        [
+          "kgm",
+          "kgm"
+        ],
+        [
+          "lbft",
+          "lb-ft"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
+      "key": "econUnit",
+      "label": "Fuel economy unit",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "As the car's trip computer"
+        ],
+        [
+          "kml",
+          "km/L"
+        ],
+        [
+          "l100",
+          "L/100km"
+        ],
+        [
+          "mpg",
+          "mpg (US)"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
+      "key": "pressUnit",
+      "profile": "pressUnit",
+      "label": "Pressure unit",
+      "type": "choice",
+      "default": "psi",
+      "options": [
+        [
+          "auto",
+          "With the speed unit (psi / bar)"
+        ],
+        [
+          "psi",
+          "psi"
+        ],
+        [
+          "bar",
+          "bar"
+        ],
+        [
+          "kpa",
+          "kPa"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
+      "key": "powerUnit",
+      "profile": "powerUnit",
+      "label": "Power unit",
+      "type": "choice",
+      "default": "hp",
+      "options": [
+        [
+          "hp",
+          "hp"
+        ],
+        [
+          "ps",
+          "PS"
+        ],
+        [
+          "kw",
+          "kW"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
+      "key": "timeZone",
+      "profile": "timeZone",
+      "label": "Time zone (the clock)",
+      "type": "choice",
+      "default": "utc+9",
+      "options": [
+        [
+          "eastern",
+          "US Eastern"
+        ],
+        [
+          "central",
+          "US Central"
+        ],
+        [
+          "mountain",
+          "US Mountain"
+        ],
+        [
+          "arizona",
+          "Arizona (no DST)"
+        ],
+        [
+          "pacific",
+          "US Pacific"
+        ],
+        [
+          "alaska",
+          "Alaska"
+        ],
+        [
+          "hawaii",
+          "Hawaii"
+        ],
+        [
+          "atlantic",
+          "Atlantic"
+        ],
+        [
+          "utc",
+          "UTC"
+        ],
+        [
+          "uk",
+          "UK / Ireland / Portugal"
+        ],
+        [
+          "cet",
+          "Central Europe"
+        ],
+        [
+          "eet",
+          "Eastern Europe"
+        ],
+        [
+          "utc+9",
+          "Korea / Japan (UTC+9)"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
+      "key": "clock",
+      "profile": "clock",
+      "label": "Clock",
+      "type": "choice",
+      "default": "12",
+      "options": [
+        [
+          "12",
+          "12-hour"
+        ],
+        [
+          "24",
+          "24-hour"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
+      "key": "vehicle",
+      "label": "Vehicle",
+      "type": "choice",
+      "default": "petrol",
+      "options": [
+        [
+          "auto",
+          "Auto (found from the car)"
+        ],
+        [
+          "phev",
+          "Plug-in hybrid (charge, electric range, battery power)"
+        ],
+        [
+          "petrol",
+          "Petrol (boost, timing, torque, fuel rail)"
+        ],
+        [
+          "diesel",
+          "Diesel (boost, torque, intake air; no ignition timing)"
+        ]
+      ],
+      "section": "Car",
+      "profile": "engine"
+    },
+    {
+      "key": "tankLitres",
+      "profile": "tankLitres",
+      "label": "Fuel tank size",
+      "type": "number",
+      "unit": "L",
+      "default": 59,
+      "steps": [
+        40,
+        42,
+        46,
+        50,
+        52,
+        55,
+        57,
+        59,
+        60,
+        63,
+        65,
+        66,
+        68,
+        69,
+        70,
+        74,
+        80,
+        83,
+        85,
+        90
+      ],
+      "section": "Car"
+    },
+    {
+      "key": "fuelFrom",
+      "label": "Fuel % from",
+      "type": "choice",
+      "default": "engine",
+      "options": [
+        [
+          "engine",
+          "Engine unit (OBD tank level)"
+        ],
+        [
+          "litres",
+          "Litres / tank size"
+        ]
+      ],
+      "section": "Car"
+    },
+    {
+      "key": "kwFast",
+      "label": "Battery power (kW)",
+      "type": "choice",
+      "default": "on",
+      "options": [
+        [
+          "on",
+          "Fast: between eDrive Live's readings from the car's speed and acceleration"
+        ],
+        [
+          "off",
+          "eDrive Live's readings only"
+        ]
+      ],
+      "section": "Car"
+    },
+    {
+      "key": "eFull",
+      "profile": "eFull",
+      "label": "Electric range when full (until the car's own is found)",
+      "type": "number",
+      "unit": "mi",
+      "default": 31,
+      "steps": [
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        31,
+        32,
+        34,
+        36,
+        38,
+        40,
+        45,
+        50
+      ],
+      "section": "Car"
+    },
+    {
+      "key": "skin",
+      "label": "Skin",
+      "type": "choice",
+      "default": "classic",
+      "options": [
+        [
+          "classic",
+          "Classic"
+        ],
+        [
+          "idrive7",
+          "iDrive 7"
+        ]
+      ],
+      "profile": "skin",
+      "section": "Display"
+    }
+  ],
+  "config": {
+    "scaling": {
+      "rpm": {
+        "factor": 0.25,
+        "offset": 0,
+        "invalid": 65535
+      },
+      "speed": {
+        "factor": 0.015625,
+        "offset": 0,
+        "invalid": 65535
+      },
+      "accel": {
+        "factor": 0.002,
+        "offset": -65,
+        "invalid": 65535
+      },
+      "ambient": {
+        "factor": 0.5,
+        "offset": -40,
+        "invalid": 255
+      },
+      "engineTemp": {
+        "factor": 1,
+        "offset": -48,
+        "invalid": 255
+      },
+      "gearboxTemp": {
+        "factor": 1,
+        "offset": -48,
+        "invalid": 255,
+        "note": "a value that never changes is shown as no data (some cars don't fill this field); raw values go to the log ('raw gearbox oil')"
+      },
+      "boost": {
+        "factor": 0.01,
+        "offset": 0,
+        "invalid": 255,
+        "note": "sport display boost; raw values go to the log ('raw FES boost')"
+      },
+      "torque": {
+        "factor": 0.5,
+        "offset": -1023.5,
+        "invalid": 65535,
+        "invalidFrom": 4095,
+        "note": "12 bit, 0.5 Nm per bit, 0 Nm at raw 2047 (negative = engine braking), 4095 = no value. With factor 1 a running engine read as ~2047 Nm."
+      },
+      "tyreTemp": {
+        "factor": 1,
+        "offset": -40,
+        "invalid": 65535,
+        "note": "degrees + 40, in the car's temperature unit (deg F on a car set to Fahrenheit: main.js converts it): a G05 PHEV sent raw 53-57 on a ~10 deg C day (2.8.0 log), not deci-Kelvin. Values outside -40..150 deg C are shown as no data; the raw values go to the log ('raw tyre temperature')"
+      },
+      "tyrePress": {
+        "factor": 0.1,
+        "offset": 0,
+        "invalidFrom": 65532,
+        "note": "0.1 per bit in the car's pressure unit (bar / kPa / psi, from Vehicle.statusNewCurrentUnitsStatusExt; main.js converts it to bar). BMW x_call: raw * 0.1, valid up to 530; a car in bar sent raw 22-25 = 2.2-2.5 bar, a car in psi about 410 = 41 psi. Read as 0.1 kPa before, every tyre came out at 0.02 bar and was hidden."
+      },
+      "sportPct": {
+        "factor": 1,
+        "offset": 0,
+        "invalid": 255,
+        "note": "sport display power / torque in % of the car maximum; calibrate if the raw value is not 0-100"
+      },
+      "batteryTemp": {
+        "factor": 1,
+        "offset": -50,
+        "invalid": 255,
+        "comment": "Efficiencytainment2.statusBatteryTemperature (X5 45e: raw 76 with the cells at ~26 C)"
+      },
+      "yaw": {
+        "factor": 0.005,
+        "offset": -163.84,
+        "invalid": 65535,
+        "note": "deg/s; the factor and offset of the car's CAN yaw-rate signal, not yet confirmed on this field: the raw values show on Cluster Layouts' Signals page and go to the log ('raw statusYawVelocityVehicle')"
+      },
+      "steer": {
+        "factor": 0.04395,
+        "offset": 0,
+        "signed16": true,
+        "invalid": 32767,
+        "note": "degrees at the wheel, negative to the right as BMW counts; the CAN steering-angle factor, signed 16 bit, not yet confirmed on this field: raw values on the Signals page and in the log"
+      }
+    },
+    "dme": {
+      "comment": "Intake / fuel values from the engine unit (DME, ecu 18 = 0x12) with UDS 0x22. F4xx = the standard OBD PIDs (F40F = PID 0x0F); a candidate with \"obd\" instead of \"did\" asks for the same PID with OBD service 01 (some engine units refuse the F4xx identifiers with NRC 31). Candidates are tried in order; the first plausible one wins. value = raw * factor + offset (bar / deg C). If a tile says 'not available from this DME', add your engine's BMW-specific DID here. boost: tried in order when the sport display sends no boost (setting 'Boost from'); absolute pressure in kPa, the outside air pressure (baro) is subtracted. boostTarget / boostActual: boost pressure setpoint and actual (absolute kPa, baro subtracted), BMW DIDs first, then OBD PID 0x70; the tile only shows when the target answers. loadTarget / loadActual: requested and actual relative air charge in %. timing: OBD PID 0x0E, degrees before top dead centre. misfire: OBD service 06 monitor results (MID A2 = cylinder 1, A3 = cylinder 2 ...), tid 0C = misfires this driving cycle (0B = average of the last 10 cycles); engine units that only speak UDS are asked 0x22 F6A2... egs: gearbox temperature from the gearbox unit (EGS); give each candidate its \"ecu\". pedal: the normalised accelerator pedal angle in % (DIDs 5814 / 480B, then OBD PID 0x49). throttle: the throttle valve's opening in % from its lower stop (DIDs 4600 / 5858, then OBD PID 0x11). tank: the fuel tank's fill in % (OBD PID 0x2F), shown in place of the litres over the tank's size (setting 'Fuel % from').",
+      "ecu": 18,
+      "iat": [
+        {
+          "did": "F40F",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": -40,
+          "min": -40,
+          "max": 150
+        },
+        {
+          "did": "F477",
+          "bytes": 1,
+          "at": 1,
+          "factor": 1,
+          "offset": -40,
+          "min": -40,
+          "max": 150,
+          "note": "charge air cooler temperature, bank 1 sensor 1"
+        },
+        {
+          "obd": "0F",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": -40,
+          "min": -40,
+          "max": 150,
+          "note": "the same PID with OBD service 01, for engine units that refuse F40F with NRC 31"
+        }
+      ],
+      "hpfp": [
+        {
+          "did": "F423",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.1,
+          "offset": 0,
+          "min": 0,
+          "max": 500,
+          "note": "fuel rail gauge pressure (direct injection), 10 kPa per bit"
+        },
+        {
+          "did": "F459",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.1,
+          "offset": -1,
+          "min": 0,
+          "max": 500,
+          "note": "fuel rail absolute pressure, 10 kPa per bit"
+        },
+        {
+          "obd": "23",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.1,
+          "offset": 0,
+          "min": 0,
+          "max": 500,
+          "note": "OBD service 01 PID 0x23 (same as F423)"
+        }
+      ],
+      "lpfp": [
+        {
+          "did": "F40A",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.03,
+          "offset": 0,
+          "min": 0.5,
+          "max": 8,
+          "note": "fuel pressure (gauge), 3 kPa per bit"
+        },
+        {
+          "did": "F422",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.00079,
+          "offset": 0,
+          "min": 0.5,
+          "max": 15,
+          "note": "fuel rail pressure relative to manifold, 0.079 kPa per bit"
+        },
+        {
+          "obd": "0A",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.03,
+          "offset": 0,
+          "min": 0.5,
+          "max": 8,
+          "note": "OBD service 01 PID 0x0A (same as F40A)"
+        },
+        {
+          "obd": "22",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.00079,
+          "offset": 0,
+          "min": 0.5,
+          "max": 15,
+          "note": "OBD service 01 PID 0x22 (same as F422)"
+        }
+      ],
+      "oil": [
+        {
+          "obd": "5C",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": -40,
+          "min": -40,
+          "max": 170,
+          "note": "engine oil temperature, OBD service 01 PID 0x5C - only read while the car's own signal (CDS) sends none"
+        },
+        {
+          "did": "F45C",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": -40,
+          "min": -40,
+          "max": 170
+        }
+      ],
+      "boost": [
+        {
+          "did": "F470",
+          "bytes": 2,
+          "at": 3,
+          "factor": 0.03125,
+          "offset": 0,
+          "min": 20,
+          "max": 600,
+          "note": "OBD PID 0x70 boost pressure control: actual boost pressure sensor A (absolute), 1/32 kPa"
+        },
+        {
+          "did": "F487",
+          "bytes": 2,
+          "at": 1,
+          "factor": 0.03125,
+          "offset": 0,
+          "min": 20,
+          "max": 600,
+          "note": "OBD PID 0x87 intake manifold absolute pressure sensor A, 1/32 kPa"
+        },
+        {
+          "did": "F40B",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": 0,
+          "min": 20,
+          "max": 255,
+          "note": "OBD PID 0x0B intake manifold absolute pressure, kPa (max 255 = 1.5 bar boost)"
+        },
+        {
+          "obd": "0B",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": 0,
+          "min": 20,
+          "max": 255,
+          "note": "OBD service 01 PID 0x0B (same as F40B)"
+        }
+      ],
+      "baro": [
+        {
+          "did": "F433",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": 0,
+          "min": 50,
+          "max": 115,
+          "note": "OBD PID 0x33 barometric pressure, kPa (101.3 when not available)"
+        },
+        {
+          "obd": "33",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": 0,
+          "min": 50,
+          "max": 115,
+          "note": "OBD service 01 PID 0x33 (same as F433)"
+        }
+      ],
+      "boostTarget": [
+        {
+          "did": "4AB0",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.00390625,
+          "offset": 0,
+          "min": 20,
+          "max": 400,
+          "note": "BMW boost pressure setpoint (absolute), hPa = raw * 10 / 256"
+        },
+        {
+          "did": "F470",
+          "bytes": 2,
+          "at": 1,
+          "factor": 0.03125,
+          "offset": 0,
+          "min": 20,
+          "max": 600,
+          "note": "OBD PID 0x70: commanded boost pressure A (absolute), 1/32 kPa"
+        },
+        {
+          "obd": "70",
+          "bytes": 2,
+          "at": 1,
+          "factor": 0.03125,
+          "offset": 0,
+          "min": 20,
+          "max": 600,
+          "note": "OBD service 01 PID 0x70 (same as F470)"
+        }
+      ],
+      "boostActual": [
+        {
+          "did": "580B",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.00390625,
+          "offset": 0,
+          "min": 20,
+          "max": 400,
+          "note": "BMW boost pressure actual (absolute), hPa = raw * 10 / 256"
+        },
+        {
+          "did": "F470",
+          "bytes": 2,
+          "at": 3,
+          "factor": 0.03125,
+          "offset": 0,
+          "min": 20,
+          "max": 600,
+          "note": "OBD PID 0x70: boost pressure sensor A (absolute), 1/32 kPa"
+        },
+        {
+          "obd": "70",
+          "bytes": 2,
+          "at": 3,
+          "factor": 0.03125,
+          "offset": 0,
+          "min": 20,
+          "max": 600,
+          "note": "OBD service 01 PID 0x70 (same as F470)"
+        }
+      ],
+      "loadTarget": [
+        {
+          "did": "480C",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.0234375,
+          "offset": 0,
+          "min": 0,
+          "max": 250,
+          "note": "BMW requested relative air charge, % = raw * 0.75 / 32"
+        }
+      ],
+      "loadActual": [
+        {
+          "did": "5813",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.75,
+          "offset": 0,
+          "min": 0,
+          "max": 191.25,
+          "note": "BMW actual relative air charge, % = raw * 0.75"
+        }
+      ],
+      "timing": [
+        {
+          "obd": "0E",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.5,
+          "offset": -64,
+          "min": -64,
+          "max": 63.5,
+          "note": "OBD service 01 PID 0x0E timing advance, degrees before TDC (cylinder 1)"
+        },
+        {
+          "did": "F40E",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.5,
+          "offset": -64,
+          "min": -64,
+          "max": 63.5,
+          "note": "the same PID over UDS 0x22"
+        }
+      ],
+      "misfire": {
+        "tid": "0C",
+        "note": "set to {} to switch off; \"ecu\" to ask another unit"
+      },
+      "egs": [
+        {
+          "ecu": 24,
+          "did": "6000",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": -40,
+          "min": -40,
+          "max": 160,
+          "note": "ZF 8HP (GSZFBCE) _GETRIEBEOELTEMPERATUR, deg C + 40 (idrive7-apps PR #29, read on a G22)"
+        },
+        {
+          "ecu": 24,
+          "did": "DA12",
+          "bytes": 1,
+          "at": 0,
+          "factor": 1,
+          "offset": -48,
+          "min": -40,
+          "max": 160,
+          "note": "gearbox unit (EGS, 0x18) transmission oil temperature, deg C + 48 (from a forum report, not confirmed on a car: only shown once it changes; the replies go to the log, \"raw EGS\")"
+        }
+      ],
+      "pedal": [
+        {
+          "did": "5814",
+          "bytes": 2,
+          "at": 0,
+          "signed": true,
+          "factor": 0.01220703,
+          "offset": 0,
+          "min": -2,
+          "max": 102,
+          "note": "FAHRPEDWINKEL_NORM, normalised pedal angle (B48 / B58 DME 8.x), as Live Data reads it"
+        },
+        {
+          "did": "480B",
+          "bytes": 2,
+          "at": 0,
+          "signed": true,
+          "factor": 0.01220703,
+          "offset": 0,
+          "min": -2,
+          "max": 102,
+          "note": "IFPWG, normalised pedal angle (driver's request)"
+        },
+        {
+          "obd": "49",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.392157,
+          "offset": 0,
+          "min": 0,
+          "max": 101,
+          "note": "OBD PID 0x49, accelerator pedal position D"
+        }
+      ],
+      "throttle": [
+        {
+          "did": "4600",
+          "bytes": 2,
+          "at": 0,
+          "signed": true,
+          "factor": 0.0078125,
+          "offset": 0,
+          "min": -2,
+          "max": 102,
+          "note": "IWDKL, throttle valve angle from its lower stop (B48 / B58 DME 8.x), as Live Data reads it"
+        },
+        {
+          "did": "5858",
+          "bytes": 2,
+          "at": 0,
+          "signed": true,
+          "factor": 0.0078125,
+          "offset": 0,
+          "min": -2,
+          "max": 102,
+          "note": "DK_WINK_BEZ_UMA, throttle valve angle from its lower stop"
+        },
+        {
+          "obd": "11",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.392157,
+          "offset": 0,
+          "min": 0,
+          "max": 101,
+          "note": "OBD PID 0x11, absolute throttle position"
+        }
+      ],
+      "tank": [
+        {
+          "did": "F42F",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.392157,
+          "offset": 0,
+          "min": 0,
+          "max": 101,
+          "note": "fuel tank level (OBD PID 0x2F) over UDS, the engine unit's own fill in %"
+        },
+        {
+          "obd": "2F",
+          "bytes": 1,
+          "at": 0,
+          "factor": 0.392157,
+          "offset": 0,
+          "min": 0,
+          "max": 101,
+          "note": "the same PID with OBD service 01, as Live Data's 'Fuel tank level' reads it"
+        }
+      ]
+    },
+    "comment": "scaling and dme as M Vitals (cauliflowermossgrape/idrive7-apps apps/car_vitals) reads them",
+    "dap": {
+      "posScale": 0.01,
+      "note": "The driving assistant (dap.js): metres a unit of an object's x and y in ObjectListSuAAR (not yet seen on a car: check 'dap raw objects' in the log against a car followed at a known distance)"
+    }
+  },
+  "requires": {
+    "idrive7-renderd": "2.1.7",
+    "mgu-inputgate": "1.0.0",
+    "cluster-render": "0.4.2"
+  },
+  "shared": [
+    "NOTICE",
+    "attribution.js",
+    "attribution_sig.js",
+    "clock.js",
+    "cluster_render_client.js",
+    "dap.js",
+    "data.js",
+    "font.js",
+    "font_baked.js",
+    "font_bold.wad",
+    "font_light.wad",
+    "font_orb.wad",
+    "font_wide.wad",
+    "kwfuse.js",
+    "logs.js",
+    "presence.js",
+    "providers.js",
+    "qr.js",
+    "shaders.js",
+    "signal_finder.js",
+    "themes.js"
+  ]
+}

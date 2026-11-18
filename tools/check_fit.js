@@ -7,7 +7,7 @@
  */
 const path = require('path');
 require('./scene');
-const ROOT = path.join(__dirname, '..'), APP = path.join(ROOT, 'apps', 'akakingj_cluster_layouts');
+const ROOT = path.join(__dirname, '..'), APP = process.env.LAYOUTS_APP ? path.resolve(process.env.LAYOUTS_APP) : path.join(ROOT, 'apps', 'akakingj_cluster_layouts');
 const C = require(path.join(APP, 'layout_common.js'));
 const font = require(path.join(APP, 'font.js'));
 const { LAYOUTS } = require(path.join(APP, 'layouts.js'));
