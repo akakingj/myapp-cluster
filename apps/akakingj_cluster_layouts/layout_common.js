@@ -382,7 +382,8 @@ const READOUTS = {
     pedal: { short: 'PDL', long: 'PEDAL', num: (o, d) => (isNum(d.pedal) ? Math.round(d.pedal) + '%' : '--'), frac: (d) => (isNum(d.pedal) ? d.pedal / 100 : 0), needs: ['pedal'] },
     timing: { short: 'TIM', long: 'TIMING', num: (o, d) => timingText(d), frac: (d) => (isNum(d.timing) ? (d.timing + 10) / 50 : 0), needs: ['timing'] },
     // the gear as the selector has it: P R N, or D / S / M with its number (gearText; '-' while unknown)
-    gear: { short: 'GEAR', long: 'GEAR', num: (o, d) => gearText(d), frac: (d) => (isNum(d.gear) && d.gear > 0 ? d.gear / 8 : 0) },
+    // (no name: D1, S2, M3, R, P say what they are)
+    gear: { short: '', long: '', num: (o, d) => gearText(d), frac: (d) => (isNum(d.gear) && d.gear > 0 ? d.gear / 8 : 0) },
     // the car's trip computer (0.45.0): its average fuel economy (with its unit), distance and driving time
     avgFuel: { short: 'AVG', long: 'AVG', num: econText, frac: econFrac },
     trip: { short: 'TRIP', long: 'TRIP', num: tripText, frac: (d) => (isNum(d.tripKm) ? Math.min(1, d.tripKm / 1000) : 0) },

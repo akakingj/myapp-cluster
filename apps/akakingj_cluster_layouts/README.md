@@ -226,7 +226,7 @@ temperature at its corner, a low one in red - or four **temperatures** - engine 
 air, an arc each, red when too hot) with the G meter (the car's own lateral and
 longitudinal acceleration, read as G Force and Car Vitals read it: each axis's offset learned while the car stands,
 smoothed over about 150 ms; the dot as the driver feels the G - right in a left bend, down accelerating, up braking,
-as every app since 0.47.0, no setting - with its trail behind it, where it was over the last 2 s, fading; Settings >
+as every app since 0.47.0, no setting - with its trail behind it as G-Force's, a stream of small dots where it was over the last 1.6 s, fading; Settings >
 JDM 2: G meter size); over its edge a big tach whose scale is a broad coloured band
 with the numerals in it, a notched dark rim round it and a dotted line inside it (red, the shift zone orange; Sport
 crimson and amber, Efficient blue), a glowing needle reaching the band over a chrome ring hub, the digital speed in

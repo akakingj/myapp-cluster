@@ -41,12 +41,14 @@ check('readouts: every choice, short', () => {
 });
 check('the gear as a readout: D / S / M and its number, P R N; Nothing under the speed', () => {
     const g = (x) => Object.assign({}, d, x);
-    assert.strictEqual(C.stripInfoA(o({ infoA: 'gear' }), narrow)(g({ stage: 'D', mode: 'D', gear: 4 })), 'GEAR D4');
-    assert.strictEqual(C.stripInfoA(o({ infoA: 'gear' }), narrow)(g({ stage: 'D', mode: 'S', gear: 3 })), 'GEAR S3');
-    assert.strictEqual(C.stripInfoA(o({ infoA: 'gear' }), narrow)(g({ stage: 'D', mode: 'M', gear: 2 })), 'GEAR M2');
-    assert.strictEqual(C.stripInfoA(o({ infoA: 'gear' }), narrow)(g({ stage: 'P', gear: 0 })), 'GEAR P');
+    // (0.47.1: the gear without its name - D4, S3, M2, P say what they are)
+    assert.strictEqual(C.stripInfoA(o({ infoA: 'gear' }), narrow)(g({ stage: 'D', mode: 'D', gear: 4 })), 'D4');
+    assert.strictEqual(C.stripInfoA(o({ infoA: 'gear' }), narrow)(g({ stage: 'D', mode: 'S', gear: 3 })), 'S3');
+    assert.strictEqual(C.stripInfoA(o({ infoA: 'gear' }), narrow)(g({ stage: 'D', mode: 'M', gear: 2 })), 'M2');
+    assert.strictEqual(C.stripInfoA(o({ infoA: 'gear' }), narrow)(g({ stage: 'P', gear: 0 })), 'P');
+    assert.strictEqual(C.placeReadout(o({}), 'gear').short, '');
     assert.strictEqual(C.focus.power(o({ infoMain: 'gear' }))(g({ stage: 'D', mode: 'M', gear: 5 })), 'M5');
-    assert.strictEqual(C.focus.powerLabel(o({ infoMain: 'gear' }), true), 'GEAR');
+    assert.strictEqual(C.focus.powerLabel(o({ infoMain: 'gear' }), true), '', 'no GEAR under the big gear either');
     assert.strictEqual(C.focus.power(o({ infoMain: 'off' })), '');
     assert.strictEqual(C.focus.powerLabel(o({ infoMain: 'off' }), true), '');
     assert.strictEqual(C.focus.mainFrac(o({ infoMain: 'off' }))(d), 0);
@@ -295,4 +297,23 @@ check('the average economy: 0.0 when the trip is reset, its name AVG', () => {
 check('the fuel gauge: 0, 1/2, 1 as the car\'s own', () => {
     assert.deepStrictEqual(C.placeGauge({ tempUnit: 'c' }, 'fuel').marks, ['0', '1/2', '1']);
     assert.deepStrictEqual(C.placeGauge({ tempUnit: 'c' }, 'coolant').marks, ['40', '90', '140']);
+});
+
+check('JDM 2\'s G trail: a place every 100 ms, 16 kept, packed one number each; it flows (the phase) and stops while parked', () => {
+    const J = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'layout_jdm2.js')).trailParts;
+    const unpack = (v) => { const xi = Math.floor(v / 256 + 0.001); return [(xi - 128) / 100, (v - xi * 256 - 128) / 100]; };
+    [[0, 0], [1.12, -1.12], [-0.37, 0.5], [0.01, -0.01]].forEach((q) => assert.deepStrictEqual(unpack(J.packOf(q)), q, String(q)));
+    const tr = J.trailOf();
+    let t = 1000, u = tr([0.1, 0.2], t);
+    assert.deepStrictEqual(u.u_trail_np, [1, 0]);
+    u = tr([0.2, 0.2], t + J.TRAIL_MS / 2);
+    assert.deepStrictEqual(u.u_trail_np, [1, 0.5], 'between places: the phase on, no new place');
+    for (let i = 1; i <= 40; i++) u = tr([0.1 * (i % 5), -0.05 * (i % 3)], t + i * J.TRAIL_MS);
+    assert.strictEqual(u.u_trail.length, 16); assert.strictEqual(u.u_trail_np[0], 16);
+    assert.deepStrictEqual(unpack(u.u_trail[15]), [0, -0.05], 'the newest last');
+    // a parked car: once every place is on the dot, the same uniforms every frame (nothing sent)
+    let last = '';
+    for (let i = 0; i < 40; i++) u = tr([0, 0], t + 6000 + i * J.TRAIL_MS);
+    for (let i = 0; i < 10; i++) { const s = JSON.stringify(tr([0, 0], t + 11000 + i * 37)); assert(!last || s === last, 'still: ' + s); last = s; }
+    assert.strictEqual(JSON.parse(last).u_trail_np[1], 0);
 });

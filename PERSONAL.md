@@ -175,8 +175,11 @@ first, checked on the car, then moved to `personal-kr`.
   1.6.0 dropped its G direction too; G-Force, M Vitals and Water Cup the same): JDM 2's G meter and JDM 1's cup lost
   their swaps (gFlipLat, gFlipLong). JDM 2's dot has a trail, as the iDrive G-Force app's: where it was over the last
   2 s (16 places, 125 ms apart) joined by a thin line fading with age, drawn in the meter's own shader (no new piece;
-  only inside the meter). Shared engine: a piece's dyn uniforms sent one by one when each changes (the trail's 32
-  numbers not with every move of the dot), more than 4 numbers as an array of vec4.
+  only inside the meter; 0.47.1: a stream of small dots fading smoothly with age as G-Force's, 16 places 100 ms apart,
+  four packed in a vec4 so the meter's shader keeps within the 29 uniform vectors the cluster already runs).
+  Shared engine: a piece's dyn uniforms sent one by one when each changes (the trail's numbers not with every move of
+  the dot), more than 4 numbers as an array of vec4.
+- Layouts 0.47.1: the gear readout without its name (D1, S2, M3, R, P), in every place and under a main readout.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

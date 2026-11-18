@@ -63,30 +63,37 @@ function tach(o, cx, cy, R) {
  * The G meter in a big round window at (cx, cy), radius R: the meter in its middle, its size's figures at the ends of
  * its cross. The dot as the driver feels the G (0.41.6; every app's since 0.47.0, no setting): right in a left bend
  * (the car's lateral G > 0 turning left), down while accelerating, up braking; the car's own acceleration less its
- * offset at a standstill, smoothed (data.js gLatZ, gLongZ). Behind the dot its trail (0.47.0, as the iDrive G-Force
- * app's): where it was over the last 2 s, a place every TRAIL_MS, TRAIL_N of them (the shader's u_trail).
+ * offset at a standstill, smoothed (data.js gLatZ, gLongZ). Behind the dot its trail (0.47.0; 0.47.1 a stream of
+ * small dots as the iDrive G-Force app's): where it was over the last 1.6 s, a place every TRAIL_MS, TRAIL_N of them,
+ * each fading smoothly with its age (the shader's u_trail, four places a vec4, one number each: packOf; u_trail_np).
  */
-const TRAIL_MS = 125, TRAIL_N = 16;
-/** The trail's places from the dot's: a new one every TRAIL_MS (now: ms), TRAIL_N kept, the oldest first. */
+const TRAIL_MS = 100, TRAIL_N = 16;
+/** A place (x, y of the meter's ring, within 1.12) as one number: x and y in hundredths, 128 on, x the high byte. */
+const packOf = (q) => (Math.round(q[0] * 100) + 128) * 256 + Math.round(q[1] * 100) + 128;
+/** The trail from the dot's places: a new one every TRAIL_MS (now: ms), TRAIL_N kept, the oldest first; the phase to
+ * the next (0..1, a twentieth at a time) every frame - but none while the dot stands still with the trail on it (a
+ * parked car: nothing sent). */
 function trailOf() {
     const pts = [];
     let at = 0;
     return (g, now) => {
-        if (!(now - at < TRAIL_MS) && C.isNum(g[0]) && C.isNum(g[1])) {
+        const l = Math.hypot(g[0], g[1]), k = l > 1.12 ? 1.12 / l : 1, here = [r2(g[0] * k), r2(g[1] * k)];
+        const still = pts.length === TRAIL_N && pts.every((q) => q[0] === here[0] && q[1] === here[1]);
+        if (!still && !(now - at < TRAIL_MS)) {
             at = now;
-            const l = Math.hypot(g[0], g[1]), k = l > 1.12 ? 1.12 / l : 1;
-            pts.push([r2(g[0] * k), r2(g[1] * k)]);
+            pts.push(here);
             if (pts.length > TRAIL_N) pts.shift();
         }
         const flat = [];
-        for (let i = 0; i < TRAIL_N; i++) { const q = pts[i] || pts[pts.length - 1] || [0, 0]; flat.push(q[0], q[1]); }
-        return { u_trail: flat, u_trail_n: [pts.length] };
+        for (let i = 0; i < TRAIL_N; i++) flat.push(packOf(pts[i] || pts[pts.length - 1] || [0, 0]));
+        const phase = still ? 0 : Math.min(1, Math.round((now - at) / TRAIL_MS * 20) / 20);
+        return { u_trail: flat, u_trail_np: [pts.length, phase] };
     };
 }
 function gMeter(o, cx, cy, R) {
     // (0.37.2: the meter 0.6 R across, was 0.46; its figures larger, and the G now in figures under it)
     const gr = R * 0.6, h = Math.max(16, Math.round(R * 0.085)), w = Math.round(h * 2.6), max = gScale(o);
-    const trail = trailOf();
+    const trail = trailOf();   // (module.exports.parts: its tests)
     const fig = max % 0.5 ? max.toFixed(2) : max.toFixed(1);
     const mark = (k, x, y) => C.text('gMark' + k, Math.round(x - w / 2), Math.round(y - h / 2), w, h, fig, white);
     const gv = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : d[k]);
@@ -230,6 +237,8 @@ module.exports = {
     places: ['top left', 'top right', 'bottom right', 'bottom left'].map((w, i) => ({ key: 'temp' + (i + 1), kind: 'gauge', label: 'Left dial: temperatures, ' + w, when: (o) => o.leftDial === 'temps' })),
     // (its own fuel gauge: the strip's fuel bar only with another reading there)
     stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
+    // (the G trail's parts: its tests)
+    trailParts: { trailOf, packOf, TRAIL_MS, TRAIL_N },
 
     /*
      * Built round what the glass and the KOMBI keep (layout_common; tools/clearance.js): the camera's cowl over the
