@@ -48,13 +48,18 @@ float digitOf(float v, float i, float n) {
     float div = p < 0.5 ? 1.0 : p < 1.5 ? 10.0 : 100.0;
     return mod(floor(v / div + 0.001), 10.0);
 }
-/* how many figures v has (up to three) */
+`;
+/* NUMERAL: the dials' numerals' place (after GLYPH, in the dial programs only - not the texts': each piece sends its
+ * own program, a text's some 30 times a layout, against the 600 KB start-up; so no comments in the GLSL either)
+ *   figuresOf(v): how many figures v has (up to three)
+ *   numeralIn(dir, n, adv, h): how far a numeral's centre goes in from its ring (dir: the unit direction out from the
+ *     dial's centre; n figures of advance adv, the cell h tall) so the side of its box towards the ticks keeps the gap
+ *     twelve o'clock's has: its half width along dir's sideways part, less what its half height there gives back (the
+ *     figures' ink about 0.6 h tall) - a wide '220' at three o'clock in from its tick, a '4' at twelve where it was.
+ *     Only for the narrow faces (IBM Plex: a figure 0.5 wide): the wide ones' layouts - JDM 1's Michroma, 0.88 - are
+ *     drawn for their own figures, kept as they are. */
+const NUMERAL = `
 float figuresOf(float v) { return v >= 99.5 ? 3.0 : v >= 9.5 ? 2.0 : 1.0; }
-/* how far a numeral's centre goes in from its ring (dir: the unit direction out from the dial's centre; n figures of
-   advance adv, the cell h tall) so the side of its box towards the ticks keeps the gap twelve o'clock's has: its half
-   width along dir's sideways part, less what its half height there gives back (the figures' ink about 0.6 h tall) -
-   a wide '220' at three o'clock in from its tick, a '4' at twelve where it was. Only for the narrow faces (IBM Plex:
-   a figure 0.5 wide): the wide ones' layouts - JDM 1's Michroma, 0.88 - are drawn for their own figures, kept as they are */
 float numeralIn(vec2 dir, float n, float adv, float h) { return adv > 0.6 ? 0.0 : max(0.0, abs(dir.x) * n * adv * 0.5 - (1.0 - abs(dir.y)) * 0.3) * h; }
 `;
 
@@ -108,7 +113,7 @@ void main() {
  *   u_value   the reading on the scale
  */
 const DIAL_FS = `#version 100
-${HIGHP}${COMMON}${GLYPH}
+${HIGHP}${COMMON}${GLYPH}${NUMERAL}
 uniform vec2 u_size;
 uniform vec4 u_scale;
 uniform float u_min;
@@ -213,7 +218,7 @@ void main() {
         float h = u_arc.z, adv = u_digit_adv;
         float n = vk >= 99.5 ? 3.0 : vk >= 9.5 ? 2.0 : 1.0;
         vec2 dk = vec2(sin(ak), -cos(ak));
-        vec2 pc = dk * (u_arc.w - numeralIn(dk, n, adv, h));    /* (clear of the ticks however wide: numeralIn) */
+        vec2 pc = dk * (u_arc.w - numeralIn(dk, n, adv, h));
         vec2 q = (d - pc) / h;
         float x = q.x + n * adv * 0.5;
         float i = floor(x / adv);
@@ -587,7 +592,7 @@ void main() {
 }`;
 
 const BAND_FS = `#version 100
-${HIGHP}${COMMON}${GLYPH}
+${HIGHP}${COMMON}${GLYPH}${NUMERAL}
 uniform vec2 u_size;
 uniform vec4 u_geo;
 uniform vec4 u_span;
@@ -705,7 +710,6 @@ void main() {
             float h = u_marks.z, adv = u_digit_adv;
             float n = vk >= 99.5 ? 3.0 : vk >= 9.5 ? 2.0 : 1.0;
             vec2 dm = vec2(sin(am), -cos(am));
-            /* (clear of the arc however wide: out from it outside, in inside) */
             vec2 pc = u_geo.xy + dm * (R + u_marks.w + sign(u_marks.w) * numeralIn(dm, n, adv, h));
             vec2 q = (p - pc) / h;
             float x = q.x + n * adv * 0.5;
@@ -1844,7 +1848,7 @@ void main() {
  *   u_value   the reading on the scale (eased)
  */
 const E9X_FS = `#version 100
-${HIGHP}${COMMON}${GLYPH}
+${HIGHP}${COMMON}${GLYPH}${NUMERAL}
 uniform vec2 u_size;
 uniform vec4 u_scale;
 uniform vec4 u_arc;
@@ -2057,6 +2061,11 @@ void main() {
  *      many set, how far on to the next 0..1 - each piece fades smoothly and the oldest shrinks away just as a new
  *      one comes -, the trail's bounding circle: its centre packed as a place, its radius; outside it nothing is
  *      worked out: a parked car's trail is a point)
+ *      (in the program, kept free of comments: trailAt(v) a place from its number, x and y in hundredths, 128 on, x
+ *      the high byte; trailD the distance to a segment, a zero-length one from its end; the line from the oldest place
+ *      on to the dot, worked out only inside the trail's bounding circle in the meter's units, each piece's age from
+ *      its place and the phase - the newest 1 -, the oldest piece shrinking away from its old end once the trail is
+ *      full; as G-Force's, 0.08 to 0.63)
  *   2  a disc for the gear: a chrome ring round a glossy disc of u_disc
  *   3  the tach: a chrome bezel, a broad band of u_band along the sweep with the numerals in it (below 0 u_regen: a
  *      plug-in's regeneration as E9X), a notched dark grey rim round its outside with the red line marked on it in
@@ -2073,7 +2082,7 @@ void main() {
  *   u_scale, u_arc (start, end, numeral height of R), u_min, u_zero, u_regen, u_value: as E9X_FS
  */
 const JDM_FS = `#version 100
-${HIGHP}${COMMON}${GLYPH}
+${HIGHP}${COMMON}${GLYPH}${NUMERAL}
 uniform vec2 u_size;
 uniform float u_mode;
 uniform vec2 u_origin;
@@ -2160,9 +2169,7 @@ vec4 tempArc(vec4 acc, vec2 d, float r, float px, float R, float am, float f, fl
     acc = over(acc, u_tick * 0.6, clamp(1.2 - e, 0.0, 1.0) * span(r / px, 0.72 / px, 0.9 / px));
     return acc;
 }
-/* a place of the G trail from its number (shaders.js JDM_FS: x, y in hundredths, 128 on, x the high byte) */
 vec2 trailAt(float v) { float xi = floor(v / 256.0 + 0.001); return (vec2(xi, v - xi * 256.0) - 128.0) / 100.0; }
-/* how far p is from the segment a-b (a zero-length one: from a) */
 float trailD(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-6), 0.0, 1.0); return length(pa - ba * h); }
 /* a box (centre c, half size b, corner k): < 0 inside */
 float boxD(vec2 p, vec2 b, float k) { vec2 q = abs(p) - b + k; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - k; }
@@ -2196,9 +2203,6 @@ void main() {
         acc = over(acc, vec3(0.0), clamp((gr - r) / px + 0.5, 0.0, 1.0) * 0.25);
         vec2 g = u_g;
         if (length(g) > 1.12) g = g / length(g) * 1.12;
-        /* the trail: only inside its bounding circle (in the meter's units), a line from the oldest place on to the
-           dot; each piece's age from its place and the phase (the newest 1), the oldest piece shrinking away from its
-           old end as the phase goes on; as G-Force's, 0.08 to 0.63 */
         vec2 m = d / (gr * R);
         if (u_trail_np.x > 0.5 && length(m - trailAt(u_trail_np.z)) < u_trail_np.w + 0.05) {
             float tr = 0.0, n = u_trail_np.x, ph = u_trail_np.y;
@@ -2210,7 +2214,7 @@ void main() {
                     vec2 pt = trailAt(j == 0 ? q.x : j == 1 ? q.y : j == 2 ? q.z : q.w);
                     if (k < n) {
                         if (k > 0.5) {
-                            vec2 a = k < 1.5 && n > 15.5 ? mix(prev, pt, ph) : prev;   /* (shrinking once full: the oldest then goes) */
+                            vec2 a = k < 1.5 && n > 15.5 ? mix(prev, pt, ph) : prev;
                             float age = clamp((k - ph) / n, 0.0, 1.0);
                             float sd = trailD(m, a, pt) * gr;
                             tr = max(tr, (0.08 + 0.55 * age) * clamp((0.009 - sd) / px + 0.5, 0.0, 1.0));
@@ -2219,7 +2223,6 @@ void main() {
                     }
                 }
             }
-            /* the newest piece: the last place to the dot */
             float sd = trailD(m, prev, g) * gr;
             tr = max(tr, 0.63 * clamp((0.009 - sd) / px + 0.5, 0.0, 1.0));
             acc = over(acc, u_dot, tr);
@@ -2354,7 +2357,7 @@ void main() {
  *      degrees either side of six o'clock, fading at its ends
  */
 const MROUND_FS = `#version 100
-${HIGHP}${COMMON}${GLYPH}
+${HIGHP}${COMMON}${GLYPH}${NUMERAL}
 uniform vec2 u_size;
 uniform float u_mode;
 uniform vec4 u_scale;

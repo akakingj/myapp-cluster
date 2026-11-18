@@ -194,6 +194,10 @@ first, checked on the car, then moved to `personal-kr`.
   keep clear of the ticks: each goes in from its ring by how much wider than tall it is towards the ticks
   (shaders.js numeralIn: a '220' at three o'clock in, a '4' at twelve as it was), for the narrow faces only (JDM 1's
   Michroma dial unchanged). The layout pictures on the page made again (tools/make_previews.py).
+- Layouts 0.48.1, Centre 0.13.1: 90's numerals closer to its ticks (their ring 230 / 214, was 218 / 200). The shaders'
+  new notes kept out of the GLSL, and the numerals' helpers only in the dial programs: each piece sends its own program,
+  so a comment in the text program went some 30 times a layout - the start-up was up to 33 KB more (ID8 M 588 KB of
+  600); now as before today (the most 555 KB), JDM 2 11 KB more for its trail (497 KB).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

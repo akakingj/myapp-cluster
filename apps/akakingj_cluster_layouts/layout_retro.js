@@ -86,7 +86,7 @@ function dialSet(o, which, cx, size, cy) {
     return [
         Object.assign({
             key: which, kind: 'dial', x: cx - size / 2, y: cy - size / 2, w: size, h: size,
-            params: Object.assign({ u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 44 : 62) * k + 2), (dense ? 218 : 200) * k], u_needle_dim: [292 * k, 62 * k, 13 * k, 4] }, look(k, 0.75)),
+            params: Object.assign({ u_scale: [s.max, s.major, s.minor, red], u_arc: [-135, 135, Math.round((dense ? 44 : 62) * k + 2), (dense ? 230 : 214) * k], u_needle_dim: [292 * k, 62 * k, 13 * k, 4] }, look(k, 0.75)),
             colors: dialColours, max: s.max, sweep: true,
             value: which === 'speed' ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : C.tachValue(o), range: which === 'speed' ? undefined : C.tachRange(o, s),
             dyn: which === 'speed' ? undefined : C.tachDyn(o, s, red),
