@@ -30,6 +30,10 @@ variants.push({ tempUnit: 'f', gaugeSpeed: 'gearbox', gaugeRpm: 'oil', tag: 'tem
     KEYS.forEach((k, i) => variants.push({ leftDial: 'temps', places: all(k, RKEYS[i % RKEYS.length]), tag: 'places ' + k + ' / ' + RKEYS[i % RKEYS.length] }));
     ['psi', 'kpa'].forEach((pu) => variants.push({ pressUnit: pu, leftDial: 'temps', places: all('boost', 'boost'), tag: 'places boost in ' + pu }));
     variants.push({ tempUnit: 'f', leftDial: 'temps', places: all('gearbox', 'gearbox'), tag: 'places in F' });
+    // (0.46.0) the centre displays' trip computer: as designed, and each line set to every readout, in each unit
+    variants.push({ centreView: 'trip', tag: 'trip computer' });
+    RKEYS.forEach((k) => variants.push({ centreView: 'trip', places: all('coolant', k), tag: 'trip computer ' + k }));
+    [['mph', 'f'], ['kmh', 'c']].forEach(([speedUnit, tempUnit]) => ['kml', 'l100', 'mpg'].forEach((econUnit) => variants.push({ centreView: 'trip', speedUnit, tempUnit, econUnit, places: all('coolant', 'avgFuel'), tag: 'trip computer economy ' + econUnit })));
 }
 // and each in every arrangement over the car's own strip (the only form): the readings, the map or the stock centre
 const MODES = [];

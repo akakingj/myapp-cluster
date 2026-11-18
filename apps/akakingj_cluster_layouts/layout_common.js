@@ -338,6 +338,31 @@ const tripTimeText = (d) => (isNum(d.tripMin) ? Math.floor(d.tripMin / 60) + ':'
 /** km/L for a bar (0..30) */
 const econFrac = (d) => { const e = econ({ econUnit: 'kml' }, d); return e ? Math.max(0, Math.min(1, e.v / 30)) : 0; };
 
+/*
+ * (0.46.0) A centre display's trip computer, in place of its big speed (Settings > Centre display: Trip computer, or the
+ * page, for each layout): n lines, each a place on the page (tripRow1-n: any readout, or nothing; as designed the
+ * distance, the driving time and the average economy - two lines: the distance and the economy), its name at the left
+ * and its figures at the right, under a small heading.
+ */
+const TRIP_OWN = { 1: ['avgFuel'], 2: ['trip', 'avgFuel'], 3: ['trip', 'tripTime', 'avgFuel'] };
+const tripShown = (o) => !!o && o.centreView === 'trip';
+const notMap = (o) => !!o && o.centre !== 'map' && o.centre !== 'stock';
+/** The places of a trip computer of n lines (when: they show; default with the trip computer in the display). */
+const tripPlaces = (n, when) => Array.from({ length: n }, (x, i) => ({ key: 'tripRow' + (i + 1), kind: 'readout', label: 'Trip computer: line ' + (i + 1), when: when || ((o) => tripShown(o) && notMap(o)) }));
+/** Its pieces in the box X Y W H: the heading (unless head false), then the lines; nameC, valueC their colours, fam the
+ * layout's glyph family (the figures made to fit their widest). */
+function tripRows(o, X, Y, W, H, n, nameC, valueC, fam, head) {
+    const out = [], top = head === false ? 0 : Math.max(14, Math.round(H * 0.1)), rh = (H - top - (head === false ? 0 : 6)) / n;
+    if (head !== false) out.push(text('tripHead', X, Y, W, top, 'TRIP COMPUTER', nameC, { tracking: 0.14 }));
+    for (let i = 0; i < n; i++) {
+        const r = placeReadout(o, placeOf(o, 'tripRow' + (i + 1)) || TRIP_OWN[n][i]), y = Math.round(Y + H - rh * (n - i)), vh = Math.round(Math.min(rh * 0.78, 46)), lw = Math.round(W * 0.3);
+        // (a space before the name: a capital's stem at the box's very edge loses half a pixel there)
+        out.push(text('tripLbl' + (i + 1), X, y + Math.round((rh - vh * 0.6) / 2), lw, Math.round(vh * 0.6), ' ' + r.short, nameC, { align: 0, tracking: 0.06 }),
+            Object.assign(fitText(text('tripRow' + (i + 1), X + lw, y + Math.round((rh - vh) / 2), W - lw, vh, r.value, valueC, { align: 1 }), fam), r.tone ? { tone: r.tone } : {}));
+    }
+    return out;
+}
+
 const READOUTS = {
     iat: { short: 'IAT', long: 'INTAKE AIR', num: tempOf('iat'), frac: (d) => (isNum(d.iat) ? d.iat / 80 : 0), needs: ['iat'] },
     gearbox: { short: 'TRANS', long: 'TRANS OIL', num: tempOf('gearbox'), frac: (d) => (isNum(d.gearbox) ? (d.gearbox - 40) / 90 : 0), needs: ['gearbox'] },
@@ -606,5 +631,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

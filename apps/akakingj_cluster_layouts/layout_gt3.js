@@ -175,11 +175,12 @@ module.exports = {
             ...box('rpmB', L.x, y2, L.w, h2, 'RPM'),
             C.text('rpmNow', L.x + 14, y2 + 32, L.w - 28, h2 - 38, rpmNow, (t, d) => ({ color: [isNum(d.rpm) && d.rpm >= shiftPoint(o, d.oil).rpm ? t.red : t.text, 1], glow: [t.glow, 0.1] }), { align: 1 }));
         if (map) list.push(...box('mgear', L.x, y3, L.w, h3, 'GEAR'), C.text('gear', L.x + 14, y3 + 32, L.w - 28, h3 - 38, C.gearText, white));
-        else if (P('box4')) list.push(...box('tyres', L.x, y3, L.w, h3, Rd('box4').label), toneOf('box4', C.text('tyresVal', L.x + 14, y3 + 36, L.w - 28, h3 - 46, Rd('box4').value, white, { align: 1 })));
+        else if (P('box4')) list.push(...box('tyres', L.x, y3, L.w, h3, Rd('box4').label), toneOf('box4', C.fitText(C.text('tyresVal', L.x + 14, y3 + 36, L.w - 28, h3 - 46, Rd('box4').value, white, { align: 1 }))));
         else list.push(...tyres(o, L.x, y3, L.w, h3));
         // right: the battery's power (boost), the charge (shift point), the last shift (with the map: the temperatures)
         list.push(...box('powerB', R.x, top, R.w, h1, power.label),
-            Object.assign(C.text('power', R.x + 14, top + 36, R.w - 28, h1 - 46, power.value, power.c, { align: 1 }), power.tone ? { tone: power.tone } : {}),
+            // (a reading set there made to fit its widest figures: '25.5 L/100km')
+            Object.assign(P('box1') ? C.fitText(C.text('power', R.x + 14, top + 36, R.w - 28, h1 - 46, power.value, power.c, { align: 1 })) : C.text('power', R.x + 14, top + 36, R.w - 28, h1 - 46, power.value, power.c, { align: 1 }), power.tone ? { tone: power.tone } : {}),
             ...box('secondB', R.x, y2, R.w, h2, second.label),
             Object.assign(C.text('second', R.x + 14, y2 + 32, R.w - 28, h2 - 38, second.value, second.c, { align: 1 }), second.tone ? { tone: second.tone } : {}));
         if (map) {
@@ -189,7 +190,7 @@ module.exports = {
                 C.text('coolant', R.x + 14, ty, tw, th, (d) => C.tempText(o, d.coolant), hot('coolant', C.hotAt(o, 'coolant')), { align: 0 }),
                 C.text('oil', R.x + R.w / 2, ty, tw, th, (d) => C.tempText(o, d.oil), hot('oil', C.hotAt(o, 'oil')), { align: 1 }));
         } else if (P('box3')) {
-            list.push(...box('lastB', R.x, y3, R.w, h3, Rd('box3').label), toneOf('box3', C.text('lastVal', R.x + 14, y3 + 36, R.w - 28, h3 - 46, Rd('box3').value, white, { align: 1 })));
+            list.push(...box('lastB', R.x, y3, R.w, h3, Rd('box3').label), toneOf('box3', C.fitText(C.text('lastVal', R.x + 14, y3 + 36, R.w - 28, h3 - 46, Rd('box3').value, white, { align: 1 }))));
         } else {
             list.push(...box('lastB', R.x, y3, R.w, h3, 'LAST SHIFT'),
                 C.text('lastGears', R.x + R.w - 120, y3 + 6, 106, 18, () => (score.last ? score.last.from + '-' + score.last.to : ''), lbl, { align: 1 }),

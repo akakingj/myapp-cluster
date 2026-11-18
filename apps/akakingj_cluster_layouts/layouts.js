@@ -149,28 +149,28 @@ const byId = (id) => LAYOUTS.find((l) => l.id === id) || LAYOUTS[0];
  * or diesel car (or the engine's focus); STRIP: only with Settings > Bottom strip: the cluster's own (the time's and
  * outside's places). tools/test_slots.js checks the table against what each layout draws.
  */
-const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm', 'leftDial', 'jdmCup'];
+const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm', 'leftDial', 'jdmCup', 'centreView'];
 // (0.36.1: a plug-in hybrid sets them too: Auto, the default, keeps each layout's own eDrive reading there)
 const ALWAYS = () => true, ENGINE = ALWAYS, STRIP = (o) => stripOn(o), ENGINE_STRIP = STRIP;
 const MAPFORM = (o) => o.centre === 'map' || (STRIP(o) && o.centre === 'stock');
 const DIALS = { gaugeSpeed: ALWAYS, gaugeRpm: ALWAYS }, STRIP2 = { infoA: ENGINE_STRIP, infoB: ENGINE_STRIP };
 const SLOTS = {
-    analog_sport: Object.assign({ infoMain: ENGINE }, DIALS, STRIP2),
+    analog_sport: Object.assign({ infoMain: ENGINE, centreView: (o) => !MAPFORM(o) }, DIALS, STRIP2),
     retro: Object.assign({}, DIALS, STRIP2),
     track: Object.assign({}, STRIP2),
     pulse: { infoMain: ENGINE },
     gt3: {}, m: {}, sport: {},
-    classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE }, DIALS),
+    classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE, centreView: (o) => !MAPFORM(o) }, DIALS),
     // (no readouts beside its dials; with the map, readouts 1 and 2 above it over the car's strip)
     // (0.41.0: the display between the dials, as 20's)
-    id6m: Object.assign({ infoMain: (o) => !MAPFORM(o) }, DIALS, STRIP2),
+    id6m: Object.assign({ infoMain: (o) => !MAPFORM(o), centreView: (o) => !MAPFORM(o) }, DIALS, STRIP2),
     // (0.40.0: the main readout under the speed, the boxes' first and last bars; with the map, readouts 1 and 2
     // above it over the car's strip)
     arc_tach: Object.assign({ infoMain: ALWAYS, infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o), jdmCup: (o) => !MAPFORM(o) }, DIALS),
     // (its left dial: the G meter, a speedometer, the tyres or the temperatures; not with the map or the stock centre)
     // (0.37.0: no readouts at the right beside the strip; with the map, readouts 1 and 2 above it over the car's strip)
     jdm2: Object.assign({ infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o), leftDial: (o) => (o.centre || 'info') === 'info' }, DIALS),
-    twin_cowl: Object.assign({}, DIALS, STRIP2, { infoLow: STRIP }),
+    twin_cowl: Object.assign({}, DIALS, STRIP2, { infoLow: STRIP, centreView: (o) => !MAPFORM(o) }),
     // (0.44.0: the display between the dials, as 20's; the arcs across the dials' feet)
     ko1: Object.assign({ infoMain: (o) => !MAPFORM(o) }, DIALS, STRIP2),
     ko2: Object.assign({ infoMain: (o) => !MAPFORM(o) }, DIALS, STRIP2),
@@ -223,6 +223,7 @@ function slotLabel(id, k, o) {
         if (ABOVE_MAP[id]) return k === 'infoA' ? 'Above the map: left' : 'Above the map: right';
         if (id === 'track') return k === 'infoA' ? 'Right column: top line' : 'Right column: second line';
     }
+    if (k === 'centreView') return 'Centre display';
     return (SLOT_LABELS[id] && SLOT_LABELS[id][k]) || null;
 }
 /** A readout's value for layout id: its own (slotsBy[id][k], when it is one of the setting's values), else the Settings'. */

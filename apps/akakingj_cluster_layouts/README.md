@@ -39,6 +39,11 @@ km/L), KO 2's the distance and the economy. A car that doesn't send them shows `
 trip computer is a place on the page (0.45.1: *Trip computer: line 1-3*): any readout there, or nothing; KO 1's bar
 follows its third line.
 
+**Centre display: speed or trip computer (0.46.0).** 20's, ID6 M, Old M and GM can show the trip computer in their
+centre display's big speed's place (Settings > Centre display, or on the page for each layout): three lines (GM: two),
+each a place on the page (*Trip computer: line 1-3*: any readout, or nothing), as designed the distance, the driving
+time and the average economy. With the speed shown, the lines' places are hidden on the page.
+
 ### KO 1 and KO 2 (0.44.0)
 
 Two pairs of round dials after the look of the mid 2020s' Korean saloons' screens (original drawings of the idea, not a

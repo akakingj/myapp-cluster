@@ -116,7 +116,8 @@ module.exports = {
     // (its own fuel gauge by the speedometer: the strip's fuel bar only with another reading there)
     stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
     // its own places, set on the page (layouts.js placesFor)
-    places: [{ key: 'footGauge', kind: 'gauge', label: "Gauge in the tach's foot" }],
+    // (0.46.0: and the trip computer's three lines, with Settings > Centre display: Trip computer)
+    places: [{ key: 'footGauge', kind: 'gauge', label: "Gauge in the tach's foot" }].concat(C.tripPlaces(3)),
 
     /*
      * Built around what the glass and the KOMBI keep (layout_common: the camera's cowl, the dark box where the
@@ -163,12 +164,17 @@ function centreDisplay(o, X, Y, W, H, gearC, elecTxt, stripped) {
             C.text('clock', X + 16, Y + 18, (W - 38) / 2, 30, C.clock, glowText, { align: 0 }),
             C.text('outside', X + W / 2 + 3, Y + 18, (W - 38) / 2, 30, (d) => C.outsideText(o, d.outside), glowText, { align: 1 }),
             C.flat('rule1', X + 24, Y + Math.round(62 * sy), W - 48, 2, 'lcdEdge'),
-            C.text('speedDigits', X, Y + Math.round(104 * sy), W, 140, (d) => C.speedText(o, d), glowText),
-            C.text('speedDigitsUnit', X, Y + Math.round(254 * sy), W, 22, C.speedUnit(o), lbl, { tracking: 0.12 }),
+        ].concat(C.tripShown(o)
+            // (Settings > Centre display: Trip computer, 0.46.0: its three lines in the speed's place)
+            ? C.tripRows(o, X + 14, Y + Math.round(80 * sy), W - 28, Math.round(220 * sy), 3, lbl, glowText, 'bold')
+            : [
+                C.text('speedDigits', X, Y + Math.round(104 * sy), W, 140, (d) => C.speedText(o, d), glowText),
+                C.text('speedDigitsUnit', X, Y + Math.round(254 * sy), W, 22, C.speedUnit(o), lbl, { tracking: 0.12 }),
+            ], [
             C.flat('rule2', X + 24, Y + Math.round(312 * sy), W - 48, 2, 'lcdEdge'),
             C.text('kwNow', X, Y + Math.round(338 * sy), W, 54, C.focus.power(o), (t, d) => (C.engineFocus(o) ? glowText(t) : C.isNum(d.kw) && d.kw < -0.3 ? { color: ['#3ddc84', 1], glow: ['#3ddc84', 0.3] } : elecTxt(t))),
             C.text('kwNowLbl', X, Y + Math.round(400 * sy), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
-        ];
+        ]);
     }
     return [
         { key: 'lcd', kind: 'panel', x: X, y: Y, w: W, h: H, params: { u_box: [20, 2, 0.5, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },

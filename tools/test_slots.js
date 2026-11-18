@@ -54,7 +54,8 @@ L.LAYOUTS.forEach((l) => {
 const KO = JSON.parse(fs.readFileSync(path.join(ROOT, 'kit', 'runtime', 'locales', 'ko.json'), 'utf8'));
 L.LAYOUTS.forEach((l) => (l.places || []).forEach((p) => check(l.id + ': its place ' + p.key + ' (' + p.kind + ') changes what it draws', () => {
     ['ice', 'phev'].forEach((vehicle) => {
-        const o = Object.assign({}, base, { vehicle, bottomStrip: 'stock', leftDial: 'temps' });
+        // (the trip computer's lines show with Settings > Centre display: Trip computer, 0.46.0)
+        const o = Object.assign({}, base, { vehicle, bottomStrip: 'stock', leftDial: 'temps', centreView: 'trip' });
         assert(!p.when || p.when(o), 'shows with the readings in the centre');
         const own = drawn(l.id, o);
         assert.strictEqual(drawn(l.id, Object.assign({}, o, { places: { [p.key]: 'auto' } })), own, 'auto: as designed');
@@ -67,6 +68,7 @@ L.LAYOUTS.forEach((l) => (l.places || []).forEach((p) => check(l.id + ': its pla
 })));
 check('all: whatever the car, every place the layout can have', () => {
     assert.deepStrictEqual(L.slotsFor('arc_tach', base, true), ['infoMain', 'infoA', 'infoB', 'gaugeSpeed', 'gaugeRpm', 'jdmCup']);
+    assert.deepStrictEqual(L.slotsFor('id6m', base, true), ['infoMain', 'infoA', 'infoB', 'gaugeSpeed', 'gaugeRpm', 'centreView']);
     assert.deepStrictEqual(L.slotsFor('m', base, true), []);
 });
 

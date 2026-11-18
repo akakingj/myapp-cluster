@@ -1117,7 +1117,7 @@
   "Distance, this trip": "이번 주행 거리",
   "Cost, this trip": "이번 주행 비용",
   "no trip yet": "주행 기록 없음",
-  "Trip computer": "트립 컴퓨터",
+  "Trip computer": "트립 창",
   "The first trip starts with the engine: every drive is counted, also while this screen is closed": "시동 시 기록이 시작됩니다. 이 화면을 닫아도 모든 주행을 기록합니다.",
   "The trip computer is off (Settings)": "트립 컴퓨터 꺼짐 (설정)",
   "Last 5 trips": "최근 주행 5회",
@@ -2777,5 +2777,7 @@
   "Clock (the time of day)": "시계 (현재 시각)",
   "Trip computer: line 1": "트립 창: 첫째 줄",
   "Trip computer: line 2": "트립 창: 둘째 줄",
-  "Trip computer: line 3": "트립 창: 셋째 줄"
+  "Trip computer: line 3": "트립 창: 셋째 줄",
+  "Centre display": "가운데 표시창",
+  "Centre display: speed or trip computer (20's, ID6 M, Old M, GM)": "가운데 표시창: 속도 또는 트립 창 (20's, ID6 M, Old M, GM)"
 }

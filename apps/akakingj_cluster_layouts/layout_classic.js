@@ -120,13 +120,18 @@ function display(o, X, Y, W, H, gear) {
         C.text('kwNow', X + 18, at(16), gear ? W - 110 : W - 36, hh(44), C.focus.power(o), amber, { align: gear ? 0 : 0.5 }),
         C.text('kwNowLbl', X + 18, at(64), W - 36, hh(17), C.focus.powerLabel(o, true), amberDim, { align: gear ? 0 : 0.5, tracking: 0.1 }),
         Object.assign(C.flat('lcdRule0', X + 16, at(96), W - 32, 2, 'lcdRule'), { z: 1 }),
-        C.text('speedDigits', X + 10, at(102) + Math.round((hh(150) - hS) / 2), W - 20, hS, (d) => C.speedText(o, d), amber),
-        C.text('speedDigitsUnit', X + 10, at(252), W - 20, hh(24), C.speedUnit(o), amberDim, { tracking: 0.2 }),
+    ].concat(C.tripShown(o)
+        // (Settings > Centre display: Trip computer, 0.46.0: its three lines in the speed's place)
+        ? C.tripRows(o, X + 14, at(104), W - 28, hh(180), 3, amberDim, amber, 'bold')
+        : [
+            C.text('speedDigits', X + 10, at(102) + Math.round((hh(150) - hS) / 2), W - 20, hS, (d) => C.speedText(o, d), amber),
+            C.text('speedDigitsUnit', X + 10, at(252), W - 20, hh(24), C.speedUnit(o), amberDim, { tracking: 0.2 }),
+        ], [
         Object.assign(C.flat('lcdRule1', X + 16, at(290), W - 32, 2, 'lcdRule'), { z: 1 }),
         // (a petrol or diesel car: the reading picked in Settings > Centre readout: bottom line, the coolant by default)
         engine || C.phevPick(o, 'infoLow') ? C.fitText(C.text('socTxt', X + 14, at(302), W - 28, hh(46), C.readout(o, o.infoLow || 'coolant', { w: W - 28, h: hh(46) }, true) || '', amber))
             : C.text('socTxt', X + 14, at(302), W - 28, hh(46), (d) => 'CHARGE ' + C.socText(d), amber),
-    ];
+    ]);
     if (gear) out.push(C.text('gear', X + W - 92, at(14), 74, hh(66), C.gearText, (t, d) => (C.gearText(d) === 'R' ? { color: [t.red, 1], glow: [t.red, 0.3] } : amber(t)), { align: 1 }));
     return out;
 }
@@ -136,6 +141,8 @@ module.exports = {
     title: 'Old M',
     stripFuel: false,   // (its own fuel gauge, in the speedometer)
     ownStripGauges: true,   // (the charge in its amber display: none of the strip's bars)
+    // its own places, set on the page: the trip computer's three lines (with Settings > Centre display: Trip computer)
+    places: C.tripPlaces(3),
     palette: pal,
     gearText: C.gearText,
 

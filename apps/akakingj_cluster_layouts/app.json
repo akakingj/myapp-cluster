@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.45.1",
+  "version": "0.46.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -801,6 +801,23 @@
         [
           "clock",
           "Clock (the time of day)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "centreView",
+      "label": "Centre display: speed or trip computer (20's, ID6 M, Old M, GM)",
+      "type": "choice",
+      "default": "speed",
+      "options": [
+        [
+          "speed",
+          "Speed"
+        ],
+        [
+          "trip",
+          "Trip computer"
         ]
       ],
       "section": "Readouts and gauges"

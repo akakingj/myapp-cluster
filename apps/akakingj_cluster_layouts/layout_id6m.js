@@ -113,6 +113,8 @@ module.exports = {
     gearText: C.gearText,
     stripGear: true,     // (the gear's white arc is part of the tach: kept over the car's own strip)
     ownStripGauges: true,   // (its own fuel gauge; no bars over the car's strip, which shows the ranges)
+    // its own places, set on the page: the trip computer's three lines (with Settings > Centre display: Trip computer)
+    places: C.tripPlaces(3),
 
     /*
      * Built round what the glass and the KOMBI keep (layout_common; tools/clearance.js): the camera's cowl between
@@ -154,10 +156,15 @@ function centreDisplay(o, X, Y, W, H) {
         C.text('clock', X + 16, Y + 18, (W - 38) / 2, 30, C.clock, white, { align: 0 }),
         C.text('outside', X + W / 2 + 3, Y + 18, (W - 38) / 2, 30, (d) => C.outsideText(o, d.outside), white, { align: 1 }),
         C.flat('rule1', X + 24, Y + Math.round(62 * sy), W - 48, 2, 'lcdEdge'),
-        C.text('speedDigits', X, Y + Math.round(104 * sy), W, 140, (d) => C.speedText(o, d), white),
-        C.text('speedDigitsUnit', X, Y + Math.round(254 * sy), W, 22, C.speedUnit(o), lbl, { tracking: 0.12 }),
+    ].concat(C.tripShown(o)
+        // (Settings > Centre display: Trip computer, 0.46.0: its three lines in the speed's place)
+        ? C.tripRows(o, X + 14, Y + Math.round(80 * sy), W - 28, Math.round(220 * sy), 3, lbl, white, 'bold')
+        : [
+            C.text('speedDigits', X, Y + Math.round(104 * sy), W, 140, (d) => C.speedText(o, d), white),
+            C.text('speedDigitsUnit', X, Y + Math.round(254 * sy), W, 22, C.speedUnit(o), lbl, { tracking: 0.12 }),
+        ], [
         C.flat('rule2', X + 24, Y + Math.round(312 * sy), W - 48, 2, 'lcdEdge'),
         C.text('kwNow', X, Y + Math.round(338 * sy), W, 54, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
         C.text('kwNowLbl', X, Y + Math.round(400 * sy), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
-    ];
+    ]);
 }

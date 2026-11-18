@@ -133,16 +133,21 @@ function display(o, X, Y, W, H, strip) {
     const out = [
         { key: 'lcd', kind: 'panel', x: X, y: Y, w: W, h: H, params: { u_box: [10, 2, 0.1, 1] }, colors: (t) => ({ top: t.lcd0, bottom: t.lcd1, border: t.lcdEdge }) },
         C.text('gear', X + 10, at(14), Math.round(W * 0.3), hh(44), C.gearText, (t, d) => (C.gearText(d) === 'R' ? { color: [t.red, 1], glow: [t.red, 0] } : ink(t)), { align: 0 }),
-        // (over the car's strip, which shows the gear: the speed in the display's middle, 0.44.0; else right of the gear)
-        strip ? C.text('speedDigits', X + 12, at(8), W - 24, hh(62), (d) => C.speedText(o, d), ink)
-            : C.text('speedDigits', X + Math.round(W * 0.3), at(8), Math.round(W * 0.7) - 12, hh(62), (d) => C.speedText(o, d), ink, { align: 1 }),
-        strip ? C.text('speedDigitsUnit', X + 12, at(72), W - 24, hh(16), C.speedUnit(o), inkDim, { tracking: 0.1 })
-            : C.text('speedDigitsUnit', X + Math.round(W * 0.3), at(72), Math.round(W * 0.7) - 12, hh(16), C.speedUnit(o), inkDim, { align: 1, tracking: 0.1 }),
+    ].concat(strip && C.tripShown(o)
+        // (Settings > Centre display: Trip computer, 0.46.0: two lines in the speed's place)
+        ? C.tripRows(o, X + 8, at(6), W - 16, hh(86), 2, inkDim, ink, 'bold', false)
+        : [
+            // (over the car's strip, which shows the gear: the speed in the display's middle, 0.44.0; else right of the gear)
+            strip ? C.text('speedDigits', X + 12, at(8), W - 24, hh(62), (d) => C.speedText(o, d), ink)
+                : C.text('speedDigits', X + Math.round(W * 0.3), at(8), Math.round(W * 0.7) - 12, hh(62), (d) => C.speedText(o, d), ink, { align: 1 }),
+            strip ? C.text('speedDigitsUnit', X + 12, at(72), W - 24, hh(16), C.speedUnit(o), inkDim, { tracking: 0.1 })
+                : C.text('speedDigitsUnit', X + Math.round(W * 0.3), at(72), Math.round(W * 0.7) - 12, hh(16), C.speedUnit(o), inkDim, { align: 1, tracking: 0.1 }),
+        ], [
         Object.assign(C.flat('lcdRule0', X + 8, at(96), W - 16, 2, 'lcdRule'), { z: 1 }),
         Object.assign(C.flat('lcdRule1', X + 8, at(156), W - 16, 2, 'lcdRule'), { z: 1 }),
         C.text('clock', X + 10, at(170), Math.round((W - 30) / 2), hh(36), C.clock, ink, { align: 0 }),
         C.text('outside', X + Math.round(W / 2) + 4, at(170), Math.round((W - 30) / 2), hh(36), (d) => C.outsideText(o, d.outside), ink, { align: 1 }),
-    ];
+    ]);
     if (strip) out.push(C.fitText(C.text('lcdLow', X + 10, at(108), W - 20, hh(36), C.readout(o, o.infoLow || 'coolant', { w: W - 20, h: hh(36) }, true) || '', ink)));
     else {
         out.push(B.icon('lcdFuelIcon', X + 12, at(112), hh(28), hh(28), 'fuel', 'lcdInk'),
@@ -156,6 +161,8 @@ module.exports = {
     title: 'GM',
     // (its own fuel gauge, the cowl's right one - unless Small gauge in the speedometer puts another reading there)
     stripFuel: (o) => { const g = C.gaugeOf(o, 'speed'); return !!g && g.key !== 'fuel'; },
+    // its own places, set on the page: the trip computer's two lines (with Settings > Centre display: Trip computer)
+    places: C.tripPlaces(2),
     palette: pal,
     gearText: C.gearText,
 
