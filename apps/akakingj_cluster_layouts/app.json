@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -64,7 +64,9 @@
       "statusPowerRelativHybrid": "rs"
     },
     "de.bmw.infotainment.KombiIF": {
-      "_optional": "the car's power distribution figures, and its fuel and electric ranges",
+      "_optional": "the car's power distribution figures, its fuel and electric ranges, and its trip computer (average fuel economy, distance, driving time)",
+      "statusBordcomputerAverage": "rs",
+      "statusBordcomputerTravelData": "rs",
       "statusDisplayElectricalPowerDistribution": "rs",
       "statusRangeTankStatus": "rs",
       "displayRangeElectricVehicle": "rs"
@@ -398,7 +400,8 @@
       "section": "Display"
     },
     {
-      "key": "demo", "profile": "demo",
+      "key": "demo",
+      "profile": "demo",
       "label": "Demo data",
       "type": "choice",
       "default": "off",
@@ -487,6 +490,18 @@
         [
           "gear",
           "Gear (D / S / M and its number)"
+        ],
+        [
+          "avgFuel",
+          "Average fuel economy (the car's trip computer)"
+        ],
+        [
+          "trip",
+          "Trip distance (the car's trip computer)"
+        ],
+        [
+          "tripTime",
+          "Driving time (the car's trip computer)"
         ]
       ],
       "section": "Readouts and gauges"
@@ -564,6 +579,18 @@
         [
           "gear",
           "Gear (D / S / M and its number)"
+        ],
+        [
+          "avgFuel",
+          "Average fuel economy (the car's trip computer)"
+        ],
+        [
+          "trip",
+          "Trip distance (the car's trip computer)"
+        ],
+        [
+          "tripTime",
+          "Driving time (the car's trip computer)"
         ]
       ],
       "section": "Readouts and gauges"
@@ -641,6 +668,18 @@
         [
           "gear",
           "Gear (D / S / M and its number)"
+        ],
+        [
+          "avgFuel",
+          "Average fuel economy (the car's trip computer)"
+        ],
+        [
+          "trip",
+          "Trip distance (the car's trip computer)"
+        ],
+        [
+          "tripTime",
+          "Driving time (the car's trip computer)"
         ]
       ],
       "section": "Readouts and gauges"
@@ -718,6 +757,18 @@
         [
           "gear",
           "Gear (D / S / M and its number)"
+        ],
+        [
+          "avgFuel",
+          "Average fuel economy (the car's trip computer)"
+        ],
+        [
+          "trip",
+          "Trip distance (the car's trip computer)"
+        ],
+        [
+          "tripTime",
+          "Driving time (the car's trip computer)"
         ]
       ],
       "section": "Readouts and gauges"
@@ -788,7 +839,11 @@
     {
       "key": "gScale",
       "profile": "gMax",
-      "profileMap": {"1": "1", "1.5": "1.5", "2": "2"},
+      "profileMap": {
+        "1": "1",
+        "1.5": "1.5",
+        "2": "2"
+      },
       "label": "JDM 2: G meter size",
       "type": "choice",
       "default": "1.5",
@@ -811,7 +866,10 @@
     {
       "key": "gFlipLat",
       "profile": "gLat",
-      "profileMap": {"out": "off", "in": "on"},
+      "profileMap": {
+        "out": "off",
+        "in": "on"
+      },
       "label": "JDM 2: G meter, swap left / right",
       "type": "choice",
       "default": "off",
@@ -830,7 +888,10 @@
     {
       "key": "gFlipLong",
       "profile": "gLong",
-      "profileMap": {"top": "off", "bottom": "on"},
+      "profileMap": {
+        "top": "off",
+        "bottom": "on"
+      },
       "label": "JDM 2: G meter, accelerating on top",
       "type": "choice",
       "default": "off",
@@ -1299,6 +1360,31 @@
       "section": "Units and clock"
     },
     {
+      "key": "econUnit",
+      "label": "Fuel economy unit",
+      "type": "choice",
+      "default": "auto",
+      "options": [
+        [
+          "auto",
+          "As the car's trip computer"
+        ],
+        [
+          "kml",
+          "km/L"
+        ],
+        [
+          "l100",
+          "L/100km"
+        ],
+        [
+          "mpg",
+          "mpg (US)"
+        ]
+      ],
+      "section": "Units and clock"
+    },
+    {
       "key": "pressUnit",
       "profile": "pressUnit",
       "label": "Pressure unit",
@@ -1347,7 +1433,8 @@
       "section": "Units and clock"
     },
     {
-      "key": "timeZone", "profile": "timeZone",
+      "key": "timeZone",
+      "profile": "timeZone",
       "label": "Time zone (the clock)",
       "type": "choice",
       "default": "utc+9",
@@ -1408,7 +1495,8 @@
       "section": "Units and clock"
     },
     {
-      "key": "clock", "profile": "clock",
+      "key": "clock",
+      "profile": "clock",
       "label": "Clock",
       "type": "choice",
       "default": "12",
@@ -1451,7 +1539,8 @@
       "profile": "engine"
     },
     {
-      "key": "tankLitres", "profile": "tankLitres",
+      "key": "tankLitres",
+      "profile": "tankLitres",
       "label": "Fuel tank size",
       "type": "number",
       "unit": "L",
@@ -1515,7 +1604,8 @@
       "section": "Car"
     },
     {
-      "key": "eFull", "profile": "eFull",
+      "key": "eFull",
+      "profile": "eFull",
       "label": "Electric range when full (until the car's own is found)",
       "type": "number",
       "unit": "mi",
@@ -1538,7 +1628,24 @@
       ],
       "section": "Car"
     },
-    {"key": "skin", "label": "Skin", "type": "choice", "default": "classic", "options": [["classic", "Classic"], ["idrive7", "iDrive 7"]], "profile": "skin", "section": "Display"}
+    {
+      "key": "skin",
+      "label": "Skin",
+      "type": "choice",
+      "default": "classic",
+      "options": [
+        [
+          "classic",
+          "Classic"
+        ],
+        [
+          "idrive7",
+          "iDrive 7"
+        ]
+      ],
+      "profile": "skin",
+      "section": "Display"
+    }
   ],
   "config": {
     "scaling": {

@@ -26,16 +26,26 @@ digits every frame, and the battery's power the moment eDrive Live reads it (it 
 reading at once and this app watches for it, instead of a quarter-second file cycle and a half-second scan). The
 battery's own pace sets the limit: its current answers 10-20 times a second over diagnostics.
 
+### The car's trip computer (0.45.0)
+
+Every readout place (Readout 1 / 2, the main readout, the bottom line, and each layout's own readout places on the page)
+can show the car's own trip computer: **Average fuel economy**, **Trip distance** and **Driving time** - read-only,
+from the cluster's KombiIF (`statusBordcomputerAverage`: trip 1's average economy and the unit the car shows it in;
+`statusBordcomputerTravelData`: the distance and the driving time; as Live Data reads them), every 15 s and on each
+change. **Settings > Fuel economy unit**: as the car's trip computer (the default; km/L with km/h, mpg with mph while
+the car hasn't said), km/L, L/100km or mpg (US). KO 1's display shows all three (and the economy as a bar, 0 to 30
+km/L), KO 2's the distance and the economy. A car that doesn't send them shows `--`.
+
 ### KO 1 and KO 2 (0.44.0)
 
 Two pairs of round dials after the look of the mid 2020s' Korean saloons' screens (original drawings of the idea, not a
 copy of any one), their colours following the drive mode: comfort the speedometer blue and the tach amber, ECO PRO both
 teal, sport both red under a bright bezel. **KO 1** is digital: no needles, each dial a dark disc with a glowing arc
 from its start to the reading (in ECO PRO a fan of fine slats over the face) and the reading in large thin figures;
-between the dials a display as 20's with readouts 1 and 2, the main readout large and the boost and timing (a
-plug-in hybrid: the electric range and charge). **KO 2** is analog: thin numerals, fine ticks, a slim needle, the face
-tinted and lit along its edge to the needle; between the dials 20's display (the speed in figures, the main
-readout). Both have a thin arc across each dial's foot: the fuel (E to F, with the range) under the speedometer, the
+between the dials a display as 20's with readouts 1 and 2, the car's trip computer (distance, driving time, average
+fuel economy with a bar; 0.45.0) and the main readout. **KO 2** is analog: thin numerals, fine ticks, a slim needle, the face
+tinted and lit along its edge to the needle; between the dials 20's display (the speed in figures, the trip
+distance and average economy, the main readout). Both have a thin arc across each dial's foot: the fuel (E to F, with the range) under the speedometer, the
 coolant (C to H; a plug-in hybrid's charge, 0 to 100) under the tach; Settings > Speedometer gauge / Tach gauge (or
 the page) put another reading in either. Shaders: BAND_FS (KO 1's arcs, both feet), RING_FS (KO 1's face and rim),
 DIAL_FS (KO 2's dials, as 20's). 0.44.0 also puts GM's speed in the middle of its display (the car's strip shows the

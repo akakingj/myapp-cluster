@@ -143,6 +143,23 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         ['50'].forEach((t) => assert(texts.indexOf(t) >= 0, t + ' in ' + JSON.stringify(texts)));
         assert(texts.indexOf('D3') < 0, 'no second gear over the strip');
     });
+    // (0.45.0) the car's trip computer (KombiIF): KO 1's display shows its distance, driving time and average economy,
+    // in the car's unit (l/100 km here) or Settings > Fuel economy unit's
+    S.layout = 'ko1'; changes.forEach((f) => f('layout', 'ko1'));
+    handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 85, speedAverage1BC1: 463, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_L_S_100KM' });
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 2, rideDurationMinutes: 30, wayPassed: 126 });
+    await sleep(700);
+    check('the trip computer: KO 1 shows the distance, the driving time and the average economy', () => {
+        const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
+        ['78 mi', '2:30', '8.5 L/100km'].forEach((t) => assert(texts.indexOf(t) >= 0, t + ' in ' + JSON.stringify(texts)));
+    });
+    ctx.settings.set('econUnit', 'kml');
+    await sleep(300);
+    check('Fuel economy unit km/L: 100 / 8.5', () => assert(eng()._pieces().some((p) => p.text === '11.8 km/L')));
+    ctx.settings.set('econUnit', 'auto');
+    handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 65535 });
+    S.layout = 'analog_sport'; changes.forEach((f) => f('layout', 'analog_sport'));
+    await sleep(300);
     check('a colour change sends uniforms only', () => {
         client.reset();
         ctx.settings.set('look', 'sport');

@@ -211,7 +211,7 @@ const SLOT_LABELS = {
     twin_cowl: { infoA: 'Centre display: bottom left', infoB: 'Centre display: bottom right', infoLow: 'Centre display: under the speed',
         gaugeSpeed: 'Small gauge between the dials: right', gaugeRpm: 'Small gauge between the dials: left' },
     track: { infoA: 'Under the speed: left', infoB: 'Under the speed: right' },
-    ko1: { infoA: 'Centre display: top left', infoB: 'Centre display: top right', infoMain: 'Centre display: the large reading',
+    ko1: { infoA: 'Centre display: top left', infoB: 'Centre display: top right', infoMain: 'Centre display: bottom',
         gaugeSpeed: 'Arc under the speedometer', gaugeRpm: 'Arc under the tach' },
     ko2: { infoA: 'Centre display: top left', infoB: 'Centre display: top right', infoMain: 'Centre display: under the speed',
         gaugeSpeed: 'Arc under the speedometer', gaugeRpm: 'Arc under the tach' },

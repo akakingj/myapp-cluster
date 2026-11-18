@@ -9,6 +9,8 @@
  *   BasicDataSet.basicDataSet: gearbox oil
  *   Efficiencytainment2.statusBatteryTemperature: the battery's temperature (avg / min / max)
  *   KombiIF.statusDisplayElectricalPowerDistribution: the car's power distribution figures
+ *   KombiIF.statusBordcomputerAverage / statusBordcomputerTravelData: the car's own trip computer (trip 1's average
+ *     fuel economy in the unit the car shows it, the distance and the driving time; as Live Data reads them), read-only
  *   the engine unit over UDS (config.dme, as M Vitals reads it): intake air, fuel pressures (high, low), boost
  *     target and actual, ignition timing; the gearbox unit: its oil temperature
  * (No xDrive split: neither the car's split signal nor the transfer case's front torque gave usable readings on the
@@ -149,6 +151,9 @@ function rangesOf(v) {
     delete out.fuelWhole;
     return out;
 }
+
+/* the trip computer's fuel economy unit (KombiIF statusUnitOfMeasurementConsumptionBC, by name or number) */
+const CONS_UNITS = { VERBRAUCH_IN_L_S_100KM: 'l100', VERBRAUCH_IN_MPG_UK: 'mpguk', VERBRAUCH_IN_MPG_US: 'mpg', VERBRAUCH_IN_KM_S_L: 'kml', 1: 'l100', 2: 'mpguk', 3: 'mpg', 4: 'kml' };
 
 /** Find objects holding `key` anywhere in a signal's value. */
 function entries(v, key, out) {
@@ -368,6 +373,20 @@ function startData(ctx, opts) {
     }, 'units', { pollMs: 60000 });
     watch('de.bmw.infotainment.KombiIF', {
         statusRangeTankStatus: (v) => { fes('statusRangeTankStatus')(v); pickRanges(v); },
+        // the trip computer (0.45.0): trip 1's average fuel economy, tenths, in the unit the car's trip computer
+        // shows (l/100 km, km/l, mpg); 65535 (no value) and 0 (nothing driven yet) left out
+        statusBordcomputerAverage: (v) => {
+            fes('statusBordcomputerAverage')(v);
+            const c = numAt(v, 'consumptionAverage1BC1'), u = one(v, 'statusUnitOfMeasurementConsumptionBC'), n = u && typeof u === 'object' ? (u.name || u.value) : u;
+            if (c !== null && c > 0) { put('avgCons', c / 10); x.avgConsUnit = CONS_UNITS[n] || x.avgConsUnit || null; }
+        },
+        // the distance (km) and the driving time on the trip computer
+        statusBordcomputerTravelData: (v) => {
+            fes('statusBordcomputerTravelData')(v);
+            const km = numAt(v, 'wayPassed'), h = numAt(v, 'rideDurationHours'), m = one(v, 'rideDurationMinutes');
+            if (km !== null) put('tripKm', km);
+            if (h !== null && isNum(m) && m >= 0 && m < 60) put('tripMin', h * 60 + m);
+        },
         // the cluster's own electric range (in this car's catalog), in the unit the cluster shows: miles on a car
         // set to miles (read as km it came out 1.6 times too low), so by the app's speed unit; kept here in km.
         // (Its displayRangeMaximum is the scale's end, not a range.)
@@ -586,6 +605,9 @@ function startData(ctx, opts) {
             ['FL', 'FR', 'RL', 'RR'].forEach((k) => { if (fresh('tyreP' + k, 60000)) o.tyres.p[k] = x['tyreP' + k]; if (fresh('tyreT' + k, 60000)) o.tyres.t[k] = x['tyreT' + k]; });
             ['steer', 'yaw', 'outside', 'gearbox', 'battTemp', 'battMin', 'battMax', 'pdDrive', 'pdClimate', 'pdSeats', 'iat', 'hpfp', 'lpfp', 'timing', 'boostTarget', 'boostActual']
                 .forEach((k) => { if (!d.demo && fresh(k, 60000)) o[k] = x[k]; });
+            // the trip computer (read every 15 s and on its notices: kept 2 minutes)
+            ['avgCons', 'tripKm', 'tripMin'].forEach((k) => { if (!d.demo && fresh(k, 120000)) o[k] = x[k]; });
+            if (isNum(o.avgCons)) o.avgConsUnit = x.avgConsUnit;
             // boost: the engine unit's (fast, while a layout wants it), else the car's sport display signal
             if (!isNum(o.boostActual) && !d.demo && fresh('boostCar', 5000)) o.boostActual = x.boostCar;
             // (the engine unit's only: the car's pedal signal's scaling is unconfirmed - Redline saw 60-96 % at a light
@@ -642,6 +664,7 @@ function demo(d) {
         outside: 9, gearbox: 72 + 4 * Math.sin(t / 50), iat: 34 + 6 * Math.sin(t / 20), hpfp: 50 + rpm / 40, lpfp: 5.2 + 0.2 * Math.sin(t),
         timing: 18 - rpm / 800, pedal: Math.max(0, Math.min(100, (isNum(d.torque) ? d.torque : 40) / 4.2)), throttle: Math.max(0, Math.min(100, (isNum(d.torque) ? d.torque : 40) / 4.6 + 3)), boostTarget: Math.max(0, (rpm - 1500) / 4000), boostActual: Math.max(0, (rpm - 1600) / 4100),
         battTemp: 27, battMin: 25, battMax: 29, soc: 64, kw: -12 + 25 * Math.sin(t / 7), pdDrive: 60, pdClimate: 25, pdSeats: 15,
+        avgCons: 11.7, avgConsUnit: 'kml', tripKm: 126, tripMin: 150,
         erange: 29, frange: 520, fuelLevel: 38,
         tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } },
     };

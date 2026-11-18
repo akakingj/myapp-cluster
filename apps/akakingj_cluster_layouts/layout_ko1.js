@@ -5,8 +5,8 @@
  * its start to the reading, the reading in large thin figures in its middle, and a thin arc across its open foot
  * (the speedometer's the fuel, E to F, with the fuel range; the tach's the coolant, C to H - on a plug-in hybrid the
  * battery's charge; Settings > Speedometer gauge / Tach gauge, or the page, put another reading in either). Between
- * the dials a display as 20's: readouts 1 and 2 at its top, the main readout large, and the boost and timing (a plug-in
- * hybrid: the electric range and charge) under it.
+ * the dials a display as 20's: readouts 1 and 2 at its top, the car's trip computer (distance, driving time, average
+ * fuel economy) and the main readout.
  *
  * The colours follow the drive mode (Settings > Colours): comfort the speedometer's arc blue and the tach's amber, ECO
  * PRO both teal and the arc a fan of fine slats over the dial's face, sport both red, wider, under a bright rim. All
@@ -141,32 +141,47 @@ function dial(o, which, cx, cy, R) {
 }
 
 /*
- * The display between the dials (as 20's): readouts 1 and 2 at its top, the main readout large in its middle with its
- * name, then the boost and the timing (a plug-in hybrid's electric range and charge).
+ * The display between the dials (as 20's): readouts 1 and 2 at its top, then the car's own trip computer (0.45.0, as
+ * the screens KO is drawn after: the distance, the driving time and the average fuel economy, with a bar of it, in the
+ * unit Settings > Fuel economy unit sets) and the main readout under it. KO 2's: the speed in figures first, then the
+ * distance and the average economy.
  */
 function centre(o, X, Y, W, H, look) {
-    const sy = H / 446, at = (y) => Y + Math.round(y * sy);
+    const sy = H / 446, at = (y) => Y + Math.round(y * sy), hh = (h) => Math.round(h * sy);
     const kw = (t, d) => (C.engineFocus(o) || C.phevPick(o, 'infoMain') ? white(t) : C.isNum(d.kw) && d.kw < -0.3 ? { color: ['#3ddc84', 1], glow: ['#3ddc84', 0.2] } : { color: [t.ev, 1], glow: [t.ev, 0.2] });
-    return [
+    // a row of the trip computer: its name at the left, its figures at the right
+    const row = (k, y, h, name, value) => [
+        // (a space before the name: a capital's stem starts at the box's very edge, half a pixel of it cut off there)
+        C.text(k + 'Lbl', X + 16, at(y) + Math.round(hh(h) * 0.22), Math.round(W * 0.3), Math.round(hh(h) * 0.6), ' ' + name, lbl, { align: 0, tracking: 0.06 }),
+        C.text(k, X + Math.round(W * 0.3), at(y), W - Math.round(W * 0.3) - 22, hh(h), value, white, { align: 1 }),
+    ];
+    const head = [
         { key: 'lcd', kind: 'panel', x: X, y: Y, w: W, h: H, params: { u_box: [18, 2, 0.4, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },
         C.text('clock', X + 18, at(20), (W - 40) / 2, 30, C.clock, white, { align: 0 }),
         C.text('outside', X + W / 2 + 2, at(20), (W - 40) / 2, 30, (d) => C.outsideText(o, d.outside), white, { align: 1 }),
-        C.flat('rule1', X + 22, at(68), W - 44, 2, 'lcdEdge'),
-    ].concat(look === 'ko2' ? [
+        C.flat('rule1', X + 22, at(66), W - 44, 2, 'lcdEdge'),
+    ];
+    if (look === 'ko2') {
         // (KO 2's dials are analog: the speed in figures here, as 20's)
-        C.text('speedDigits', X, at(104), W, Math.round(132 * sy), (d) => C.speedText(o, d), white),
-        C.text('speedDigitsUnit', X, at(246), W, 22, C.speedUnit(o), lbl, { tracking: 0.12 }),
-        C.flat('rule2', X + 22, at(300), W - 44, 2, 'lcdEdge'),
-        C.text('kwNow', X, at(326), W, Math.round(52 * sy), C.focus.power(o), kw),
-        C.text('kwNowLbl', X, at(392), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
-    ] : [
-        C.text('kwNow', X, at(108), W, Math.round(96 * sy), C.focus.power(o), kw),
-        C.text('kwNowLbl', X, at(216), W, 20, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
-        C.flat('rule2', X + 22, at(270), W - 44, 2, 'lcdEdge'),
-        C.text('koRangeLbl', X + 18, at(298), (W - 40) / 2, 16, C.focus.rangeLabel(o), lbl, { align: 0, tracking: 0.1 }),
-        C.text('koRange', X + 18, at(320), (W - 40) / 2, 34, C.focus.range(o), white, { align: 0 }),
-        C.text('koChargeLbl', X + W / 2 + 2, at(298), (W - 40) / 2, 16, C.focus.chargeLabel(o), lbl, { align: 1, tracking: 0.1 }),
-        C.text('koCharge', X + W / 2 + 2, at(320), (W - 40) / 2, 34, C.focus.charge(o), white, { align: 1 }),
+        return head.concat([
+            C.text('speedDigits', X, at(84), W, hh(96), (d) => C.speedText(o, d), white),
+            C.text('speedDigitsUnit', X, at(184), W, 20, C.speedUnit(o), lbl, { tracking: 0.12 }),
+            C.flat('rule2', X + 22, at(218), W - 44, 2, 'lcdEdge'),
+        ], row('koTrip', 230, 34, 'TRIP', (d) => C.tripText(o, d)), row('koAvg', 270, 34, 'AVG', (d) => C.econText(o, d)), [
+            C.flat('rule3', X + 22, at(316), W - 44, 2, 'lcdEdge'),
+            C.text('kwNow', X, at(330), W, hh(50), C.focus.power(o), kw),
+            C.text('kwNowLbl', X, at(388), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+        ]);
+    }
+    const P = 's';
+    return head.concat([
+        C.text('koTripHead', X, at(80), W, 16, 'TRIP COMPUTER', lbl, { tracking: 0.14 }),
+    ], row('koTrip', 104, 36, 'TRIP', (d) => C.tripText(o, d)), row('koTime', 144, 36, 'TIME', (d) => C.tripTimeText(d)), row('koAvg', 184, 36, 'AVG', (d) => C.econText(o, d)), [
+        // (the average economy as a bar, 0 to 30 km/L, in the speedometer's arc colours)
+        C.bar('koAvgBar', X + 18, at(230), W - 36, 16, C.econFrac, (t) => ({ track: t[P + 'Track'], fill0: t[P + 'Arc0'], fill1: t[P + 'Arc1'], redc: t.red, tip: t[P + 'Arc1'], tick: t.dim, num: t.dim })),
+        C.flat('rule2', X + 22, at(268), W - 44, 2, 'lcdEdge'),
+        C.text('kwNow', X, at(284), W, hh(70), C.focus.power(o), kw),
+        C.text('kwNowLbl', X, at(362), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
     ]);
 }
 

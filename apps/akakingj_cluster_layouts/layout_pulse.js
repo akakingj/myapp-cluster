@@ -47,7 +47,8 @@ function rpmBar(o, key, x, y, w, h, segments) {
 /** A reading with its label above it, both large: label lh px, a 2 px gap, then the value h px. */
 const up = (key, x, y, w, h, value, label, colors, lh) => [
     C.text(key + 'Lbl', x, y, w, lh || 22, label, lbl, { tracking: 0.12 }),
-    C.text(key, x, y + (lh || 22) + 2, w, h, value, colors),
+    // (its figures made to fit the widest a readout gives: 0.45.0's fuel economy in L/100km)
+    C.fitText(C.text(key, x, y + (lh || 22) + 2, w, h, value, colors)),
 ];
 const socBar = (o, key, x, y, w, h) => C.bar(key, x, y, w, h, C.focus.bar(o), (t, d) => {
     // (the charge red when low: layout_common.socLow)

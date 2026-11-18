@@ -315,6 +315,29 @@ const numOrOff = (f) => (o, d) => (d.engineOn === false ? 'OFF' : f(o, d));
  * the temperatures and the pedal, whose figures carry theirs); frac: 0..1 for a bar under it; needs: what the engine
  * unit must read for it (data.js).
  */
+/*
+ * The car's own trip computer (0.45.0; data.js: KombiIF, read-only): trip 1's average fuel economy in the unit the car
+ * shows it (avgConsUnit: 'l100', 'kml', 'mpg' US, 'mpguk'), its distance (km) and driving time (minutes). Settings > Fuel
+ * economy unit: as the car's trip computer (Auto; km/L with km/h, mpg with mph while the car hasn't said), or km/L,
+ * L/100km, mpg. Each unit is its own number over litres a 100 km, so one turns into another as 100 / x does.
+ */
+const ECON_UNITS = { kml: 'km/L', l100: 'L/100km', mpg: 'mpg', mpguk: 'mpg' };
+const ECON_K = { l100: 1, kml: 100, mpg: 235.215, mpguk: 282.481 };   // (x to l/100 km: K / x, l100 itself)
+const econUnitOf = (o, d) => { const u = o && o.econUnit; return ECON_K[u] ? u : d && ECON_K[d.avgConsUnit] ? d.avgConsUnit : o && o.speedUnit === 'mph' ? 'mpg' : 'kml'; };
+/** The average fuel economy in unit u (econUnitOf), or null. */
+function econ(o, d) {
+    if (!d || !isNum(d.avgCons) || d.avgCons <= 0) return null;
+    const src = ECON_K[d.avgConsUnit] ? d.avgConsUnit : 'l100', u = econUnitOf(o, d);
+    const l100 = src === 'l100' ? d.avgCons : ECON_K[src] / d.avgCons, v = u === 'l100' ? l100 : ECON_K[u] / l100;
+    return isNum(v) && v > 0 && v < 1000 ? { v, u } : null;
+}
+const econNum = (o, d) => { const e = econ(o, d); return e ? e.v.toFixed(1) : '--'; };
+const econText = (o, d) => { const e = econ(o, d); return e ? e.v.toFixed(1) + ' ' + ECON_UNITS[e.u] : '--'; };
+const tripText = (o, d) => distText(o, d.tripKm);
+const tripTimeText = (d) => (isNum(d.tripMin) ? Math.floor(d.tripMin / 60) + ':' + String(Math.round(d.tripMin % 60)).padStart(2, '0') : '--');
+/** km/L for a bar (0..30) */
+const econFrac = (d) => { const e = econ({ econUnit: 'kml' }, d); return e ? Math.max(0, Math.min(1, e.v / 30)) : 0; };
+
 const READOUTS = {
     iat: { short: 'IAT', long: 'INTAKE AIR', num: tempOf('iat'), frac: (d) => (isNum(d.iat) ? d.iat / 80 : 0), needs: ['iat'] },
     gearbox: { short: 'TRANS', long: 'TRANS OIL', num: tempOf('gearbox'), frac: (d) => (isNum(d.gearbox) ? (d.gearbox - 40) / 90 : 0), needs: ['gearbox'] },
@@ -333,6 +356,10 @@ const READOUTS = {
     timing: { short: 'TIM', long: 'TIMING', num: (o, d) => timingText(d), frac: (d) => (isNum(d.timing) ? (d.timing + 10) / 50 : 0), needs: ['timing'] },
     // the gear as the selector has it: P R N, or D / S / M with its number (gearText; '-' while unknown)
     gear: { short: 'GEAR', long: 'GEAR', num: (o, d) => gearText(d), frac: (d) => (isNum(d.gear) && d.gear > 0 ? d.gear / 8 : 0) },
+    // the car's trip computer (0.45.0): its average fuel economy (with its unit), distance and driving time
+    avgFuel: { short: 'AVG', long: 'AVG ECONOMY', num: econText, frac: econFrac },
+    trip: { short: 'TRIP', long: 'TRIP', num: tripText, frac: (d) => (isNum(d.tripKm) ? Math.min(1, d.tripKm / 1000) : 0) },
+    tripTime: { short: 'TIME', long: 'DRIVE TIME', num: (o, d) => tripTimeText(d), frac: (d) => (isNum(d.tripMin) ? Math.min(1, d.tripMin / 600) : 0) },
 };
 const readoutOf = (k) => READOUTS[k] || null;
 /*
@@ -409,8 +436,8 @@ function fitText(p, fam, room) {
 /** The readings at their widest figures (three-figure temperatures, the most negative timing and boost ...): what a
  * readout's box is sized to hold (layouts.js), and what tools/check_fit.js measures every text with. */
 const READOUT_SAMPLES = [
-    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8 },
-    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P' },
+    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 9999, tripMin: 5999 },
+    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P', avgCons: 99.9, avgConsUnit: 'kml', tripKm: 0, tripMin: 0 },
 ];
 const nameOf = (r, o, long) => { const n = long ? r.long : r.short; return typeof n === 'function' ? n(o) : n; };
 /** A readout on one line, its name first: 'IAT 31°', 'BST 14.5' ('INTAKE AIR 31°', 'BOOST 14.5 psi' where it
@@ -576,5 +603,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

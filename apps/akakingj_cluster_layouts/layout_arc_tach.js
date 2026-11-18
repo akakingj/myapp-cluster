@@ -56,7 +56,7 @@ function tach(o, cx, cy, R, withGear) {
         C.text('speedDigitsUnit', cx + Math.round(0.02 * R), cy + Math.round(0.54 * R), Math.round(0.5 * R), Math.round(0.07 * R), C.speedUnit(o), lbl, { align: 1, tracking: 0.12 }),
         C.text('rpmUnit', cx + Math.round(0.12 * R), cy + Math.round(0.65 * R), Math.round(0.4 * R), Math.round(0.055 * R), (d) => (evOff(d) ? C.POWER_UNIT : 'x1000 rpm'), (t, d) => (evOff(d) ? elecTxt(t) : lbl(t)), { align: 1, tracking: 0.1 }),
         // the main readout above the hub
-        C.text('kwNow', cx - Math.round(0.36 * R), cy - Math.round(0.46 * R), Math.round(0.72 * R), Math.round(0.15 * R), C.focus.power(o), (t, d) => (C.engineFocus(o) ? lit(t) : kwOf(d) < -0.3 ? { color: [t.regen, 1], glow: [t.regen, 0.3] } : elecTxt(t))),
+        C.fitText(C.text('kwNow', cx - Math.round(0.36 * R), cy - Math.round(0.46 * R), Math.round(0.72 * R), Math.round(0.15 * R), C.focus.power(o), (t, d) => (C.engineFocus(o) ? lit(t) : kwOf(d) < -0.3 ? { color: [t.regen, 1], glow: [t.regen, 0.3] } : elecTxt(t))), 'wide'),
         C.text('kwNowLbl', cx - Math.round(0.3 * R), cy - Math.round(0.29 * R), Math.round(0.6 * R), Math.round(0.055 * R), C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
     ];
     // (the gear: Settings > Arc tach: the gear in the arc; not twice, with the gear as the main readout too)
@@ -293,7 +293,7 @@ function dash(o) {
         C.text('spUnit', sp.x + sp.w - 112, sp.y + 112, 90, 30, C.speedUnit(o), grn, { align: 0, z: 22 }));
     // the main readout under the display (Settings > Main readout; a plug-in hybrid's battery power)
     const pv = C.focus.power(o), pl = C.focus.powerLabel(o, true);
-    if (pv) list.push(Object.assign(C.text('kwNow', sp.x + 24, sp.y + 202, sp.w - 48, 30, (d) => (typeof pv === 'function' ? pv(d) : pv) + (pl ? '   ' + pl : ''), ink), { z: 22 }));
+    if (pv) list.push(Object.assign(C.fitText(C.text('kwNow', sp.x + 24, sp.y + 202, sp.w - 48, 30, (d) => (typeof pv === 'function' ? pv(d) : pv) + (pl ? '   ' + pl : ''), ink), 'wide'), { z: 22 }));
     // the boxes: left a reading and the fuel, right the coolant and a reading (each of the four set on the page:
     // Settings > Small gauge in the speedometer / in the tach for the outer two, the layout's places for the inner)
     const [left, fuel, cool, right] = boxBars(o);

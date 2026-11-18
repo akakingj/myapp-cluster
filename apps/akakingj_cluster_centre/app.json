@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_centre",
   "title": "AK Cluster Centre",
   "description": "Pages of engine, gearbox and eDrive data, warm-up, turbo cool-down, a shift light and a 0-60 timer in the centre of the factory cluster, drawn by the cluster itself",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCC",
@@ -65,7 +65,9 @@
     },
     "de.bmw.infotainment.vehicle.Vehicle": { "statusNewCurrentUnitsStatusExt": "rs", "_optional": "the car's pressure unit: the sport display's boost comes in it" },
     "de.bmw.infotainment.KombiIF": {
-      "_optional": "the car's power distribution figures, and its fuel and electric ranges",
+      "_optional": "the car's power distribution figures, its fuel and electric ranges, and its trip computer (average fuel economy, distance, driving time)",
+      "statusBordcomputerAverage": "rs",
+      "statusBordcomputerTravelData": "rs",
       "statusDisplayElectricalPowerDistribution": "rs",
       "statusRangeTankStatus": "rs",
       "displayRangeElectricVehicle": "rs"
