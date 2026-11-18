@@ -774,7 +774,8 @@ void main() {
 }`;
 
 /**
- * A small icon, drawn from shapes: u_icon picks it (0 thermometer, 1 oil drop, 2 gear, 3 air, 4 fuel pump,
+ * A small icon, drawn from shapes (each inside its square with a pixel to spare: 0.44.0 drew the battery's nub in from
+ * the edge, where it was cut off): u_icon picks it (0 thermometer, 1 oil drop, 2 gear, 3 air, 4 fuel pump,
  * 5 turbo, 6 battery, 7 bolt, 8 steering wheel, 9 stopwatch, 10 car, 11 engine, 12 snowflake, 13 gauge).
  */
 const ICON_FS = `#version 100
@@ -797,7 +798,7 @@ void main() {
     else if (id < 3.5) { d = min(min(seg(p, vec2(-0.8, 0.4), vec2(0.5, 0.4), 0.09), seg(p, vec2(-0.8, 0.0), vec2(0.8, 0.0), 0.09)), seg(p, vec2(-0.8, -0.4), vec2(0.3, -0.4), 0.09)); d = min(d, ring(p - vec2(0.5, 0.6), 0.2, 0.09) + step(0.6, p.y) * 0.0); }
     else if (id < 4.5) { d = min(box(p - vec2(-0.2, -0.05), vec2(0.42, 0.8), 0.1), seg(p, vec2(0.25, 0.3), vec2(0.7, 0.0), 0.08)); d = min(d, seg(p, vec2(0.7, 0.0), vec2(0.7, -0.6), 0.08)); d = max(d, -box(p - vec2(-0.2, 0.35), vec2(0.24, 0.2), 0.04)); }
     else if (id < 5.5) { float a = atan(p.y, p.x), r = length(p); float sp = fract((a / 6.2832) * 3.0 + r * 0.9); d = max(r - 0.85, -(r - 0.18)); d = max(d, -(abs(sp - 0.5) - 0.32) * r * 2.0); d = min(d, ring(p, 0.85, 0.07)); }
-    else if (id < 6.5) { d = min(ring(vec2(box(p, vec2(0.85, 0.5), 0.12), 0.0), 0.0, 0.08), box(p - vec2(0.93, 0.0), vec2(0.07, 0.2), 0.03)); d = min(d, box(p - vec2(-0.3, 0.0), vec2(0.4, 0.3), 0.05)); }
+    else if (id < 6.5) { d = min(ring(vec2(box(p - vec2(-0.06, 0.0), vec2(0.78, 0.48), 0.12), 0.0), 0.0, 0.08), box(p - vec2(0.84, 0.0), vec2(0.05, 0.2), 0.03)); d = min(d, box(p - vec2(-0.34, 0.0), vec2(0.36, 0.28), 0.05)); }
     else if (id < 7.5) { vec2 a = vec2(0.15, 0.95), b = vec2(-0.45, -0.05), c = vec2(0.05, -0.05), e = vec2(-0.15, -0.95), f = vec2(0.45, 0.05), g = vec2(-0.05, 0.05);
         d = min(min(seg(p, a, b, 0.09), seg(p, b, f, 0.09)), seg(p, f, e, 0.09)); d = min(d, seg(p, c, g, 0.09)); }
     else if (id < 8.5) { d = min(ring(p, 0.78, 0.1), length(p) - 0.2); d = min(d, min(seg(p, vec2(-0.75, 0.05), vec2(0.75, 0.05), 0.08), seg(p, vec2(0.0, 0.0), vec2(0.0, -0.75), 0.08))); }

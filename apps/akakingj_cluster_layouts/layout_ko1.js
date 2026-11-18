@@ -34,7 +34,7 @@ const PALETTES = {
     sport: {
         bg: '#000000', face: '#100709', rim: '#9aa0a8', sTrack: '#2a0c12', sArc0: '#3e0710', sArc1: '#ff2a48', rTrack: '#2a0c12', rArc0: '#3e0710', rArc1: '#ff2a48',
         tip: '#ffd6dc', text: '#ffffff', dim: '#a8959a', glow: '#ff5a72', red: '#ff2a1a', ev: '#4ab4ff', foot: '#f2f2f2', footTrack: '#3a2a2e', num: '#ffffff', track: '#1d1214',
-        lcdTop: '#120c0d', lcdBottom: '#070505', lcdEdge: '#4a3034', arcR: 0.86, arcT: 0.15, slats: 0, rimT: 9, soft: 0,
+        lcdTop: '#120c0d', lcdBottom: '#070505', lcdEdge: '#4a3034', arcR: 0.86, arcT: 0.12, slats: 0, rimT: 9, soft: 0,
     },
 };
 const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.12] });
@@ -120,7 +120,8 @@ function dial(o, which, cx, cy, R) {
         dyn: (d, t) => { const T = (t && t.rimT) || 3; return { u_geo: [rim.params.u_geo[0], rim.params.u_geo[1], R - 2 - T / 2, T] }; },
     });
     [face, rim].forEach((p) => { p.params = { u_geo: p.params.u_geo, u_span: p.params.u_span }; });
-    const band = arc(which, cx, cy, R * 0.9, R * 0.075, A0, A1, 22, {
+    // (its quad 40 px round the ink: sport's wide arc glows that far, and a glow cut off at the quad's edge shows)
+    const band = arc(which, cx, cy, R * 0.9, R * 0.075, A0, A1, 40, {
         z: 2, value: fr, max: 1, sweep: true,
         colors: (t) => ({ track: t[P + 'Track'], fill0: t[P + 'Arc0'], fill1: t[P + 'Arc1'], redc: t.red, tip: t.tip, tick: t.dim, num: t.dim, neg: t.ev }),
         // the look's shape (ECO PRO: a fan of slats over the face, without the glow round it), the red zone where the shift point puts it now, and
