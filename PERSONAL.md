@@ -198,6 +198,10 @@ first, checked on the car, then moved to `personal-kr`.
   new notes kept out of the GLSL, and the numerals' helpers only in the dial programs: each piece sends its own program,
   so a comment in the text program went some 30 times a layout - the start-up was up to 33 KB more (ID8 M 588 KB of
   600); now as before today (the most 555 KB), JDM 2 11 KB more for its trail (497 KB).
+- Layouts 0.48.2, Centre 0.13.2: each program sent without its comments, indentation and empty lines (engine.js
+  tight; the preprocessor's lines whole; tools/test_tight.js: every program's words and signs the same). The renderer
+  takes no shared program, so each piece sends its own: the start-up 16-67 KB less a layout, the most now 487 KB
+  (ID8 M, plug-in hybrid; was 555), every layout's picture pixel for pixel the same.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

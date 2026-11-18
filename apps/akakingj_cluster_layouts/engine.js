@@ -55,7 +55,26 @@ const FS = { flat: SH.FLAT_FS, panel: SH.PANEL_FS, dial: SH.DIAL_FS, band: SH.BA
 /* a piece's program: JDM 2's and ID6 M's kinds one program per mode (shaders.js JDM_FS_MODES), u_mode a constant in it */
 const MODES = { jdm: SH.JDM_FS_MODES, mround: SH.MROUND_FS_MODES };
 const modeOf = (s) => (MODES[s.kind] && s.params && s.params.u_mode ? Math.round(s.params.u_mode[0]) : -1);
-const fsOf = (s) => { const m = modeOf(s); return m >= 0 && MODES[s.kind][m] ? MODES[s.kind][m] : FS[s.kind]; };
+/*
+ * A program as it is sent: without its comments, its indentation and its empty lines (each piece sends its own program
+ * and the renderer takes no shared one: ID8 M's four programs went 54 times, 198 KB of its start-up; about a third of
+ * it was comments and spaces). Only what the GLSL compiler never reads goes: the preprocessor's lines (#version, #ifdef
+ * ...) stay whole on their own lines, every other line keeps its words and signs as they were, inner runs of spaces made
+ * one, spaces only dropped beside ; , ( ) { } where nothing can join. Worked out once a program.
+ */
+const TIGHT = new Map();
+function tight(src) {
+    let t = TIGHT.get(src);
+    if (t !== undefined) return t;
+    t = String(src).replace(/\/\*[\s\S]*?\*\//g, ' ').split('\n').map((l) => {
+        const line = l.replace(/\/\/.*$/, '').trim();
+        if (line.charAt(0) === '#') return line;
+        return line.replace(/[ \t]+/g, ' ').replace(/ ?([;,(){}]) ?/g, '$1');
+    }).filter((l) => l.length).join('\n') + '\n';
+    TIGHT.set(src, t);
+    return t;
+}
+const fsOf = (s) => { const m = modeOf(s); return tight(m >= 0 && MODES[s.kind][m] ? MODES[s.kind][m] : FS[s.kind]); };
 const Z = { flag: -210, bg: -200, road: -40, fireworks: -190, eagles: -180, flat: -100, panel: -50, spark: -20, band: 0, chevron: 0, mdash: -90, sdash: -150, mtach: 0, e9x: 0, mbar: 0, jdm: 0, mround: 0, aclock: 0, ring: 0, rtach: 0, rbox: 0, rseg: 0, cup: 0, wakaba: 0, dial: 0, car: 0, leds: 0, text: 20, icon: 20, licon: 20 };
 /* kinds that animate (u_time): their clock sent from the head unit every frame (values()) */
 const TIMED = { car: true, leds: true, flag: true, eagles: true, fireworks: true };
@@ -459,4 +478,4 @@ function frozen(d, lastSampleMs, nowMs) {
     return running && nowMs - lastSampleMs > FROZEN_MS;
 }
 
-module.exports = { startCluster, TARGET: DEFAULT_TARGET, STALE_MS, SWEEP_MS, FROZEN_MS, frozen };
+module.exports = { tight, startCluster, TARGET: DEFAULT_TARGET, STALE_MS, SWEEP_MS, FROZEN_MS, frozen };
