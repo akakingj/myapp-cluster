@@ -44,17 +44,18 @@ centre display's big speed's place (Settings > Centre display, or on the page fo
 each a place on the page (*Trip computer: line 1-3*: any readout, or nothing), as designed the distance, the driving
 time and the average economy. With the speed shown, the lines' places are hidden on the page.
 
-### KO 2 Map (0.49.0, a trial on personal-kr-extend)
+### KO 1 Map (0.49.1, a trial on personal-kr-extend)
 
-KO 2's two analog dials, smaller (radius 176) and further out, over the CarPlay map laid under the whole layout: the
-map 1360 x 600 at 280,46 (the phone's 1088 x 480 at 1.25), from just below the camera cowl's line down to the car's
-own strip, whatever the centre is set to. The layout writes `panel 280 46 1360 600 under` to the map window file
-(map_window.js); Waze on cluster with "under" (akakingj/idrive-apps, branch extend-map) draws the map there in the
-renderer's ambient class, below every layer of the layout. Under the map a black base, also ambient but below it: with
-a Waze on cluster that doesn't read "under" (the MGU Store's own build), or no phone, the middle is black, never the
-stock cluster showing through. Over the map a light veil (22 % black), a dark plate under readouts 1 and 2 at the top
-and under the speed in figures at the bottom, between the dials. The phone keeps its turn card in its safe area, in
-the frame's middle. Not checked on the car yet: the cluster's load with the whole map under a layout.
+KO 1's two digital round dials, smaller (radius 176) and further out, each on a black disc, over the CarPlay map laid
+under the whole layout: the map 1360 x 600 at 280,46 (the phone's 1088 x 480 at 1.25), from just below the camera
+cowl's line down to the car's own strip, whatever the centre is set to. The layout writes
+`panel 280 46 1360 600 under` to the map window file (map_window.js); Waze on cluster with "under"
+(akakingj/idrive-apps, branch extend-map) draws the map there in the renderer's ambient class, below every layer of the
+layout. Under the map a black base, also ambient but below it: with a Waze on cluster that doesn't read "under" (the
+MGU Store's own build), or no phone, the middle is black, never the stock cluster showing through. Over the map a
+light veil (22 % black) and a dark plate under readouts 1 and 2 at the top; the speed in figures is the
+speedometer's own. The phone keeps its turn card in its safe area, in the frame's middle. (0.49.0 had it on KO 2's
+dials, KO 2 Map, gone.) Not checked on the car yet: the cluster's load with the whole map under a layout.
 
 ### KO 1 and KO 2 (0.44.0)
 

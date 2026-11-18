@@ -90,7 +90,7 @@ LAYOUTS.forEach((L) => {
         assert(!over.length, 'a piece over x 820-1100: ' + over.map((l) => l.key).join(' '));
         s.stop();
     });
-    // (KO 2 Map: the map under the layout, whatever the centre - its own checks below)
+    // (KO 1 Map: the map under the layout, whatever the centre - its own checks below)
     if (!L.mapAlways) check(id + ': map in the centre: nothing over the map window, the readings round it', () => {
         const C = require(path.join(APP, 'layout_common'));
         const s = makeScene({ layout: id, options: { centre: 'map' }, data: { speed: 0 } });
@@ -117,29 +117,29 @@ LAYOUTS.forEach((L) => {
 });
 
 /*
- * KO 2 Map (0.49.0): the map under the layout, whatever the centre: its window "under" (main.js, map_window.js), a
+ * KO 1 Map (0.49.1): the map under the layout, whatever the centre: its window "under" (main.js, map_window.js), a
  * black base in the ambient class (below Waze on cluster's map there, so the stock cluster never shows through), and
- * over the map only the veil, the readouts' plates and figures, and the dials' edges.
+ * over the map only the veil, the readouts' plates and figures, and the dials (each on its black disc).
  */
-check('ko2map: the map window under the layout, whatever the centre', () => {
-    const L = require(path.join(APP, 'layouts')).byId('ko2map');
+check('ko1map: the map window under the layout, whatever the centre', () => {
+    const L = require(path.join(APP, 'layouts')).byId('ko1map');
     assert(L.mapAlways && L.mapWindow.under === true);
     const W = L.mapWindow;
     assert.strictEqual(W.w % 4, 0);
     assert(W.y + W.h <= 646, 'above the car\'s strip');
     assert(Math.abs(W.w / W.h - 1088 / 480) < 0.01, 'the phone\'s proportions');
     ['info', 'map', 'stock'].forEach((centre) => {
-        const s = makeScene({ layout: 'ko2map', options: { centre }, data: { speed: 0 } });
+        const s = makeScene({ layout: 'ko1map', options: { centre }, data: { speed: 0 } });
         s.engine._tick();
         const layers = [...s.client.layers.values()];
         const ambient = layers.filter((l) => l.opts.klass === 'ambient').map((l) => l.opts);
         assert.strictEqual(ambient.length, 1, centre + ': one layer in the ambient class (the base)');
         assert(ambient[0].x === 0 && ambient[0].y === 0 && ambient[0].w === 1920 && ambient[0].h >= W.y + W.h, centre + ': the base under the whole map');
         const over = s.engine._pieces().filter((l) => l.x < W.x + W.w && l.x + l.w > W.x && l.y < W.y + W.h && l.y + l.h > W.y);
-        // (the dials' own pieces: within a dial's square, its foot's arc and figures a little below it)
-        const dials = s.engine._pieces().filter((l) => l.kind === 'dial');
+        // (the dials' own pieces: within a dial's black disc's square, its arc's glow and its foot's figures a little round it)
+        const dials = s.engine._pieces().filter((l) => /Disc$/.test(l.key));
         const inDial = (l) => dials.some((d) => l.x >= d.x - 40 && l.x + l.w <= d.x + d.w + 40 && l.y >= d.y - 40 && l.y + l.h <= d.y + d.h + 60);
-        const allowed = (l) => /^(bgMap|clock|outside|speed)/.test(l.key) || inDial(l);
+        const allowed = (l) => /^(bgMap|clock|outside)/.test(l.key) || inDial(l);
         assert(over.every(allowed), centre + ': over the map: ' + over.filter((l) => !allowed(l)).map((l) => l.key).join(' '));
         s.stop();
     });

@@ -94,7 +94,7 @@ const SETTLE_MS = 1200;
  *   opts.data()   the car's data now ({ speed km/h, rpm, gear, stage, mode, oil, coolant, demo, ... })
  *   opts.live(), opts.enabled(), opts.sweep() (optional: the start-up sweep wanted), opts.log
  *   opts.settleMs how long the layout must be wanted before it shows (SETTLE_MS; the tests: 0)
- *   (a piece's klass: its class on the target, 'content' if none - 'ambient' under another client's content: KO 2 Map's
+ *   (a piece's klass: its class on the target, 'content' if none - 'ambient' under another client's content: KO 1 Map's
  *   base under the map)
  *   opts.font() the glyph family ('bold' default, 'light'; font.js), opts.target ('panel' default, 'map', 'hud'), opts.contend (take the slot over from the stock HMI), opts.z
  *   (added to every layer's z: above another client's layers on the same target)
