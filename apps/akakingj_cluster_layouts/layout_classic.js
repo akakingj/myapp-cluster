@@ -41,7 +41,8 @@ function dial(o, which, cx, cy, size) {
     const elec = (d) => !speed && C.electric(o, d);
     const kwS = () => C.PCT;   // (Power %: layout_common.powerPct)
     // Settings > Speedometer gauge / Tach gauge: another reading in the small gauge (its name and figures by it)
-    const g = C.gaugeOf(o, which);
+    // (a plug-in hybrid driven on its charge: the tach's own small gauge its battery's charge, as the other layouts')
+    const g = C.gaugeOf(o, which) || (!speed && !C.engineFocus(o) ? C.gaugeOf(Object.assign({}, o, { gaugeRpm: 'soc' }), 'rpm') : null);
     // (a temperature as the car's own: C to H, warm in the middle; Settings > Temperature gauges)
     const ch = C.chOf(o, g ? g.key : speed ? null : 'oil');
     const subv = (d) => (ch ? [Math.round(C.chFrac(ch, d[ch]) * 200) / 200] : g ? [Math.round(g.frac(d) * 200) / 200] : speed ? [isNum(d.fuelPct) ? Math.round(Math.max(0, Math.min(1, d.fuelPct / 100)) * 200) / 200 : 0]
