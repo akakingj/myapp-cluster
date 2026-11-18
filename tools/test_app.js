@@ -66,10 +66,11 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     const tgt = (key) => { const x = lastPage.targets.find((q) => q.key === key); assert(x, 'no ' + key + ' on the page: ' + lastPage.targets.map((q) => q.key).join(',')); return x; };
     check('the page: the chosen layout\'s picture and a row of cards, each a picture from previews.wad', () => {
         const ids = Array.from(lastPage.images);
-        // (the row the Stock card is on, it being chosen while off: Stock alone there, the twelve layouts filling the two
+        // (the row the Stock card is on, it being chosen while off: the twelve layouts before KO 1 and KO 2 filling the two
         // rows before; the pictures with the car's own bottom strip, the only form; the Stock card its own picture,
         // the car's cluster drawn, 0.39.6: IMG_CARD + 0x3f)
-        assert(ids.indexOf(0x434c0100) >= 0 && ids.filter((i) => i >= 0x434c0200 && i < 0x434c0300).join() === String(0x434c0200 + 0x3f), ids.map((i) => i.toString(16)).join(','));
+        // (0.44.0: KO 1 and KO 2 before it on that row)
+        assert(ids.indexOf(0x434c0100) >= 0 && ids.filter((i) => i >= 0x434c0200 && i < 0x434c0300).sort().join() === [0x434c0200 + 0x3f, 0x434c0200 + 0x40 + 12, 0x434c0200 + 0x40 + 13].join(), ids.map((i) => i.toString(16)).join(','));
         assert(rec.imageById.get(0x434c0200 + 0x3f).w === 216 && rec.imageById.get(0x434c0200 + 0x3f).data.length === 216 * 81 * 4);
         assert(rec.imageById.get(0x434c0100).w === 600 && rec.imageById.get(0x434c0100).data.length === 600 * 225 * 4);
     });

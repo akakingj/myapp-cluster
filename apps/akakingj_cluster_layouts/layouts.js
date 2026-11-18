@@ -3,7 +3,7 @@
  * layouts.js - the layouts this app offers, by id. A layout is one file, layout_<id>.js, next to this one
  * (the build ships only top-level .js files); list it here and in app.json's "layout" setting (README.md).
  */
-const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_gt3')];
+const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_gt3'), require('./layout_ko1'), require('./layout_ko2')];
 const C0 = require('./layout_common');
 /** A readout put in the time's or the outside temperature's place, two side by side: made to hold its widest
  * figures ('TRANS 140°') with a gap to the other (layout_common.fitText). */
@@ -171,6 +171,9 @@ const SLOTS = {
     // (0.37.0: no readouts at the right beside the strip; with the map, readouts 1 and 2 above it over the car's strip)
     jdm2: Object.assign({ infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o), leftDial: (o) => (o.centre || 'info') === 'info' }, DIALS),
     twin_cowl: Object.assign({}, DIALS, STRIP2, { infoLow: STRIP }),
+    // (0.44.0: the display between the dials, as 20's; the arcs across the dials' feet)
+    ko1: Object.assign({ infoMain: (o) => !MAPFORM(o) }, DIALS, STRIP2),
+    ko2: Object.assign({ infoMain: (o) => !MAPFORM(o) }, DIALS, STRIP2),
 };
 /** The readout places layout id has (all: whatever the car and settings; else those that show with options o). */
 /*
@@ -197,7 +200,7 @@ function slotsFor(id, o, all) {
  * left", "under the speed", "Small gauge in the speedometer" ...) is not where that layout puts it. With the map in
  * the centre, readouts 1 and 2 stand above it in these layouts (or in Track's right column).
  */
-const ABOVE_MAP = { analog_sport: 1, retro: 1, id6m: 1, jdm2: 1, arc_tach: 1 };
+const ABOVE_MAP = { analog_sport: 1, retro: 1, id6m: 1, jdm2: 1, arc_tach: 1, ko1: 1, ko2: 1 };
 const SLOT_LABELS = {
     analog_sport: { gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
     id6m: { infoA: 'Centre display: top left', infoB: 'Centre display: top right', infoMain: 'Centre display: under the speed',
@@ -208,6 +211,10 @@ const SLOT_LABELS = {
     twin_cowl: { infoA: 'Centre display: bottom left', infoB: 'Centre display: bottom right', infoLow: 'Centre display: under the speed',
         gaugeSpeed: 'Small gauge between the dials: right', gaugeRpm: 'Small gauge between the dials: left' },
     track: { infoA: 'Under the speed: left', infoB: 'Under the speed: right' },
+    ko1: { infoA: 'Centre display: top left', infoB: 'Centre display: top right', infoMain: 'Centre display: the large reading',
+        gaugeSpeed: 'Arc under the speedometer', gaugeRpm: 'Arc under the tach' },
+    ko2: { infoA: 'Centre display: top left', infoB: 'Centre display: top right', infoMain: 'Centre display: under the speed',
+        gaugeSpeed: 'Arc under the speedometer', gaugeRpm: 'Arc under the tach' },
 };
 /** The page's name for readout k of layout id with options o; null: the setting's own. */
 function slotLabel(id, k, o) {

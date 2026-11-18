@@ -3,8 +3,8 @@
 *Part of [iDrive 7 cluster apps](../../README.md), with Cluster Info and [Cluster Centre](../cluster_centre/README.md).*
 
 Custom layouts for the whole instrument cluster of a BMW with iDrive 7 (MGU), **drawn by the cluster
-itself**. Twelve layouts, in the page's order: 90's, 20's, Old M, ID6 M, ID7 M and ID8 M (the last two after
-bimmer-lab's M and Sport), JDM 1, JDM 2, GM, Track, Pulse and GT3 (after bimmer-lab's), each in comfort, sport and efficient
+itself**. Fourteen layouts, in the page's order: 90's, 20's, Old M, ID6 M, ID7 M and ID8 M (the last two after
+bimmer-lab's M and Sport), JDM 1, JDM 2, GM, Track, Pulse, GT3 (after bimmer-lab's), KO 1 and KO 2, each in comfort, sport and efficient
 colours (following the selector's S / M
 programme, or chosen), each with three centres: the **readings**, **Waze** or the **stock** centre content.
 
@@ -25,6 +25,21 @@ Every reading goes to the cluster within a frame of arriving: the needles and ba
 digits every frame, and the battery's power the moment eDrive Live reads it (it writes each
 reading at once and this app watches for it, instead of a quarter-second file cycle and a half-second scan). The
 battery's own pace sets the limit: its current answers 10-20 times a second over diagnostics.
+
+### KO 1 and KO 2 (0.44.0)
+
+Two pairs of round dials after the look of the mid 2020s' Korean saloons' screens (original drawings of the idea, not a
+copy of any one), their colours following the drive mode: comfort the speedometer blue and the tach amber, ECO PRO both
+teal, sport both red under a bright bezel. **KO 1** is digital: no needles, each dial a dark disc with a glowing arc
+from its start to the reading (in ECO PRO a fan of fine slats over the face) and the reading in large thin figures;
+between the dials a display as 20's with readouts 1 and 2, the main readout large and the boost and timing (a
+plug-in hybrid: the electric range and charge). **KO 2** is analog: thin numerals, fine ticks, a slim needle, the face
+tinted and lit along its edge to the needle; between the dials 20's display (the speed in figures, the main
+readout). Both have a thin arc across each dial's foot: the fuel (E to F, with the range) under the speedometer, the
+coolant (C to H; a plug-in hybrid's charge, 0 to 100) under the tach; Settings > Speedometer gauge / Tach gauge (or
+the page) put another reading in either. Shaders: BAND_FS (KO 1's arcs, both feet), RING_FS (KO 1's face and rim),
+DIAL_FS (KO 2's dials, as 20's). 0.44.0 also puts GM's speed in the middle of its display (the car's strip shows the
+gear, which stood left of it).
 
 ### The app's page: pick a layout, set its readouts (0.29.0)
 
@@ -50,7 +65,7 @@ follows the mode (blue, red in sport, teal in ECO PRO).
 |  the layout, large        |  [ Main readout: Boost  ]  [ Readout 1: Intake air ]
 |  (its demo picture)       |  [ Readout 2: Gearbox   ]  [ Speedometer gauge      ]
 +---------------------------+  [ Tach gauge           ]
- <  [card] [card] [card] [card] [card] [card]  >          (12 layouts and Stock)
+ <  [card] [card] [card] [card] [card] [card]  >          (14 layouts and Stock)
 ```
 
 - **The cards:** every layout's picture (made beforehand with demo readings for a petrol car, km/h, °C:

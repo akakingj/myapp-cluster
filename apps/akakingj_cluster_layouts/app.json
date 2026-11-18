@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.43.0",
+  "version": "0.44.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -186,6 +186,14 @@
         [
           "gt3",
           "GT3"
+        ],
+        [
+          "ko1",
+          "KO 1"
+        ],
+        [
+          "ko2",
+          "KO 2"
         ]
       ]
     },
@@ -270,6 +278,14 @@
         [
           "gt3",
           "GT3"
+        ],
+        [
+          "ko1",
+          "KO 1"
+        ],
+        [
+          "ko2",
+          "KO 2"
         ]
       ],
       "section": "Display"
@@ -331,6 +347,14 @@
         [
           "gt3",
           "GT3"
+        ],
+        [
+          "ko1",
+          "KO 1"
+        ],
+        [
+          "ko2",
+          "KO 2"
         ]
       ],
       "section": "Display"
