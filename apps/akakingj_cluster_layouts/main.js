@@ -211,7 +211,11 @@ mgu.run({
             const n = (short, long) => (full ? long : short);
             const d = data(), o = options(), snap = {};
             Object.keys(d).forEach((k) => { const v = d[k]; if (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean') snap[k] = typeof v === 'number' ? Math.round(v * 100) / 100 : v; });
-            return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''), [
+            // (0.48.7) the QR codes (not full) leave out the catalog listings - the car's signal names for the range,
+            // power, cruise control and time, found long since - and list only the reset-logic and trip computer
+            // services' fields: about a quarter of the codes (45 were 15 pages); the USB file keeps everything
+            const QR_OUT = ['range and charge signals', 'power and consumption signals', 'cruise control signals', 'time and date signals', 'driving assistant (ID8 M)'];
+            const sections = [
                 ['settings', JSON.stringify({ layout: settings.get('layout'), centre: o.centre, look: settings.get('look'), show: settings.get('show') })],
                 ['engine', JSON.stringify(cluster.status())],
                 ['cluster renderer status', squeeze(cluster.rendererStatus() || '(no answer yet)', full)],
@@ -221,7 +225,7 @@ mgu.run({
                 // (0.48.4) the trip data: the car's trip computer follows the head unit's "values shown since" choice
                 // (start, refuelling, charging, delivery, own reset); every field of its reset-logic services and the
                 // catalog's trip, distance and duration fields with all their members, to find the one with each choice
-                ['trip data signals', sigList(findSignals({ iface: /resetlogic|bordcomputer|tripdata|travel/i, match: /bordcomputer|travel|trip|reise|waypassed|rideduration|since|abstart|seit|refuel|tanken|charg|laden|delivery|auslieferung|mileage|odometer|kilometerstand|distance|duration|fahrzeit|average|durchschnitt/i }), n(80, 600), 40)],
+                ['trip data signals', full ? sigList(findSignals({ iface: /resetlogic|bordcomputer|tripdata|travel/i, match: /bordcomputer|travel|trip|reise|waypassed|rideduration|since|abstart|seit|refuel|tanken|charg|laden|delivery|auslieferung|mileage|odometer|kilometerstand|distance|duration|fahrzeit|average|durchschnitt/i }), n(80, 600), 40) : sigList(findSignals({ iface: /resetlogic\.ResetLogic$/i, match: /bordcomputer(average|traveldata)/i }), 20, 12)],
                 ['vehicle', (() => { const v = D.vehicle(); return v.vehicle + ' (' + v.how + ': ' + v.why + ')'; })()],
                 ['data status', JSON.stringify(Object.assign({}, D.status(), { raw: undefined }))],
                 // the kW gauges' sources: each of the car's power signals (how often it came, its last value), its fit to
@@ -243,10 +247,12 @@ mgu.run({
                 // "seen" empty), so the catalog's other candidates, to pick from
                 ['cruise control signals', sigList(findSignals({ match: /cruise|tempomat|geschwindigkeitsregel|wunschgeschw|speed.?limit|limiter|set.?speed|target.?speed|abstand|distance.?control|longitudinal.?(control|guid|function|assist)|\bacc\b|acc[A-Z_]|ACC|DCC|FGR/ }), n(30, 300))],
                 ['time and date signals', sigList(findSignals({ match: /time|date|uhrzeit|datum|zone|clock/i }), n(10, 300))],
-                ['cluster-render log', logs.tail(logs.RENDER_LOG, n(50, 1500))],
+                ['cluster-render log', logs.tail(logs.RENDER_LOG, n(20, 1500))],
                 ['this app\'s log', logs.tail(path.join(ctx.dataDir || '.', 'akakingj_cluster_layouts.log'), n(30, 400))],
                 ['Cluster Centre log', logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_centre', n(20, 300))],
-            ]);
+            ];
+            return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''),
+                full ? sections : sections.filter((sec) => QR_OUT.indexOf(sec[0]) < 0));
         }
         ui.onClick('BTN_LOGS', () => {
             page = 0; cupOpen = false;

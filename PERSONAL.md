@@ -234,6 +234,9 @@ first, checked on the car, then moved to `personal-kr`.
   active choice's entry, its distance, hours / minutes or duration, consumption with its scale, each checked for a
   sensible size), else none rather than the last choice's (the trip computer's economy then waits too). Their raw
   values are logged, to read bcData's layout from them.
+- Layouts 0.48.7: the logs' QR codes about a third as many (45 were 15 pages, now about 16 codes, 6 pages): the catalog
+  listings (range, power, cruise control, time signals, found long since) and the trip list past the reset-logic and
+  trip computer services left to the USB file, the render log's last 20 lines (was 50).
   tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo
