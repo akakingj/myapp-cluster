@@ -162,41 +162,6 @@ function rangesOf(v) {
 /* the trip computer's fuel economy unit (KombiIF statusUnitOfMeasurementConsumptionBC, by name or number) */
 const CONS_UNITS = { VERBRAUCH_IN_L_S_100KM: 'l100', VERBRAUCH_IN_MPG_UK: 'mpguk', VERBRAUCH_IN_MPG_US: 'mpg', VERBRAUCH_IN_KM_S_L: 'kml', 1: 'l100', 2: 'mpguk', 3: 'mpg', 4: 'kml' };
 
-/* The head unit's trip data (ResetLogic.bcDataAll: bcUnits, activeResetLogic, availableResetLogic, bcData; its inner
- * layout not yet seen, Nov 19 2026): the active choice, whether it is "since delivery", and that choice's distance,
- * driving time and average fuel economy where bcData has them under telling names, each checked for a sensible
- * size (none taken else). */
-const DELIVERY = /deliver|auslief|factory|werk|total|gesamt|lifetime|production|produkt/i;
-const nameOf_ = (a) => (a && typeof a === 'object' ? String(a.name !== undefined ? a.name : a.value !== undefined ? a.value : JSON.stringify(a)) : String(a));
-function tripOf(v) {
-    const out = { active: null, delivery: false, km: null, min: null, cons: null };
-    if (!v || typeof v !== 'object') return out;
-    const act = v.activeResetLogic;
-    if (act === undefined || act === null) return out;
-    out.active = nameOf_(act);
-    out.delivery = DELIVERY.test(out.active);
-    // the active choice's entry: one naming it, else the one at its place in availableResetLogic
-    const list = Array.isArray(v.bcData) ? v.bcData : v.bcData && typeof v.bcData === 'object' ? Object.keys(v.bcData).map((k) => Object.assign({ _key: k }, v.bcData[k])) : [];
-    const names = (o) => { const r = []; (function walk(x, d) { if (d > 3 || !x || typeof x !== 'object') return; Object.keys(x).forEach((k) => { const y = x[k]; if (typeof y === 'string' || typeof y === 'number') r.push(String(y)); else if (y && typeof y === 'object' && (y.name !== undefined || y.value !== undefined) && Object.keys(y).length <= 2) r.push(nameOf_(y)); else walk(y, d + 1); }); })(o, 0); return r; };
-    let e = list.find((o) => o && typeof o === 'object' && names(o).some((n) => n === out.active || (o._key && o._key === out.active)));
-    if (!e && Array.isArray(v.availableResetLogic)) { const i = v.availableResetLogic.map(nameOf_).indexOf(out.active); if (i >= 0 && list[i] && typeof list[i] === 'object') e = list[i]; }
-    if (!e && typeof act === 'number' && list[act] && typeof list[act] === 'object') e = list[act];
-    if (!e) return out;
-    // its numbers by name, to two levels down
-    const nums = [];
-    (function walk(x, path, d) { if (d > 3 || !x || typeof x !== 'object') return; Object.keys(x).forEach((k) => { const y = x[k]; if (typeof y === 'number' && isFinite(y)) nums.push([path + '.' + k, y]); else walk(y, path + '.' + k, d + 1); }); })(e, '', 0);
-    const pick = (re, not) => { const f = nums.find(([k]) => re.test(k) && !(not && not.test(k))); return f ? f[1] : null; };
-    const km = pick(/distance|way|mileage|kilomet/i, /range|remain|unit|coast|sail|electric|edrive(?!n)/i);
-    if (km !== null && km >= 0 && km < 2000000) out.km = km;
-    const h = pick(/hour|stunde/i), m = pick(/minute/i), dur = pick(/duration|drivingtime|fahrzeit|time/i, /hour|minute|stunde|departure|start|date/i);
-    if (h !== null && h >= 0 && h < 200000 && (m === null || (m >= 0 && m < 60))) out.min = h * 60 + (m || 0);
-    else if (dur !== null && dur >= 0 && dur < 12000000) out.min = dur;
-    // the fuel economy: a plain figure, or digits and a scale (as ResetLogic's consumption signals send them)
-    const c = pick(/(consumption|verbrauch)(?!.*(electric|elektr|scale|unit))/i), sc = pick(/(consumption|verbrauch).*combustion.*scale|combustion.*scale|consumption.*scale/i, /electric|elektr/i);
-    if (c !== null) { const val = sc !== null && sc >= 0 && sc < 6 ? c / Math.pow(10, sc) : c; if (val > 0.5 && val < 100) out.cons = val; }
-    return out;
-}
-
 /** Find objects holding `key` anywhere in a signal's value. */
 function entries(v, key, out) {
     out = out || [];
@@ -338,30 +303,7 @@ function startData(ctx, opts) {
             const c = numAt(v, 'consumptionElectricCurrentDigit');
             if (c !== null) fuse.signal(Date.now(), 'cons', c);
         },
-        // (0.48.6) the head unit's trip data: which "values shown since" choice is active (activeResetLogic). The trip
-        // computer's own signal (statusBordcomputerTravelData) keeps the last choice's figures with "since delivery"
-        // (seen Nov 19 2026), so with that choice the odometer is the trip; the raw value is logged to learn the rest
-        // (its own distance, time and fuel economy for that choice where bcData has them: as the head unit shows them;
-        // else the odometer, and no time or economy rather than the last choice's)
-        bcDataAll: (v) => {
-            fes('bcDataAll')(v);
-            const t = tripOf(v);
-            if (t.active === null) return;
-            x.sinceDelivery = t.delivery;
-            if (!t.delivery) return;
-            const o = t.km !== null ? t.km : isNum(x.gwszKm) ? x.gwszKm : x.odometer;
-            if (isNum(o)) put('tripKm', o);
-            if (t.min !== null) put('tripMin', t.min); else x.tripMin = undefined;
-            if (t.cons !== null) put('avgCons', t.cons); else x.avgCons = undefined;
-            x.deliveryTrip = t;
-        },
-        // the odometer as the head unit's trip data has it (Gesamtwegstreckenzaehler)
-        gwsz: (v) => {
-            fes('gwsz')(v);
-            const n = one(v, 'drivenDistance');
-            if (isNum(n) && n > 0 && n < 2000000) { x.gwszKm = n; if (x.sinceDelivery && !(x.deliveryTrip && x.deliveryTrip.km !== null)) put('tripKm', n); }
-        },
-    }, 'consumption now and the trip data', { pollMs: 2000 });
+    }, 'consumption now', { pollMs: 2000 });
     // the cruise control's set speed as the head-up display shows it (the driving assistant's view services send nothing
     // on this car): 0 or invalid while it is off; in the display's unit
     watch('de.bmw.infotainment.displaydataserver.DisplayDataServer', {
@@ -376,7 +318,7 @@ function startData(ctx, opts) {
      * or fuel (fuel, tank, kraftstoff, combustion), and the tank's level; kilometres, invalid at 0xFFFF and up */
     const pickRanges = (v) => { const r = rangesOf(v); Object.keys(r).forEach((k) => put(k, r[k])); };
     // the odometer (km: KombiIF statusRangeTankStatus / VehicleInformation Range mileageKilometre): the trip since delivery
-    const odometer = (v) => { const n = one(v, 'mileageKilometre'); if (isNum(n) && n > 0 && n < 2000000) { put('odometer', n); if (x.sinceDelivery && !isNum(x.gwszKm) && !(x.deliveryTrip && x.deliveryTrip.km !== null)) put('tripKm', n); } };
+    const odometer = (v) => { const n = one(v, 'mileageKilometre'); if (isNum(n) && n > 0 && n < 2000000) put('odometer', n); };
     // steering angle and yaw rate (as installed apps declare them; scaling in config.scaling, raw values shown)
     watch('de.bmw.chassis.SteeringAngle', {
         ActualSteeringAngleDriver: (v) => { fes('ActualSteeringAngleDriver')(v); const a = sc('steer', numberIn(v, /angle|winkel/i)); if (isNum(a) && Math.abs(a) < 900) put('steer', a); },
@@ -449,8 +391,6 @@ function startData(ctx, opts) {
             const c = numAt(v, 'consumptionAverage1BC1'), u = one(v, 'statusUnitOfMeasurementConsumptionBC'), n = u && typeof u === 'object' ? (u.name || u.value) : u;
             const unit = CONS_UNITS[n] || null;
             if (unit && unit !== x.avgConsUnit) { if (c === null) x.avgCons = undefined; x.avgConsUnit = unit; }
-            // (with "since delivery" this signal keeps the last choice's economy: the head unit's trip data has it)
-            if (x.sinceDelivery) return;
             if (c !== null && c >= 0) put('avgCons', c / 10);
         },
         // the distance (km) and the driving time on the trip computer
@@ -461,7 +401,6 @@ function startData(ctx, opts) {
         statusBordcomputerTravelData: (v) => {
             fes('statusBordcomputerTravelData')(v);
             const km = one(v, 'wayPassed'), h = one(v, 'rideDurationHours'), m = one(v, 'rideDurationMinutes');
-            if (x.sinceDelivery) return;   // (the head unit's trip data has that choice's figures: bcDataAll)
             if (isNum(km) && km >= 0 && km < 0xFFFE) put('tripKm', km);
             else if (km !== undefined) { if (isNum(x.odometer)) put('tripKm', x.odometer); else x.tripKm = undefined; }
             if (isNum(h) && h >= 0 && h < 0xFFFE && isNum(m) && m >= 0 && m < 60) put('tripMin', h * 60 + m);
@@ -750,4 +689,4 @@ function demo(d) {
     };
 }
 
-module.exports = { startData, DME_KEYS, FAST_KEYS, entries, modeOf, rangesOf, tripOf, FES_MODES };
+module.exports = { startData, DME_KEYS, FAST_KEYS, entries, modeOf, rangesOf, FES_MODES };

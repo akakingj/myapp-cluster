@@ -161,25 +161,6 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         assert(texts.indexOf('146858 mi') >= 0 && texts.indexOf('2:30') < 0, JSON.stringify(texts));
     });
-    // (0.48.6) the head unit's trip data says "since delivery" while the trip computer keeps the last choice's figures
-    handlers.statusBordcomputerTravelData({ rideDurationHours: 675, rideDurationMinutes: 27, wayPassed: 53487 });
-    handlers.gwsz({ drivenDistance: 236387, unit: 'KM', manipulationPoint: 0 });
-    handlers.bcDataAll({ activeResetLogic: 'SINCE_DELIVERY', availableResetLogic: [], bcData: [] });
-    handlers.statusBordcomputerTravelData({ rideDurationHours: 675, rideDurationMinutes: 27, wayPassed: 53487 });
-    await sleep(40);
-    check('since delivery from the head unit: the odometer, not the last choice', () => {
-        const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
-        assert(texts.indexOf('146884 mi') >= 0 && texts.indexOf('33236 mi') < 0, JSON.stringify(texts));
-    });
-    // (and its own figures for that choice, where bcData names them: an entry for the active choice)
-    handlers.bcDataAll({ activeResetLogic: 'SINCE_DELIVERY', availableResetLogic: ['SINCE_START', 'SINCE_DELIVERY'],
-        bcData: [{ resetLogic: 'SINCE_START', drivenDistance: 48 }, { resetLogic: 'SINCE_DELIVERY', drivenDistance: 236390, drivingTimeHours: 4100, drivingTimeMinutes: 12, averageConsumptionCombustion: 8.7 }] });
-    await sleep(40);
-    check('since delivery: its own time and economy from the trip data', () => {
-        const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
-        assert(texts.indexOf('146886 mi') >= 0 && texts.indexOf('4100:12') >= 0 && texts.indexOf('8.7 L/100km') >= 0, JSON.stringify(texts));
-    });
-    handlers.bcDataAll({ activeResetLogic: 'SINCE_START', availableResetLogic: [], bcData: [] });
     handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 85, speedAverage1BC1: 463, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_L_S_100KM' });
     handlers.statusBordcomputerTravelData({ rideDurationHours: 2, rideDurationMinutes: 30, wayPassed: 126 });
     ctx.settings.set('econUnit', 'kml');

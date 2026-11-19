@@ -237,6 +237,10 @@ first, checked on the car, then moved to `personal-kr`.
 - Layouts 0.48.7: the logs' QR codes about a third as many (45 were 15 pages, now about 16 codes, 6 pages): the catalog
   listings (range, power, cruise control, time signals, found long since) and the trip list past the reset-logic and
   trip computer services left to the USB file, the render log's last 20 lines (was 50).
+- Layouts 0.48.8, Centre 0.13.6: ResetLogic.bcDataAll and gwsz out again (0.48.6-0.48.7). On the plug-in hybrid they
+  answered only their defaults (the active choice 0, every figure 0, gwsz 0; the service's currentConsumption too,
+  Nov 19 2026 15:18): the cluster keeps the trip data there, not the head unit. The trip stays the trip computer's
+  (statusBordcomputerTravelData / Average).
   tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo
