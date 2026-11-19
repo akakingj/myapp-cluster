@@ -219,6 +219,8 @@ first, checked on the car, then moved to `personal-kr`.
   fit samples 999999 km / 9999:59 (check_fit), and a trip computer line's figures a gap clear of its name, a long
   figure set smaller rather than squeezed (fitText room 0.88), and every line's figures one size (the smallest any
   line needs, as a rule the distance's), not each its own. The driving time's name TIME (was DRIVE).
+  "Since delivery" chosen: the distance comes with no value (too long for its field), so the trip shows the odometer
+  (mileageKilometre, km) and no driving time; any choice's driving time with no value drops the last choice's.
   tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo
