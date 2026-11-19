@@ -153,6 +153,15 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         ['78 mi', '2:30', '8.5 L/100km'].forEach((t) => assert(texts.indexOf(t) >= 0, t + ' in ' + JSON.stringify(texts)));
     });
+    // (0.48.4) "since delivery" chosen on the head unit: no distance comes (too long for its field), so the odometer
+    handlers.statusRangeTankStatus({ fluidLevelFuelTank: 34, range: 416, mileageKilometre: 236345 });
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 65535, rideDurationMinutes: 255, wayPassed: 65535 });
+    await sleep(40);
+    check('the trip since delivery: the odometer, no driving time', () => {
+        const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
+        assert(texts.indexOf('146858 mi') >= 0 && texts.indexOf('2:30') < 0, JSON.stringify(texts));
+    });
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 2, rideDurationMinutes: 30, wayPassed: 126 });
     ctx.settings.set('econUnit', 'kml');
     await sleep(180);
     check('Fuel economy unit km/L: 100 / 8.5', () => assert(eng()._pieces().some((p) => p.text === '11.8 km/L')));

@@ -34,4 +34,8 @@ assert.deepStrictEqual(r.list.map((s) => s.field), ['statusRange', 'statusTank']
 assert(r.list[0].get && r.list[0].notify && r.list[0].members.indexOf('remainingRangeFuel') >= 0);
 assert.deepStrictEqual(r.list[1].members, ['qualifier', 'fuelLevel']);   // its own name matches: all its members
 assert(findSignals({ path: f + '.none' }).error);
+// a whole service by its name (opts.iface): every field of it, with all its members
+const w = findSignals({ path: f, iface: /vehicle\.Example/, match: /nothing/ });
+assert.deepStrictEqual(w.list.map((s) => s.field).sort(), ['statusRange', 'statusSpeed', 'statusTank']);
+assert.deepStrictEqual(w.list.find((s) => s.field === 'statusSpeed').members, ['speedVehicle']);
 console.log('ok   ranges, fuel and charge found, others left out; a missing catalog says so');

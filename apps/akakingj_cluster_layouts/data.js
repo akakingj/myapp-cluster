@@ -132,13 +132,20 @@ function modeOf(v, ice) {
  * Reichweite with electric (elec, ev, hv, bev, batt) -> carErange, total -> carTrange, else carFrange; a fuel
  * level -> fuelLevel. Kilometres; 0xFFFE and up are invalid. Returns { name: number }.
  */
+/* A range no car gives: a range signal's 12-bit "no value" marks (0xFFD-0xFFF: 4093 km on a G-series plug-in hybrid
+ * at 8 % charge, Nov 2026), and an electric range past MAX_ERANGE km. */
+const RANGE_NONE = 0xFFD, MAX_ERANGE = 1000;
+const rangeOk = (n, electric) => typeof n === 'number' && isFinite(n) && n >= 0 && n < RANGE_NONE && (!electric || n <= MAX_ERANGE);
+
 function rangesOf(v) {
     const out = {};
     leaves(v).forEach((l) => {
         const n = l.v, key = String(l.key).toLowerCase();
         if (typeof n !== 'number' || !isFinite(n) || n < 0 || n >= 0xFFFE) return;
         if (/range|reichweite/.test(key)) {
-            if (/elec|(^|[^a-z])ev|hv|bev|batt|edrive/.test(key)) out.carErange = n;
+            const electric = /elec|(^|[^a-z])ev|hv|bev|batt|edrive/.test(key);
+            if (!rangeOk(n, electric)) return;
+            if (electric) out.carErange = n;
             else if (/total|gesamt|overall|sum/.test(key)) out.carTrange = n;
             else out.carFrange = n;
         } else if (/level|fill|inhalt|volume|liter/.test(key) && /fuel|tank|kraftstoff/.test(key)) {
@@ -310,6 +317,8 @@ function startData(ctx, opts) {
      * differ by car, so numbers are picked by their names - range / Reichweite, electric (elec, ev, hv, bev)
      * or fuel (fuel, tank, kraftstoff, combustion), and the tank's level; kilometres, invalid at 0xFFFF and up */
     const pickRanges = (v) => { const r = rangesOf(v); Object.keys(r).forEach((k) => put(k, r[k])); };
+    // the odometer (km: KombiIF statusRangeTankStatus / VehicleInformation Range mileageKilometre): the trip since delivery
+    const odometer = (v) => { const n = one(v, 'mileageKilometre'); if (isNum(n) && n > 0 && n < 2000000) put('odometer', n); };
     // steering angle and yaw rate (as installed apps declare them; scaling in config.scaling, raw values shown)
     watch('de.bmw.chassis.SteeringAngle', {
         ActualSteeringAngleDriver: (v) => { fes('ActualSteeringAngleDriver')(v); const a = sc('steer', numberIn(v, /angle|winkel/i)); if (isNum(a) && Math.abs(a) < 900) put('steer', a); },
@@ -331,7 +340,7 @@ function startData(ctx, opts) {
     }, 'engine status');
     // a range the car's vehicle information service sends (as installed apps declare it)
     watch('de.bmw.infrastructure.VehicleInformation', {
-        Range: (v) => { fes('Range')(v); pickRanges(v); },
+        Range: (v) => { fes('Range')(v); pickRanges(v); odometer(v); },
     }, 'range');
     /*
      * The tyres: pressure and temperature at each corner from the car's tyre monitor (TPMS), as bimmer-lab's Cluster
@@ -372,7 +381,7 @@ function startData(ctx, opts) {
         },
     }, 'units', { pollMs: 60000 });
     watch('de.bmw.infotainment.KombiIF', {
-        statusRangeTankStatus: (v) => { fes('statusRangeTankStatus')(v); pickRanges(v); },
+        statusRangeTankStatus: (v) => { fes('statusRangeTankStatus')(v); pickRanges(v); odometer(v); },
         // the trip computer (0.45.0): trip 1's average fuel economy, tenths, in the unit the car's trip computer
         // shows (l/100 km, km/l, mpg); 65535 left out (no value). 0 kept (a trip just reset: the car shows 0.0, so
         // does the cluster - not the last trip's figure). The unit taken from every reply: the car's own unit changed
@@ -385,11 +394,17 @@ function startData(ctx, opts) {
             if (c !== null && c >= 0) put('avgCons', c / 10);
         },
         // the distance (km) and the driving time on the trip computer
+        // (0.48.4) its figures follow the head unit's Trip data > "values shown since" choice (start, refuelling,
+        // charging, own reset: seen on a G-series plug-in hybrid, Nov 19 2026); "since delivery" is longer than the
+        // distance's field holds (236345 km): no value comes, so the odometer is that trip's distance. A choice's
+        // driving time with no value drops the last one's.
         statusBordcomputerTravelData: (v) => {
             fes('statusBordcomputerTravelData')(v);
-            const km = numAt(v, 'wayPassed'), h = numAt(v, 'rideDurationHours'), m = one(v, 'rideDurationMinutes');
-            if (km !== null) put('tripKm', km);
-            if (h !== null && isNum(m) && m >= 0 && m < 60) put('tripMin', h * 60 + m);
+            const km = one(v, 'wayPassed'), h = one(v, 'rideDurationHours'), m = one(v, 'rideDurationMinutes');
+            if (isNum(km) && km >= 0 && km < 0xFFFE) put('tripKm', km);
+            else if (km !== undefined) { if (isNum(x.odometer)) put('tripKm', x.odometer); else x.tripKm = undefined; }
+            if (isNum(h) && h >= 0 && h < 0xFFFE && isNum(m) && m >= 0 && m < 60) put('tripMin', h * 60 + m);
+            else if (h !== undefined) x.tripMin = undefined;
         },
         // the cluster's own electric range (in this car's catalog), in the unit the cluster shows: miles on a car
         // set to miles (read as km it came out 1.6 times too low), so by the app's speed unit; kept here in km.
@@ -398,7 +413,7 @@ function startData(ctx, opts) {
             fes('displayRangeElectricVehicle')(v);
             const n = numberIn(v, /^displayRangeElectricVehicle$/);
             const miles = !(ctx.settings && ctx.settings.get && ctx.settings.get('speedUnit') === 'kmh');
-            if (isNum(n) && n >= 0 && n < 0xFFFE) put('carErange', miles ? n * 1.609344 : n);
+            if (isNum(n) && rangeOk(n) && rangeOk(miles ? n * 1.609344 : n, true)) put('carErange', miles ? n * 1.609344 : n);
         },
         statusDisplayElectricalPowerDistribution: (v) => {
             const e = entries(v, 'displayRepartitionDriveElectricPower')[0];
@@ -601,8 +616,8 @@ function startData(ctx, opts) {
             const fz = !d.demo && fastKw() ? fuse.now(tNow) : null;
             const o = Object.assign({}, d, { mode: x.mode, soc: isNum(p.soc) ? p.soc : !d.demo && fresh('socSme', 60000) ? x.socSme : undefined,
                 kw: fz ? fz.kw : isNum(p.kw) ? p.kw : undefined, kwRead: isNum(p.kw) ? p.kw : undefined, kwFused: !!(fz && fz.fused), kwModel: fz && fz.model ? fz.model : undefined, kwOut: endsOf(p).out || undefined, kwIn: kwEnds.in || undefined, driveMode: x.driveMode,
-                erange: isNum(p.erange) ? p.erange : fresh('carErange', 120000) ? x.carErange : undefined,
-                frange: isNum(p.frange) ? p.frange : fresh('carFrange', 120000) ? x.carFrange : undefined,
+                erange: isNum(p.erange) && rangeOk(p.erange, true) ? p.erange : fresh('carErange', 120000) ? x.carErange : undefined,
+                frange: isNum(p.frange) && rangeOk(p.frange) ? p.frange : fresh('carFrange', 120000) ? x.carFrange : undefined,
                 trange: fresh('carTrange', 120000) ? x.carTrange : undefined, fuelLevel: fresh('fuelLevel', 120000) ? x.fuelLevel : undefined });
             // the tyres: { p: { FL.. } bar, t: { FL.. } C }, each fresh for a minute (read every 10 s)
             o.tyres = { p: {}, t: {} };

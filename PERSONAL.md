@@ -205,7 +205,25 @@ first, checked on the car, then moved to `personal-kr`.
   (ID8 M, plug-in hybrid; was 555), every layout's picture pixel for pixel the same.
 - Layouts 0.48.3: 90's and 20's numerals their dials' share as Old M's and ID6 M's (0.11 of the radius the
   speedometer's, 0.13 the tach's; they were 0.14 / 0.18-0.2, crowded), a little further out for it.
-- AK Map Test 0.1.0 (branch personal-kr-extend only, a trial): a copy of Cluster Layouts with one layout, KO 1 Map -
+- Info 1.9.1: the panel's text smaller, its height kept (the kW 0.46 of it, was 0.54; a value 0.42, was 0.5; its label
+  0.19, was 0.22), and its ends' margins alike: the kW's figures right-aligned in a column for "188" / "-88" (the
+  widest a battery gives; a rarer "-1xx" reaches into the padding), a value at the far end centred with as much room
+  outside it as the meter's padding (edgePad). On the cluster 192-428 px wide, was 220-448.
+- Layouts 0.48.4, Centre 0.13.3 (Nov 19 2026, from a G-series plug-in hybrid): a range signal's 12-bit "no value"
+  marks (0xFFD-0xFFF) left out - the car sent an electric range of 4093 at 8 % charge, and the layouts showed it as
+  4093 km - and no electric range past 1000 km taken, from the car or an app (shared/data.js rangeOk).
+  The logs gain "trip data signals": on that car the trip computer's distance, time and economy follow the head
+  unit's Trip data > "values shown since" choice (start 48 km, refuelling 108, charging 48, own reset 53464 km),
+  but "since delivery" (236345 km) never comes in statusBordcomputerTravelData; every field of the reset-logic
+  services and the catalog's trip fields are listed, to find the one each choice comes in.
+  The readouts made for six-figure distances (a trip since delivery, 236345 km) and 9999-hour driving times: the
+  fit samples 999999 km / 9999:59 (check_fit), and a trip computer line's figures a gap clear of its name, a long
+  figure set smaller rather than squeezed (fitText room 0.88), and every line's figures one size (the smallest any
+  line needs, as a rule the distance's), not each its own. The driving time's name TIME (was DRIVE).
+  "Since delivery" chosen: the distance comes with no value (too long for its field), so the trip shows the odometer
+  (mileageKilometre, km) and no driving time; any choice's driving time with no value drops the last choice's.
+  tools/preview.js: --centreView trip --tripKm --tripMin.
+- AK Map Test 0.1.0-0.1.1 (branch personal-kr-extend only, a trial; 0.1.1: the shared files as Layouts 0.48.4's): a copy of Cluster Layouts with one layout, KO 1 Map -
   KO 1's dials over the CarPlay map laid under the whole layout (map_window.js "panel 280 46 1360 600 under", read by
   akakingj/idrive-apps extend-map's waze-on-cluster; a black base under the map in the ambient class, its own engine.js
   with a piece's klass). Cluster Layouts and Centre untouched. Show Off by default: Cluster Layouts' Show off first.
