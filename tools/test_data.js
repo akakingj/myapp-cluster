@@ -7,7 +7,7 @@
 const assert = require('assert');
 const path = require('path');
 require('./scene');   // maps ./kit/ to the kit's runtime
-const { modeOf, rangesOf } = require(path.join(__dirname, '..', 'shared', 'data'));
+const { modeOf, rangesOf, tripOf } = require(path.join(__dirname, '..', 'shared', 'data'));
 
 let ok = 0;
 const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
@@ -54,5 +54,14 @@ check('ranges by field name: electric, total, fuel, the tank level; invalid valu
     assert.deepStrictEqual(rangesOf({ rangeElectric: 4095, rangeTotal: 4094, range: 4093 }), {});
     assert.deepStrictEqual(rangesOf({ rangeElectric: 1200, range: 417 }), { carFrange: 417 });
     assert.deepStrictEqual(rangesOf({ rangeElectric: 0, range: 417 }), { carErange: 0, carFrange: 417 });
+    // the head unit's trip data (ResetLogic.bcDataAll): the active choice and its own figures where named
+    assert.deepStrictEqual(tripOf(null), { active: null, delivery: false, km: null, min: null, cons: null });
+    assert.strictEqual(tripOf({ activeResetLogic: 'SINCE_START', bcData: [] }).delivery, false);
+    assert.strictEqual(tripOf({ activeResetLogic: { name: 'AUSLIEFERUNG' } }).delivery, true);
+    const t = tripOf({ activeResetLogic: 'DELIVERY', availableResetLogic: ['START', 'DELIVERY'], bcData: [{ d: 48 }, { distanceDriven: 236390, hours: 4100, minutes: 12, consumptionCombustionDigit: 87, consumptionCombustionScale: 1 }] });
+    assert.deepStrictEqual([t.km, t.min, t.cons], [236390, 4100 * 60 + 12, 8.7]);
+    // nothing sensible under those names: nothing taken
+    const u = tripOf({ activeResetLogic: 2, bcData: [{}, {}, { distance: -5, minutes: 75, consumption: 9999 }] });
+    assert.deepStrictEqual([u.km, u.min, u.cons], [null, null, null]);
 });
 console.log(ok + ' passed');

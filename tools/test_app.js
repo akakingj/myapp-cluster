@@ -171,7 +171,16 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         assert(texts.indexOf('146884 mi') >= 0 && texts.indexOf('33236 mi') < 0, JSON.stringify(texts));
     });
+    // (and its own figures for that choice, where bcData names them: an entry for the active choice)
+    handlers.bcDataAll({ activeResetLogic: 'SINCE_DELIVERY', availableResetLogic: ['SINCE_START', 'SINCE_DELIVERY'],
+        bcData: [{ resetLogic: 'SINCE_START', drivenDistance: 48 }, { resetLogic: 'SINCE_DELIVERY', drivenDistance: 236390, drivingTimeHours: 4100, drivingTimeMinutes: 12, averageConsumptionCombustion: 8.7 }] });
+    await sleep(40);
+    check('since delivery: its own time and economy from the trip data', () => {
+        const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
+        assert(texts.indexOf('146886 mi') >= 0 && texts.indexOf('4100:12') >= 0 && texts.indexOf('8.7 L/100km') >= 0, JSON.stringify(texts));
+    });
     handlers.bcDataAll({ activeResetLogic: 'SINCE_START', availableResetLogic: [], bcData: [] });
+    handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 85, speedAverage1BC1: 463, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_L_S_100KM' });
     handlers.statusBordcomputerTravelData({ rideDurationHours: 2, rideDurationMinutes: 30, wayPassed: 126 });
     ctx.settings.set('econUnit', 'kml');
     await sleep(180);
@@ -218,6 +227,9 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     check('the readings centre: no map window', () => assert(!fs.existsSync(mw)));
     check('the page draws', () => assert(pages > 0));
     check('warnings only for what this machine lacks (no catalog, no diagnostic link)', () => assert(warns.some((w) => /catalog not readable/.test(w)) && warns.every((w) => /catalog not readable|TASU/.test(w)), JSON.stringify(warns)));
+    // (a sample again: the checks above take longer than the readings' staleness, 3 s, with the trip data's added)
+    handlers.statusCarSpeed2({ speedVehicleCentreOfGravity: Math.round(52 * 1.609344 / 0.015625) });
+    await sleep(300);
     check('the stock strip\'s time and outside temperature left to the car: its slots show the battery and the gearbox oil', () => {
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         assert(texts.some((x) => /^BATT /.test(x)) && texts.some((x) => /^GEARBOX /.test(x)) && !texts.some((x) => /^48°/.test(x)), JSON.stringify(texts));

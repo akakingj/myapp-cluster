@@ -230,7 +230,10 @@ first, checked on the car, then moved to `personal-kr`.
   the trip computer's statusBordcomputerTravelData keeps the last choice's figures (53487 km, 675:27), no "no value";
   the head unit's own trip data, ResetLogic.bcDataAll (activeResetLogic: the active choice) and ResetLogic.gwsz
   (drivenDistance: the odometer), are now watched (both "rs", from that car's catalog): with a delivery choice the trip
-  is the odometer and no driving time. Their raw values are logged, to read the other choices' figures from them.
+  is the odometer, and the driving time and fuel economy that choice's own where bcData names them (tripOf: the
+  active choice's entry, its distance, hours / minutes or duration, consumption with its scale, each checked for a
+  sensible size), else none rather than the last choice's (the trip computer's economy then waits too). Their raw
+  values are logged, to read bcData's layout from them.
   tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo
