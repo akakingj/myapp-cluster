@@ -38,6 +38,18 @@ check('ko1map: the map window under the layout, whatever the centre', () => {
         s.stop();
     });
 });
+check('ko1map: the dials (their black discs) clear of the KOMBI\'s warning lights at the top corners, above the strip', () => {
+    const L = require(path.join(APP, 'layouts')).byId('ko1map');
+    const M = require(path.join(APP, 'layout_ko1map'));
+    L.DIALS = M.DIALS;
+    M.DIALS.forEach((d) => {
+        M.TELLTALE_ZONES.forEach((z) => {
+            const nx = Math.max(z.x, Math.min(d.cx, z.x + z.w)), ny = Math.max(z.y, Math.min(d.cy, z.y + z.h));
+            assert(Math.hypot(d.cx - nx, d.cy - ny) > d.r, 'a dial at ' + d.cx + ',' + d.cy + ' reaches into ' + JSON.stringify(z));
+        });
+        assert(d.cy + 0.94 * (d.r - 2) + 40 <= 646, 'its glow above the strip');
+    });
+});
 check('map_window.js: "under" at the line\'s end', () => {
     const fs = require('fs'), os = require('os');
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mw-'));

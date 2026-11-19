@@ -223,7 +223,7 @@ first, checked on the car, then moved to `personal-kr`.
   "Since delivery" chosen: the distance comes with no value (too long for its field), so the trip shows the odometer
   (mileageKilometre, km) and no driving time; any choice's driving time with no value drops the last choice's.
   tools/preview.js: --centreView trip --tripKm --tripMin.
-- AK Map Test 0.1.0-0.1.1 (branch personal-kr-extend only, a trial; 0.1.1: the shared files as Layouts 0.48.4's): a copy of Cluster Layouts with one layout, KO 1 Map -
+- AK Map Test 0.1.0-0.1.2 (branch personal-kr-extend only, a trial; 0.1.1: the shared files as Layouts 0.48.4's; 0.1.2: the dials radius 168, low and in from the edges, clear of the KOMBI's AUTO H and parking-brake lights at the top right): a copy of Cluster Layouts with one layout, KO 1 Map -
   KO 1's dials over the CarPlay map laid under the whole layout (map_window.js "panel 280 46 1360 600 under", read by
   akakingj/idrive-apps extend-map's waze-on-cluster; a black base under the map in the ambient class, its own engine.js
   with a piece's klass). Cluster Layouts and Centre untouched. Show Off by default: Cluster Layouts' Show off first.

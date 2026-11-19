@@ -18,11 +18,11 @@ import json, os, struct, subprocess, sys, tempfile, zlib
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP = os.path.join(ROOT, 'apps', 'akakingj_cluster_layouts')
+APP = os.path.abspath(os.environ['LAYOUTS_APP']) if os.environ.get('LAYOUTS_APP') else os.path.join(ROOT, 'apps', 'akakingj_cluster_layouts')   # (LAYOUTS_APP: another app's, AK Map Test's)
 PW, PH = 600, 225          # the page's large picture (8:3, the cluster's 1920 x 720); the cards are made from it
 
 def layout_ids():
-    js = "require('./tools/scene');console.log(JSON.stringify(require('./apps/akakingj_cluster_layouts/layouts').LAYOUTS.map(l=>l.id)))"
+    js = "require('./tools/scene');console.log(JSON.stringify(require(" + json.dumps(os.path.join(APP, 'layouts')) + ").LAYOUTS.map(l=>l.id)))"
     out = subprocess.run(['node', '-e', js], capture_output=True, text=True, cwd=ROOT)
     if out.returncode != 0:
         raise SystemExit('layout list: ' + out.stderr)

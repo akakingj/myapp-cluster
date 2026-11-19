@@ -10,7 +10,8 @@
  * waze-on-cluster's 476 x 306 at 306,72 of the frame) starts below the camera cowl (layout_common NOTCH, to y 128).
  * Under it a black base, also in the ambient class but below the map (z -100): where there is no map (a Waze on
  * cluster that does not read "under", the stock build, or no phone) the panel is black there, never the stock cluster
- * showing through. Over the map a light veil (VEIL) and, under each dial, a black disc as KO 1's own background (its
+ * showing through. The dials low and in from the edges, clear of the KOMBI's warning lights at the top corners
+ * (TELLTALE_ZONES). Over the map a light veil (VEIL) and, under each dial, a black disc as KO 1's own background (its
  * face leaves a ring clear between it and the rim), and a dark plate under each readout at the top. The speed in
  * figures is the speedometer's own. The phone keeps its turn card in the frame's middle (its safe area), between the dials.
  */
@@ -21,8 +22,12 @@ const KO1 = require('./layout_ko1');
 /** Where the map is drawn under the layout (the panel's pixels) */
 const MAP_RECT = { x: 280, y: 46, w: 1360, h: 600 };
 const VEIL = 0.22;                       // the map darkened by this much (black over it)
-const R = 176, CY = 350;                 // the dials' radius and centre height (KO 1's map form: 196 at 368)
-const SX = 206, RX = 1920 - 206;         // their centres: the arc's glow (40 px round it) just inside the panel
+/* The KOMBI's own warning lights over the panel's top outer corners (AUTO H and the parking brake at the top
+ * right, measured from a photo of the car: about x 1745-1900, y 190-290), with a margin; the same kept clear at the
+ * left so the dials stay alike. The dials (and their black discs) stay out of them (0.1.2). */
+const TELLTALE_ZONES = [{ x: 1730, y: 180, w: 190, h: 125 }, { x: 0, y: 180, w: 190, h: 125 }];
+const R = 168, CY = 448;                 // the dials' radius and centre height: low, their glow (0.94 R + 40) above the strip (646)
+const SX = 284, RX = 1920 - 284;         // their centres: in from the edges, their tops clear of TELLTALE_ZONES
 
 /** A flat rectangle of one colour and alpha, in a class and at a z of its own */
 const plate = (key, x, y, w, h, colour, alpha, extra) => Object.assign({ key, kind: 'flat', x, y, w, h, colors: () => ({ color: [colour, alpha] }) }, extra || {});
@@ -48,6 +53,7 @@ function pieces(o) {
 }
 
 module.exports = {
+    TELLTALE_ZONES, DIALS: [{ cx: SX, cy: CY, r: R + 2 }, { cx: RX, cy: CY, r: R + 2 }],
     id: 'ko1map',
     title: 'KO 1 Map',
     font: 'light',

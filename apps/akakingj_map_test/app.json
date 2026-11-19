@@ -2,7 +2,7 @@
   "id": "akakingj_map_test",
   "title": "AK Map Test",
   "description": "A trial: KO 1 dials over the CarPlay map laid under them on the whole instrument cluster (needs waze-on-cluster from akakingj/idrive-apps extend-map)",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKMT",
