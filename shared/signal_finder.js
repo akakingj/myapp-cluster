@@ -29,7 +29,8 @@ function members(db, ref, depth) {
 
 /**
  * The candidates: [{ iface, field, get, notify, members: [names] }], those whose own name matches first.
- * opts.path: another catalog (tests); opts.match: another pattern. Returns { list, error }.
+ * opts.path: another catalog (tests); opts.match: another pattern; opts.iface: a pattern for whole services, every
+ * field of a service whose name matches it listed (with all its members). Returns { list, error }.
  */
 function findSignals(opts) {
     let db;
@@ -40,7 +41,8 @@ function findSignals(opts) {
         const fields = db.interfaces[iface].fields || {};
         Object.keys(fields).forEach((name) => {
             const f = fields[name], mem = members(db, f.dataRef, 0);
-            const own = re.test(name), inMembers = mem.filter((m) => re.test(m));
+            const whole = !!(opts && opts.iface && opts.iface.test(iface));
+            const own = whole || re.test(name), inMembers = mem.filter((m) => re.test(m));
             if (!own && !inMembers.length) return;
             list.push({ iface, field: name, get: !!(f.getter && f.getter.id), notify: !!f.notifier, members: own ? mem : inMembers, own });
         });

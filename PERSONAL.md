@@ -211,6 +211,10 @@ first, checked on the car, then moved to `personal-kr`.
 - Layouts 0.48.4, Centre 0.13.3 (Nov 19 2026, from a G-series plug-in hybrid): a range signal's 12-bit "no value"
   marks (0xFFD-0xFFF) left out - the car sent an electric range of 4093 at 8 % charge, and the layouts showed it as
   4093 km - and no electric range past 1000 km taken, from the car or an app (shared/data.js rangeOk).
+  The logs gain "trip data signals": on that car the trip computer's distance, time and economy follow the head
+  unit's Trip data > "values shown since" choice (start 48 km, refuelling 108, charging 48, own reset 53464 km),
+  but "since delivery" (236345 km) never comes in statusBordcomputerTravelData; every field of the reset-logic
+  services and the catalog's trip fields are listed, to find the one each choice comes in.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

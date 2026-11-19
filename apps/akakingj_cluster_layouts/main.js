@@ -199,7 +199,7 @@ mgu.run({
         let logView = null;   // { codes, page, saved, bytes }
         const PER_PAGE = 3;
         /** A finder result as lines: 'Iface.field [get notify] { members }'. */
-        const sigList = (f, max) => (f.error ? f.error : f.list.slice(0, max).map((x) => x.iface.replace(/^de\.bmw\./, '') + '.' + x.field + (x.get ? ' get' : '') + (x.notify ? ' notify' : '') + ' {' + x.members.slice(0, 10).join(', ') + '}').join('\n') + (f.list.length > max ? '\n(' + (f.list.length - max) + ' more)' : ''));
+        const sigList = (f, max, mem) => (f.error ? f.error : f.list.slice(0, max).map((x) => x.iface.replace(/^de\.bmw\./, '') + '.' + x.field + (x.get ? ' get' : '') + (x.notify ? ' notify' : '') + ' {' + x.members.slice(0, mem || 10).join(', ') + '}').join('\n') + (f.list.length > max ? '\n(' + (f.list.length - max) + ' more)' : ''));
         /** The renderer's status with this app's own effect layers (one line each, ~60) counted, for the codes. */
         const squeeze = (txt, full) => {
             if (full) return txt;
@@ -218,6 +218,10 @@ mgu.run({
                 ['data now', JSON.stringify(snap)],
                 ['raw signals', JSON.stringify(D.status().raw || {})],
                 ['driving assistant (ID8 M)', 'not subscribed (0.36.7): the cruise control from the head-up display\'s set speed'],
+                // (0.48.4) the trip data: the car's trip computer follows the head unit's "values shown since" choice
+                // (start, refuelling, charging, delivery, own reset); every field of its reset-logic services and the
+                // catalog's trip, distance and duration fields with all their members, to find the one with each choice
+                ['trip data signals', sigList(findSignals({ iface: /resetlogic|bordcomputer|tripdata|travel/i, match: /bordcomputer|travel|trip|reise|waypassed|rideduration|since|abstart|seit|refuel|tanken|charg|laden|delivery|auslieferung|mileage|odometer|kilometerstand|distance|duration|fahrzeit|average|durchschnitt/i }), n(80, 600), 40)],
                 ['vehicle', (() => { const v = D.vehicle(); return v.vehicle + ' (' + v.how + ': ' + v.why + ')'; })()],
                 ['data status', JSON.stringify(Object.assign({}, D.status(), { raw: undefined }))],
                 // the kW gauges' sources: each of the car's power signals (how often it came, its last value), its fit to
