@@ -215,6 +215,9 @@ first, checked on the car, then moved to `personal-kr`.
   unit's Trip data > "values shown since" choice (start 48 km, refuelling 108, charging 48, own reset 53464 km),
   but "since delivery" (236345 km) never comes in statusBordcomputerTravelData; every field of the reset-logic
   services and the catalog's trip fields are listed, to find the one each choice comes in.
+  The readouts made for six-figure distances (a trip since delivery, 236345 km) and 9999-hour driving times: the
+  fit samples 999999 km / 9999:59 (check_fit), and a trip computer line's figures a gap clear of its name, a long
+  figure set smaller rather than squeezed (fitText room 0.88). tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

@@ -360,7 +360,9 @@ function tripRows(o, X, Y, W, H, n, nameC, valueC, fam, head) {
         const r = placeReadout(o, placeOf(o, 'tripRow' + (i + 1)) || TRIP_OWN[n][i]), y = Math.round(Y + H - rh * (n - i)), vh = Math.round(Math.min(rh * 0.78, 46)), lw = Math.round(W * 0.34);   // (0.34: IBM Plex's names wider than Barlow's)
         // (a space before the name: a capital's stem at the box's very edge loses half a pixel there)
         out.push(text('tripLbl' + (i + 1), X, y + Math.round((rh - vh * 0.6) / 2), lw, Math.round(vh * 0.6), ' ' + r.short, nameC, { align: 0, tracking: 0.06 }),
-            Object.assign(fitText(text('tripRow' + (i + 1), X + lw, y + Math.round((rh - vh) / 2), W - lw, vh, r.value, valueC, { align: 1 }), fam), r.tone ? { tone: r.tone } : {}));
+            // (0.48.4: a gap after the name, and a long figure - the distance since delivery, six figures - set smaller
+            // rather than its glyphs squeezed up to the name: room 0.88 of the box)
+            Object.assign(fitText(text('tripRow' + (i + 1), X + lw + Math.round(vh * 0.2), y + Math.round((rh - vh) / 2), W - lw - Math.round(vh * 0.2), vh, r.value, valueC, { align: 1 }), fam, 0.88), r.tone ? { tone: r.tone } : {}));
     }
     return out;
 }
@@ -468,7 +470,7 @@ function fitText(p, fam, room) {
 /** The readings at their widest figures (three-figure temperatures, the most negative timing and boost ...): what a
  * readout's box is sized to hold (layouts.js), and what tools/check_fit.js measures every text with. */
 const READOUT_SAMPLES = [
-    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 9999, tripMin: 5999, frange: 1999 },
+    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 999999, tripMin: 599999, frange: 1999 },
     { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P', avgCons: 99.9, avgConsUnit: 'kml', tripKm: 0, tripMin: 0, frange: 0 },
 ];
 const nameOf = (r, o, long) => { const n = long ? r.long : r.short; return typeof n === 'function' ? n(o) : n; };
