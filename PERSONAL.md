@@ -221,6 +221,11 @@ first, checked on the car, then moved to `personal-kr`.
   line needs, as a rule the distance's), not each its own. The driving time's name TIME (was DRIVE).
   "Since delivery" chosen: the distance comes with no value (too long for its field), so the trip shows the odometer
   (mileageKilometre, km) and no driving time; any choice's driving time with no value drops the last choice's.
+- Layouts 0.48.5, Centre 0.13.4, Info 1.9.2 (Nov 19 2026, a robustness pass): every signal handler of the three fed
+  odd values (none, numbers for structs, nested junk) while the cluster shows and the layouts change - now no throw
+  (shared/data.js: the raw log of a value that is none, the gearbox signal's struct); kit: a read or notice with no
+  value never reaches a handler (signals.js), a value that is no struct never reaches the car's readers (car.js).
+  Checked again: Node 8 syntax and APIs over all shipped code, 52 layers at most (60), 487 KB at most (600).
   tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo

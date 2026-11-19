@@ -239,7 +239,7 @@ function startData(ctx, opts) {
     /** A number under one of these field names however deep, or null; the binding's invalid values (all bits set) left out. */
     const numAt = (v, key) => { const e = entries(v, key)[0]; const n = e ? e[key] : undefined; return isNum(n) && n !== 255 && n !== 65535 && n !== 0x7FFF && n !== 0xFFFFFFFF ? n : null; };
     const fes = (name) => (v) => {
-        const j = JSON.stringify(v);
+        const j = String(JSON.stringify(v));   // (undefined for a value that is none: 'undefined', not a throw)
         if (raw[name] !== j) {
             raw[name] = j;
             const n = rawLogged[name] = (rawLogged[name] || 0) + 1;
@@ -277,7 +277,7 @@ function startData(ctx, opts) {
     watch('de.bmw.infrastructure.EnvironmentalInformation', { ExteriorTemperature: (v) => put('outside', sc('ambient', v && v.temperatureExterior)) }, 'outside temperature');
     watch('de.bmw.infrastructure.analytics.BasicDataSet', {
         basicDataSet: (v) => {
-            const g = sc('gearboxTemp', v.valueTemperatureTransmissionOil);
+            const g = sc('gearboxTemp', v && v.valueTemperatureTransmissionOil);
             if (isNum(g) && g > -40 && g < 160) put('gearbox', g);
         },
     }, 'basic data set');
