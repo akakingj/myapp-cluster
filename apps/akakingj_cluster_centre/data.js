@@ -303,7 +303,22 @@ function startData(ctx, opts) {
             const c = numAt(v, 'consumptionElectricCurrentDigit');
             if (c !== null) fuse.signal(Date.now(), 'cons', c);
         },
-    }, 'consumption now', { pollMs: 2000 });
+        // (0.48.6) the head unit's trip data: which "values shown since" choice is active (activeResetLogic). The trip
+        // computer's own signal (statusBordcomputerTravelData) keeps the last choice's figures with "since delivery"
+        // (seen Nov 19 2026), so with that choice the odometer is the trip; the raw value is logged to learn the rest
+        bcDataAll: (v) => {
+            fes('bcDataAll')(v);
+            const a = v && v.activeResetLogic, name = a && typeof a === 'object' ? String(a.name || a.value || JSON.stringify(a)) : String(a);
+            x.sinceDelivery = /deliver|auslief|factory|werk|total|gesamt|lifetime|production|produkt/i.test(name);
+            if (x.sinceDelivery) { const o = isNum(x.gwszKm) ? x.gwszKm : x.odometer; if (isNum(o)) put('tripKm', o); x.tripMin = undefined; }
+        },
+        // the odometer as the head unit's trip data has it (Gesamtwegstreckenzaehler)
+        gwsz: (v) => {
+            fes('gwsz')(v);
+            const n = one(v, 'drivenDistance');
+            if (isNum(n) && n > 0 && n < 2000000) { x.gwszKm = n; if (x.sinceDelivery) put('tripKm', n); }
+        },
+    }, 'consumption now and the trip data', { pollMs: 2000 });
     // the cruise control's set speed as the head-up display shows it (the driving assistant's view services send nothing
     // on this car): 0 or invalid while it is off; in the display's unit
     watch('de.bmw.infotainment.displaydataserver.DisplayDataServer', {
@@ -318,7 +333,7 @@ function startData(ctx, opts) {
      * or fuel (fuel, tank, kraftstoff, combustion), and the tank's level; kilometres, invalid at 0xFFFF and up */
     const pickRanges = (v) => { const r = rangesOf(v); Object.keys(r).forEach((k) => put(k, r[k])); };
     // the odometer (km: KombiIF statusRangeTankStatus / VehicleInformation Range mileageKilometre): the trip since delivery
-    const odometer = (v) => { const n = one(v, 'mileageKilometre'); if (isNum(n) && n > 0 && n < 2000000) put('odometer', n); };
+    const odometer = (v) => { const n = one(v, 'mileageKilometre'); if (isNum(n) && n > 0 && n < 2000000) { put('odometer', n); if (x.sinceDelivery && !isNum(x.gwszKm)) put('tripKm', n); } };
     // steering angle and yaw rate (as installed apps declare them; scaling in config.scaling, raw values shown)
     watch('de.bmw.chassis.SteeringAngle', {
         ActualSteeringAngleDriver: (v) => { fes('ActualSteeringAngleDriver')(v); const a = sc('steer', numberIn(v, /angle|winkel/i)); if (isNum(a) && Math.abs(a) < 900) put('steer', a); },
@@ -401,6 +416,7 @@ function startData(ctx, opts) {
         statusBordcomputerTravelData: (v) => {
             fes('statusBordcomputerTravelData')(v);
             const km = one(v, 'wayPassed'), h = one(v, 'rideDurationHours'), m = one(v, 'rideDurationMinutes');
+            if (x.sinceDelivery) { const o = isNum(x.gwszKm) ? x.gwszKm : x.odometer; if (isNum(o)) put('tripKm', o); x.tripMin = undefined; return; }
             if (isNum(km) && km >= 0 && km < 0xFFFE) put('tripKm', km);
             else if (km !== undefined) { if (isNum(x.odometer)) put('tripKm', x.odometer); else x.tripKm = undefined; }
             if (isNum(h) && h >= 0 && h < 0xFFFE && isNum(m) && m >= 0 && m < 60) put('tripMin', h * 60 + m);

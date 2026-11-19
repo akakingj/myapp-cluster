@@ -161,6 +161,17 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         assert(texts.indexOf('146858 mi') >= 0 && texts.indexOf('2:30') < 0, JSON.stringify(texts));
     });
+    // (0.48.6) the head unit's trip data says "since delivery" while the trip computer keeps the last choice's figures
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 675, rideDurationMinutes: 27, wayPassed: 53487 });
+    handlers.gwsz({ drivenDistance: 236387, unit: 'KM', manipulationPoint: 0 });
+    handlers.bcDataAll({ activeResetLogic: 'SINCE_DELIVERY', availableResetLogic: [], bcData: [] });
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 675, rideDurationMinutes: 27, wayPassed: 53487 });
+    await sleep(40);
+    check('since delivery from the head unit: the odometer, not the last choice', () => {
+        const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
+        assert(texts.indexOf('146884 mi') >= 0 && texts.indexOf('33236 mi') < 0, JSON.stringify(texts));
+    });
+    handlers.bcDataAll({ activeResetLogic: 'SINCE_START', availableResetLogic: [], bcData: [] });
     handlers.statusBordcomputerTravelData({ rideDurationHours: 2, rideDurationMinutes: 30, wayPassed: 126 });
     ctx.settings.set('econUnit', 'kml');
     await sleep(180);

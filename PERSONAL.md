@@ -226,6 +226,11 @@ first, checked on the car, then moved to `personal-kr`.
   (shared/data.js: the raw log of a value that is none, the gearbox signal's struct); kit: a read or notice with no
   value never reaches a handler (signals.js), a value that is no struct never reaches the car's readers (car.js).
   Checked again: Node 8 syntax and APIs over all shipped code, 52 layers at most (60), 487 KB at most (600).
+- Layouts 0.48.6, Centre 0.13.5 (Nov 19 2026, the plug-in hybrid's trip data signals log): with "since delivery"
+  the trip computer's statusBordcomputerTravelData keeps the last choice's figures (53487 km, 675:27), no "no value";
+  the head unit's own trip data, ResetLogic.bcDataAll (activeResetLogic: the active choice) and ResetLogic.gwsz
+  (drivenDistance: the odometer), are now watched (both "rs", from that car's catalog): with a delivery choice the trip
+  is the odometer and no driving time. Their raw values are logged, to read the other choices' figures from them.
   tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo

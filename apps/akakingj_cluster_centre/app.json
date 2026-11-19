@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_centre",
   "title": "AK Cluster Centre",
   "description": "Pages of engine, gearbox and eDrive data, warm-up, turbo cool-down, a shift light and a 0-60 timer in the centre of the factory cluster, drawn by the cluster itself",
-  "version": "0.13.4",
+  "version": "0.13.5",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCC",
@@ -81,8 +81,10 @@
       "ActualSteeringAngleDriver": "s"
     },
     "de.bmw.infotainment.resetlogic.ResetLogic": {
-      "_optional": "the consumption now (a candidate for the fast kW)",
-      "currentConsumption": "rs"
+      "_optional": "the consumption now (a candidate for the fast kW); the trip data, which choice the head unit shows (since delivery: the odometer)",
+      "currentConsumption": "rs",
+      "bcDataAll": "rs",
+      "gwsz": "rs"
     },
     "de.bmw.infotainment.displaydataserver.DisplayDataServer": {
       "_optional": "the cruise control's set speed",
