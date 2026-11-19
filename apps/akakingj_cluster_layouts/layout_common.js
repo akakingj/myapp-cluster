@@ -364,6 +364,10 @@ function tripRows(o, X, Y, W, H, n, nameC, valueC, fam, head) {
             // rather than its glyphs squeezed up to the name: room 0.88 of the box)
             Object.assign(fitText(text('tripRow' + (i + 1), X + lw + Math.round(vh * 0.2), y + Math.round((rh - vh) / 2), W - lw - Math.round(vh * 0.2), vh, r.value, valueC, { align: 1 }), fam, 0.88), r.tone ? { tone: r.tone } : {}));
     }
+    // (0.48.4) every line's figures one size, the smallest any of them needs at its widest (the distance's, six
+    // figures, as a rule): lines of one height, not each its own
+    const vals = out.filter((p) => /^tripRow/.test(p.key)), h = Math.min(...vals.map((p) => p.h));
+    vals.forEach((p) => { p.y += Math.round((p.h - h) / 2); p.h = h; });
     return out;
 }
 
@@ -389,7 +393,7 @@ const READOUTS = {
     // the car's trip computer (0.45.0): its average fuel economy (with its unit), distance and driving time
     avgFuel: { short: 'AVG', long: 'AVG', num: econText, frac: econFrac },
     trip: { short: 'TRIP', long: 'TRIP', num: tripText, frac: (d) => (isNum(d.tripKm) ? Math.min(1, d.tripKm / 1000) : 0) },
-    tripTime: { short: 'DRIVE', long: 'DRIVE TIME', num: (o, d) => tripTimeText(d), frac: (d) => (isNum(d.tripMin) ? Math.min(1, d.tripMin / 600) : 0) },
+    tripTime: { short: 'TIME', long: 'TIME', num: (o, d) => tripTimeText(d), frac: (d) => (isNum(d.tripMin) ? Math.min(1, d.tripMin / 600) : 0) },
     // (0.45.0) the fuel range (the car's, as the strip shows it) and the time of day (Settings > Time zone), anywhere
     frange: { short: 'RANGE', long: 'FUEL RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
     // (no name: '7:37 PM' says what it is)

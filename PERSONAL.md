@@ -217,7 +217,9 @@ first, checked on the car, then moved to `personal-kr`.
   services and the catalog's trip fields are listed, to find the one each choice comes in.
   The readouts made for six-figure distances (a trip since delivery, 236345 km) and 9999-hour driving times: the
   fit samples 999999 km / 9999:59 (check_fit), and a trip computer line's figures a gap clear of its name, a long
-  figure set smaller rather than squeezed (fitText room 0.88). tools/preview.js: --centreView trip --tripKm --tripMin.
+  figure set smaller rather than squeezed (fitText room 0.88), and every line's figures one size (the smallest any
+  line needs, as a rule the distance's), not each its own. The driving time's name TIME (was DRIVE).
+  tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.
