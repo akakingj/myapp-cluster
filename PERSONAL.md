@@ -14,7 +14,7 @@ The `akakingj_` prefix is used by no other app in the Store's known sources (cau
 robertnisipeanu/idrive-apps, eroobeeroo/idrive7-apps, IterioDev/car-apps; checked 11 Nov 2026).
 Icons: a gauge with an M-coloured accent and L / C / I (`icon.png` in each app's folder; `kit/tools/make_icon.js krgauge-L`).
 
-MGU Store: Settings > Add source > `akakingj/idrive7-cluster-info` > branch `personal-kr`.
+MGU Store: Settings > Add source > `akakingj/myapp-cluster` > branch `main` (moved Nov 19 2026 from the fork akakingj/idrive7-cluster-info, branch personal-kr; its history kept).
 Remove the original Cluster Layouts / Centre / Info (or turn their Show off): both would draw on the cluster.
 
 ## Language
@@ -138,8 +138,8 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
   each app's list takes all of them.
 
 ## Since 0.36 (Nov 16-18 2026)
-Branches: `personal-kr` is what the Store installs (other drivers use it too); every change goes to `personal-kr-test`
-first, checked on the car, then moved to `personal-kr`.
+Branches: `main` is what the Store installs (other drivers use it too); every change goes to `test` first, checked on
+the car, then moved to `main` (in the fork they were `personal-kr` / `personal-kr-test`).
 - Safety first: the cluster must never go dark. Each layout at most 60 layers, under 600 KB at start
   (tools/test_engine.js), GPU cost measured in the demo (swiftshader) against the other layouts, nothing cut off at a
   layer's edge, no clash with the cowl, the corners, the warning lights or the strip (tools/clearance.js), every text in
