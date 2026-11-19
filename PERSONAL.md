@@ -247,6 +247,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   under 5,536) adds one to that setting. New readout ODO: the odometer (mileageKilometre), the trip since delivery -
   with "since delivery" chosen the car sends nothing new on the trip signal (its last choice's figures stay).
   tools/preview.js: --centreView trip --tripKm --tripMin.
+- Layouts 0.48.9, Centre 0.13.7: eroobeeroo's kwfuse (Nov 19 2026): the fast kW sits on the battery reading (each
+  car-signal model carries its average gap to it) and is shown as computed, with no easing lag.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.
