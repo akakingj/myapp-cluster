@@ -161,6 +161,30 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         assert(texts.indexOf('146858 mi') >= 0 && texts.indexOf('2:30') < 0, JSON.stringify(texts));
     });
+    // (0.48.8) a long trip's distance past 65,535 km: the setting's wraps added (the plug-in hybrid's own reset: 119,110 km
+    // on the car, 53,575 sent), never past the odometer; a short trip as sent
+    const tripTexts = () => eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
+    const mi = (km) => Math.round(km / 1.609344) + ' mi';
+    ctx.settings.set('tripWraps', 1);
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 677, rideDurationMinutes: 5, wayPassed: 53575 });
+    await sleep(40);
+    check('a long trip past 65,535 km: one wrap from Settings added (53,575 sent, 119,111 km)', () => assert(tripTexts().indexOf(mi(119111)) >= 0, JSON.stringify(tripTexts())));
+    ctx.settings.set('tripWraps', 3);
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 677, rideDurationMinutes: 6, wayPassed: 53575 });
+    await sleep(40);
+    check('never past the odometer: 3 wraps would be 250,183 km, so 2 (184,647 km)', () => assert(tripTexts().indexOf(mi(184647)) >= 0, JSON.stringify(tripTexts())));
+    ctx.settings.set('tripWraps', 0);
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 677, rideDurationMinutes: 7, wayPassed: 65530 });
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 677, rideDurationMinutes: 8, wayPassed: 4 });
+    await sleep(40);
+    check('a wrap seen while the long trip counts (65,530 -> 4): the setting one up, the distance 65,540 km', () => {
+        assert.strictEqual(S.tripWraps, 1);
+        assert(tripTexts().indexOf(mi(65540)) >= 0, JSON.stringify(tripTexts()));
+    });
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 0, rideDurationMinutes: 40, wayPassed: 48 });
+    await sleep(40);
+    check('a short trip (since the start) as sent, the setting left alone', () => assert(tripTexts().indexOf(mi(48)) >= 0 && S.tripWraps === 1, JSON.stringify(tripTexts())));
+    ctx.settings.set('tripWraps', 0);
     handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 85, speedAverage1BC1: 463, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_L_S_100KM' });
     handlers.statusBordcomputerTravelData({ rideDurationHours: 2, rideDurationMinutes: 30, wayPassed: 126 });
     ctx.settings.set('econUnit', 'kml');

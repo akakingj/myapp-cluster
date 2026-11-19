@@ -241,6 +241,11 @@ first, checked on the car, then moved to `personal-kr`.
   answered only their defaults (the active choice 0, every figure 0, gwsz 0; the service's currentConsumption too,
   Nov 19 2026 15:18): the cluster keeps the trip data there, not the head unit. The trip stays the trip computer's
   (statusBordcomputerTravelData / Average).
+  The trip computer's distance is 16 bits: past 65,535 km it starts from 0 again (that car's own-reset trip: 119,110 km
+  on the car, 53,575 sent, 65,536 apart). A long trip (its driving time 100 h or more) gets Settings > Car > "Trip
+  distance past 65,535 km" x 65,536 km added, never past the odometer, and a wrap seen while it counts (60,000+ to
+  under 5,536) adds one to that setting. New readout ODO: the odometer (mileageKilometre), the trip since delivery -
+  with "since delivery" chosen the car sends nothing new on the trip signal (its last choice's figures stay).
   tools/preview.js: --centreView trip --tripKm --tripMin.
 
 ## Demo

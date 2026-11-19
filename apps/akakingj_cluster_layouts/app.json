@@ -504,6 +504,10 @@
           "Driving time (the car's trip computer)"
         ],
         [
+          "odo",
+          "Odometer (the car's total distance)"
+        ],
+        [
           "frange",
           "Fuel range"
         ],
@@ -599,6 +603,10 @@
         [
           "tripTime",
           "Driving time (the car's trip computer)"
+        ],
+        [
+          "odo",
+          "Odometer (the car's total distance)"
         ],
         [
           "frange",
@@ -698,6 +706,10 @@
           "Driving time (the car's trip computer)"
         ],
         [
+          "odo",
+          "Odometer (the car's total distance)"
+        ],
+        [
           "frange",
           "Fuel range"
         ],
@@ -793,6 +805,10 @@
         [
           "tripTime",
           "Driving time (the car's trip computer)"
+        ],
+        [
+          "odo",
+          "Odometer (the car's total distance)"
         ],
         [
           "frange",
@@ -1576,6 +1592,22 @@
         83,
         85,
         90
+      ],
+      "section": "Car"
+    },
+    {
+      "key": "tripWraps",
+      "label": "Trip distance past 65,535 km (the car's own-reset or since-delivery trip)",
+      "type": "number",
+      "unit": "x 65,536 km",
+      "default": 0,
+      "steps": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
       ],
       "section": "Car"
     },

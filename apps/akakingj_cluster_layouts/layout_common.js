@@ -394,6 +394,8 @@ const READOUTS = {
     avgFuel: { short: 'AVG', long: 'AVG', num: econText, frac: econFrac },
     trip: { short: 'TRIP', long: 'TRIP', num: tripText, frac: (d) => (isNum(d.tripKm) ? Math.min(1, d.tripKm / 1000) : 0) },
     tripTime: { short: 'TIME', long: 'TIME', num: (o, d) => tripTimeText(d), frac: (d) => (isNum(d.tripMin) ? Math.min(1, d.tripMin / 600) : 0) },
+    // (0.48.8) the odometer: the trip since delivery, whatever the head unit's trip data shows
+    odo: { short: 'ODO', long: 'ODO', num: (o, d) => distText(o, d.odometer), frac: () => 0 },
     // (0.45.0) the fuel range (the car's, as the strip shows it) and the time of day (Settings > Time zone), anywhere
     frange: { short: 'RANGE', long: 'FUEL RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
     // (no name: '7:37 PM' says what it is)
@@ -474,8 +476,8 @@ function fitText(p, fam, room) {
 /** The readings at their widest figures (three-figure temperatures, the most negative timing and boost ...): what a
  * readout's box is sized to hold (layouts.js), and what tools/check_fit.js measures every text with. */
 const READOUT_SAMPLES = [
-    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 999999, tripMin: 599999, frange: 1999 },
-    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P', avgCons: 99.9, avgConsUnit: 'kml', tripKm: 0, tripMin: 0, frange: 0 },
+    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 999999, tripMin: 599999, odometer: 999999, frange: 1999 },
+    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P', avgCons: 99.9, avgConsUnit: 'kml', tripKm: 0, tripMin: 0, odometer: 0, frange: 0 },
 ];
 const nameOf = (r, o, long) => { const n = long ? r.long : r.short; return typeof n === 'function' ? n(o) : n; };
 /** A readout on one line, its name first: 'IAT 31°', 'BST 14.5' ('INTAKE AIR 31°', 'BOOST 14.5 psi' where it
