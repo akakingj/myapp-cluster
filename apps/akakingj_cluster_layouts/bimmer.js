@@ -4,7 +4,7 @@
  * Themes (github.com/bimmer-lab/apps, MIT: NOTICE) put them: its texts' fonts (their sizes and baselines, from its
  * hud/fonts/*.json) and a text piece placed from one of its text widgets' boxes, so a glyph comes out the size and on
  * the line theirs does. Their texts are pre-drawn bitmaps; ours are the distance-field atlas (font.js), the same faces
- * baked by tools/bake_font.py ('wide': Michroma, 'orb': Orbitron Black, both with Barlow Medium for the small print).
+ * baked by tools/bake_font.py ('wide': Michroma, 'orb': Barlow Bold, both with Barlow Medium for the small print).
  */
 const C = require('./layout_common');
 const BAKED = require('./font_baked');
@@ -16,8 +16,8 @@ const FONTS = {
     // Sport (Michroma, Barlow)
     s_scale: [27, 24, 'main'], s_speed: [74, 62, 'main'], s_gear: [70, 58, 'main'], s_val: [26, 23, 'main'], s_gl: [21, 19, 'main'],
     s_unit: [24, 22, 'lower'], s_label: [30, 24, 'lower'],
-    // M (Orbitron Black, Barlow)
-    m_num: [36, 28, 'main'], m_gear: [125, 96, 'main'], m_speed: [78, 61, 'main'], m_gl: [25, 21, 'main'], m_mid: [34, 27, 'main'],
+    // ID7 M (Barlow Bold, Barlow Medium)
+    m_num: [36, 28, 'main'], m_gear: [125, 96, 'main'], m_speed: [78, 61, 'main'], m_speedBig: [96, 75, 'main'], m_gl: [25, 21, 'main'], m_mid: [34, 27, 'main'],
     m_tyre: [25, 21, 'main'], m_label: [20, 17, 'main'], m_tiny: [26, 25, 'lower'], m_unit: [30, 28, 'lower'], m_badge: [26, 21, 'lower'],
     // (the M8's side gauges' scale numbers: Barlow)
     m_scale: [25, 20, 'lower'],

@@ -5,7 +5,7 @@
  * so one small atlas draws a 40 px numeral and a 200 px gear alike. It is the only picture a layout sends
  * to the cluster, once (CELL_W x CELL_H a glyph, 32 to a row: about 200 KB).
  *
- * Baked from IBM Plex Sans Condensed (bold, light; and, for 'wide' and 'orb', Michroma and Orbitron with Barlow's
+ * Baked from IBM Plex Sans Condensed (bold, light; and, for 'wide' and 'orb', Michroma and Barlow Bold with Barlow's
  * small print; SIL OFL 1.1: NOTICE) by tools/bake_font.py into font_<family>.wad and font_baked.js,
  * with upper and lower case. Without those files it is made at start from the kit's own font as before (drawn
  * large, then a Euclidean distance transform), upper case only.

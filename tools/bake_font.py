@@ -9,7 +9,7 @@ Barlow Semi Condensed), a condensed face with clear figures, with upper and lowe
   bold   SemiBold (figures and text the layouts call bold: every layout but ID7 M, ID8 M and JDM 1; Centre's modern look)
   light  Regular (KO 1, KO 2; Centre's native look)
   wide   Michroma (SIL OFL 1.1, shared/NOTICE), thickened, with Barlow Medium for the small print: Sport's face
-  orb    Orbitron Black (SIL OFL 1.1), with Barlow Medium for the small print: M's face
+  orb    Barlow Bold (SIL OFL 1.1), with Barlow Medium for the small print: ID7 M's face
          (both as bimmer-lab's Cluster Themes bakes them; wider cells, 60 x 40, for the wide faces)
 
 Each cell: the glyph drawn at 4x, centred, its baseline at BASE of the cell's height (room below it for the
@@ -49,8 +49,8 @@ FAMILIES = {
     # GPU takes, and a layout's start-up under 600 KB); scale: Michroma's capitals the height of Barlow's; grow: atlas px added round each glyph (thickened)
     # (Sport's: Michroma thickened, Barlow Medium for the small print, as bimmer-lab's Cluster Themes bakes them)
     'wide': {'ttf': 'Michroma-Regular.ttf', 'lower': 'Barlow-Medium.ttf', 'cellW': 60, 'cellH': 40, 'cols': 16, 'scale': 0.93, 'grow': 1.375},
-    # M's: Orbitron Black (its zero slashed: the O drawn for it, plain as the M8's), Barlow Medium for the small print
-    'orb': {'ttf': 'Orbitron[wght].ttf', 'weight': 'Black', 'subs': {'0': 'O'}, 'lower': 'Barlow-Medium.ttf', 'cellW': 60, 'cellH': 40, 'cols': 16, 'scale': 1.0, 'grow': 0.42},
+    # ID7 M's: Barlow Bold, Barlow Medium for the small print
+    'orb': {'ttf': 'Barlow-Bold.ttf', 'lower': 'Barlow-Medium.ttf', 'cellW': 60, 'cellH': 40, 'cols': 16, 'scale': 1.0, 'grow': 0.0},
 }
 
 
@@ -114,6 +114,6 @@ if __name__ == '__main__':
             meta[fam] = bake(src, fam, spec)
     meta = {k: meta[k] for k in FAMILIES if k in meta}
     with open(out, 'w') as f:
-        f.write("'use strict';\n/* The baked glyph atlases' metrics (tools/bake_font.py; IBM Plex Sans Condensed, Michroma, Orbitron, Barlow, SIL OFL 1.1: NOTICE). */\n"
+        f.write("'use strict';\n/* The baked glyph atlases' metrics (tools/bake_font.py; IBM Plex Sans Condensed, Michroma, Barlow, SIL OFL 1.1: NOTICE). */\n"
                 'module.exports = ' + json.dumps(meta, ensure_ascii=False) + ';\n')
     # (shared/NOTICE carries the fonts' copyright and the OFL: edited by hand, it has the layouts' notices too)
