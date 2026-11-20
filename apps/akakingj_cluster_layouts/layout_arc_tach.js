@@ -291,9 +291,9 @@ function dash(o) {
             colors: (t) => ({ fill: t.panel, on: t.lcd, off: t.lcdOff }),
             dyn: (d) => ({ u_num: [C.isNum(d.speed) ? Math.max(0, Math.min(999, Math.round(C.speedIn(o, d.speed)))) : 0] }) },
         C.text('spUnit', sp.x + sp.w - 112, sp.y + 112, 90, 30, C.speedUnit(o), grn, { align: 0, z: 22 }));
-    // the main readout under the display (Settings > Main readout; a plug-in hybrid's battery power)
+    // the main readout under the display, its name first (Settings > Main readout; a plug-in hybrid's battery power)
     const pv = C.focus.power(o), pl = C.focus.powerLabel(o, true);
-    if (pv) list.push(Object.assign(C.fitText(C.text('kwNow', sp.x + 24, sp.y + 202, sp.w - 48, 30, (d) => (typeof pv === 'function' ? pv(d) : pv) + (pl ? '   ' + pl : ''), ink), 'wide'), { z: 22 }));
+    if (pv) list.push(Object.assign(C.fitText(C.text('kwNow', sp.x + 24, sp.y + 202, sp.w - 48, 30, (d) => (pl ? pl + '   ' : '') + (typeof pv === 'function' ? pv(d) : pv), ink), 'wide'), { z: 22 }));
     // the boxes: left a reading and the fuel, right the coolant and a reading (each of the four set on the page:
     // Settings > Small gauge in the speedometer / in the tach for the outer two, the layout's places for the inner)
     const [left, fuel, cool, right] = boxBars(o);
