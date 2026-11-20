@@ -60,7 +60,7 @@ function pod(o, which, cx, cy, S, readKey, bare) {
 function ranges(o) {
     const RX = 1672, RW = 216;
     return [
-        ...C.reading('fuel', RX, 292, RW, 44, (d) => C.distText(o, d.frange), 'FUEL RANGE', lit, lbl),
+        ...C.reading('fuel', RX, 292, RW, 44, (d) => C.distText(o, d.frange), 'RANGE', lit, lbl),
         ...C.reading('elec', RX, 400, RW, 44, C.focus.range(o), C.focus.rangeLabel(o), C.engineFocus(o) ? lit : elecTxt, lbl),
         C.text('socTxt', RX, 506, RW, 44, C.focus.charge(o), C.engineFocus(o) ? lit : elecTxt),
         C.bar('soc', RX + 8, 562, RW - 16, 16, C.focus.bar(o), (t) => ({ track: t.track, fill0: C.engineFocus(o) ? t.accent : t.ev, fill1: C.engineFocus(o) ? t.accent : t.ev, redc: t.red, tip: t.glow, tick: t.dim, num: t.num }), 16),

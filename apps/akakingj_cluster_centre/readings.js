@@ -31,7 +31,7 @@ const READINGS = {
     kw: { title: 'Battery power', short: 'POWER', icon: 7, kind: 'kw', min: -35, max: 100 },
     battTemp: { title: 'Battery temperature', short: 'BATTERY', icon: 6, kind: 'temp', min: 0, max: 50, warnHigh: 42, cold: 5 },
     erange: { title: 'Electric range', short: 'ELECTRIC', icon: 7, kind: 'km', min: 0, max: 60 },
-    frange: { title: 'Fuel range', short: 'FUEL RANGE', icon: 4, kind: 'km', min: 0, max: 700, warnLow: 50 },
+    frange: { title: 'Fuel range', short: 'RANGE', icon: 4, kind: 'km', min: 0, max: 700, warnLow: 50 },
 };
 
 /** Units now: { temp: 'f' | 'c', press: 'bar' | 'psi' | 'kpa', speed: 'mph' | 'kmh', torque: 'lbft' | 'nm' | 'kgm', power: 'hp' | 'ps' | 'kw' }. */

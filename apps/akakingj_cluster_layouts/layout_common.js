@@ -397,7 +397,7 @@ const READOUTS = {
     // (0.48.8) the odometer: the trip since delivery, whatever the head unit's trip data shows
     odo: { short: 'ODO', long: 'ODO', num: (o, d) => distText(o, d.odometer), frac: () => 0 },
     // (0.45.0) the fuel range (the car's, as the strip shows it) and the time of day (Settings > Time zone), anywhere
-    frange: { short: 'RANGE', long: 'FUEL RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
+    frange: { short: 'RANGE', long: 'RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
     // (no name: '7:37 PM' says what it is)
     clock: { short: '', long: '', num: () => clock(), frac: () => 0 },
 };

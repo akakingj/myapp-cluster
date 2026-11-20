@@ -131,7 +131,7 @@ module.exports = {
                     C.text('clock', 520, top - 76, 200, 34, C.clock, white),
                     C.text('outside', 1200, top - 76, 200, 34, (d) => C.outsideText(o, d.outside), white),
                 ],
-                C.readingUp('fuel', 560, bot + 2, 260, 30, (d) => C.distText(o, d.frange), 'FUEL RANGE', white, lbl),
+                C.readingUp('fuel', 560, bot + 2, 260, 30, (d) => C.distText(o, d.frange), 'RANGE', white, lbl),
                 C.readingUp('elec', 1100, bot + 2, 300, 30, C.focus.both(o), C.focus.rangeLabel(o), C.engineFocus(o) ? white : elecTxt, lbl),
             );
         }

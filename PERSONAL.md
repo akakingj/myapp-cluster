@@ -249,6 +249,7 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   tools/preview.js: --centreView trip --tripKm --tripMin.
 - Layouts 0.48.9, Centre 0.13.7: eroobeeroo's kwfuse (Nov 19 2026): the fast kW sits on the battery reading (each
   car-signal model carries its average gap to it) and is shown as computed, with no easing lag.
+  The cluster's names for the trip figures are one set in every skin: ODO, AVG, RANGE (the fuel range), TIME.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.
