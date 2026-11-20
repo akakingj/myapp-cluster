@@ -4,7 +4,7 @@
  * the engine speed left, the speed large under the camera's cowl, the gear right; their units in one small line
  * under them, a rule, and under each of the three a line of the trip computer, its name small above its figures
  * (places tripRow1-3: as designed the distance, the driving time and the average economy). The engine speed turns yellow from Settings > Yellow shift
- * light from, red from the red zone (Red shift light from); at the shift warning (Shift warning at) the speed and
+ * light from, red from the red zone (Red light at); at the shift warning (Shift now warning at) the speed and
  * the gear turn red with it. The settings as set, the cold-engine guard aside. Pulse's colours, after the drive mode;
  * with the map or the stock centre, Pulse's pieces. An original design.
  */

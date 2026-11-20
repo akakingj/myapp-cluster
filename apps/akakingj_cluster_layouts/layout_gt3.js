@@ -73,7 +73,7 @@ function box(key, x, y, w, h, label) {
         C.text(key + 'Lbl', x + 14, y + 6, w - 28, 18, label, white, { align: 0, tracking: 0.12 }),
     ];
 }
-/** The shift lights: lit from Settings > Yellow shift light from (Auto: 3000 rpm or 2500 under the shift point,
+/** The shift lights: lit from Settings > Yellow light at (Auto: 3000 rpm or 2500 under the shift point,
  * whichever is higher), full at the shift point (the shift warning), all of them flashing there. */
 function lights(o, x, y, w, h) {
     return {
@@ -84,7 +84,7 @@ function lights(o, x, y, w, h) {
         colors: (t) => ({ off: t.off, green: t.green, yellow: t.yellow, red: t.red }),
     };
 }
-/** The segmented rpm bar, red from the red zone: white turning yellow from Settings > Yellow shift light from (Auto: white
+/** The segmented rpm bar, red from the red zone: white turning yellow from Settings > Yellow light at (Auto: white
  * to yellow along the fill). */
 function revBar(o, x, y, w, h) {
     const r = C.rpmScale(o);

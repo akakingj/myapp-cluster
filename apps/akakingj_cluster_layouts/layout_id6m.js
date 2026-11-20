@@ -24,7 +24,7 @@ const kwNow = (d) => (C.isNum(d.kw) ? d.kw : 0);
 const powerTxt = (t, d) => ({ color: [kwNow(d) < -0.3 ? '#3ddc84' : t.ev, 1], glow: [t.ev, 0.2] });
 const A0 = -125, A1 = 125;     // the big dials' sweep
 const NUM_H = 0.13;            // their numerals' height, of the radius
-/** Where the amber zone starts, in thousands of rpm: Settings > Yellow shift light from (Auto: 700 rpm under the red,
+/** Where the amber zone starts, in thousands of rpm: Settings > Yellow light at (Auto: 700 rpm under the red,
  * as ID7 M's and ID8 M's). */
 const amberAt = (o, d) => C.yellowAt(o, d || {}) / 1000;
 

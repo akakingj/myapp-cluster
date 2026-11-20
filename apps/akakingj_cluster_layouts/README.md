@@ -165,8 +165,8 @@ regeneration. An original drawing.
 Round dials after the M cars' analog clusters of the mid 2010s, an original drawing (the M tricolour, no lettering):
 two big dials, each with a thin white ring round its top, open at the bottom, a dark band with white marks and large
 numerals, a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of its
-top end, amber from Settings > Yellow shift light from (Auto: 700 rpm under the red) and red from the red zone (Red
-shift light from; lower while the oil is cold); the gear under the tach in a white arc; the speed in figures with its unit at the bottom of the middle, between the dials; no
+top end, amber from Settings > Yellow light at (Auto: 700 rpm under the red) and red from the red zone (Red
+light at; lower while the oil is cold); the gear under the tach in a white arc; the speed in figures with its unit at the bottom of the middle, between the dials; no
 readouts beside the dials (the car's strip shows the time, temperature and ranges); a small fuel gauge (0, 1/2, 1) left of the
 speedometer and a small engine oil gauge (70-170 °C, 160-340 °F, red from Too hot) right of the tach, either of which
 Settings > Speedometer gauge / Tach gauge (or the page) can give another reading.
@@ -240,9 +240,9 @@ parts are one shader (`shaders.js` JDM_FS).
 
 ### Track
 
-A motorsport data display: a row of shift lights (green, yellow, then red, from Settings > Yellow shift light from
+A motorsport data display: a row of shift lights (green, yellow, then red, from Settings > Yellow light at
 when it is set, all flashing red at the shift warning, 300 rpm before the red zone unless set) over a segmented rpm
-bar (with Yellow shift light from set: white up to it, turning yellow towards the red zone, red from there), a huge gear with the engine speed in the middle, tiles for oil,
+bar (with Yellow light at set: white up to it, turning yellow towards the red zone, red from there), a huge gear with the engine speed in the middle, tiles for oil,
 coolant, boost and battery power either side of it (over the car's own strip, which shows the gear, the card holds
 the engine speed, large, instead) (timing and torque with Vehicle: ICE), the speed large on
 the left with a **0-60 timer** (it times every run from a stop to 60 mph, or 0-100 km/h, and keeps the best of
@@ -274,7 +274,7 @@ Made for the car's own bottom strip: three figures on one baseline across the mi
 speed large in the middle, the gear right, their units in a small line under them; a rule, and under each of the
 three a line of the car's trip computer, its name small above its figures (as designed the distance, the driving
 time and the average economy; each a place on the page). The engine speed turns yellow from Settings > Yellow shift
-light from and red from the red zone (Red shift light from); at the shift warning (Shift warning at) the speed and
+light from and red from the red zone (Red light at); at the shift warning (Shift now warning at) the speed and
 the gear turn red with it, the cold-engine guard aside. Pulse's colours, after the drive mode; with Waze or the stock
 centre, Pulse's arrangement.
 
@@ -284,9 +284,9 @@ centre, Pulse's arrangement.
 
 A race dash, after bimmer-lab's GT3 theme for Cluster Themes ([bimmer-lab/apps](https://github.com/bimmer-lab/apps), MIT):
 its arrangement and its shift grading, redrawn with this app's engine and fitted to the G05 and a plug-in hybrid.
-Eighteen round shift lights over a segmented rev bar (the lights fill from Settings > Yellow shift light from when it
+Eighteen round shift lights over a segmented rev bar (the lights fill from Settings > Yellow light at when it
 is set to the shift warning, the red zone less 300 rpm unless set, pulled down while the oil is cold, and all flash
-there; with Yellow shift light from set the bar is white up to it, turning yellow towards the red zone, red from there); the gear huge in the middle with the coolant and oil
+there; with Yellow light at set the bar is white up to it, turning yellow towards the red zone, red from there); the gear huge in the middle with the coolant and oil
 under it; on the left the speed, the engine speed (OFF in an electric drive) and the **tyres**: pressure and
 temperature at each corner from the car's tyre monitor (read every 10 s); on the right the battery's power, the
 charge, and the last upshift with its grade (EARLY, SPOT ON, LATE, COLD REV or LIMITER). On a petrol or diesel car,

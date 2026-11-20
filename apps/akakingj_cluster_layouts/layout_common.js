@@ -21,8 +21,8 @@ function rpmScale(o) {
 }
 /*
  * The shift warning (the shift point) and the red zone now, worked as cauliflowermossgrape's Redline app works them
- * (GT3 did already): the red zone from Settings > Red shift light from (o.redline, main.js), the shift warning that
- * far under it (o.shiftBefore: 300 rpm; negative when Shift warning at is past the red); with Settings > Cold-engine
+ * (GT3 did already): the red zone from Settings > Red light at (o.redline, main.js), the shift warning that
+ * far under it (o.shiftBefore: 300 rpm; negative when Shift now warning at is past the red); with Settings > Cold-engine
  * rev guard on, pulled down to the Cold rev limit (4500 rpm) with the oil at 30 °C and climbing back as the oil
  * reaches Oil warm at (80 °C), the red zone keeping its distance to it: lower while cold (as an M car's variable
  * redline). d: the data (its oil); { rpm, red, cold }.
@@ -37,7 +37,7 @@ function shiftPoint(o, d) {
     const rpm = Math.round((cold + (n - cold) * f) / 50) * 50;
     return { rpm, red: Math.max(2000, Math.min(red, rpm + before)), cold: true };
 }
-/** Where the tach turns yellow now (Settings > Yellow shift light from; Auto: 700 under the red zone), never past
+/** Where the tach turns yellow now (Settings > Yellow light at; Auto: 700 under the red zone), never past
  * the red zone; rpm. */
 function yellowAt(o, d) {
     const red = shiftPoint(o, d).red, y = o && Number(o.yellowFrom) > 0 ? Number(o.yellowFrom) : red - 700;

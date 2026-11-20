@@ -64,7 +64,7 @@ function tile(key, x, y, w, h, label, value, colours, valueH) {
         C.text(key, x + 10, y + 34, w - 20, vh, value, colours || white, { align: 0 }),
     ];
 }
-/** The shift lights: from Settings > Yellow shift light from (Auto: 2200 rpm under the shift point) to the shift point
+/** The shift lights: from Settings > Yellow light at (Auto: 2200 rpm under the shift point) to the shift point
  * (the shift warning; layout_common.shiftPoint: the red zone less 300 rpm by default, lower while the oil is cold),
  * all flashing red at it. */
 function shiftLights(o, x, y, w, h, count) {
@@ -77,7 +77,7 @@ function shiftLights(o, x, y, w, h, count) {
         colors: (t) => ({ off: t.off, green: t.green, yellow: t.yellow, red: t.red }),
     };
 }
-/** The segmented rpm bar, red from the red zone: white turning yellow from Settings > Yellow shift light from (Auto: white
+/** The segmented rpm bar, red from the red zone: white turning yellow from Settings > Yellow light at (Auto: white
  * to yellow along the fill). */
 function rpmBar(o, x, y, w, h) {
     const r = C.rpmScale(o);

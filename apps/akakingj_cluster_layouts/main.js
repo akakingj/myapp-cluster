@@ -25,9 +25,9 @@ const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, slotLabel: layoutSlotLabe
 
 /** The shift point as layout_common takes it - so many rpm under the red zone - from Settings > Shift point (0.42.0,
  * the Car profile's: an rpm; 0 Auto, the red zone less 300). */
-/** The red zone's start: Red shift light from, or (Auto) the redline. */
+/** The red zone's start: Red light at, or (Auto) the redline. */
 const redOf = (settings) => Number(settings.get('redLight')) || Number(settings.get('redline')) || 7000;
-/** How far the shift warning sits under the red zone (negative: above it, Shift warning at past the red). */
+/** How far the shift warning sits under the red zone (negative: above it, Shift now warning at past the red). */
 function beforeOf(settings) {
     const at = Number(settings.get('shiftAt')), red = redOf(settings);
     return at > 0 ? red - at : 300;

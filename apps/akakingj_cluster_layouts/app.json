@@ -1178,7 +1178,7 @@
     {
       "key": "yellowLight",
       "profile": "lightStart",
-      "label": "Yellow shift light from",
+      "label": "Yellow light at",
       "type": "number",
       "unit": "rpm",
       "default": 0,
@@ -1204,7 +1204,7 @@
     {
       "key": "redLight",
       "profile": "lightRed",
-      "label": "Red shift light from (the red zone)",
+      "label": "Red light at (the red zone)",
       "type": "number",
       "unit": "rpm",
       "default": 0,
@@ -1236,7 +1236,7 @@
     {
       "key": "shiftAt",
       "profile": "shiftAt",
-      "label": "Shift warning at (the shift point)",
+      "label": "Shift now warning at",
       "type": "number",
       "unit": "rpm",
       "default": 0,
@@ -1266,7 +1266,7 @@
     {
       "key": "rpmMax",
       "profile": "rpmScale",
-      "label": "Max rpm (the end of the rev scale)",
+      "label": "Gauge goes up to",
       "type": "number",
       "unit": "rpm",
       "default": 7000,
@@ -1283,7 +1283,7 @@
     {
       "key": "redline",
       "profile": "redline",
-      "label": "Redline (the limiter; the red zone while Red shift light is Auto)",
+      "label": "Engine's top rpm (redline; the red zone while Red light is Auto)",
       "type": "number",
       "unit": "rpm",
       "default": 6000,
@@ -1309,7 +1309,7 @@
     },
     {
       "key": "shiftWarn",
-      "label": "At the shift warning: the speed and the gear red (layouts without their own)",
+      "label": "At the shift now warning: the speed and the gear red (layouts without their own)",
       "type": "choice",
       "default": "off",
       "options": [
