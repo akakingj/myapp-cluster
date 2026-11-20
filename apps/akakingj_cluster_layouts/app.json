@@ -1440,6 +1440,12 @@
     },
     {
       "key": "econUnit",
+      "profile": "fuelUnit",
+      "profileMap": {
+        "l100": "l100",
+        "kml": "kml",
+        "mpgus": "mpg"
+      },
       "label": "Fuel economy unit",
       "type": "choice",
       "default": "auto",
