@@ -1463,11 +1463,12 @@ void main() {
     gl_FragColor = c;
 }
 `;
-const MTACH_FS = `// The M theme's rev bar (GLSL ES 1.00), after the M8's: a bowed glass blade (the curve bends at u_geoA.z with a
-// large roundness, so it reads as one arc), wide at 0 rpm and narrow at the top, with a bright silver outer
-// edge and bright ticks running in from it every 1000 rpm. The part below the rpm is lit dim grey, a glowing red
-// block rides the blade at the rpm (the M8's marker), an outlined grey foot block fills the bottom 20 px, orange dashes sit before
-// the redline and a solid red line past it. Drawn as the left bar; u_side 1 mirrors it. v_uv (0,0) is the top-left.
+const MTACH_FS = `// The M theme's rev bar (GLSL ES 1.00): a bowed blade (the curve bends at u_geoA.z with a large roundness, so it
+// reads as one arc), wide at 0 rpm and narrow at the top, in blocks of 1000 rpm (a dark gap between them), a thick
+// silver outer edge with ticks standing out from it (every 1000 rpm long, every 500 short), a red block at the foot
+// on its outer half. Lit from the foot to the rpm, a white marker there; the run-up to the redline amber and the red
+// zone red on the outer half of the blade until the rpm reaches them, then across it. Drawn as the left bar; u_side 1
+// mirrors it. v_uv (0,0) is the top-left.
 // (Here, as a power gauge in an electric drive: u_zero above 0, the glass lit from the 0 to the value, below the 0
 // regeneration in u_regen; the marker in u_mark.)
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -1533,31 +1534,33 @@ void main() {
         // the run-up to the redline amber, the red zone red: dim, bright where the rpm has reached them (an engine
         // speed only: a power gauge's are off)
         bool reached = lit && u_zero <= 0.0;
-        if (t >= u_orange && t < u_redFrom) g = reached ? vec4(mix(vec3(1.0, 0.92, 0.55), vec3(1.0, 0.76, 0.12), across), mix(0.98, 0.9, across))
+        bool outerHalf = across < 0.45 || reached;
+        if (t >= u_orange && t < u_redFrom && outerHalf) g = reached ? vec4(mix(vec3(1.0, 0.92, 0.55), vec3(1.0, 0.76, 0.12), across), mix(0.98, 0.9, across))
             : vec4(mix(vec3(0.8, 0.6, 0.08), vec3(0.55, 0.4, 0.04), across), mix(0.9, 0.7, across));
-        if (t >= u_redFrom) g = reached ? vec4(mix(vec3(1.0, 0.5, 0.45), vec3(0.95, 0.12, 0.12), across), mix(0.98, 0.9, across))
+        if (t >= u_redFrom && outerHalf) g = reached ? vec4(mix(vec3(1.0, 0.5, 0.45), vec3(0.95, 0.12, 0.12), across), mix(0.98, 0.9, across))
             : vec4(mix(vec3(0.85, 0.1, 0.1), vec3(0.62, 0.04, 0.05), across), mix(0.9, 0.7, across));
-        // the foot: the bottom 20 px as an outlined grey block, as the M8 draws it
-        if (p.y > y0 - 20.0) g = over(vec4(0.7, 0.72, 0.78, 0.22), g);
-        g = over(vec4(0.9, 0.92, 0.95, 0.7 * cov(min(abs(p.y - (y0 - 19.0)), abs(p.y - (y0 - 1.5))) - 0.8)), g);
+        // the foot: a red block, the bottom 14 px of the blade's outer half
+        if (p.y > y0 - 14.0 && across < 0.5) g = vec4(u_red, 1.0);
         // the marker: a white line at the rpm (ID8 M's), a soft glow either side (on electricity in its colour)
         float dm = abs(p.y - yn);
         g = over(vec4(u_mark, 0.35 * exp(-dm / 18.0)), g);
         g = over(vec4(mix(u_mark, vec3(1.0), 0.5), cov(dm - 3.0)), g);
+        // the blocks: a dark gap across the blade every 1000 rpm (from the foot block up)
+        float kb = floor(t * u_ticks + 0.5);
+        float yb = y0 - kb / u_ticks * (y0 - y8);
+        if (kb >= 1.0 && kb < u_ticks) g.a *= 1.0 - 0.9 * cov(abs(p.y - yb) - 1.3);
         c = vec4(g.rgb, g.a * inBand);
-        c = over(vec4(0.93, 0.95, 0.98, cov(abs(d) - 1.6)), c);               // outer edge
-        c = over(vec4(1.0, 1.0, 1.0, 0.3 * cov(abs(d - 4.0) - 0.6)), c);       // its bevel
+        c = over(vec4(0.93, 0.95, 0.98, cov(abs(d - 0.6) - 2.2)), c);         // outer edge, thick silver
+        c = over(vec4(0.55, 0.58, 0.64, 0.8 * cov(abs(d - 3.6) - 0.7)), c);    // its darker inner line
         c = over(vec4(0.66, 0.7, 0.76, 0.75 * cov(abs(d - w) - 0.8)), c);      // inner edge
-        // (the run-up to the redline and the red zone: filled across the glass, above)
     }
-    // ticks every 1000 rpm: bright, from the outer edge 24 px into the glass, as the M8 draws them
-    float kk = floor(t * u_ticks + 0.5);
-    float yk = y0 - kk / u_ticks * (y0 - y8);
-    if (kk >= 0.0 && kk <= u_ticks && d > -2.0 && d < 24.0) {
-        float ty = abs(p.y - yk) - 1.5;
-        // (0.39.5) dark on the lit glass, white on the dark: seen on both
-        bool onLit = d > 2.0 && t >= min(u_zero, u_value) && t <= max(u_zero, u_value);
-        c = over(vec4(onLit ? vec3(0.08, 0.09, 0.11) : vec3(0.93, 0.95, 0.98), onLit ? 0.55 * cov(ty) : cov(ty)), c);
+    // ticks standing out from the outer edge: every 1000 rpm 12 px, every 500 rpm 6 px
+    float kh = floor(t * u_ticks * 2.0 + 0.5);
+    float yh = y0 - kh / (u_ticks * 2.0) * (y0 - y8);
+    float len = mod(kh, 2.0) < 0.5 ? 12.0 : 6.0;
+    if (kh >= 0.0 && kh <= u_ticks * 2.0 && d > -len - 1.0 && d < 1.0) {
+        float ty = abs(p.y - yh) - 1.3;
+        c = over(vec4(0.93, 0.95, 0.98, cov(ty) * clamp(d + len + 0.5, 0.0, 1.0)), c);
     }
     gl_FragColor = c;
 }

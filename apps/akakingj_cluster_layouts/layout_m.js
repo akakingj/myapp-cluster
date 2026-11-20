@@ -12,11 +12,12 @@
  * an M car (its KOMBI's two boxes in the middle) the gear and speed in those places too. Full screen without the
  * car's strip the right-hand setup rows stand clear of the KOMBI's own gear box (above and below it).
  *
- * The gauges are the M8's flat bars, each temperature and the charge in figures too: in the cards the engine's
+ * The gauges in the cards are the M8's flat bars, each temperature and the charge in figures too: the engine's
  * temperatures on the left (coolant, oil; the gearbox's oil on a petrol or diesel car), on the right the battery's
  * power (its first quarter regeneration, green) and temperature on a plug-in hybrid, the boost and torque on a petrol
- * or diesel car (or with Show: Engine); along the bottom, as the M8's fuel gauge, the fuel level left and the charge
- * right (the oil on a petrol or diesel car).
+ * or diesel car (or with Show: Engine). In the bottom corners two arcs: the fuel level left, the charge right (the oil
+ * on a petrol or diesel car). The blades in blocks of 1000 rpm with ticks standing out from their outer edge; the
+ * gear's programme small and grey beside its number (D 4).
  */
 const C = require('./layout_common');
 const B = require('./bimmer');
@@ -26,7 +27,7 @@ const B = require('./bimmer');
  * as ID8 M's rev band, in its colours: dark glass (band), lit up to the rpm in white (comfort), red (sport), teal
  * (ECO PRO), a white marker line */
 const PAL = { bg: '#000000', text: '#eef1f6', fg: '#eef1f6', dim: '#848c98', faint: '#606876', red: '#e2242c', regen: '#3ddc84', glow: '#e2242c', track: '#5c6068', ev: '#4ab4ff',
-    mark: '#ffffff', lit: '#e8edf5', band: '#262c38', fill: '#eef1f6' };
+    mark: '#ffffff', lit: '#e8edf5', band: '#262c38', fill: '#eef1f6', cornerTrack: '#2c3038', cornerFill: '#9aa1ac' };
 const LOOKS = {
     comfort: {},
     sport: { lit: '#ed1a26', band: '#540f1a', fill: '#ffd9db', dim: '#a8868a' },
@@ -41,7 +42,7 @@ const RPM_MAX = 8000;   // the M8's scale: 0-8
 const WINDOW = { x: 711, y: 171, w: 498, h: 263 };
 /* their rev blades (tach_left / tach_right), each in a layer from just outside its outer edge (the right one clear of
  * the KOMBI's gear box, from x 1410) to the map window's edge */
-const BLADE = { x0: 515, w: 196, y: 36, h: 558, y0: 566, y8: 66, ym: 303, xm: 528, kTop: 1.0684, kBot: 0.5434, round: 135, wBot: 52, wTop: 17, wBend: 44 };
+const BLADE = { x0: 512, w: 199, y: 36, h: 558, y0: 566, y8: 66, ym: 303, xm: 528, kTop: 1.0684, kBot: 0.5434, round: 135, wBot: 60, wTop: 22, wBend: 48 };
 
 /*
  * The gauges, as the M8's coolant and boost bars: an icon over the left end, the unit over the right, the bar
@@ -69,7 +70,7 @@ function gauges(o, engine) {
     // diesel car the oil there instead, and the gearbox's oil in the card in its place
     const ice = o.vehicle === 'ice';
     // (the fuel's bar reads the range left on it)
-    const fuel = { icon: 'fuel', unit: '', read: (d) => (isNum(d.frange) ? C.distText(o, d.frange) : ''), labels: [[0, '0'], [-1, '0'], [1, '1']], value: (d) => (isNum(d.fuelPct) ? clamp01(d.fuelPct / 100) : 0), zero: 0, lo: 0.125, hi: 2 };
+    const fuel = { icon: 'fuel', unit: '', read: (d) => (isNum(d.frange) ? C.distText(o, d.frange) : ''), labels: [[0, '0'], [0.5, '1/2'], [1, '1']], value: (d) => (isNum(d.fuelPct) ? clamp01(d.fuelPct / 100) : 0), zero: 0, lo: 0.125, hi: 2 };
     const charge = { icon: 'battery', unit: '%', read: (d) => (isNum(d.soc) ? String(Math.round(d.soc)) : '--'), labels: [[0, '0'], [0.5, '50'], [1, '100']], value: (d) => f01(d.soc, 0, 100), zero: 0, lo: C.LOW_SOC / 100, hi: 2 };   // (red at the plug-in's low charge: layout_common.LOW_SOC)
     const left = ice ? [coolant, gearbox] : [coolant, oil];
     if (engine) {
@@ -120,6 +121,42 @@ function gauge(T, key, x, y, w, g) {
             value: g.value, max: 1, sweep: true }]);
 }
 
+/** A band along the circle round (cx, cy), radius r, thickness T, from a0 to a1 (degrees clockwise from up): its
+ * quad round the ink (pad px more each way, for the tip's glow). */
+function arc(key, cx, cy, r, T, a0, a1, pad) {
+    const pts = [], lo = Math.min(a0, a1), hi = Math.max(a0, a1);
+    for (let a = lo; a <= hi + 0.01; a += Math.max(1, (hi - lo) / 90)) for (const rr of [r - T / 2, r + T / 2]) {
+        const q = a * Math.PI / 180; pts.push([cx + rr * Math.sin(q), cy - rr * Math.cos(q)]);
+    }
+    const x0 = Math.max(0, Math.floor(Math.min(...pts.map((p) => p[0])) - pad)), y0 = Math.floor(Math.min(...pts.map((p) => p[1])) - pad);
+    const x1 = Math.min(1920, Math.ceil(Math.max(...pts.map((p) => p[0])) + pad)), y1 = Math.min(720, Math.ceil(Math.max(...pts.map((p) => p[1])) + pad));
+    return { key, kind: 'band', x: x0, y: y0, w: x1 - x0, h: y1 - y0,
+        params: { u_geo: [cx - x0, cy - y0, r, T], u_span: [a0, a1, 0, 0], u_marks: [0, 0, 0, 0], u_red: [2], u_zero: [0], u_soft: [0], u_neg: C.REGEN_RGB } };
+}
+/** A gauge in a bottom corner (the fuel left, the charge or the oil right): an arc round (cx, cy) from a0 (its 0, at
+ * the bottom) to a1 (its top), lit to the reading with a red tip, red from its red zone; its scale's three figures
+ * inside the arc, its icon and its reading in figures in the corner. */
+function corner(T, key, cx, cy, R, a0, a1, g, right) {
+    const fg = B.role('fg'), dim = B.role('dim');
+    const readC = (t, d) => ({ color: [(g.hi < 1 && g.value(d) >= g.hi) || (g.lo > 0 && g.value(d) <= g.lo) ? t.red : t.fg, 1], glow: [t.fg, 0] });
+    const band = Object.assign(arc(key, cx, cy, R, 9, a0, a1, 14), {
+        colors: (t) => ({ track: t.cornerTrack, fill0: t.cornerFill, fill1: t.cornerFill, redc: t.red, tip: t.red, tick: t.dim, num: t.dim }),
+        value: g.value, max: 1, sweep: true });
+    band.params.u_red = [g.hi < 1 ? g.hi : 2];
+    const out = [band];
+    g.labels.forEach(([at, txt], i) => {
+        if (at < 0) return;
+        const q = (a0 + (a1 - a0) * at) * Math.PI / 180, rr = R - 36;
+        const x = Math.round(cx + rr * Math.sin(q)), y = Math.round(cy - rr * Math.cos(q));
+        out.push(T(key + 'N' + i, [x - 34, y - 15, 68, 30], 'm_tiny', txt, fg, 'center'));
+    });
+    const ix = right ? cx - 52 : cx + 14, iy = cy - 64;
+    out.push(B.icon(key + 'Icon', ix, iy, 38, 36, g.icon, 'fg'));
+    const rbox = right ? [ix - 176, iy + 2, 170, 32] : [ix + 46, iy + 2, 170, 32];
+    if (g.read) out.push(T(key + 'Read', rbox, 'm_unit', (d) => g.read(d) + (g.unit ? ' ' + g.unit : ''), readC, right ? 'right' : 'left'));
+    return out;
+}
+
 module.exports = {
     id: 'm',
     title: 'ID7 M',
@@ -131,7 +168,7 @@ module.exports = {
     ownStripGauges: true,   // (the fuel and the charge are its own bars along the bottom: none of the strip's)
     // its own places, set on the page (layouts.js placesFor): the cards' gauges and the bars along the bottom
     places: [['card1', 'Left card: top'], ['card2', 'Left card: bottom'], ['card3', 'Right card: top'], ['card4', 'Right card: bottom'],
-        ['bar1', 'Bottom bar: left'], ['bar2', 'Bottom bar: right']].map(([key, label]) => ({ key, kind: 'gauge', label })),
+        ['bar1', 'Bottom corner: left'], ['bar2', 'Bottom corner: right']].map(([key, label]) => ({ key, kind: 'gauge', label })),
     palette: pal,
     gearText: C.gearText,
 
@@ -212,7 +249,12 @@ module.exports = {
                     T('speedDigits', [1006, 467, 203, 82], 'm_speed', (d) => C.speedText(o, d), fg, 'left'),
                     T('speedUnit', [1006, 549, 108, 29], 'm_tiny', C.speedUnit(o), dim, 'left'));
             } else {
-                list.push(T('gear', [700, 246, 520, 117], 'm_gear', gearNum, gearC, 'center'),
+                // (a gear with its programme, D4 / S3 / M2: the letter small and grey left of the middle, the number
+                // right of it; P R N, or the programme alone, centred)
+                const two = (d) => /^[DSM]\d+$/.test(C.gearText(d));
+                list.push(Object.assign(T('gearProg', [700, 281, 244, 82], 'm_speed', (d) => C.gearText(d).charAt(0), dim, 'right'), { visible: two }),
+                    Object.assign(T('gearNo', [958, 246, 262, 117], 'm_gear', (d) => C.gearText(d).slice(1), gearC, 'left'), { visible: two }),
+                    Object.assign(T('gear', [700, 246, 520, 117], 'm_gear', gearNum, gearC, 'center'), { visible: (d) => !two(d) }),
                     T('speedDigits', [700, 400, 520, 82], 'm_speed', (d) => C.speedText(o, d), fg, 'center'),
                     T('speedUnit', [1111, 409, 97, 29], 'm_tiny', C.speedUnit(o), dim, 'left'));
             }
@@ -220,10 +262,9 @@ module.exports = {
         // the gauges in the cards: engine left (x 300), eDrive right (x 1420)
         G.left.forEach((g, i) => list.push(...gauge(T, 'gl' + i, 300, [222, 324][i], 200, g)));
         G.right.forEach((g, i) => list.push(...gauge(T, 'gr' + i, 1420, rows[i], 200, g)));
-        // the flat bars along the bottom, under the cards: the fuel left, the charge right (full screen lower, clear of
-        // the right card's gauge over the KOMBI's gear box, and outside the warning lights, x 560-1520 from y 652)
-        const bot = strip ? { x: 120, y: 556, w: 340 } : { x: 90, y: 590, w: 300 };
-        G.bottom.forEach((g, i) => list.push(...gauge(T, i ? 'chargeBar' : 'fuelBar', i ? 1920 - bot.x - bot.w : bot.x, bot.y, bot.w, g)));
+        // the bottom corners: the fuel left, the charge (or the oil) right; with the car's strip above it
+        const cy = strip ? 600 : 690, R = 236;
+        G.bottom.forEach((g, i) => list.push(...corner(T, i ? 'chargeBar' : 'fuelBar', i ? 1880 : 40, cy, R, i ? -90 : 90, i ? -12 : 12, g, !!i)));
         if (stock) return list.filter((p) => p.kind === 'mtach' || /^card/.test(p.key) || p.x + p.w <= 566 || p.x >= 1104);
         return list;
     },
