@@ -117,8 +117,8 @@ function display(o, X, Y, W, H, gear) {
         // the M tricolour over the display, as on the E9x M3's dials
         { key: 'mStripes', kind: 'mdash', x: X + W / 2 - 40, y: Y - 44, w: 84, h: 34, z: -90, params: { u_part: [4], u_off: [X + W / 2 - 40, Y - 44], u_mark: [X + W / 2 - 34, Y - 40, 1.2] }, colors: (t) => ({ red: t.red }) },
         { key: 'lcd', kind: 'panel', x: X, y: Y, w: W, h: H, params: { u_box: [16, 3, 0.12, 1] }, colors: (t) => ({ top: t.lcd0, bottom: t.lcd1, border: t.lcdEdge }) },
-        C.text('kwNow', X + 18, at(16), gear ? W - 110 : W - 36, hh(44), C.focus.power(o), amber, { align: gear ? 0 : 0.5 }),
-        C.text('kwNowLbl', X + 18, at(64), W - 36, hh(17), C.focus.powerLabel(o, true), amberDim, { align: gear ? 0 : 0.5, tracking: 0.1 }),
+        C.text('kwNowLbl', X + 18, at(16), gear ? W - 110 : W - 36, hh(17), C.focus.powerLabel(o, true), amberDim, { align: gear ? 0 : 0.5, tracking: 0.1 }),
+        C.text('kwNow', X + 18, at(64) + hh(17) - hh(44), gear ? W - 110 : W - 36, hh(44), C.focus.power(o), amber, { align: gear ? 0 : 0.5 }),
         Object.assign(C.flat('lcdRule0', X + 16, at(96), W - 32, 2, 'lcdRule'), { z: 1 }),
     ].concat(C.tripShown(o)
         // (Settings > Centre display: Trip computer, 0.46.0: its three lines in the speed's place)

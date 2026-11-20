@@ -251,6 +251,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   car-signal model carries its average gap to it) and is shown as computed, with no easing lag.
   The cluster's names for the trip figures are one set in every skin: ODO, AVG, RANGE (the fuel range), TIME. JDM 1's
   readout under the speed: its name, then the value (RANGE   520 km).
+- Layouts 0.48.10: a readout's name sits small above its value everywhere: the main readout in 20's, ID6 M, KO 1,
+  KO 2, Old M and JDM 2, and the side readings of JDM 2, Track and the pods (C.reading).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

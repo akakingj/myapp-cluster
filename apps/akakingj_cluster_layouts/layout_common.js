@@ -617,11 +617,12 @@ const outsideText = (o, c) => (isNum(c) ? Math.round(tempIn(o, c)) + '°' + (o.t
 const socText = (d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--');
 const kwText = (d) => (isNum(d.kw) ? (d.kw > 0.05 ? '+' : '') + (Math.abs(d.kw) < 10 ? d.kw.toFixed(1) : Math.round(d.kw)) + ' kW' : '--');
 
-/** A reading with its label under it: two text pieces. */
+/** A reading with its label small above it: two text pieces, together as high as the value, a gap and the label. */
 function reading(key, x, y, w, h, value, label, colors, labelColors) {
+    const lh = Math.max(18, Math.round(h * 0.4));
     return [
-        text(key, x, y, w, h, value, colors),
-        text(key + 'Lbl', x, y + h + Math.round(h * 0.14), w, Math.max(18, Math.round(h * 0.4)), label, labelColors, { tracking: 0.12 }),
+        text(key + 'Lbl', x, y, w, lh, label, labelColors, { tracking: 0.12 }),
+        text(key, x, y + lh + Math.round(h * 0.14), w, h, value, colors),
     ];
 }
 /** A reading with its label above it (where the row must end above the warning lights): label 16 px, then the

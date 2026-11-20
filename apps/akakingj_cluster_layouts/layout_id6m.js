@@ -164,7 +164,7 @@ function centreDisplay(o, X, Y, W, H) {
             C.text('speedDigitsUnit', X, Y + Math.round(254 * sy), W, 22, C.speedUnit(o), lbl, { tracking: 0.12 }),
         ], [
         C.flat('rule2', X + 24, Y + Math.round(312 * sy), W - 48, 2, 'lcdEdge'),
-        C.text('kwNow', X, Y + Math.round(338 * sy), W, 54, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
-        C.text('kwNowLbl', X, Y + Math.round(400 * sy), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+        C.text('kwNowLbl', X, Y + Math.round(338 * sy), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+        C.text('kwNow', X, Y + Math.round(400 * sy) - 36, W, 54, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
     ]);
 }

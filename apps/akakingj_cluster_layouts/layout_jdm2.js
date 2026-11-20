@@ -225,8 +225,8 @@ function column(o, my) {
     return [
         ...C.reading('fuel', RX, 292, RW, 44, (d) => C.distText(o, d.frange), 'RANGE', white, lbl),
         ...C.reading('elec', RX, 400, RW, 44, C.focus.range(o), C.focus.rangeLabel(o), C.engineFocus(o) ? white : elecTxt, lbl),
-        C.text('kwNow', RX, y, RW, 44, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
-        C.text('kwNowLbl', RX, y + 56, RW, 18, C.focus.powerLabel(o), lbl, { tracking: 0.1 }),
+        C.text('kwNowLbl', RX, y, RW, 18, C.focus.powerLabel(o), lbl, { tracking: 0.1 }),
+        C.text('kwNow', RX, y + 30, RW, 44, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
     ];
 }
 
