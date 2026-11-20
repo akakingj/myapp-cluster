@@ -253,14 +253,6 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   readout under the speed: its name, then the value (RANGE   520 km).
 - Layouts 0.48.10: a readout's name sits small above its value everywhere: the main readout in 20's, ID6 M, KO 1,
   KO 2, Old M and JDM 2, and the side readings of JDM 2, Track and the pods (C.reading).
-- Layouts 0.49.0, Centre 0.13.8 (shared shaders.js, font_orb.wad): ID7 M after a cluster design the owner sent, drawn
-  in its own manner: the blades bent as open brackets (steep above the bend, flatter below, widest at the bend), lit
-  blue in comfort in blocks of 1000 rpm, a silver outer edge with a tick across it every 1000 / 500 rpm and a flag
-  along each end to its numeral, a red mark at the foot, the amber and red zones on the outer half until reached; the
-  numerals beside the blades' inner edge; the gear's programme small and grey beside its number (D 4), the speed
-  larger; every figure and word in Barlow Bold / Medium (font 'orb' re-baked from Barlow Bold: Orbitron gone); no M
-  tricolour; the fuel and the oil (a plug-in hybrid's charge) as rings in the bottom corners with a red needle and the
-  red zone along the rim (Settings: Bottom corner: left / right).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

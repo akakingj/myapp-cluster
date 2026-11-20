@@ -100,7 +100,7 @@ follows the mode (blue, red in sport, teal in ECO PRO).
   which stays every layout's default (*Common*).
 - **Every other place (0.35.0):** each layout's places that had a fixed reading - 90's gauge between the dials (also an
   analog clock, 0.35.1, on Settings > Time zone), 20's
-  gauge in the tach's foot, ID7 M's four card gauges and two corner arcs, ID8 M's bars in the brackets and the bottom
+  gauge in the tach's foot, ID7 M's four card gauges and two bottom bars, ID8 M's bars in the brackets and the bottom
   bar's halves, JDM 2's four temperature quarters, Track's six tiles, Pulse's bottom row, GT3's boxes and the
   readings under the gear - are cards on the page too, set for that layout alone (a gauge place any small gauge's
   reading, with its scale, red zone and figures; a readout place any readout). *The layout's own* keeps it as
@@ -175,23 +175,20 @@ Settings > Speedometer gauge / Tach gauge (or the page) can give another reading
 
 ### ID7 M
 
-The M view: the backdrop and the rev blades from bimmer-lab's M theme
+The M8's M view: the backdrop and the two bowed glass rev blades from bimmer-lab's M theme
 ([bimmer-lab/apps](https://github.com/bimmer-lab/apps), MIT; their own shaders, traced off an M8's cluster), the
-blades bent as open brackets (steep above the bend, flatter below it, widest there), lit blue (red in sport, teal in
-ECO PRO) in blocks of 1000 rpm, a silver outer edge with a tick across it every 1000 rpm and a flag along each end to
-its numeral, a red mark at the foot; the scale 0-8 with the numerals every 2000 beside the blades' inner edge, the
-gear's programme small and grey beside its number (D 4), the speed large under the line, all in Barlow Bold, and the
-M8's flat gauges in its own manner (an icon over the bar, the unit at the right, a white fill over a
+scale 0-8 with the numerals every 2000, the gear's number with the shift programme's stack beside it, the speed under
+the line, and the M8's flat gauges in its own manner (an icon over the bar, the unit at the right, a white fill over a
 thin track with its red zones, the scale's numbers under it; each temperature's reading in figures beside its icon,
 red when hot): in the cards the coolant and oil temperatures (the gearbox oil's in place of the oil on a petrol
 or diesel car) on the
 left, and on the right the battery's power (its first quarter, left of the 0, regeneration in green) and
-temperature on a plug-in hybrid, the boost and torque on a petrol or diesel car; in the bottom corners arcs for the
-fuel level (left, with the range) and the charge with its percentage (right; the oil temperature on a petrol or
-diesel car), so the strip's own bars aren't added. In an
+temperature on a plug-in hybrid, the boost and torque on a petrol or diesel car; along the bottom, as the M8's fuel
+gauge, long flat bars for the fuel level (left) and the charge with its percentage (right; the oil temperature on a
+petrol or diesel car), so the strip's own bars aren't added. In an
 electric drive the blades read the battery's power in kW: 0 at the 2000 mark, regeneration below it in green to the
-battery's limit, the power drawn above it to the blades' top. Its colours follow the drive mode: blue in comfort, red in a
-sport mode, teal in ECO PRO. With the Waze map the map goes
+battery's limit, the power drawn above it to the blades' top. Its colours follow the drive mode as the M8's: silver
+glass in comfort, lit red in a sport mode, blue in ECO PRO and on electricity alone. With the Waze map the map goes
 in the window between the blades.
 
 ![ID7 M](../../docs/m.png)
@@ -476,7 +473,7 @@ module.exports = {
 (`speed` km/h, `rpm`, `gear`, `stage`, `mode`, `oil`, `coolant`, `outside` °C, `soc` %, `kw`, `erange` and
 `frange` km); `t` the layout's palette for the look now. Texts use the glyphs in `font.js`; add more there. A layout's
 `font` picks its face for every text and numeral: `'bold'` (the default), `'light'`, `'wide'` (Michroma, Sport) or
-`'orb'` (Barlow Bold, ID7 M); its `mapWindow` ({ x, y, w, h }) where Waze on cluster draws the map, if not the native map area.
+`'orb'` (Orbitron, M); its `mapWindow` ({ x, y, w, h }) where Waze on cluster draws the map, if not the native map area.
 
 Check it before the car:
 
