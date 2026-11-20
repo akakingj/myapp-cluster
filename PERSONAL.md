@@ -262,6 +262,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   speed and the gear on one baseline, their units under them, the trip computer's three lines under a rule; the
   engine speed yellow / red, at the warning the speed and gear red too. The page's pictures made again
   (make_previews.py: Simple, and the readout-name changes of 0.48.x).
+- Layouts 0.49.1: Simple with the map or the stock centre (Pulse's pieces) takes Settings > At the shift now warning:
+  the speed and the gear red, as Pulse does.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

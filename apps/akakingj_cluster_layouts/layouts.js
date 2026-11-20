@@ -31,7 +31,9 @@ function finish(L, o, list) {
         if (SMALL_KEYS[p.key]) { const g = C0.gaugeOf(o, SMALL_KEYS[p.key]); return g ? g.key : SMALL_OWN[p.key] || null; }
         return null;
     };
-    const tones = o.tempTone !== 'off', warn = o.shiftWarn === 'on' && OWN_SHIFT.indexOf(L.id) < 0;
+    // (Simple with the map or the stock centre: Pulse's pieces, without a warning of their own)
+    const own = OWN_SHIFT.indexOf(L.id) >= 0 && !(L.id === 'simple' && (o.centre === 'map' || o.centre === 'stock'));
+    const tones = o.tempTone !== 'off', warn = o.shiftWarn === 'on' && !own;
     return list.map((p) => {
         if (p.kind !== 'text') return p;
         const k = tones ? readingOf(p) : null;
