@@ -2798,3 +2798,11 @@ Trip computer: line 2	트립 창: 둘째 줄
 Trip computer: line 3	트립 창: 셋째 줄
 Centre display	가운데 표시창
 Centre display: speed or trip computer (20's, ID6 M, Old M, GM)	가운데 표시창: 속도 또는 트립 창 (20's, ID6 M, Old M, GM)
+Yellow shift light from	노란색 시프트 라이트 시작
+Red shift light from (the red zone)	빨간색 시프트 라이트 시작 (레드존)
+Shift warning at (the shift point)	경고 시프트 (변속 시점)
+Max rpm (the end of the rev scale)	최대 rpm (회전수 눈금 끝)
+Redline (the limiter; the red zone while Red shift light is Auto)	레드라인 (리미터, 빨간색 시프트 라이트가 자동일 때 레드존)
+At the shift warning: the speed and the gear red (layouts without their own)	경고 시프트에서 속도와 단수를 빨갛게 (자체 경고가 없는 레이아웃)
+Auto (700 below the red)	자동 (빨간색보다 700 아래)
+Auto (the redline)	자동 (레드라인과 같게)

@@ -599,6 +599,7 @@ uniform vec4 u_span;
 uniform vec4 u_marks;
 uniform float u_value;
 uniform float u_red;
+uniform float u_yellow;            /* the straight bar: where its fill starts turning from u_fill0 to u_fill1 (0: along the fill) */
 uniform float u_soft;              /* 0: glows as drawn, 1: none (a quieter look) */
 uniform float u_zero;
 uniform float u_digit_adv;
@@ -615,7 +616,8 @@ void main() {
     vec2 p = v_uv * u_size;
     if (u_geo.z <= 0.0) {
         /* a straight capsule along x: inset u_geo.x each end, u_geo.w thick, centred on y u_geo.y; filled with a
-         * gradient to u_value, a glow round the fill, a marker at u_red (from there the fill turns red);
+         * gradient to u_value (or, with u_yellow, u_fill0 up to it and turning to u_fill1 by u_red), a glow round the
+         * fill, a marker at u_red (from there the fill turns red);
          * segmented when u_span.z > 0; filled from the right when u_span.x < 0 */
         float x0 = u_geo.x, len = u_size.x - 2.0 * u_geo.x, T = u_geo.w, r = T * 0.5;
         float t = (p.x - x0) / len;
@@ -626,7 +628,8 @@ void main() {
         float v = clamp(u_value, 0.0, 1.0);
         float fx = u_span.x < 0.0 ? x0 + len * (1.0 - v) : x0 + len * v;   /* the fill's edge */
         float lit = u_span.x < 0.0 ? clamp(p.x - fx + 0.5, 0.0, 1.0) : clamp(fx - p.x + 0.5, 0.0, 1.0);
-        vec3 fc = mix(u_fill0, u_fill1, clamp(t / max(v, 0.001), 0.0, 1.0));
+        vec3 fc = u_yellow > 0.0 ? mix(u_fill0, u_fill1, clamp((t - u_yellow) / max(u_red - u_yellow, 0.001), 0.0, 1.0))
+                                 : mix(u_fill0, u_fill1, clamp(t / max(v, 0.001), 0.0, 1.0));
         if (t >= u_red) fc = u_redc;
         /* the glow round the fill, under everything */
         float gl = exp(-max(dist, 0.0) * max(dist, 0.0) / (T * T * 0.6)) * (dist > 0.0 ? 1.0 : 0.0) * lit;

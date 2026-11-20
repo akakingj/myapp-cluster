@@ -40,8 +40,9 @@ SETS.push({ tag: 'gear everywhere', infoA: 'gear', infoB: 'gear', infoMain: 'gea
 SETS.push({ tag: 'nothing everywhere', infoA: 'off', infoB: 'off', infoMain: 'off', infoLow: 'off' });
 SETS.push({ tag: 'gear under the speed', infoMain: 'gear' });
 SETS.push({ tag: 'imperial', speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'lbft', pressUnit: 'kpa', powerUnit: 'kw', gaugeSpeed: 'boost', gaugeRpm: 'gearbox' });
-SETS.push({ tag: 'no cold guard, no amber', coldGuard: 'off', amberRpm: 0, shiftBefore: 0 });
-SETS.push({ tag: 'wide amber, far shift', amberRpm: 2000, shiftBefore: 1000, coldLimit: 3000, warmOil: 100, redline: 5000, rpmMax: 6000 });
+SETS.push({ tag: 'no cold guard, yellow at the red', coldGuard: 'off', yellowFrom: 7000, shiftBefore: 0 });
+SETS.push({ tag: 'wide amber, far shift', yellowFrom: 3000, shiftBefore: 1000, coldLimit: 3000, warmOil: 100, redline: 5000, rpmMax: 6000 });
+SETS.push({ tag: 'shift warning past the red', yellowFrom: 4000, shiftBefore: -500, redline: 6000, rpmMax: 7000 });
 SETS.push({ tag: 'top end', redline: 8000, rpmMax: 9000 });
 // the Car profile's ends (its values are all in the settings' lists): the scale to 10000 with the red line at 9000, and
 // to 5000 with it at 4000, the shift point 800 below

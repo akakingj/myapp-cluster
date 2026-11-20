@@ -3,7 +3,7 @@
  * layouts.js - the layouts this app offers, by id. A layout is one file, layout_<id>.js, next to this one
  * (the build ships only top-level .js files); list it here and in app.json's "layout" setting (README.md).
  */
-const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_gt3'), require('./layout_ko1'), require('./layout_ko2')];
+const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_simple'), require('./layout_gt3'), require('./layout_ko1'), require('./layout_ko2')];
 const C0 = require('./layout_common');
 /** A readout put in the time's or the outside temperature's place, two side by side: made to hold its widest
  * figures ('TRANS 140°') with a gap to the other (layout_common.fitText). */
@@ -12,8 +12,8 @@ const fitted = (L, p) => C0.fitText(p, L.font, 0.8);
 const MAIN_KEYS = ['kwNow', 'power', 'powerBig', 'kw'];
 const SMALL_KEYS = { coolantNum: 'speed', oilNum: 'rpm', coolantTxt: 'speed', oilTxt: 'rpm', speedSubNum: 'speed', rpmSubNum: 'rpm', speedSub1: 'speed', rpmSub1: 'rpm' };
 const SMALL_OWN = { coolantNum: 'coolant', oilNum: 'oil', coolantTxt: 'coolant', oilTxt: 'oil' };
-/* the layouts with their own shift warning (the gear or the blades red at the shift point) */
-const OWN_SHIFT = ['m', 'sport', 'gt3', 'track'];
+/* the layouts with their own shift warning (the gear, the blades or the figures red at the shift point) */
+const OWN_SHIFT = ['m', 'sport', 'gt3', 'track', 'simple'];
 /**
  * Every layout's last step, on a petrol or diesel car: the temperatures in colour (Settings > Temperature colours: the
  * readouts and the small gauges' figures) and, with Settings > Shift warning, the digital speed and the gear red
@@ -159,6 +159,8 @@ const SLOTS = {
     retro: Object.assign({}, DIALS, STRIP2),
     track: Object.assign({}, STRIP2),
     pulse: { infoMain: ENGINE },
+    // (Pulse's pieces with the map or the stock centre: its main readout there)
+    simple: { infoMain: (o) => o.centre === 'map' || o.centre === 'stock' },
     gt3: {}, m: {}, sport: {},
     classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE, centreView: (o) => !MAPFORM(o) }, DIALS),
     // (no readouts beside its dials; with the map, readouts 1 and 2 above it over the car's strip)

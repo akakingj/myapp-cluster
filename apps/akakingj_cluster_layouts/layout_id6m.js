@@ -24,8 +24,9 @@ const kwNow = (d) => (C.isNum(d.kw) ? d.kw : 0);
 const powerTxt = (t, d) => ({ color: [kwNow(d) < -0.3 ? '#3ddc84' : t.ev, 1], glow: [t.ev, 0.2] });
 const A0 = -125, A1 = 125;     // the big dials' sweep
 const NUM_H = 0.13;            // their numerals' height, of the radius
-/** Settings > Amber zone below the red zone, in thousands of rpm (700 rpm by default, as ID7 M's and ID8 M's). */
-const amberK = (o) => (o && o.amberRpm !== undefined && o.amberRpm !== '' && isFinite(Number(o.amberRpm)) ? Math.max(0, Number(o.amberRpm)) : 700) / 1000;
+/** Where the amber zone starts, in thousands of rpm: Settings > Yellow shift light from (Auto: 700 rpm under the red,
+ * as ID7 M's and ID8 M's). */
+const amberAt = (o, d) => C.yellowAt(o, d || {}) / 1000;
 
 /** The speedometer at (cx, cy), radius R: its unit over the middle, the M tricolour in its open foot. */
 function speedo(o, cx, cy, R) {
@@ -48,10 +49,10 @@ function tach(o, cx, cy, R, gear) {
     const list = [
         {
             key: 'rpm', kind: 'mround', x: cx - R, y: cy - R, w: 2 * R, h: 2 * R,
-            params: { u_mode: [0], u_scale: [s.max, s.major, s.minor, s.red], u_arc: [A0, A1, NUM_H, s.red - amberK(o)], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB },
+            params: { u_mode: [0], u_scale: [s.max, s.major, s.minor, s.red], u_arc: [A0, A1, NUM_H, amberAt(o)], u_min: [0], u_zero: [0], u_regen: C.REGEN_RGB },
             colors: roundColours, max: s.max, sweep: true, value: C.tachValue(o), range: C.tachRange(o, s),
             // (the shift lights from the red zone where the shift point puts it now; none on the battery's power)
-            dyn: (d) => { const u = dyn(d), red = u.u_scale[3]; return Object.assign(u, { u_arc: [A0, A1, NUM_H, C.electric(o, d) ? u.u_scale[0] + 1 : red - amberK(o)] }); },
+            dyn: (d) => { const u = dyn(d), red = u.u_scale[3]; return Object.assign(u, { u_arc: [A0, A1, NUM_H, C.electric(o, d) ? u.u_scale[0] + 1 : Math.min(red, amberAt(o, d))] }); },
         },
         C.text('rpmUnit', cx - R * 0.35, cy - Math.round(R * 0.3), R * 0.7, Math.max(14, Math.round(R * 0.07)),
             (d) => (C.electric(o, d) ? C.POWER_UNIT : 'x1000 rpm'), (t, d) => (C.electric(o, d) ? powerTxt(t, d) : white(t)), { tracking: 0.02 }),

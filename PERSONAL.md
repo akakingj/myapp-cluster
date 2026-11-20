@@ -253,6 +253,15 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   readout under the speed: its name, then the value (RANGE   520 km).
 - Layouts 0.48.10: a readout's name sits small above its value everywhere: the main readout in 20's, ID6 M, KO 1,
   KO 2, Old M and JDM 2, and the side readings of JDM 2, Track and the pods (C.reading).
+- Layouts 0.49.0, Centre 0.13.8 (shared shaders.js: BAND_FS u_yellow): the shift lights as four settings, each the Car
+  profile's (1.7.0) where it sets one: Yellow shift light from (lightStart; Auto: 700 rpm under the red), Red shift
+  light from (lightRed; the red zone; Auto: the redline), Shift warning at (shiftAt, may be past the red), Max rpm
+  (rpmScale); the Redline the limiter. Yellow replaces Amber zone below the red zone (ID6 M, ID7 M, ID8 M: the amber
+  zone from it). Track and GT3 with Yellow set: the rpm bar white up to it, turning yellow towards the red zone, red
+  from there, the shift lights from it to the warning. New layout Simple (layout_simple.js): the engine speed, the
+  speed and the gear on one baseline, their units under them, the trip computer's three lines under a rule; the
+  engine speed yellow / red, at the warning the speed and gear red too. The page's pictures made again
+  (make_previews.py: Simple, and the readout-name changes of 0.48.x).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

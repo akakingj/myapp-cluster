@@ -25,9 +25,12 @@ const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, slotLabel: layoutSlotLabe
 
 /** The shift point as layout_common takes it - so many rpm under the red zone - from Settings > Shift point (0.42.0,
  * the Car profile's: an rpm; 0 Auto, the red zone less 300). */
+/** The red zone's start: Red shift light from, or (Auto) the redline. */
+const redOf = (settings) => Number(settings.get('redLight')) || Number(settings.get('redline')) || 7000;
+/** How far the shift warning sits under the red zone (negative: above it, Shift warning at past the red). */
 function beforeOf(settings) {
-    const at = Number(settings.get('shiftAt')), red = Number(settings.get('redline'));
-    return at > 0 && red > 0 ? Math.max(100, red - at) : 300;
+    const at = Number(settings.get('shiftAt')), red = redOf(settings);
+    return at > 0 ? red - at : 300;
 }
 const menu = require('./menu');
 const CupView = require('./cup_view');
@@ -103,10 +106,10 @@ mgu.run({
         const options = () => ({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
             powerUnit: settings.get('powerUnit'), econUnit: settings.get('econUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), jdmCup: slot('jdmCup'), centreView: slot('centreView'), stripBars: settings.get('stripBars'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'), places: placesOf(layout.id),
-            amberRpm: settings.get('amberRpm'), shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
+            yellowFrom: Number(settings.get('yellowLight')) || 0, shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
-            redline: Number(settings.get('redline')) || 7000, rpmMax: Number(settings.get('rpmMax')) || 8000,
+            redline: redOf(settings), rpmMax: Number(settings.get('rpmMax')) || 8000,
             // (always the car's own bottom strip since 0.34.0: Bottom strip, Cluster: M car and Frame behind the gear box
             // are gone with the full-screen form; layouts.js holds them so)
             cluster: 'standard', bottomStrip: 'stock', boxBezel: false,
@@ -177,7 +180,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'yellowLight', 'redLight', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */

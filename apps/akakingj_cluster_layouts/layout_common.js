@@ -20,21 +20,28 @@ function rpmScale(o) {
     return { max, major: 1, minor: 0.25, red: Math.max(2, Math.min(max, (o.redline || 7000) / 1000)) };
 }
 /*
- * The shift point and the red zone now, worked as cauliflowermossgrape's Redline app works them (GT3 did already):
- * the shift point the red line less Settings > Shift point before redline (300 rpm); with Settings > Cold-engine
+ * The shift warning (the shift point) and the red zone now, worked as cauliflowermossgrape's Redline app works them
+ * (GT3 did already): the red zone from Settings > Red shift light from (o.redline, main.js), the shift warning that
+ * far under it (o.shiftBefore: 300 rpm; negative when Shift warning at is past the red); with Settings > Cold-engine
  * rev guard on, pulled down to the Cold rev limit (4500 rpm) with the oil at 30 °C and climbing back as the oil
- * reaches Oil warm at (80 °C). The red zone starts that far above the shift point: at the red line once warm, lower
- * while cold (as an M car's variable redline). d: the data (its oil); { rpm, red, cold }.
+ * reaches Oil warm at (80 °C), the red zone keeping its distance to it: lower while cold (as an M car's variable
+ * redline). d: the data (its oil); { rpm, red, cold }.
  */
 const SHIFT_DEFAULTS = { shiftBefore: 300, coldLimit: 4500, warmOil: 80 };
 const setNum = (o, k) => { const v = o ? Number(o[k]) : NaN; return o && o[k] !== '' && o[k] !== null && o[k] !== undefined && isFinite(v) ? v : SHIFT_DEFAULTS[k]; };
 function shiftPoint(o, d) {
-    const red = rpmScale(o || {}).red * 1000, before = Math.max(0, setNum(o, 'shiftBefore'));
+    const red = rpmScale(o || {}).red * 1000, before = setNum(o, 'shiftBefore');
     const n = Math.max(2500, red - before), oil = d && d.oil, warm = setNum(o, 'warmOil');
     if (!o || o.coldGuard === 'off' || !isNum(oil) || oil >= warm) return { rpm: n, red, cold: false };
     const cold = Math.min(setNum(o, 'coldLimit'), n), f = Math.max(0, Math.min(1, (oil - 30) / Math.max(1, warm - 30)));
     const rpm = Math.round((cold + (n - cold) * f) / 50) * 50;
-    return { rpm, red: Math.min(red, rpm + before), cold: true };
+    return { rpm, red: Math.max(2000, Math.min(red, rpm + before)), cold: true };
+}
+/** Where the tach turns yellow now (Settings > Yellow shift light from; Auto: 700 under the red zone), never past
+ * the red zone; rpm. */
+function yellowAt(o, d) {
+    const red = shiftPoint(o, d).red, y = o && Number(o.yellowFrom) > 0 ? Number(o.yellowFrom) : red - 700;
+    return Math.min(y, red);
 }
 /** A temperature (°C) on a 40-140 °C scale, 0..1. */
 const tempFrac = (c) => (isNum(c) ? Math.max(0, Math.min(1, (c - 40) / 100)) : 0);
@@ -645,6 +652,6 @@ const text = (key, x, y, w, h, txt, colors, extra) => Object.assign({ key, kind:
 const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colors: (t, d) => ({ color: [typeof colour === 'function' ? colour(t, d) : t[colour], 1] }) });
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

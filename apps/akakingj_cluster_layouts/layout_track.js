@@ -64,10 +64,11 @@ function tile(key, x, y, w, h, label, value, colours, valueH) {
         C.text(key, x + 10, y + 34, w - 20, vh, value, colours || white, { align: 0 }),
     ];
 }
-/** The shift lights: from 2200 rpm under the shift point (layout_common.shiftPoint: the red line less 300 rpm by
- * default, lower while the oil is cold), all flashing red at it. */
+/** The shift lights: from Settings > Yellow shift light from (Auto: 2200 rpm under the shift point) to the shift point
+ * (the shift warning; layout_common.shiftPoint: the red zone less 300 rpm by default, lower while the oil is cold),
+ * all flashing red at it. */
 function shiftLights(o, x, y, w, h, count) {
-    const at = (d) => C.shiftPoint(o, d).rpm, from = (d) => at(d) - 2200;
+    const at = (d) => C.shiftPoint(o, d).rpm, from = (d) => Math.min(at(d) - 500, Number(o.yellowFrom) > 0 ? Number(o.yellowFrom) : at(d) - 2200);
     return {
         key: 'shift', kind: 'leds', x, y, w, h, max: 1,
         value: (d) => (C.isNum(d.rpm) ? Math.max(0, Math.min(1, (d.rpm - from(d)) / (at(d) - from(d)))) : 0),
@@ -76,11 +77,12 @@ function shiftLights(o, x, y, w, h, count) {
         colors: (t) => ({ off: t.off, green: t.green, yellow: t.yellow, red: t.red }),
     };
 }
-/** The segmented rpm bar, red from the red line. */
+/** The segmented rpm bar, red from the red zone: white turning yellow from Settings > Yellow shift light from (Auto: white
+ * to yellow along the fill). */
 function rpmBar(o, x, y, w, h) {
     const r = C.rpmScale(o);
     return { key: 'rpmBar', kind: 'band', x, y, w, h,
-        params: { u_geo: [4, h / 2, 0, Math.max(4, h - 6)], u_span: [0, 0, 48, 0.3], u_marks: [0, 0, 0, 0], u_red: [r.red / r.max], u_soft: [1] },
+        params: { u_geo: [4, h / 2, 0, Math.max(4, h - 6)], u_span: [0, 0, 48, 0.3], u_marks: [0, 0, 0, 0], u_red: [r.red / r.max], u_yellow: [Number(o.yellowFrom) > 0 ? Math.max(0.001, C.yellowAt(o, {}) / 1000 / r.max) : 0], u_soft: [1] },
         colors: (t) => ({ track: t.track, fill0: t.text, fill1: t.accent, redc: t.red, tip: t.accent, tick: t.dim, num: t.num }),
         value: (d) => (C.isNum(d.rpm) ? d.rpm / 1000 / r.max : 0), max: 1, sweep: true };
 }
