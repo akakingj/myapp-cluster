@@ -264,6 +264,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   (make_previews.py: Simple, and the readout-name changes of 0.48.x).
 - Layouts 0.49.1: Simple with the map or the stock centre (Pulse's pieces) takes Settings > At the shift now warning:
   the speed and the gear red, as Pulse does.
+- Layouts 0.49.2, Centre 0.13.9: boost (and the boost target) read from the engine unit start at 0: a closed throttle's
+  vacuum (below the outside air) reads 0 psi / 0.00 bar / 0 kPa, not a minus figure.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

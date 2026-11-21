@@ -477,8 +477,9 @@ function startData(ctx, opts) {
             const tg = await rd.value('boostTarget', dme.boostTarget);
             if (tg === null) return null;
             const ac = await rd.value('boostActual', dme.boostActual);
-            put('boostTarget', (tg - baro) / 100);
-            if (ac !== null) put('boostActual', (ac - baro) / 100);
+            // bar over the outside air, from 0: a closed throttle's vacuum reads 0, not below it
+            put('boostTarget', Math.max(0, (tg - baro) / 100));
+            if (ac !== null) put('boostActual', Math.max(0, (ac - baro) / 100));
             return tg;
         }
         // (the high-voltage battery is eDrive Live's alone: its charge and power come from its shared file, below.
