@@ -266,6 +266,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   the speed and the gear red, as Pulse does.
 - Layouts 0.49.2, Centre 0.13.9: boost (and the boost target) read from the engine unit start at 0: a closed throttle's
   vacuum (below the outside air) reads 0 psi / 0.00 bar / 0 kPa, not a minus figure.
+  Boost is the car's sport display's first, as BMW's sport display shows it (once it has moved: a car whose sport
+  display sends none sends one value all along), the engine unit's only without it; the target stays the engine unit's.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

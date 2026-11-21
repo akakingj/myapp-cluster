@@ -265,7 +265,12 @@ function startData(ctx, opts) {
             const b = v && typeof v === 'object' ? v.displayBoostPressure : undefined;
             const bs = S.boost || {}, factor = isNum(bs.factor) ? bs.factor : 0.01, invalid = isNum(bs.invalid) ? bs.invalid : 254;
             if (isNum(b) && Date.now() - (x.at.boostRawLog || 0) > 60000) { x.at.boostRawLog = Date.now(); log.info('raw FES boost ' + b + ' (max ' + (v && v.displayMaximumValueBoostPressure) + ')'); }
-            if (isNum(b) && b >= 0 && b < Math.min(254, invalid)) put('boostCar', carPress === 'PSI' ? b * 0.1 / 14.5038 : b * factor + (bs.offset || 0));
+            if (isNum(b) && b >= 0 && b < Math.min(254, invalid)) {
+                const bar = carPress === 'PSI' ? b * 0.1 / 14.5038 : b * factor + (bs.offset || 0);
+                // a car whose sport display sends no boost sends one value all along: the sport display counts once it moves
+                if (!isNum(x.boostCarFirst)) x.boostCarFirst = bar; else if (Math.abs(bar - x.boostCarFirst) >= 0.03) x.boostCarMoved = true;
+                put('boostCar', bar);
+            }
         },
         // the sport display's powertrain power (+ driving, - recuperating; its unit fitted in kwfuse.js)
         displaySportPowertrain: (v) => {
@@ -649,8 +654,9 @@ function startData(ctx, opts) {
             ['avgCons', 'tripKm', 'tripMin'].forEach((k) => { if (!d.demo && fresh(k, 120000)) o[k] = x[k]; });
             if (!d.demo && fresh('odometer', 600000)) o.odometer = x.odometer;   // (0.48.8: the ODO readout)
             if (isNum(o.avgCons)) o.avgConsUnit = x.avgConsUnit;
-            // boost: the engine unit's (fast, while a layout wants it), else the car's sport display signal
-            if (!isNum(o.boostActual) && !d.demo && fresh('boostCar', 5000)) o.boostActual = x.boostCar;
+            // boost: the car's sport display's, as BMW's sport display shows it (once it has moved), else the engine unit's
+            // (fast, while a layout wants it; its target is the engine unit's alone)
+            if (!d.demo && fresh('boostCar', 5000) && (x.boostCarMoved || !isNum(o.boostActual))) o.boostActual = x.boostCar;
             // (the engine unit's only: the car's pedal signal's scaling is unconfirmed - Redline saw 60-96 % at a light
             // touch with it - so its value goes to the log alone, never on the cluster)
             // (kept 8 s: a round of the engine unit's readings can take 3 s or more while driving, its replies slower)
