@@ -244,6 +244,20 @@ mgu.run({
         const bs = startBlindSpot(ctx, log, { link, want: () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !awake.parked()
             && !(overlay && overlay.lcwWanted && !overlay.lcwWanted()) });
         src.blindSpot = () => bs.state();
+        /* ---------- directions on the HUD (Settings > Directions on the HUD), as Redline's (nav.js, navlog.js) ----------
+         * BMW's guidance service, read only: the next turn, its distance, the street and the lanes, the same way for
+         * CarPlay, Android Auto and BMW's navigation (only apps that hand the car their turns: Waze over CarPlay doesn't).
+         * The event list is asked only while they can show (the panel on the HUD: overlay.js); never stops the app. */
+        let tracker = null, navError = null;
+        const navMode = () => (settings.get('hudNav') === 'near' ? 'near' : settings.get('hudNav') === 'off' ? 'off' : 'route');
+        const navWanted = () => navMode() !== 'off' && !!(overlay && overlay.navCan());
+        try {
+            const Nav = require('./nav');
+            const probe = require('./navlog').start(ctx, log, (s, f, v, at) => { if (tracker) tracker.tap(s, f, v, at); },
+                { wanted: navWanted, routing: () => !!tracker && tracker.routing(), onGlass: () => !!(overlay && overlay.nav().shown) });
+            tracker = Nav.start(ctx, log, probe);
+        } catch (e) { navError = String(e); log.warn('directions not started: ' + e); }
+        src.nav = () => (tracker && navMode() !== 'off' ? tracker.view(navMode()).show : null);
         try { overlay = startOverlay(ctx, src); } catch (e) { overlayError = String(e); log.warn('overlay: ' + e); }
 
         /* ---------- this app's page: the panel as it is now, larger, and every source's state ---------- */
@@ -275,7 +289,8 @@ mgu.run({
             const provs = providers.list(), pnames = Object.keys(provs).map((k) => provs[k]);
             const lines = [
                 ['Shown', settings.display('show') + (settings.get('show') === 'off' ? '' : ', ' + settings.display('place').toLowerCase())
-                    + '   ·   Waze map: ' + (ov ? ov.map : '--') + '   ·   Cluster renderer: ' + (overlayError ? 'error: ' + overlayError : ov ? ov.renderer : 'not started')],
+                    + '   ·   Waze map: ' + (ov ? ov.map : '--') + '   ·   Cluster renderer: ' + (overlayError ? 'error: ' + overlayError : ov ? ov.renderer : 'not started')
+                    + '   ·   Directions: ' + (navError ? 'error: ' + navError : navMode() === 'off' ? 'off' : !tracker || !tracker.routing() ? 'no route' : overlay && overlay.nav().shown ? 'on the HUD' : 'route, not shown (panel not on the HUD)')],
                 ['Apps providing', (pnames.length ? pnames.join(', ') : 'none') + (pw ? '   ·   power ' + pw.text + ' kW' : '') + '   (folder ' + DIR + ')'],
                 ['Values', (chosen().map((k) => { const v = valueNow(k); return VALUES[k].label + ' ' + (v ? (G.isNum(v.c) ? temp(v.c) : v.text) + ' from ' + v.src : 'no reading'); }).join('   ·   ') || 'none chosen')
                     + (chosen().indexOf('soc') >= 0 && hv ? '   ·   battery unit: ' + hv.status() : '') + (linkError ? '   ·   diagnostic link: ' + linkError : '')],

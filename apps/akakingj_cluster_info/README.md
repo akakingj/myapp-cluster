@@ -28,8 +28,18 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   diagnostic link (only 22 D3 47 is ever sent: the same identifier written switches the lamps). Gone 3 s after the
   last answer. After mlurker's HUD signals (mlurker/bmw-idrive7-apps, found on a G05), written anew; whether a G20's
   BDC answers D347 shows on the app's page (Lane change warning: mirror lamps, or the BDC has no D347).
+- **Directions on the HUD** (Settings > Directions on the HUD: while a route runs, near turns only, or off): while
+  the panel is on the HUD, the next turn above it at its right edge (with the panel at the top, in the glass's bottom
+  right corner), in jaimeen77's Cluster Redline design (`nav_draw.js`, `lane_draw.js`, `nav_text.js`, from its 1.3.9,
+  MIT; `nav_view.js` stacks them): the instruction or street on top (Korean in the Korean build), the blue turn
+  arrow, or a junction diagram for forks, highway exits and entries, roundabouts and lane changes, with the
+  distance, and the lane board under it. The turn is read as Redline's (idrive7-apps, `nav.js`, `navlog.js`, MIT):
+  BMW's guidance service, read only, the same way for CarPlay, Android Auto and BMW's navigation, for apps that hand
+  the car their turns (Apple Maps, TMAP; Waze over CarPlay doesn't). With the panel off the HUD BMW's own turn card shows them; while Redline
+  holds the HUD, its own. A turn older than 3 s isn't shown. `cluster-info-nav.log` in the app's data folder (at most
+  2 x 256 KiB, written only while directions show) records what the car sends, street names as their length only.
 - **Its page** shows the panel as it is now, larger, and whether each source works (turn signals, day / night,
-  driver profile, the apps providing, the cluster renderer, the Waze map).
+  driver profile, the apps providing, the cluster renderer, the Waze map, the directions).
 
 ## Providing values from your app
 

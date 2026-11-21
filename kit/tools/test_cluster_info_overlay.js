@@ -158,6 +158,47 @@ class FakeCR extends EventEmitter {
     });
     write({ state: 'showing', target: 'hud', hud_width_pct: 0 });
     await step();
+
+    /* ---------- directions on the HUD (lv.nav(): nav.js's turn), only while the panel is on the HUD ---------- */
+    let navM = null;
+    lv.nav = () => navM;
+    const NV = require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'nav_view.js'));
+    const navLayer = () => [...cr.layers.values()].find((l) => l.w === NV.W && l.h === NV.H);
+    ov._navTick();
+    check('directions: no route, no layer', () => { assert(!navLayer()); assert.strictEqual(ov.nav().shown, false); });
+    navM = { kind: 'turn', dir: 'RIGHT', dist: '350', unit: 'm', road: 'Example Road' };
+    ov._navTick();
+    check('directions: a turn, the panel on the HUD: a layer above it, its right edge with the panel\'s', () => {
+        const l = navLayer(), p = [...cr.layers.values()][0];
+        assert(l && l.target === 'hud' && l.visible === true && ov.nav().shown, JSON.stringify(l));
+        assert.strictEqual(l.x + l.w, Math.min(672, p.x + p.w)); assert(l.y + l.h <= p.y - 4 && l.y >= 148, JSON.stringify([l, p]));
+        assert(ov.navCan());
+    });
+    let nn = cr.log.length;
+    ov._navTick();
+    check('directions: the same turn again: nothing sent', () => assert.strictEqual(cr.log.length, nn));
+    navM = Object.assign({}, navM, { dist: '300' });
+    ov._navTick();
+    check('directions: nearer: drawn again', () => assert(cr.log.slice(nn).some((e) => e[0] === 'pixels')));
+    write({ state: 'showing', target: 'map', hud_width_pct: 0 });
+    await step();
+    ov._navTick();
+    check('directions: the panel off the HUD (BMW\'s own card shows the turns): hidden', () => {
+        assert.strictEqual(ov.nav().shown, false); assert.strictEqual(navLayer().visible, false); assert(!ov.navCan());
+    });
+    write({ state: 'showing', target: 'hud', hud_width_pct: 0 });
+    await step();
+    ov._navTick();
+    check('directions: back on the HUD with the panel', () => assert(ov.nav().shown));
+    fs.writeFileSync(path.join(claims, 'redline'), JSON.stringify({ held: true }));
+    t += 2000; fs.utimesSync(path.join(claims, 'redline'), t / 1000, t / 1000); ov._navTick();
+    check('directions: another app holds the HUD (Redline): hidden', () => assert.strictEqual(ov.nav().shown, false));
+    fs.unlinkSync(path.join(claims, 'redline'));
+    t += 2000; navM = null; ov._navTick(); ov._tick();
+    check('directions: the route over: hidden', () => assert.strictEqual(ov.nav().shown, false));
+    // (the fake's directions layer taken out: the panel's checks below look at the first layer there)
+    for (const [r, l] of cr.layers) if (l.w === NV.W && l.h === NV.H) cr.layers.delete(r);
+
     settings.v.show = 'off'; t += 300; ov._tick();
     check('setting off: hidden', () => assert.strictEqual(ov.shown(), false));
     settings.v.show = 'map'; settings.v.place = 'top'; t += 300; ov._tick();

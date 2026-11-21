@@ -13,6 +13,12 @@
   the tyre readings come from or follow bimmer-lab's Cluster Themes
   ([bimmer-lab/apps](https://github.com/bimmer-lab/apps)), MIT licence: its notice ships with each app in `NOTICE`
   (`shared/NOTICE`).
+- Cluster Info's directions on the HUD: reading the turn (`nav.js`, `navlog.js`) is Redline's, from
+  [cauliflowermossgrape/idrive7-apps](https://github.com/cauliflowermossgrape/idrive7-apps) (`apps/redline`), MIT
+  licence (`LICENSE-MIT`); the picture (`nav_draw.js`, `lane_draw.js`, `nav_text.js`, and the sharper small text in
+  `nav_canvas.js`) is jaimeen77's Cluster Redline 1.3.9
+  ([jaimeen77-cmyk/apps](https://github.com/jaimeen77-cmyk/apps) `apps/cluster_redline` at 07d7925), MIT licence,
+  used with its author's agreement.
 - Everything else: Copyright (C) 2026 eroobeeroo, PolyForm Noncommercial License 1.0.0 (`LICENSE`): noncommercial
   use only; no selling, no paid installation. Versions published before 10 November 2026: GPL-3.0-or-later, as
   published.

@@ -276,6 +276,14 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   inside the fin's tip: the dials end at x 410; measured at 0 km/h, a three-digit speed not yet seen on the car).
   ID7 M with the map: its window reaches from under the camera's cowl to the foot of the map area (711, 130,
   498 x 470, was 263 high), the speed in the left card and the gear in the right one, under their gauges.
+- Info 1.10.0 (Nov 21 2026): directions on the HUD (Settings > Directions on the HUD). The turn read as Redline's
+  (nav.js, navlog.js from idrive7-apps; the event list asked only while they can show: overlay.navCan()); drawn in
+  jaimeen77's Cluster Redline 1.3.9 design (nav_draw.js, lane_draw.js, nav_text.js, MIT; the owner relayed its author's
+  agreement), stacked by nav_view.js into one 154x123 layer (text / arrow or junction diagram with the distance /
+  lanes, blue): shown only while the panel is on the HUD, right-aligned with it just above (y from 148, the lane
+  change signs' end), with the panel at the top at the glass's bottom right; hidden while another app holds the HUD.
+  Korean text only when every syllable is in the Korean atlas. nav_canvas.js: Cluster Redline's crisp small text on a
+  Canvas subclass (the panel's text unchanged).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

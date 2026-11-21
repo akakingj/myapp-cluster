@@ -2806,3 +2806,6 @@ Gauge goes up to	게이지 끝 rpm
 Engine's top rpm (redline; the red zone while Red light is Auto)	엔진 최고 rpm (레드라인, 빨간불이 자동이면 레드존)
 At the shift now warning: the speed and the gear red (layouts without their own)	변속 경고에서 속도와 단수를 빨갛게 (자체 경고가 없는 레이아웃)
 Auto (700 below the red)	자동 (빨간불보다 700 아래)
+Directions on the HUD	HUD 길안내
+Highway entry	고속도로 진입
+Highway exit	고속도로 진출

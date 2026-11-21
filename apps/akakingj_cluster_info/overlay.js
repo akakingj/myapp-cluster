@@ -23,6 +23,8 @@ const G = require('./kit/gauges');
 // the panel's text in IBM Plex Sans Condensed SemiBold, as the cluster's other apps' (plex_font.js: its own atlas,
 // tools/bake_info_font.py); the iDrive pages keep the kit's faces
 const PLEX = require('./plex_font');
+// the directions picture, Cluster Redline's design (nav_view.js)
+const NV = require('./nav_view');
 require('./kit/fonts').register(PLEX.family, PLEX);
 
 const STATUS = process.env.WOC_STATUS || '/run/waze-on-cluster/status.json';   // (the variable: tests)
@@ -67,6 +69,10 @@ const NIGHT_DIM = 0.6;            // the HUD extras at night, of their brightnes
 // unit's clock that is 638 (its clock ran ~0.3 % behind the cluster's flasher there), and the car tells the head unit
 // of the stalk about 40 ms after the cluster's first flash, so the HUD starts its flashing that far in
 const BLINK_ON_MS = 335, BLINK_OFF_MS = 303, BLINK_LEAD_MS = 40;
+// the directions on the HUD (nav_view.js, 154 x 123): right-aligned with the panel, just above it, under the turn
+// signals' place; with the panel at the top, in the glass's bottom right corner (x up to 672, y up to 356)
+const NAV_RIGHT = 672, NAV_BOTTOM = 356, NAV_GAP = 4, NAV_TOP = SIGNALS_TOP + 44;   // (the lane change signs end there)
+const NAV_MS = 200;               // the directions looked at this often (a turn's distance counts down every second)
 const ARROW_TICK_MS = 25;        // (the flash edges within 25 ms of the cluster's)
 
 /** The map's rectangle on a target, as waze-on-cluster places it (map_feed.cpp quad, map_quad): on the HUD
@@ -603,6 +609,43 @@ function startOverlay(ctx, lv, opts) {
     }
     const arrowTimer = si(arrowTick, ARROW_TICK_MS);
 
+    /* ---------- directions on the HUD (lv.nav(): the next turn, nav.js's object, while a route runs; else null) ----------
+     * Shown only while this app's panel is on the HUD: the HUD's slot is this app's then, and BMW's own turn card
+     * (CarPlay's, Android Auto's or its navigation's turns) is not there. Without the panel there BMW's card shows them. */
+    let navRef = 0, navAt = '', navLast = '', navShown = false, navOp = 1, navCv = null;
+    function navPlace() {
+        const b = hudBadge;
+        if (b && where() !== 'top') return { x: Math.min(NAV_RIGHT, b.x + b.w) - NV.W, y: Math.max(NAV_TOP, b.y - NV.H - NAV_GAP) };
+        return { x: NAV_RIGHT - NV.W, y: NAV_BOTTOM - NV.H };
+    }
+    function hideNav() {
+        if (navRef && navShown && cr) cr.set(navRef, { visible: false });
+        navShown = false;
+    }
+    function navTick() {
+        const m = visible && hudBadge && !hudTaken() && typeof lv.nav === 'function' ? lv.nav() : null;    // (navCan)
+        const key = NV.key(m);
+        if (!key) return hideNav();
+        if (!client()) return undefined;
+        const p = navPlace(), at = p.x + ',' + p.y;
+        if (!navRef) {
+            navOp = hudOpacity();
+            navRef = cr.image({ target: 'hud', klass: 'overlay', z: 11, x: p.x, y: p.y, w: NV.W, h: NV.H, iw: NV.W, ih: NV.H, visible: false, opacity: navOp });
+            if (!navRef) { warnOnce('the renderer refused the directions layer'); return undefined; }
+            navCv = new NV.Canvas(NV.W, NV.H); navAt = at; navLast = '';
+            log.info('directions: on the HUD at ' + at);
+        } else if (at !== navAt) { cr.set(navRef, { x: p.x, y: p.y }); navAt = at; }
+        if (key !== navLast) {
+            NV.draw(navCv, m);
+            cr.pixels(navRef, null, Buffer.from(navCv.d.buffer, navCv.d.byteOffset, navCv.d.length));
+            navLast = key;
+        }
+        const op = hudOpacity();
+        if (!navShown || op !== navOp) { cr.set(navRef, { visible: true, opacity: op }); navShown = true; navOp = op; }
+        return undefined;
+    }
+    const navTimer = si(navTick, NAV_MS);
+
     /* ---------- the lane change warning on the HUD (lv.blindSpot(): { left, right }, 0 none, else a car there:
      * blindspot.js) ---------- */
     const lcwShown = {};
@@ -631,14 +674,14 @@ function startOverlay(ctx, lv, opts) {
     }
     const lcwTimer = si(lcwTick, ARROW_TICK_MS);
 
-    process.on('exit', () => { hideArrows(); });
+    process.on('exit', () => { hideArrows(); hideNav(); });
 
     return {
         /** Whether the badge is on the map now. */
         shown: () => visible,
         /** The Waze map as status.json says: { showing, target, pct }. */
         map: () => Object.assign({}, map),
-        stop() { ci(poll); ci(draw); ci(arrowTimer); ci(lcwTimer); if (watcher) watcher.close(); hide(); hideArrows(); ['left', 'right'].forEach((d) => lcwSet(d, false)); if (cr) cr.close(); },
+        stop() { ci(poll); ci(draw); ci(arrowTimer); ci(lcwTimer); ci(navTimer); if (watcher) watcher.close(); hide(); hideArrows(); hideNav(); ['left', 'right'].forEach((d) => lcwSet(d, false)); if (cr) cr.close(); },
         /** For the diagnostics: the renderer link and the Waze map as status.json says. */
         status: () => ({
             renderer: cr ? (cr.ready ? 'connected' : 'connecting') : 'not needed yet',
@@ -649,6 +692,11 @@ function startOverlay(ctx, lv, opts) {
         arrows: () => ({ shown: arrowsShown, phase: lastPhase, refs: Object.assign({}, arrows) }),
         /** Whether the lane change sign can show now (blindspot.js reads the BDC only then: not while Redline holds the HUD). */
         lcwWanted: lcwOn,
+        /** The directions on the HUD now: { shown, at: 'x,y' } (navlog.js writes its log only while they show). */
+        nav: () => ({ shown: navShown, at: navAt }),
+        /** Whether directions can show now: the panel on the HUD, the HUD not another app's (main.js asks for turns only then). */
+        navCan: () => !!(visible && hudBadge && !hudTaken()),
+        _navTick: navTick,
         _arrowTick: arrowTick, _lcwTick: lcwTick, lcw: () => ({ shown: Object.assign({}, lcwShown), refs: Object.assign({}, lcwRefs) }),
         _tick: tick, _read: readStatus,
     };
