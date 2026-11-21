@@ -73,21 +73,23 @@ function box(key, x, y, w, h, label) {
         C.text(key + 'Lbl', x + 14, y + 6, w - 28, 18, label, white, { align: 0, tracking: 0.12 }),
     ];
 }
-/** The shift lights: lit from 3000 rpm (or 2500 under the shift point, whichever is higher), full at the shift
- * point, all of them flashing there. */
+/** The shift lights: lit from Settings > Yellow light at (Auto: 3000 rpm or 2500 under the shift point,
+ * whichever is higher), full at the shift point (the shift warning), all of them flashing there. */
 function lights(o, x, y, w, h) {
     return {
         key: 'lights', kind: 'leds', x, y, w, h, max: 1,
-        value: (d) => { const at = shiftPoint(o, d.oil).rpm, from = Math.max(3000, at - 2500); return isNum(d.rpm) ? Math.max(0, Math.min(1, (d.rpm - from) / (at - from))) : 0; },
+        value: (d) => { const at = shiftPoint(o, d.oil).rpm, from = Math.min(at - 500, Number(o.yellowFrom) > 0 ? Number(o.yellowFrom) : Math.max(3000, at - 2500)); return isNum(d.rpm) ? Math.max(0, Math.min(1, (d.rpm - from) / (at - from))) : 0; },
         params: { u_count: [18], u_soft: [0], u_shape: [0] },
         dyn: (d) => ({ u_flash: [isNum(d.rpm) && d.rpm >= shiftPoint(o, d.oil).rpm ? 1 : 0] }),
         colors: (t) => ({ off: t.off, green: t.green, yellow: t.yellow, red: t.red }),
     };
 }
+/** The segmented rpm bar, red from the red zone: white turning yellow from Settings > Yellow light at (Auto: white
+ * to yellow along the fill). */
 function revBar(o, x, y, w, h) {
     const r = C.rpmScale(o);
     return { key: 'revs', kind: 'band', x, y, w, h,
-        params: { u_geo: [4, h / 2, 0, Math.max(4, h - 6)], u_span: [0, 0, 52, 0.28], u_marks: [0, 0, 0, 0], u_red: [r.red / r.max], u_soft: [1] },
+        params: { u_geo: [4, h / 2, 0, Math.max(4, h - 6)], u_span: [0, 0, 52, 0.28], u_marks: [0, 0, 0, 0], u_red: [r.red / r.max], u_yellow: [Number(o.yellowFrom) > 0 ? Math.max(0.001, C.yellowAt(o, {}) / 1000 / r.max) : 0], u_soft: [1] },
         colors: (t) => ({ track: t.track, fill0: t.text, fill1: t.accent, redc: t.red, tip: t.accent, tick: t.dim, num: t.num }),
         value: (d) => (isNum(d.rpm) ? d.rpm / 1000 / r.max : 0), max: 1, sweep: true };
 }
@@ -153,7 +155,7 @@ module.exports = {
             // (full screen with the stock centre: its own area, x 566-1104, left as the other layouts leave it)
             const around = o.centre === 'stock' && !strip ? [{ x: 0, y: 0, w: 566, h: 720 }, { x: 1104, y: 0, w: 816, h: 720 }] : C.aroundMap();
             list.splice(0, 1, ...around.map((b, i) => C.flat('bg' + i, b.x, b.y, b.w, b.h, 'bg')));
-            if (o.centre === 'map') list.push(revBar(o, C.MAP.x, C.MAP.y + C.MAP.h + 8, C.MAP.w, 26));   // (the stock centre: nothing under it)
+            if (o.centre === 'map') list.push(revBar(o, C.MAP_VIEW.x, C.MAP.y + C.MAP.h + 8, C.MAP_VIEW.w, 26));   // (the stock centre: nothing under it)
         } else {
             // under the camera's cowl and inside the glass's slanted corners: the lights, the rev bar, its scale
             list.push(lights(o, 470, 170, 980, 40), C.text('shiftLbl', 330, 180, 120, 22, 'SHIFT', lbl, { align: 1, tracking: 0.14 }),

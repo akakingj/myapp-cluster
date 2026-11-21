@@ -20,21 +20,28 @@ function rpmScale(o) {
     return { max, major: 1, minor: 0.25, red: Math.max(2, Math.min(max, (o.redline || 7000) / 1000)) };
 }
 /*
- * The shift point and the red zone now, worked as cauliflowermossgrape's Redline app works them (GT3 did already):
- * the shift point the red line less Settings > Shift point before redline (300 rpm); with Settings > Cold-engine
+ * The shift warning (the shift point) and the red zone now, worked as cauliflowermossgrape's Redline app works them
+ * (GT3 did already): the red zone from Settings > Red light at (o.redline, main.js), the shift warning that
+ * far under it (o.shiftBefore: 300 rpm; negative when Shift now warning at is past the red); with Settings > Cold-engine
  * rev guard on, pulled down to the Cold rev limit (4500 rpm) with the oil at 30 °C and climbing back as the oil
- * reaches Oil warm at (80 °C). The red zone starts that far above the shift point: at the red line once warm, lower
- * while cold (as an M car's variable redline). d: the data (its oil); { rpm, red, cold }.
+ * reaches Oil warm at (80 °C), the red zone keeping its distance to it: lower while cold (as an M car's variable
+ * redline). d: the data (its oil); { rpm, red, cold }.
  */
 const SHIFT_DEFAULTS = { shiftBefore: 300, coldLimit: 4500, warmOil: 80 };
 const setNum = (o, k) => { const v = o ? Number(o[k]) : NaN; return o && o[k] !== '' && o[k] !== null && o[k] !== undefined && isFinite(v) ? v : SHIFT_DEFAULTS[k]; };
 function shiftPoint(o, d) {
-    const red = rpmScale(o || {}).red * 1000, before = Math.max(0, setNum(o, 'shiftBefore'));
+    const red = rpmScale(o || {}).red * 1000, before = setNum(o, 'shiftBefore');
     const n = Math.max(2500, red - before), oil = d && d.oil, warm = setNum(o, 'warmOil');
     if (!o || o.coldGuard === 'off' || !isNum(oil) || oil >= warm) return { rpm: n, red, cold: false };
     const cold = Math.min(setNum(o, 'coldLimit'), n), f = Math.max(0, Math.min(1, (oil - 30) / Math.max(1, warm - 30)));
     const rpm = Math.round((cold + (n - cold) * f) / 50) * 50;
-    return { rpm, red: Math.min(red, rpm + before), cold: true };
+    return { rpm, red: Math.max(2000, Math.min(red, rpm + before)), cold: true };
+}
+/** Where the tach turns yellow now (Settings > Yellow light at; Auto: 700 under the red zone), never past
+ * the red zone; rpm. */
+function yellowAt(o, d) {
+    const red = shiftPoint(o, d).red, y = o && Number(o.yellowFrom) > 0 ? Number(o.yellowFrom) : red - 700;
+    return Math.min(y, red);
 }
 /** A temperature (°C) on a 40-140 °C scale, 0..1. */
 const tempFrac = (c) => (isNum(c) ? Math.max(0, Math.min(1, (c - 40) / 100)) : 0);
@@ -64,14 +71,25 @@ const clock = () => require('./clock').hm(undefined, true);   // (12-hour: with 
 
 /* ---------- the map window and the extra readings ---------- */
 
-/** Where waze-on-cluster's map (and the stock map) shows on the panel: the native map area (slot 0x100). With
- * the centre set to 'map', a layout leaves this clear and puts nothing over it. */
+/** The native map area (slot 0x100), where the KOMBI draws its own map or centre: with the centre set to 'map' (or
+ * the stock centre over the car's own strip) a layout puts none of its readings over it. */
 const MAP = { x: 416, y: 120, w: 1088, h: 480 };
-/** Background rectangles round the map window (top, bottom, left, right). */
-const aroundMap = () => [
-    { x: 0, y: 0, w: 1920, h: MAP.y }, { x: 0, y: MAP.y + MAP.h, w: 1920, h: 720 - MAP.y - MAP.h },
-    { x: 0, y: MAP.y, w: MAP.x, h: MAP.h }, { x: MAP.x + MAP.w, y: MAP.y, w: 1920 - MAP.x - MAP.w, h: MAP.h },
-];
+/*
+ * What a layout leaves open of it: the middle between the KOMBI's own fins (x 574 and 1357 at the top; its "km/h",
+ * speed-limit sign and "1/min" along the bottom edges), where waze-on-cluster draws its map (map_window.js). The
+ * KOMBI's speed readout at the left of its map (x 416-703, y 343-416) is covered by STOCK_SPEED.
+ */
+const MAP_VIEW = { x: 592, y: 120, w: 746, h: 480 };
+const STOCK_SPEED = { x: 592, y: 332, w: 124, h: 96 };
+/** Background rectangles round the map's view (top, bottom, left, right, the KOMBI's speed readout). */
+const aroundMap = () => {
+    const V = MAP_VIEW;
+    return [
+        { x: 0, y: 0, w: 1920, h: V.y }, { x: 0, y: V.y + V.h, w: 1920, h: 720 - V.y - V.h },
+        { x: 0, y: V.y, w: V.x, h: V.h }, { x: V.x + V.w, y: V.y, w: 1920 - V.x - V.w, h: V.h },
+        Object.assign({}, STOCK_SPEED),
+    ];
+};
 /** True when a rectangle overlaps the map window. */
 const overMap = (r) => r.x < MAP.x + MAP.w && r.x + r.w > MAP.x && r.y < MAP.y + MAP.h && r.y + r.h > MAP.y;
 
@@ -394,8 +412,10 @@ const READOUTS = {
     avgFuel: { short: 'AVG', long: 'AVG', num: econText, frac: econFrac },
     trip: { short: 'TRIP', long: 'TRIP', num: tripText, frac: (d) => (isNum(d.tripKm) ? Math.min(1, d.tripKm / 1000) : 0) },
     tripTime: { short: 'TIME', long: 'TIME', num: (o, d) => tripTimeText(d), frac: (d) => (isNum(d.tripMin) ? Math.min(1, d.tripMin / 600) : 0) },
+    // (0.48.8) the odometer: the trip since delivery, whatever the head unit's trip data shows
+    odo: { short: 'ODO', long: 'ODO', num: (o, d) => distText(o, d.odometer), frac: () => 0 },
     // (0.45.0) the fuel range (the car's, as the strip shows it) and the time of day (Settings > Time zone), anywhere
-    frange: { short: 'RANGE', long: 'FUEL RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
+    frange: { short: 'RANGE', long: 'RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
     // (no name: '7:37 PM' says what it is)
     clock: { short: '', long: '', num: () => clock(), frac: () => 0 },
 };
@@ -474,8 +494,8 @@ function fitText(p, fam, room) {
 /** The readings at their widest figures (three-figure temperatures, the most negative timing and boost ...): what a
  * readout's box is sized to hold (layouts.js), and what tools/check_fit.js measures every text with. */
 const READOUT_SAMPLES = [
-    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 999999, tripMin: 599999, frange: 1999 },
-    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P', avgCons: 99.9, avgConsUnit: 'kml', tripKm: 0, tripMin: 0, frange: 0 },
+    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 999999, tripMin: 599999, odometer: 999999, frange: 1999 },
+    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P', avgCons: 99.9, avgConsUnit: 'kml', tripKm: 0, tripMin: 0, odometer: 0, frange: 0 },
 ];
 const nameOf = (r, o, long) => { const n = long ? r.long : r.short; return typeof n === 'function' ? n(o) : n; };
 /** A readout on one line, its name first: 'IAT 31°', 'BST 14.5' ('INTAKE AIR 31°', 'BOOST 14.5 psi' where it
@@ -615,11 +635,12 @@ const outsideText = (o, c) => (isNum(c) ? Math.round(tempIn(o, c)) + '°' + (o.t
 const socText = (d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--');
 const kwText = (d) => (isNum(d.kw) ? (d.kw > 0.05 ? '+' : '') + (Math.abs(d.kw) < 10 ? d.kw.toFixed(1) : Math.round(d.kw)) + ' kW' : '--');
 
-/** A reading with its label under it: two text pieces. */
+/** A reading with its label small above it: two text pieces, together as high as the value, a gap and the label. */
 function reading(key, x, y, w, h, value, label, colors, labelColors) {
+    const lh = Math.max(18, Math.round(h * 0.4));
     return [
-        text(key, x, y, w, h, value, colors),
-        text(key + 'Lbl', x, y + h + Math.round(h * 0.14), w, Math.max(18, Math.round(h * 0.4)), label, labelColors, { tracking: 0.12 }),
+        text(key + 'Lbl', x, y, w, lh, label, labelColors, { tracking: 0.12 }),
+        text(key, x, y + lh + Math.round(h * 0.14), w, h, value, colors),
     ];
 }
 /** A reading with its label above it (where the row must end above the warning lights): label 16 px, then the
@@ -642,6 +663,6 @@ const text = (key, x, y, w, h, txt, colors, extra) => Object.assign({ key, kind:
 const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colors: (t, d) => ({ color: [typeof colour === 'function' ? colour(t, d) : t[colour], 1] }) });
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

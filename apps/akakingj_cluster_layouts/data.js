@@ -239,7 +239,7 @@ function startData(ctx, opts) {
     /** A number under one of these field names however deep, or null; the binding's invalid values (all bits set) left out. */
     const numAt = (v, key) => { const e = entries(v, key)[0]; const n = e ? e[key] : undefined; return isNum(n) && n !== 255 && n !== 65535 && n !== 0x7FFF && n !== 0xFFFFFFFF ? n : null; };
     const fes = (name) => (v) => {
-        const j = JSON.stringify(v);
+        const j = String(JSON.stringify(v));   // (undefined for a value that is none: 'undefined', not a throw)
         if (raw[name] !== j) {
             raw[name] = j;
             const n = rawLogged[name] = (rawLogged[name] || 0) + 1;
@@ -265,7 +265,12 @@ function startData(ctx, opts) {
             const b = v && typeof v === 'object' ? v.displayBoostPressure : undefined;
             const bs = S.boost || {}, factor = isNum(bs.factor) ? bs.factor : 0.01, invalid = isNum(bs.invalid) ? bs.invalid : 254;
             if (isNum(b) && Date.now() - (x.at.boostRawLog || 0) > 60000) { x.at.boostRawLog = Date.now(); log.info('raw FES boost ' + b + ' (max ' + (v && v.displayMaximumValueBoostPressure) + ')'); }
-            if (isNum(b) && b >= 0 && b < Math.min(254, invalid)) put('boostCar', carPress === 'PSI' ? b * 0.1 / 14.5038 : b * factor + (bs.offset || 0));
+            if (isNum(b) && b >= 0 && b < Math.min(254, invalid)) {
+                const bar = carPress === 'PSI' ? b * 0.1 / 14.5038 : b * factor + (bs.offset || 0);
+                // a car whose sport display sends no boost sends one value all along: the sport display counts once it moves
+                if (!isNum(x.boostCarFirst)) x.boostCarFirst = bar; else if (Math.abs(bar - x.boostCarFirst) >= 0.03) x.boostCarMoved = true;
+                put('boostCar', bar);
+            }
         },
         // the sport display's powertrain power (+ driving, - recuperating; its unit fitted in kwfuse.js)
         displaySportPowertrain: (v) => {
@@ -277,7 +282,7 @@ function startData(ctx, opts) {
     watch('de.bmw.infrastructure.EnvironmentalInformation', { ExteriorTemperature: (v) => put('outside', sc('ambient', v && v.temperatureExterior)) }, 'outside temperature');
     watch('de.bmw.infrastructure.analytics.BasicDataSet', {
         basicDataSet: (v) => {
-            const g = sc('gearboxTemp', v.valueTemperatureTransmissionOil);
+            const g = sc('gearboxTemp', v && v.valueTemperatureTransmissionOil);
             if (isNum(g) && g > -40 && g < 160) put('gearbox', g);
         },
     }, 'basic data set');
@@ -317,6 +322,22 @@ function startData(ctx, opts) {
      * differ by car, so numbers are picked by their names - range / Reichweite, electric (elec, ev, hv, bev)
      * or fuel (fuel, tank, kraftstoff, combustion), and the tank's level; kilometres, invalid at 0xFFFF and up */
     const pickRanges = (v) => { const r = rangesOf(v); Object.keys(r).forEach((k) => put(k, r[k])); };
+    // a long trip's distance with its wraps past 65,535 km (statusBordcomputerTravelData)
+    const WRAP = 65536, LONG_MIN = 100 * 60;
+    let lastLong = null;   // { km, min }: the last long trip's figures as sent, to see a wrap
+    const unwrapTrip = (km, min) => {
+        if (min === null || min < LONG_MIN) { lastLong = null; return km; }
+        let k = Math.max(0, Math.min(30, Math.round(Number(setting('tripWraps')) || 0)));
+        if (lastLong && lastLong.km >= 60000 && km < WRAP - 60000 && min >= lastLong.min) {
+            k++;
+            try { if (ctx.settings && ctx.settings.set) ctx.settings.set('tripWraps', k); } catch (e) { /* kept for this run */ }
+            if (ctx.log) ctx.log.info('trip: its distance wrapped past 65,535 km (' + lastLong.km + ' -> ' + km + '): ' + k + ' wraps');
+        }
+        lastLong = { km, min };
+        let out = km + WRAP * k;
+        while (k > 0 && isNum(x.odometer) && out > x.odometer + 1) { k--; out -= WRAP; }
+        return out;
+    };
     // the odometer (km: KombiIF statusRangeTankStatus / VehicleInformation Range mileageKilometre): the trip since delivery
     const odometer = (v) => { const n = one(v, 'mileageKilometre'); if (isNum(n) && n > 0 && n < 2000000) put('odometer', n); };
     // steering angle and yaw rate (as installed apps declare them; scaling in config.scaling, raw values shown)
@@ -398,13 +419,17 @@ function startData(ctx, opts) {
         // charging, own reset: seen on a G-series plug-in hybrid, Nov 19 2026); "since delivery" is longer than the
         // distance's field holds (236345 km): no value comes, so the odometer is that trip's distance. A choice's
         // driving time with no value drops the last one's.
+        // (0.48.8) its distance is 16 bits: past 65,535 km it starts from 0 again (a plug-in hybrid's own-reset trip:
+        // 119,110 km on the car, 53,575 sent, Nov 19 2026). A long trip - its driving time 100 h or more, which a
+        // tankful or a day's driving never is - gets Settings > "Trip distance past 65,535 km" x 65,536 km added, never
+        // past the odometer; a wrap seen while it counts (from 60,000 up to under 5,536) adds one to that setting.
         statusBordcomputerTravelData: (v) => {
             fes('statusBordcomputerTravelData')(v);
             const km = one(v, 'wayPassed'), h = one(v, 'rideDurationHours'), m = one(v, 'rideDurationMinutes');
-            if (isNum(km) && km >= 0 && km < 0xFFFE) put('tripKm', km);
+            const min = isNum(h) && h >= 0 && h < 0xFFFE && isNum(m) && m >= 0 && m < 60 ? h * 60 + m : null;
+            if (min !== null) put('tripMin', min); else if (h !== undefined) x.tripMin = undefined;
+            if (isNum(km) && km >= 0 && km < 0xFFFE) put('tripKm', unwrapTrip(km, min));
             else if (km !== undefined) { if (isNum(x.odometer)) put('tripKm', x.odometer); else x.tripKm = undefined; }
-            if (isNum(h) && h >= 0 && h < 0xFFFE && isNum(m) && m >= 0 && m < 60) put('tripMin', h * 60 + m);
-            else if (h !== undefined) x.tripMin = undefined;
         },
         // the cluster's own electric range (in this car's catalog), in the unit the cluster shows: miles on a car
         // set to miles (read as km it came out 1.6 times too low), so by the app's speed unit; kept here in km.
@@ -457,8 +482,9 @@ function startData(ctx, opts) {
             const tg = await rd.value('boostTarget', dme.boostTarget);
             if (tg === null) return null;
             const ac = await rd.value('boostActual', dme.boostActual);
-            put('boostTarget', (tg - baro) / 100);
-            if (ac !== null) put('boostActual', (ac - baro) / 100);
+            // bar over the outside air, from 0: a closed throttle's vacuum reads 0, not below it
+            put('boostTarget', Math.max(0, (tg - baro) / 100));
+            if (ac !== null) put('boostActual', Math.max(0, (ac - baro) / 100));
             return tg;
         }
         // (the high-voltage battery is eDrive Live's alone: its charge and power come from its shared file, below.
@@ -626,9 +652,11 @@ function startData(ctx, opts) {
                 .forEach((k) => { if (!d.demo && fresh(k, 60000)) o[k] = x[k]; });
             // the trip computer (read every 15 s and on its notices: kept 2 minutes)
             ['avgCons', 'tripKm', 'tripMin'].forEach((k) => { if (!d.demo && fresh(k, 120000)) o[k] = x[k]; });
+            if (!d.demo && fresh('odometer', 600000)) o.odometer = x.odometer;   // (0.48.8: the ODO readout)
             if (isNum(o.avgCons)) o.avgConsUnit = x.avgConsUnit;
-            // boost: the engine unit's (fast, while a layout wants it), else the car's sport display signal
-            if (!isNum(o.boostActual) && !d.demo && fresh('boostCar', 5000)) o.boostActual = x.boostCar;
+            // boost: the car's sport display's, as BMW's sport display shows it (once it has moved), else the engine unit's
+            // (fast, while a layout wants it; its target is the engine unit's alone)
+            if (!d.demo && fresh('boostCar', 5000) && (x.boostCarMoved || !isNum(o.boostActual))) o.boostActual = x.boostCar;
             // (the engine unit's only: the car's pedal signal's scaling is unconfirmed - Redline saw 60-96 % at a light
             // touch with it - so its value goes to the log alone, never on the cluster)
             // (kept 8 s: a round of the engine unit's readings can take 3 s or more while driving, its replies slower)
@@ -683,7 +711,7 @@ function demo(d) {
         outside: 9, gearbox: 72 + 4 * Math.sin(t / 50), iat: 34 + 6 * Math.sin(t / 20), hpfp: 50 + rpm / 40, lpfp: 5.2 + 0.2 * Math.sin(t),
         timing: 18 - rpm / 800, pedal: Math.max(0, Math.min(100, (isNum(d.torque) ? d.torque : 40) / 4.2)), throttle: Math.max(0, Math.min(100, (isNum(d.torque) ? d.torque : 40) / 4.6 + 3)), boostTarget: Math.max(0, (rpm - 1500) / 4000), boostActual: Math.max(0, (rpm - 1600) / 4100),
         battTemp: 27, battMin: 25, battMax: 29, soc: 64, kw: -12 + 25 * Math.sin(t / 7), pdDrive: 60, pdClimate: 25, pdSeats: 15,
-        avgCons: 11.7, avgConsUnit: 'kml', tripKm: 126, tripMin: 150,
+        avgCons: 11.7, avgConsUnit: 'kml', tripKm: 126, tripMin: 150, odometer: 48210,
         erange: 29, frange: 520, fuelLevel: 38,
         tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } },
     };

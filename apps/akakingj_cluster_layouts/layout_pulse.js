@@ -78,7 +78,7 @@ module.exports = {
                 C.text('outside', 110, 450, 290, 44, (d) => C.outsideText(o, d.outside), txt),
                 C.text('gear', 1666, 286, 244, 150, C.gearText, gearC),
                 C.text('mode', 1666, 440, 244, 26, C.modeText, accent, { tracking: 0.25 }),
-                rpmBar(o, 'rpmBar', C.MAP.x, bot + 10, C.MAP.w, 30, 48),
+                rpmBar(o, 'rpmBar', C.MAP_VIEW.x, bot + 10, C.MAP_VIEW.w, 30, 48),
             ],
             up('fuel', 20, 510, 190, 40, (d) => C.distText(o, d.frange), 'FUEL', txt, 20),
             up('elec', 215, 510, 195, 40, C.focus.range(o), C.focus.rangeLabel(o), eTxt, 20),
@@ -101,7 +101,7 @@ module.exports = {
             ].concat(
                 up('oil', 110, 540, 250, 48, (d) => C.tempText(o, d.oil), 'OIL', hotC('oil', C.hotAt(o, 'oil'))),
                 up('coolant', 380, 540, 250, 48, (d) => C.tempText(o, d.coolant), 'COOLANT', hotC('coolant', C.hotAt(o, 'coolant'))),
-                up('fuel', 1290, 480, 310, 48, (d) => C.distText(o, d.frange), 'FUEL RANGE', txt),
+                up('fuel', 1290, 480, 310, 48, (d) => C.distText(o, d.frange), 'RANGE', txt),
                 up('elec', 1600, 480, 310, 48, C.focus.range(o), C.focus.rangeLabel(o), eTxt),
                 up('kw', 1290, 570, 310, 48, C.focus.power(o), C.focus.powerLabel(o), txt),
                 up('soc', 1600, 570, 310, 48, C.focus.charge(o), C.focus.chargeLabel(o), eTxt));
@@ -159,7 +159,7 @@ module.exports = {
             // one row along the bottom, the charge bar under its charge
             up('oil', 200, 534, 250, 64, (d) => C.tempText(o, d.oil), 'OIL', hotC('oil', C.hotAt(o, 'oil')), 24),
             up('coolant', 454, 534, 250, 64, (d) => C.tempText(o, d.coolant), 'COOLANT', hotC('coolant', C.hotAt(o, 'coolant')), 24),
-            up('fuel', 708, 534, 250, 64, (d) => C.distText(o, d.frange), 'FUEL RANGE', txt, 24),
+            up('fuel', 708, 534, 250, 64, (d) => C.distText(o, d.frange), 'RANGE', txt, 24),
             up('elec', 962, 534, 250, 64, C.focus.range(o), C.focus.rangeLabel(o), eTxt, 24),
             up('soc', 1216, 534, 250, 64, C.focus.charge(o), C.focus.chargeLabel(o), eTxt, 24),
             [socBar(o, 'socBar', 1256, 634, 170, 14)],

@@ -25,9 +25,12 @@ const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, slotLabel: layoutSlotLabe
 
 /** The shift point as layout_common takes it - so many rpm under the red zone - from Settings > Shift point (0.42.0,
  * the Car profile's: an rpm; 0 Auto, the red zone less 300). */
+/** The red zone's start: Red light at, or (Auto) the redline. */
+const redOf = (settings) => Number(settings.get('redLight')) || Number(settings.get('redline')) || 7000;
+/** How far the shift warning sits under the red zone (negative: above it, Shift now warning at past the red). */
 function beforeOf(settings) {
-    const at = Number(settings.get('shiftAt')), red = Number(settings.get('redline'));
-    return at > 0 && red > 0 ? Math.max(100, red - at) : 300;
+    const at = Number(settings.get('shiftAt')), red = redOf(settings);
+    return at > 0 ? red - at : 300;
 }
 const menu = require('./menu');
 const CupView = require('./cup_view');
@@ -103,10 +106,10 @@ mgu.run({
         const options = () => ({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
             powerUnit: settings.get('powerUnit'), econUnit: settings.get('econUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), jdmCup: slot('jdmCup'), centreView: slot('centreView'), stripBars: settings.get('stripBars'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'), places: placesOf(layout.id),
-            amberRpm: settings.get('amberRpm'), shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
+            yellowFrom: Number(settings.get('yellowLight')) || 0, shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
-            redline: Number(settings.get('redline')) || 7000, rpmMax: Number(settings.get('rpmMax')) || 8000,
+            redline: redOf(settings), rpmMax: Number(settings.get('rpmMax')) || 8000,
             // (always the car's own bottom strip since 0.34.0: Bottom strip, Cluster: M car and Frame behind the gear box
             // are gone with the full-screen form; layouts.js holds them so)
             cluster: 'standard', bottomStrip: 'stock', boxBezel: false,
@@ -155,8 +158,8 @@ mgu.run({
             // Cluster Centre steps aside while a layout shows
             if (cluster.status().shown) presence.mark('layouts', { centre: options().centre });
             // the Waze centre: Waze on cluster draws its map over the layout, filling the window (map_window.js): the
-            // layout's own (M's and Sport's: where bimmer-lab's put it), else the native map area
-            mapWindow.set(cluster.status().shown && options().centre === 'map' ? (layout.mapWindow || require('./layout_common').MAP) : null);
+            // layout's own (M's and Sport's: where bimmer-lab's put it), else the view the layouts leave open
+            mapWindow.set(cluster.status().shown && options().centre === 'map' ? (layout.mapWindow || require('./layout_common').MAP_VIEW) : null);
             // the vehicle found (Settings > Vehicle: Auto): the layout redrawn for it once known
             const v = D.vehicle().vehicle;
             if (v !== lastVehicle) { if (lastVehicle) cluster.rebuild(); lastVehicle = v; }
@@ -177,7 +180,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'amberRpm', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'yellowLight', 'redLight', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */
@@ -211,7 +214,11 @@ mgu.run({
             const n = (short, long) => (full ? long : short);
             const d = data(), o = options(), snap = {};
             Object.keys(d).forEach((k) => { const v = d[k]; if (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean') snap[k] = typeof v === 'number' ? Math.round(v * 100) / 100 : v; });
-            return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''), [
+            // (0.48.7) the QR codes (not full) leave out the catalog listings - the car's signal names for the range,
+            // power, cruise control and time, found long since - and list only the reset-logic and trip computer
+            // services' fields: about a quarter of the codes (45 were 15 pages); the USB file keeps everything
+            const QR_OUT = ['range and charge signals', 'power and consumption signals', 'cruise control signals', 'time and date signals', 'driving assistant (ID8 M)'];
+            const sections = [
                 ['settings', JSON.stringify({ layout: settings.get('layout'), centre: o.centre, look: settings.get('look'), show: settings.get('show') })],
                 ['engine', JSON.stringify(cluster.status())],
                 ['cluster renderer status', squeeze(cluster.rendererStatus() || '(no answer yet)', full)],
@@ -221,7 +228,7 @@ mgu.run({
                 // (0.48.4) the trip data: the car's trip computer follows the head unit's "values shown since" choice
                 // (start, refuelling, charging, delivery, own reset); every field of its reset-logic services and the
                 // catalog's trip, distance and duration fields with all their members, to find the one with each choice
-                ['trip data signals', sigList(findSignals({ iface: /resetlogic|bordcomputer|tripdata|travel/i, match: /bordcomputer|travel|trip|reise|waypassed|rideduration|since|abstart|seit|refuel|tanken|charg|laden|delivery|auslieferung|mileage|odometer|kilometerstand|distance|duration|fahrzeit|average|durchschnitt/i }), n(80, 600), 40)],
+                ['trip data signals', full ? sigList(findSignals({ iface: /resetlogic|bordcomputer|tripdata|travel/i, match: /bordcomputer|travel|trip|reise|waypassed|rideduration|since|abstart|seit|refuel|tanken|charg|laden|delivery|auslieferung|mileage|odometer|kilometerstand|distance|duration|fahrzeit|average|durchschnitt/i }), n(80, 600), 40) : sigList(findSignals({ iface: /resetlogic\.ResetLogic$/i, match: /bordcomputer(average|traveldata)/i }), 20, 12)],
                 ['vehicle', (() => { const v = D.vehicle(); return v.vehicle + ' (' + v.how + ': ' + v.why + ')'; })()],
                 ['data status', JSON.stringify(Object.assign({}, D.status(), { raw: undefined }))],
                 // the kW gauges' sources: each of the car's power signals (how often it came, its last value), its fit to
@@ -243,10 +250,12 @@ mgu.run({
                 // "seen" empty), so the catalog's other candidates, to pick from
                 ['cruise control signals', sigList(findSignals({ match: /cruise|tempomat|geschwindigkeitsregel|wunschgeschw|speed.?limit|limiter|set.?speed|target.?speed|abstand|distance.?control|longitudinal.?(control|guid|function|assist)|\bacc\b|acc[A-Z_]|ACC|DCC|FGR/ }), n(30, 300))],
                 ['time and date signals', sigList(findSignals({ match: /time|date|uhrzeit|datum|zone|clock/i }), n(10, 300))],
-                ['cluster-render log', logs.tail(logs.RENDER_LOG, n(50, 1500))],
+                ['cluster-render log', logs.tail(logs.RENDER_LOG, n(20, 1500))],
                 ['this app\'s log', logs.tail(path.join(ctx.dataDir || '.', 'akakingj_cluster_layouts.log'), n(30, 400))],
                 ['Cluster Centre log', logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_centre', n(20, 300))],
-            ]);
+            ];
+            return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''),
+                full ? sections : sections.filter((sec) => QR_OUT.indexOf(sec[0]) < 0));
         }
         ui.onClick('BTN_LOGS', () => {
             page = 0; cupOpen = false;

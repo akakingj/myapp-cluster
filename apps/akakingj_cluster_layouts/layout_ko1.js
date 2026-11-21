@@ -183,8 +183,8 @@ function centre(o, X, Y, W, H, look) {
             C.flat('rule2', X + 22, at(218), W - 44, 2, 'lcdEdge'),
         ], line('koTrip', 'tripRow1', 'trip', 230, 34), line('koAvg', 'tripRow2', 'avgFuel', 270, 34), [
             C.flat('rule3', X + 22, at(316), W - 44, 2, 'lcdEdge'),
-            C.text('kwNow', X, at(330), W, hh(50), C.focus.power(o), kw),
-            C.text('kwNowLbl', X, at(388), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+            C.text('kwNowLbl', X, at(330), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+            C.text('kwNow', X, at(388) + 18 - hh(50), W, hh(50), C.focus.power(o), kw),
         ]);
     }
     const P = 's';
@@ -194,8 +194,8 @@ function centre(o, X, Y, W, H, look) {
         // (the third line's reading as a bar - the average economy, 0 to 30 km/L - in the speedometer's arc colours)
         C.bar('koAvgBar', X + 18, at(230), W - 36, 16, barOf(C.placeOf(o, 'tripRow3') || 'avgFuel'), (t) => ({ track: t[P + 'Track'], fill0: t[P + 'Arc0'], fill1: t[P + 'Arc1'], redc: t.red, tip: t[P + 'Arc1'], tick: t.dim, num: t.dim })),
         C.flat('rule2', X + 22, at(268), W - 44, 2, 'lcdEdge'),
-        C.text('kwNow', X, at(284), W, hh(70), C.focus.power(o), kw),
-        C.text('kwNowLbl', X, at(362), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+        C.text('kwNowLbl', X, at(284), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+        C.text('kwNow', X, at(362) + 18 - hh(70), W, hh(70), C.focus.power(o), kw),
     ]);
 }
 

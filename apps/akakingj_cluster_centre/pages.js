@@ -228,7 +228,7 @@ const PAGES = {
                 label(g + '.chg', g, M.x + 18, BODY.y + 130, 150, 'CHARGING'), label(g + '.drw', g, M.x + M.w - 168, BODY.y + 130, 150, 'DRAWING', { align: 1 }),
                 spark(g + '.kwS', g, M.x + 10, BODY.y + 150, M.w - 20, 40, (d) => (isNum(d.kw) ? (d.kw >= 0 ? 0.25 + 0.75 * Math.min(1, d.kw / kwOut(d)) : 0.25 * (1 - Math.min(1, -d.kw / kwIn(d)))) : null), 'ev'),
                 card(g + '.pdC', g, M.x, BODY.y + 208, M.w, BODY.h - 208),
-                icon(g + '.frI', g, M.x + 14, BODY.y + 221, 20, 4, 'accent'), label(g + '.frL', g, M.x + 42, BODY.y + 225, 160, 'FUEL RANGE'),
+                icon(g + '.frI', g, M.x + 14, BODY.y + 221, 20, 4, 'accent'), label(g + '.frL', g, M.x + 42, BODY.y + 225, 160, 'RANGE'),
                 text(g + '.fr', g, M.x + 16, BODY.y + 250, 190, 40, (d) => view('frange', d, o.units).text + ' ' + view('frange', d, o.units).unit, glowing('text', 0.2), { align: 0 }),
                 label(g + '.pdT', g, M.x + 220, BODY.y + 225, 190, 'POWER GOES TO'),
             ].concat(pd('pdDrive', 'DRIVE', 10, BODY.y + 258), pd('pdClimate', 'CLIMATE', 12, BODY.y + 290), pd('pdSeats', 'SEATS', 0, BODY.y + 322));

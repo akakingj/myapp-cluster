@@ -125,7 +125,10 @@ if (require.main === module) {
         // (the readouts: --infoA, --infoB, --infoMain, --infoLow: a readout's name, gear or off; --arcGear off)
         infoA: a.infoA, infoB: a.infoB, infoMain: a.infoMain, infoLow: a.infoLow, arcGear: a.arcGear, gaugeSpeed: a.gaugeSpeed, gaugeRpm: a.gaugeRpm,
         // (--centreView trip: a centre display's trip computer; --tripKm, --tripMin its figures)
-        centreView: a.centreView },
+        centreView: a.centreView,
+        // (the shift lights, as main.js gives them: --redline the red zone, --rpmMax the scale's end, --yellow the yellow
+        // shift light, --shiftAt the shift warning)
+        redline: a.redline, rpmMax: a.rpmMax, yellowFrom: a.yellow, shiftBefore: a.shiftAt !== undefined && a.redline !== undefined ? a.redline - a.shiftAt : undefined },
         data: { speed: a.speed * (a.kmh ? 1 : 1.609344), rpm: a.rpm, gear: a.gear, stage: a.stage, mode: a.mode, driveMode: a.drive, pedal: a.pedal, oil: a.oil, coolant: a.coolant, outside: a.outside, soc: a.soc, kw: a.kw, erange: a.erange, frange: a.frange,
             gearbox: a.gearbox, iat: a.iat, battTemp: a.batt, boostActual: a.boost, torque: 312, timing: 14.5, hpfp: 205, boostTarget: 0.9, engineOn: a.rpm > 300, tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } }, fuelPct: a.fuel, gLat: a.glat, gLong: a.glong, pdDrive: 62, pdClimate: 24, pdSeats: 14, avgCons: 11.7, avgConsUnit: 'kml', tripKm: a.tripKm !== undefined ? a.tripKm : 126, tripMin: a.tripMin !== undefined ? a.tripMin : 150, dap: a.dap ? require('../apps/akakingj_cluster_layouts/dap').DEMO : null } });
     // let the needles ease to their readings

@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> 이 저장소는 개인 테스트 목적으로 만들었습니다. 악용을 삼가 주시고, 불법 행위나 금전적 이익을 위한 무단 사용을 하지 마세요.
+>
+> This repository is for personal testing. Do not misuse it, use it for anything illegal, or use it for profit without permission.
+
 > [!WARNING]
 > **Disclaimer.** This is an independent personal project by eroobeeroo. It is not affiliated with, endorsed by
 > or supported by any vehicle manufacturer, equipment supplier or their partners.

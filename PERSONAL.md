@@ -9,13 +9,13 @@ noncommercial use only), with PR #8 (lb-ft and a pressure unit setting).
 | cluster_layouts | akakingj_cluster_layouts | AK Cluster Layouts |
 | cluster_centre | akakingj_cluster_centre | AK Cluster Centre |
 | cluster_info | akakingj_cluster_info | AK Cluster Info |
-| (none: a trial, branch personal-kr-extend only) | akakingj_map_test | AK Map Test |
+| (none: a trial, branch extend only; its Store source: akakingj/extended-map-test) | akakingj_map_test | AK Map Test |
 
 The `akakingj_` prefix is used by no other app in the Store's known sources (cauliflowermossgrape/idrive7-apps,
 robertnisipeanu/idrive-apps, eroobeeroo/idrive7-apps, IterioDev/car-apps; checked 11 Nov 2026).
 Icons: a gauge with an M-coloured accent and L / C / I (`icon.png` in each app's folder; `kit/tools/make_icon.js krgauge-L`).
 
-MGU Store: Settings > Add source > `akakingj/idrive7-cluster-info` > branch `personal-kr`.
+MGU Store: Settings > Add source > `akakingj/myapp-cluster` > branch `main` (moved Nov 19 2026 from the fork akakingj/idrive7-cluster-info, branch personal-kr; its history kept).
 Remove the original Cluster Layouts / Centre / Info (or turn their Show off): both would draw on the cluster.
 
 ## Language
@@ -139,8 +139,8 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
   each app's list takes all of them.
 
 ## Since 0.36 (Nov 16-18 2026)
-Branches: `personal-kr` is what the Store installs (other drivers use it too); every change goes to `personal-kr-test`
-first, checked on the car, then moved to `personal-kr`.
+Branches: `main` is what the Store installs (other drivers use it too); every change goes to `test` first, checked on
+the car, then moved to `main` (in the fork they were `personal-kr` / `personal-kr-test`).
 - Safety first: the cluster must never go dark. Each layout at most 60 layers, under 600 KB at start
   (tools/test_engine.js), GPU cost measured in the demo (swiftshader) against the other layouts, nothing cut off at a
   layer's edge, no clash with the cowl, the corners, the warning lights or the strip (tools/clearance.js), every text in
@@ -222,12 +222,66 @@ first, checked on the car, then moved to `personal-kr`.
   line needs, as a rule the distance's), not each its own. The driving time's name TIME (was DRIVE).
   "Since delivery" chosen: the distance comes with no value (too long for its field), so the trip shows the odometer
   (mileageKilometre, km) and no driving time; any choice's driving time with no value drops the last choice's.
+- Layouts 0.48.5, Centre 0.13.4, Info 1.9.2 (Nov 19 2026, a robustness pass): every signal handler of the three fed
+  odd values (none, numbers for structs, nested junk) while the cluster shows and the layouts change - now no throw
+  (shared/data.js: the raw log of a value that is none, the gearbox signal's struct); kit: a read or notice with no
+  value never reaches a handler (signals.js), a value that is no struct never reaches the car's readers (car.js).
+  Checked again: Node 8 syntax and APIs over all shipped code, 52 layers at most (60), 487 KB at most (600).
+- Layouts 0.48.6, Centre 0.13.5 (Nov 19 2026, the plug-in hybrid's trip data signals log): with "since delivery"
+  the trip computer's statusBordcomputerTravelData keeps the last choice's figures (53487 km, 675:27), no "no value";
+  the head unit's own trip data, ResetLogic.bcDataAll (activeResetLogic: the active choice) and ResetLogic.gwsz
+  (drivenDistance: the odometer), are now watched (both "rs", from that car's catalog): with a delivery choice the trip
+  is the odometer, and the driving time and fuel economy that choice's own where bcData names them (tripOf: the
+  active choice's entry, its distance, hours / minutes or duration, consumption with its scale, each checked for a
+  sensible size), else none rather than the last choice's (the trip computer's economy then waits too). Their raw
+  values are logged, to read bcData's layout from them.
+- Layouts 0.48.7: the logs' QR codes about a third as many (45 were 15 pages, now about 16 codes, 6 pages): the catalog
+  listings (range, power, cruise control, time signals, found long since) and the trip list past the reset-logic and
+  trip computer services left to the USB file, the render log's last 20 lines (was 50).
+- Layouts 0.48.8, Centre 0.13.6: ResetLogic.bcDataAll and gwsz out again (0.48.6-0.48.7). On the plug-in hybrid they
+  answered only their defaults (the active choice 0, every figure 0, gwsz 0; the service's currentConsumption too,
+  Nov 19 2026 15:18): the cluster keeps the trip data there, not the head unit. The trip stays the trip computer's
+  (statusBordcomputerTravelData / Average).
+  The trip computer's distance is 16 bits: past 65,535 km it starts from 0 again (that car's own-reset trip: 119,110 km
+  on the car, 53,575 sent, 65,536 apart). A long trip (its driving time 100 h or more) gets Settings > Car > "Trip
+  distance past 65,535 km" x 65,536 km added, never past the odometer, and a wrap seen while it counts (60,000+ to
+  under 5,536) adds one to that setting. New readout ODO: the odometer (mileageKilometre), the trip since delivery -
+  with "since delivery" chosen the car sends nothing new on the trip signal (its last choice's figures stay).
   tools/preview.js: --centreView trip --tripKm --tripMin.
-- AK Map Test 0.1.0-0.1.2 (branch personal-kr-extend only, a trial; 0.1.1: the shared files as Layouts 0.48.4's; 0.1.2: the dials radius 168, low and in from the edges, clear of the KOMBI's AUTO H and parking-brake lights at the top right): a copy of Cluster Layouts with one layout, KO 1 Map -
+- Layouts 0.48.9, Centre 0.13.7: eroobeeroo's kwfuse (Nov 19 2026): the fast kW sits on the battery reading (each
+  car-signal model carries its average gap to it) and is shown as computed, with no easing lag.
+  The cluster's names for the trip figures are one set in every skin: ODO, AVG, RANGE (the fuel range), TIME. JDM 1's
+  readout under the speed: its name, then the value (RANGE   520 km).
+- Layouts 0.48.10: a readout's name sits small above its value everywhere: the main readout in 20's, ID6 M, KO 1,
+  KO 2, Old M and JDM 2, and the side readings of JDM 2, Track and the pods (C.reading).
+- Layouts 0.49.0, Centre 0.13.8 (shared shaders.js: BAND_FS u_yellow): the shift lights as four settings, each the Car
+  profile's (1.7.0) where it sets one: Yellow light at (lightStart; Auto: 700 rpm under the red), Red shift
+  light from (lightRed; the red zone; Auto: the redline), Shift now warning at (shiftAt, may be past the red), Max rpm
+  (rpmScale); the Redline the limiter. Yellow replaces Amber zone below the red zone (ID6 M, ID7 M, ID8 M: the amber
+  zone from it). Track and GT3 with Yellow set: the rpm bar white up to it, turning yellow towards the red zone, red
+  from there, the shift lights from it to the warning. New layout Simple (layout_simple.js): the engine speed, the
+  speed and the gear on one baseline, their units under them, the trip computer's three lines under a rule; the
+  engine speed yellow / red, at the warning the speed and gear red too. The page's pictures made again
+  (make_previews.py: Simple, and the readout-name changes of 0.48.x).
+- Layouts 0.49.1: Simple with the map or the stock centre (Pulse's pieces) takes Settings > At the shift now warning:
+  the speed and the gear red, as Pulse does.
+- Layouts 0.49.2, Centre 0.13.9: boost (and the boost target) read from the engine unit start at 0: a closed throttle's
+  vacuum (below the outside air) reads 0 psi / 0.00 bar / 0 kPa, not a minus figure.
+  Boost is the car's sport display's first, as BMW's sport display shows it (once it has moved: a car whose sport
+  display sends none sends one value all along), the engine unit's only without it; the target stays the engine unit's.
+- Layouts 0.50.0: with the map or the stock centre over the car's strip, every layout but ID7 M and ID8 M leaves the
+  middle of the map area open (layout_common.MAP_VIEW, x 592-1338, y 120-600; Waze on cluster's window too) and
+  covers the cluster's own speed readout at its left edge (STOCK_SPEED): the stock fins, "km/h", speed limit sign
+  and "1/min" no longer show cut off at the window's edges.
+  ID7 M with the map: its window reaches from under the camera's cowl to the foot of the map area (711, 130,
+  498 x 470, was 263 high), the speed in the left card and the gear in the right one, under their gauges.
+- AK Map Test 0.1.0-0.1.3 (branch extend only, a trial, never on main; 0.1.1: the shared files as Layouts 0.48.4's; 0.1.2: the dials radius 168, low and in from the edges, clear of the KOMBI's AUTO H and parking-brake lights at the top right): a copy of Cluster Layouts with one layout, KO 1 Map -
   KO 1's dials over the CarPlay map laid under the whole layout (map_window.js "panel 280 46 1360 600 under", read by
-  akakingj/idrive-apps extend-map's waze-on-cluster; a black base under the map in the ambient class, its own engine.js
+  akakingj/myapp-map test's waze-on-cluster; a black base under the map in the ambient class, its own engine.js
   with a piece's klass). Cluster Layouts and Centre untouched. Show Off by default: Cluster Layouts' Show off first.
   tools/test_map_test.js.
+  0.1.3: the notes name the repositories as they are now (myapp-cluster extend, myapp-map test,
+  extended-map-test).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.48.4",
+  "version": "0.50.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -186,6 +186,10 @@
           "Pulse"
         ],
         [
+          "simple",
+          "Simple"
+        ],
+        [
           "gt3",
           "GT3"
         ],
@@ -278,6 +282,10 @@
           "Pulse"
         ],
         [
+          "simple",
+          "Simple"
+        ],
+        [
           "gt3",
           "GT3"
         ],
@@ -345,6 +353,10 @@
         [
           "pulse",
           "Pulse"
+        ],
+        [
+          "simple",
+          "Simple"
         ],
         [
           "gt3",
@@ -504,6 +516,10 @@
           "Driving time (the car's trip computer)"
         ],
         [
+          "odo",
+          "Odometer (the car's total distance)"
+        ],
+        [
           "frange",
           "Fuel range"
         ],
@@ -599,6 +615,10 @@
         [
           "tripTime",
           "Driving time (the car's trip computer)"
+        ],
+        [
+          "odo",
+          "Odometer (the car's total distance)"
         ],
         [
           "frange",
@@ -698,6 +718,10 @@
           "Driving time (the car's trip computer)"
         ],
         [
+          "odo",
+          "Odometer (the car's total distance)"
+        ],
+        [
           "frange",
           "Fuel range"
         ],
@@ -793,6 +817,10 @@
         [
           "tripTime",
           "Driving time (the car's trip computer)"
+        ],
+        [
+          "odo",
+          "Odometer (the car's total distance)"
         ],
         [
           "frange",
@@ -1148,13 +1176,45 @@
       "section": "Readouts and gauges"
     },
     {
-      "key": "redline",
-      "profile": "redline",
-      "label": "Red zone from",
+      "key": "yellowLight",
+      "profile": "lightStart",
+      "label": "Yellow light at",
       "type": "number",
       "unit": "rpm",
-      "default": 6000,
+      "default": 0,
+      "labels": {
+        "0": "Auto (700 below the red)"
+      },
       "steps": [
+        0,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        4500,
+        5000,
+        5500,
+        6000,
+        6500,
+        7000
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "redLight",
+      "profile": "lightRed",
+      "label": "Red light at (the red zone)",
+      "type": "number",
+      "unit": "rpm",
+      "default": 0,
+      "labels": {
+        "0": "Auto (the redline)"
+      },
+      "steps": [
+        0,
+        3000,
+        3500,
         4000,
         4500,
         5000,
@@ -1169,49 +1229,14 @@
         7500,
         7800,
         8000,
-        8500,
-        9000
-      ],
-      "section": "Red zone and shift"
-    },
-    {
-      "key": "rpmMax",
-      "profile": "rpmScale",
-      "label": "Rev scale up to",
-      "type": "number",
-      "unit": "rpm",
-      "default": 7000,
-      "steps": [
-        5000,
-        6000,
-        7000,
-        8000,
-        9000,
-        10000
-      ],
-      "section": "Red zone and shift"
-    },
-    {
-      "key": "amberRpm",
-      "label": "Amber zone below the red zone (ID6 M, ID7 M, ID8 M)",
-      "type": "number",
-      "unit": "rpm",
-      "default": 700,
-      "steps": [
-        0,
-        300,
-        500,
-        700,
-        1000,
-        1500,
-        2000
+        8500
       ],
       "section": "Red zone and shift"
     },
     {
       "key": "shiftAt",
       "profile": "shiftAt",
-      "label": "Shift point",
+      "label": "Shift now warning at",
       "type": "number",
       "unit": "rpm",
       "default": 0,
@@ -1239,8 +1264,52 @@
       "section": "Red zone and shift"
     },
     {
+      "key": "rpmMax",
+      "profile": "rpmScale",
+      "label": "Gauge goes up to",
+      "type": "number",
+      "unit": "rpm",
+      "default": 7000,
+      "steps": [
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000
+      ],
+      "section": "Red zone and shift"
+    },
+    {
+      "key": "redline",
+      "profile": "redline",
+      "label": "Engine's top rpm (redline; the red zone while Red light is Auto)",
+      "type": "number",
+      "unit": "rpm",
+      "default": 6000,
+      "steps": [
+        4000,
+        4500,
+        5000,
+        5500,
+        5800,
+        6000,
+        6200,
+        6500,
+        6800,
+        7000,
+        7200,
+        7500,
+        7800,
+        8000,
+        8500,
+        9000
+      ],
+      "section": "Red zone and shift"
+    },
+    {
       "key": "shiftWarn",
-      "label": "Shift warning (layouts without their own)",
+      "label": "At the shift now warning: the speed and the gear red (layouts without their own)",
       "type": "choice",
       "default": "off",
       "options": [
@@ -1371,6 +1440,12 @@
     },
     {
       "key": "econUnit",
+      "profile": "fuelUnit",
+      "profileMap": {
+        "l100": "l100",
+        "kml": "kml",
+        "mpgus": "mpg"
+      },
       "label": "Fuel economy unit",
       "type": "choice",
       "default": "auto",
@@ -1576,6 +1651,22 @@
         83,
         85,
         90
+      ],
+      "section": "Car"
+    },
+    {
+      "key": "tripWraps",
+      "label": "Trip distance past 65,535 km (the car's own-reset or since-delivery trip)",
+      "type": "number",
+      "unit": "x 65,536 km",
+      "default": 0,
+      "steps": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
       ],
       "section": "Car"
     },

@@ -69,8 +69,8 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         // (the row the Stock card is on, it being chosen while off: the twelve layouts before KO 1 and KO 2 filling the two
         // rows before; the pictures with the car's own bottom strip, the only form; the Stock card its own picture,
         // the car's cluster drawn, 0.39.6: IMG_CARD + 0x3f)
-        // (0.44.0: KO 1 and KO 2 before it on that row)
-        assert(ids.indexOf(0x434c0100) >= 0 && ids.filter((i) => i >= 0x434c0200 && i < 0x434c0300).sort().join() === [0x434c0200 + 0x3f, 0x434c0200 + 0x40 + 12, 0x434c0200 + 0x40 + 13].join(), ids.map((i) => i.toString(16)).join(','));
+        // (0.44.0: KO 1 and KO 2 before it on that row; 0.49.0: Simple after Pulse, GT3 moved onto that row)
+        assert(ids.indexOf(0x434c0100) >= 0 && ids.filter((i) => i >= 0x434c0200 && i < 0x434c0300).sort().join() === [0x434c0200 + 0x3f, 0x434c0200 + 0x40 + 12, 0x434c0200 + 0x40 + 13, 0x434c0200 + 0x40 + 14].join(), ids.map((i) => i.toString(16)).join(','));
         assert(rec.imageById.get(0x434c0200 + 0x3f).w === 216 && rec.imageById.get(0x434c0200 + 0x3f).data.length === 216 * 81 * 4);
         assert(rec.imageById.get(0x434c0100).w === 600 && rec.imageById.get(0x434c0100).data.length === 600 * 225 * 4);
     });
@@ -161,6 +161,31 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         assert(texts.indexOf('146858 mi') >= 0 && texts.indexOf('2:30') < 0, JSON.stringify(texts));
     });
+    // (0.48.8) a long trip's distance past 65,535 km: the setting's wraps added (the plug-in hybrid's own reset: 119,110 km
+    // on the car, 53,575 sent), never past the odometer; a short trip as sent
+    const tripTexts = () => eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
+    const mi = (km) => Math.round(km / 1.609344) + ' mi';
+    ctx.settings.set('tripWraps', 1);
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 677, rideDurationMinutes: 5, wayPassed: 53575 });
+    await sleep(40);
+    check('a long trip past 65,535 km: one wrap from Settings added (53,575 sent, 119,111 km)', () => assert(tripTexts().indexOf(mi(119111)) >= 0, JSON.stringify(tripTexts())));
+    ctx.settings.set('tripWraps', 3);
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 677, rideDurationMinutes: 6, wayPassed: 53575 });
+    await sleep(40);
+    check('never past the odometer: 3 wraps would be 250,183 km, so 2 (184,647 km)', () => assert(tripTexts().indexOf(mi(184647)) >= 0, JSON.stringify(tripTexts())));
+    ctx.settings.set('tripWraps', 0);
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 677, rideDurationMinutes: 7, wayPassed: 65530 });
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 677, rideDurationMinutes: 8, wayPassed: 4 });
+    await sleep(40);
+    check('a wrap seen while the long trip counts (65,530 -> 4): the setting one up, the distance 65,540 km', () => {
+        assert.strictEqual(S.tripWraps, 1);
+        assert(tripTexts().indexOf(mi(65540)) >= 0, JSON.stringify(tripTexts()));
+    });
+    handlers.statusBordcomputerTravelData({ rideDurationHours: 0, rideDurationMinutes: 40, wayPassed: 48 });
+    await sleep(40);
+    check('a short trip (since the start) as sent, the setting left alone', () => assert(tripTexts().indexOf(mi(48)) >= 0 && S.tripWraps === 1, JSON.stringify(tripTexts())));
+    ctx.settings.set('tripWraps', 0);
+    handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 85, speedAverage1BC1: 463, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_L_S_100KM' });
     handlers.statusBordcomputerTravelData({ rideDurationHours: 2, rideDurationMinutes: 30, wayPassed: 126 });
     ctx.settings.set('econUnit', 'kml');
     await sleep(180);
@@ -201,12 +226,15 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     ctx.settings.set('centre', 'map');
     await sleep(700);
     const mw = path.join(process.env.CLUSTER_INFO_DIR, 'map_window.txt');
-    check('Waze centre: the map window for Waze on cluster, the map area on the panel', () => assert.strictEqual(fs.readFileSync(mw, 'utf8'), 'panel 416 120 1088 480\n'));
+    check('Waze centre: the map window for Waze on cluster, the view the layout leaves open on the panel', () => assert.strictEqual(fs.readFileSync(mw, 'utf8'), 'panel 592 120 746 480\n'));
     ctx.settings.set('centre', 'info');
     await sleep(700);
     check('the readings centre: no map window', () => assert(!fs.existsSync(mw)));
     check('the page draws', () => assert(pages > 0));
     check('warnings only for what this machine lacks (no catalog, no diagnostic link)', () => assert(warns.some((w) => /catalog not readable/.test(w)) && warns.every((w) => /catalog not readable|TASU/.test(w)), JSON.stringify(warns)));
+    // (a sample again: the checks above take longer than the readings' staleness, 3 s, with the trip data's added)
+    handlers.statusCarSpeed2({ speedVehicleCentreOfGravity: Math.round(52 * 1.609344 / 0.015625) });
+    await sleep(300);
     check('the stock strip\'s time and outside temperature left to the car: its slots show the battery and the gearbox oil', () => {
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         assert(texts.some((x) => /^BATT /.test(x)) && texts.some((x) => /^GEARBOX /.test(x)) && !texts.some((x) => /^48°/.test(x)), JSON.stringify(texts));

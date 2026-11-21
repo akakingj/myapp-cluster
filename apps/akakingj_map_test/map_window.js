@@ -8,7 +8,7 @@
  * The file is /dev/shm/cluster-info/map_window.txt (the folder every app shares, providers.js), one line:
  *   panel <x> <y> <w> <h> [under]
  * ("under", AK Map Test 0.1.0: the map below the layout, in the renderer's ambient class, for a layout drawn over it with its
- * background left clear: KO 1 Map; read by akakingj/idrive-apps extend-map's waze-on-cluster)
+ * background left clear: KO 1 Map; read by akakingj/myapp-map test's waze-on-cluster)
  * rewritten every second while the layout shows with the Waze centre; removed as soon as it doesn't. Waze on cluster
  * takes it while it is fresh (written in the last 3 s) and goes back to its own place when it is gone or stale, so a
  * stopped app leaves nothing behind for long.

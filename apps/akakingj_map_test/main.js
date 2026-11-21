@@ -156,7 +156,7 @@ mgu.run({
             if (cluster.status().shown) presence.mark('layouts', { centre: options().centre });
             // the Waze centre: Waze on cluster draws its map over the layout, filling the window (map_window.js): the
             // layout's own (M's and Sport's: where bimmer-lab's put it), else the native map area; KO 1 Map (mapAlways)
-            // whatever the centre, its map under the layout ("under", akakingj/idrive-apps extend-map)
+            // whatever the centre, its map under the layout ("under", akakingj/myapp-map test)
             mapWindow.set(cluster.status().shown && (options().centre === 'map' || layout.mapAlways) ? (layout.mapWindow || require('./layout_common').MAP) : null);
             // the vehicle found (Settings > Vehicle: Auto): the layout redrawn for it once known
             const v = D.vehicle().vehicle;

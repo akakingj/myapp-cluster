@@ -1,4 +1,4 @@
-# AK Map Test (0.1.0, a trial on personal-kr-extend)
+# AK Map Test (0.1.3, a trial on akakingj/myapp-cluster, branch extend)
 
 *A trial copy of [AK Cluster Layouts](../akakingj_cluster_layouts/README.md) with one layout, kept apart from it so
 Cluster Layouts stays as it is while this is tried.*
@@ -7,7 +7,7 @@ Cluster Layouts stays as it is while this is tried.*
 CarPlay map laid under the whole layout: the map 1360 x 600 at 280,46 (the phone's 1088 x 480 at 1.25), from just
 below the camera cowl's line down to the car's own strip, whatever the centre is set to. The app writes
 `panel 280 46 1360 600 under` to `/dev/shm/cluster-info/map_window.txt` (map_window.js); Waze on cluster with "under"
-(akakingj/idrive-apps, branch extend-map) draws the map there in the renderer's ambient class, below every layer of the
+(akakingj/myapp-map, branch test) draws the map there in the renderer's ambient class, below every layer of the
 layout. Under the map a black base, also ambient but below it (engine.js here: a piece's `klass`; the app's own copy,
 not shared/): with a Waze on cluster that doesn't read "under" (the MGU Store's own build), or no phone, the middle is
 black, never the stock cluster showing through. Over the map a light veil (22 % black) and a dark plate under readouts 1

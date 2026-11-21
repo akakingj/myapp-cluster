@@ -9,7 +9,8 @@
  * Fitted to the G05: their time, fuel range, outside temperature and badge along the bottom left out (the car's own
  * strip shows them); the M stripes, the top numerals moved clear of the camera's cowl. With the Waze map their
  * window between the blades (the map drawn there, map_window.js) and their map-up places for the gear and speed; on
- * an M car (its KOMBI's two boxes in the middle) the gear and speed in those places too. Full screen without the
+ * an M car (its KOMBI's two boxes in the middle) the gear and speed in those places. With the map the window reaches
+ * from under the cowl to the foot of the map area, the speed in the left card and the gear in the right one. Full screen without the
  * car's strip the right-hand setup rows stand clear of the KOMBI's own gear box (above and below it).
  *
  * The gauges are the M8's flat bars, each temperature and the charge in figures too: in the cards the engine's
@@ -37,8 +38,9 @@ const isNum = C.isNum;
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const RPM_MAX = 8000;   // the M8's scale: 0-8
 
-/* their map window ("hole" [705, 165, 510, 275], inset 6) */
-const WINDOW = { x: 711, y: 171, w: 498, h: 263 };
+/* the map window: between the blades (their "hole" [705, 165, 510, 275] inset 6, as wide), from under the camera's
+ * cowl to the foot of the car's map area, the gear and speed in the cards beside it */
+const WINDOW = { x: 711, y: 130, w: 498, h: 470 };
 /* their rev blades (tach_left / tach_right), each in a layer from just outside its outer edge (the right one clear of
  * the KOMBI's gear box, from x 1410) to the map window's edge */
 const BLADE = { x0: 515, w: 196, y: 36, h: 558, y0: 566, y8: 66, ym: 303, xm: 528, kTop: 1.0684, kBot: 0.5434, round: 135, wBot: 52, wTop: 17, wBend: 44 };
@@ -190,8 +192,9 @@ module.exports = {
             return i === 0 ? '' : String(Math.round((i - 1) * 100 / 3));
         };
         const numC = (i) => (t, d) => ({ color: [i === 0 && elec(d) ? t.regen : t.fg, 1], glow: [t.fg, 0] });
-        [[0, 693, 547], [1, 659, 422], [2, 653, 297], [3, 675, 172], [4, 712, 47]].forEach(([i, cx, y]) => {
-            const n = i * 2, w = i === 4 ? 30 : 60, top = i === 4 ? { visible: (d) => !elec(d) } : {};
+        // (with the map the 0's box narrower and out, clear of the window reaching down past it)
+        [[0, map ? 685 : 693, 547], [1, 659, 422], [2, 653, 297], [3, 675, 172], [4, 712, 47]].forEach(([i, cx, y]) => {
+            const n = i * 2, w = i === 4 ? 30 : i === 0 && map ? 44 : 60, top = i === 4 ? { visible: (d) => !elec(d) } : {};
             list.push(Object.assign(T('nl' + n, [cx - w / 2, y, w, 38], 'm_num', num(i), numC(i), 'center'), top),
                 Object.assign(T('nr' + n, [1920 - cx - w / 2, y, w, 38], 'm_num', num(i), numC(i), 'center'), top));
         });
@@ -207,7 +210,12 @@ module.exports = {
         const gearNum = (d) => C.gearText(d);
         const gearC = (t, d) => ({ color: [B.shiftNow(o, d) ? t.red : t.fg, 1], glow: [t.fg, 0] });
         if (!stock) {
-            if (map || mcar) {
+            if (map) {
+                // (under the cards' gauges, the same size: the speed left, the gear right)
+                list.push(T('speedDigits', [250, 440, 222, 82], 'm_speed', (d) => C.speedText(o, d), fg, 'right'),
+                    T('speedUnit', [480, 489, 100, 29], 'm_tiny', C.speedUnit(o), dim, 'left'),
+                    T('gear', [1400, 440, 260, 82], 'm_speed', gearNum, gearC, 'center'));
+            } else if (mcar) {
                 list.push(T('gear', [700, 450, 300, 117], 'm_gear', gearNum, gearC, 'right'),
                     T('speedDigits', [1006, 467, 203, 82], 'm_speed', (d) => C.speedText(o, d), fg, 'left'),
                     T('speedUnit', [1006, 549, 108, 29], 'm_tiny', C.speedUnit(o), dim, 'left'));

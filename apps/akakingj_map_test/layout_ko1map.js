@@ -1,8 +1,8 @@
 'use strict';
 /**
- * layout_ko1map.js - "KO 1 Map", AK Map Test's one layout (0.1.0, a trial on personal-kr-extend): KO 1's two digital round dials, smaller and
- * further out, over the CarPlay map laid under the whole layout. The layout tells Waze on cluster (akakingj/idrive-apps
- * extend-map, waze-on-cluster with "under") to draw the map on the panel at MAP_RECT in the renderer's ambient class,
+ * layout_ko1map.js - "KO 1 Map", AK Map Test's one layout (0.1.0, a trial on akakingj/myapp-cluster extend): KO 1's two digital round dials, smaller and
+ * further out, over the CarPlay map laid under the whole layout. The layout tells Waze on cluster (akakingj/myapp-map
+ * test, waze-on-cluster with "under") to draw the map on the panel at MAP_RECT in the renderer's ambient class,
  * below every layer of the layout (map_window.js: "panel 280 46 1360 600 under"), whatever the centre is set to.
  *
  * The map's place: down to the car's own bottom strip (y 646, which the layout leaves clear), in the phone's own

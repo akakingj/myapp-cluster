@@ -2775,11 +2775,22 @@
   "Average fuel economy (the car's trip computer)": "평균 연비 (차량 트립 컴퓨터)",
   "Trip distance (the car's trip computer)": "트립 주행 거리 (차량 트립 컴퓨터)",
   "Driving time (the car's trip computer)": "주행 시간 (차량 트립 컴퓨터)",
+  "Odometer (the car's total distance)": "총 주행거리 (차량 누적 거리)",
+  "Trip distance past 65,535 km (the car's own-reset or since-delivery trip)": "65,535 km를 넘은 트립 거리 보정 (개별 설정 후·출고 후 트립)",
+  "x 65,536 km": "× 65,536 km",
   "Centre display: bottom": "가운데 표시창: 아래",
   "Clock (the time of day)": "시계 (현재 시각)",
   "Trip computer: line 1": "트립 창: 첫째 줄",
   "Trip computer: line 2": "트립 창: 둘째 줄",
   "Trip computer: line 3": "트립 창: 셋째 줄",
   "Centre display": "가운데 표시창",
-  "Centre display: speed or trip computer (20's, ID6 M, Old M, GM)": "가운데 표시창: 속도 또는 트립 창 (20's, ID6 M, Old M, GM)"
+  "Centre display: speed or trip computer (20's, ID6 M, Old M, GM)": "가운데 표시창: 속도 또는 트립 창 (20's, ID6 M, Old M, GM)",
+  "Auto (the redline)": "자동 (레드라인과 같게)",
+  "Yellow light at": "노란불 rpm",
+  "Red light at (the red zone)": "빨간불 rpm (레드존 시작)",
+  "Shift now warning at": "변속 경고 rpm",
+  "Gauge goes up to": "게이지 끝 rpm",
+  "Engine's top rpm (redline; the red zone while Red light is Auto)": "엔진 최고 rpm (레드라인, 빨간불이 자동이면 레드존)",
+  "At the shift now warning: the speed and the gear red (layouts without their own)": "변속 경고에서 속도와 단수를 빨갛게 (자체 경고가 없는 레이아웃)",
+  "Auto (700 below the red)": "자동 (빨간불보다 700 아래)"
 }
