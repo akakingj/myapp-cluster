@@ -77,11 +77,11 @@ const MAP = { x: 416, y: 120, w: 1088, h: 480 };
 /*
  * What a layout leaves open of it: the middle between the KOMBI's own fins (x 574 and 1357 at the top; its "km/h",
  * speed-limit sign and "1/min" along the bottom edges), where waze-on-cluster draws its map (map_window.js), and
- * STOCK_SPEED beside it, the KOMBI's own speed readout and speed bar at the left of its map (x 416-705, y 342-415)
- * from just inside the fin.
+ * STOCK_SPEED beside it, the KOMBI's own speed readout and speed bar at the left of its map (at 0 km/h x 416-705,
+ * y 342-415), from just inside the fin's tip, as far left as the layouts' dials leave room, for a three-digit speed.
  */
 const MAP_VIEW = { x: 592, y: 120, w: 746, h: 480 };
-const STOCK_SPEED = { x: 436, y: 330, w: 156, h: 98 };
+const STOCK_SPEED = { x: 426, y: 326, w: 166, h: 98 };
 /** Background rectangles round the map's view and the KOMBI's speed readout (top, bottom, left above, beside and
  * below the readout, right). */
 const aroundMap = () => {
