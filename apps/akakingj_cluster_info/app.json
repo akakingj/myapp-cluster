@@ -31,6 +31,39 @@
       "statusSwitchDriveDynamicSport2": "rs",
       "statusActualValueTorque2": "rs"
     },
+    "de.bmw.infotainment.navigation.guiding.Guidance": {
+      "_optional": "directions on the HUD (the route, BMW navigation's turns, lanes)",
+      "_instances": "Main_Instance",
+      "guidanceState": "rs",
+      "guidingProvider": "rs",
+      "conclusiveDart": "rs",
+      "currentLaneGuiding": "rs",
+      "nextIntersection": "rs"
+    },
+    "de.bmw.infotainment.navigation.guiding.GuidanceEventList": {
+      "_optional": "directions on the HUD (the phone's turns) and the speed camera and bump test",
+      "_instances": "Main_Instance",
+      "_methods": [
+        "queryContent"
+      ]
+    },
+    "de.bmw.infotainment.navigation.projectedmodeguiding.ProjectedModeGuiding": {
+      "_optional": "directions on the HUD: the phone's lanes",
+      "_instances": "Main_Instance",
+      "currentLaneGuiding": "rs"
+    },
+    "de.bmw.infotainment.a4a.carplay.CarPlayManager": {
+      "_optional": "directions on the HUD: whether CarPlay is guiding",
+      "_instances": "CarPlayManagerInst1",
+      "projectedGuidanceActive": "rs",
+      "projectedGuidanceMetadataAvailable": "rs"
+    },
+    "de.bmw.infotainment.sdi.aap.androidautoprojectedmanager.AndroidAutoProjectedManager": {
+      "_optional": "directions on the HUD: whether Android Auto is guiding",
+      "_instances": "AndroidAutoProjectedManagerInst1",
+      "projectedGuidanceActive": "rs",
+      "projectedGuidanceMetadataAvailable": "rs"
+    },
     "com.harman.infotainment.systemfunctions.tasu.tasu.InternalTasu": {
       "_instances": "SystemFunctionsInternalTasuInst1",
       "_methods": [
@@ -393,6 +426,23 @@
         [
           "near",
           "Near turns (under 1 km, and lanes)"
+        ],
+        [
+          "off",
+          "Off"
+        ]
+      ],
+      "section": "HUD"
+    },
+    {
+      "key": "alertTest",
+      "label": "Speed camera and bump test (log)",
+      "type": "choice",
+      "default": "on",
+      "options": [
+        [
+          "on",
+          "On: logged while a route runs"
         ],
         [
           "off",

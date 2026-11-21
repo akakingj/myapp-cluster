@@ -287,6 +287,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   holds the HUD.
   Korean text only when every syllable is in the Korean atlas. nav_canvas.js: Cluster Redline's crisp small text on a
   Canvas subclass (the panel's text unchanged).
+  The speed camera / bump test (alerts.js, setting alertTest, on): GuidanceEventList.queryContent every 2 s while a
+  route runs, each INCLUDE_* name of earlier probes (jaimeen77's 1.2-1.3.9) alone once, then the accepted together and
+  [] in turn; every non-manoeuvre event and every text with a camera / bump / school word to cluster-info-alerts.log
+  (2 x 256 KiB) and the page. app.json now declares the navigation interfaces (optional; they were missing for the
+  directions). Layouts 0.50.2: its Logs carry that log (codes: last 15 lines, 200 characters each; USB: 1500 lines)
+  and the directions' log (USB only).
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

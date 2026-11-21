@@ -258,6 +258,11 @@ mgu.run({
             tracker = Nav.start(ctx, log, probe);
         } catch (e) { navError = String(e); log.warn('directions not started: ' + e); }
         src.nav = () => (tracker && navMode() !== 'off' ? tracker.view(navMode()).show : null);
+        // the speed camera / bump test (alerts.js): what the navigation says is ahead, logged while a route runs
+        let alertTest = null;
+        try {
+            alertTest = require('./alerts').start(ctx, log, { wanted: () => settings.get('alertTest') !== 'off' && !awake.parked(), routing: () => !!tracker && tracker.routing() });
+        } catch (e) { log.warn('alerts test not started: ' + e); }
         try { overlay = startOverlay(ctx, src); } catch (e) { overlayError = String(e); log.warn('overlay: ' + e); }
 
         /* ---------- this app's page: the panel as it is now, larger, and every source's state ---------- */
@@ -301,12 +306,20 @@ mgu.run({
                     + '   ·   Day / night: ' + (live.night === null ? st('day / night') + ', none received' : live.night ? 'night' : 'day')
                     + '   ·   Driver profile: ' + (live.profile || (st('driver profile') === 'subscribed' ? 'none read yet' : st('driver profile')))],
             ];
+            // the speed camera / bump test: its state, the types the car took, what came this drive, the latest new ones
+            if (settings.get('alertTest') !== 'off' && alertTest) {
+                const a = alertTest.status(), ok = Object.keys(a.types).filter((k) => a.types[k] === 'accepted').map((k) => k.replace(/^INCLUDE_/, ''));
+                const kinds = Object.keys(a.kinds).map((k) => k + ' ' + a.kinds[k]).join(', ');
+                lines.push(['Camera / bump test', a.state + '   ·   types taken: ' + (Object.keys(a.types).length ? (ok.join(', ') || 'none') : 'not asked yet')
+                    + '   ·   replies ' + a.replies + (kinds ? '   ·   seen: ' + kinds : '') + (a.last.length ? '   ·   latest: ' + a.last.slice(0, 2).join('  |  ') : '')]);
+            }
+            const step = lines.length > 5 ? 31 : 36;
             lines.forEach(([k, v], i) => {
-                cv.text(k, 48, 296 + i * 36, 20, t.dim, { font: 'bold' });
-                cv.text(v, 260, 296 + i * 36, 20, t.text, { font: 'label', literal: true });
+                cv.text(k, 48, 296 + i * step, 20, t.dim, { font: 'bold' });
+                cv.text(v, 260, 296 + i * step, 20, t.text, { font: 'label', literal: true });
             });
             const raws = Object.keys(live.raw).map((k) => k + ': ' + live.raw[k]).join('   ').slice(0, 190);
-            cv.text(raws || 'No raw turn signal or day / night value received yet.', 48, 488, 16, t.dim, { font: 'label', literal: true });
+            cv.text(raws || 'No raw turn signal or day / night value received yet.', 48, 494, 16, t.dim, { font: 'label', literal: true });
             G.frame(cv, t, [((ctx.spec && ctx.spec.title) || 'Cluster Info')], 0, []);
             return ui.image('MAIN_GFX', cv);
         }

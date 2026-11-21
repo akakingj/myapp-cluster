@@ -217,7 +217,7 @@ mgu.run({
             // (0.48.7) the QR codes (not full) leave out the catalog listings - the car's signal names for the range,
             // power, cruise control and time, found long since - and list only the reset-logic and trip computer
             // services' fields: about a quarter of the codes (45 were 15 pages); the USB file keeps everything
-            const QR_OUT = ['range and charge signals', 'power and consumption signals', 'cruise control signals', 'time and date signals', 'driving assistant (ID8 M)'];
+            const QR_OUT = ['range and charge signals', 'power and consumption signals', 'cruise control signals', 'time and date signals', 'driving assistant (ID8 M)', 'Cluster Info directions'];
             const sections = [
                 ['settings', JSON.stringify({ layout: settings.get('layout'), centre: o.centre, look: settings.get('look'), show: settings.get('show') })],
                 ['engine', JSON.stringify(cluster.status())],
@@ -253,6 +253,10 @@ mgu.run({
                 ['cluster-render log', logs.tail(logs.RENDER_LOG, n(20, 1500))],
                 ['this app\'s log', logs.tail(path.join(ctx.dataDir || '.', 'akakingj_cluster_layouts.log'), n(30, 400))],
                 ['Cluster Centre log', logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_centre', n(20, 300))],
+                // Cluster Info's speed camera / bump test and its directions (alerts.js, navlog.js in that app)
+                // (in the codes: its last 15 lines, each cut to 200 characters)
+                ['Cluster Info camera / bump test', ((txt) => (full ? txt : txt.split('\n').map((l) => (l.length > 200 ? l.slice(0, 200) + '…' : l)).join('\n')))(logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_info', n(15, 1500), 'cluster-info-alerts.log'))],
+                ['Cluster Info directions', logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_info', n(10, 600), 'cluster-info-nav.log')],
             ];
             return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''),
                 full ? sections : sections.filter((sec) => QR_OUT.indexOf(sec[0]) < 0));

@@ -39,8 +39,18 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   the car their turns (Apple Maps, TMAP; Waze over CarPlay doesn't). With the panel off the HUD BMW's own turn card shows them; while Redline
   holds the HUD, its own. A turn older than 3 s isn't shown. `cluster-info-nav.log` in the app's data folder (at most
   2 x 256 KiB, written only while directions show) records what the car sends, street names as their length only.
+- **Speed camera and bump test** (Settings > Speed camera and bump test, on): while a route runs, asks the car's
+  navigation every 2 s what is ahead besides the turns (`alerts.js`, read only, the same query as the directions):
+  speed and section cameras, school zones, speed limits, dangerous curves, anything it sends. The car's catalog has
+  no speed bump event, so every text of every event (a manoeuvre's too) is looked at for a camera, bump or school
+  word (과속, 카메라, 단속, 방지턱, 어린이, 보호구역, camera, bump, school...). Each event type name is asked alone
+  once (which the car takes is not known yet), then the ones it took together. All of it goes to
+  `cluster-info-alerts.log` (at most 2 x 256 KiB, while a route runs; no coordinates, street names as their length)
+  and the latest on this app's page (Camera / bump test). Cluster Layouts' Logs button carries the log's end in its
+  codes and the whole of it (and the directions' log) in the file on the USB stick. Nothing is drawn on the HUD
+  from it yet.
 - **Its page** shows the panel as it is now, larger, and whether each source works (turn signals, day / night,
-  driver profile, the apps providing, the cluster renderer, the Waze map, the directions).
+  driver profile, the apps providing, the cluster renderer, the Waze map, the directions, the camera / bump test).
 
 ## Providing values from your app
 

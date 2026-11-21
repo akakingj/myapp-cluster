@@ -2793,5 +2793,8 @@
   "Auto (700 below the red)": "자동 (빨간불보다 700 아래)",
   "Directions on the HUD": "HUD 길안내",
   "Highway entry": "고속도로 진입",
-  "Highway exit": "고속도로 진출"
+  "Highway exit": "고속도로 진출",
+  "Speed camera and bump test (log)": "과속카메라·방지턱 테스트 (로그)",
+  "On: logged while a route runs": "켬: 경로 안내 중 기록",
+  "Camera / bump test": "카메라·방지턱 테스트"
 }
