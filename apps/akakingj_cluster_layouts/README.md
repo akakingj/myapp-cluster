@@ -21,7 +21,8 @@ in the car's map slot under the layout, seen through the window with the cluster
 0.21.0. (Its renderer, cluster-render 0.6.x, can host a target in a scene drawn from a RAMSES file, which a layout of
 shaders doesn't have yet.)
 
-Apart from ID7 M and ID8 M (their own windows), the layouts leave the middle of the car's map area open, x 592-1338
+ID7 M's map window runs between its blades from under the camera's cowl to the foot of the map area, the speed in its
+left card and the gear in its right one. Apart from ID7 M and ID8 M (their own windows), the layouts leave the middle of the car's map area open, x 592-1338
 between the cluster's own fins, with its speed readout at the left edge covered: the stock map or centre shows there
 without the fins, "km/h", the speed limit sign or "1/min" round it.
 

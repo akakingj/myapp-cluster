@@ -272,6 +272,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   middle of the map area open (layout_common.MAP_VIEW, x 592-1338, y 120-600; Waze on cluster's window too) and
   covers the cluster's own speed readout at its left edge (STOCK_SPEED): the stock fins, "km/h", speed limit sign
   and "1/min" no longer show cut off at the window's edges.
+  ID7 M with the map: its window reaches from under the camera's cowl to the foot of the map area (711, 130,
+  498 x 470, was 263 high), the speed in the left card and the gear in the right one, under their gauges.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.
