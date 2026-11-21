@@ -78,7 +78,7 @@ module.exports = {
                 C.text('outside', 110, 450, 290, 44, (d) => C.outsideText(o, d.outside), txt),
                 C.text('gear', 1666, 286, 244, 150, C.gearText, gearC),
                 C.text('mode', 1666, 440, 244, 26, C.modeText, accent, { tracking: 0.25 }),
-                rpmBar(o, 'rpmBar', C.MAP.x, bot + 10, C.MAP.w, 30, 48),
+                rpmBar(o, 'rpmBar', C.MAP_VIEW.x, bot + 10, C.MAP_VIEW.w, 30, 48),
             ],
             up('fuel', 20, 510, 190, 40, (d) => C.distText(o, d.frange), 'FUEL', txt, 20),
             up('elec', 215, 510, 195, 40, C.focus.range(o), C.focus.rangeLabel(o), eTxt, 20),

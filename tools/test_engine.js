@@ -85,7 +85,7 @@ LAYOUTS.forEach((L) => {
         const cutOut = (l) => /^(mdash|sdash)$/.test(l.kind) && l.params.u_hole && l.params.u_hole[0] <= 820 && l.params.u_hole[0] + l.params.u_hole[2] >= 1100;
         // (over the car's strip the stock centre shows in the map's window: the backgrounds round it and the black band
         // under the layout may span the middle above and below the window, nothing in it)
-        const W = L.mapWindow || require(path.join(APP, 'layout_common')).MAP;
+        const W = L.mapWindow || require(path.join(APP, 'layout_common')).MAP_VIEW;
         const over = s.engine._pieces().filter((l) => l.x < 1100 && l.x + l.w > 820 && l.y < W.y + W.h && l.y + l.h > W.y && !cutOut(l));
         assert(!over.length, 'a piece over x 820-1100: ' + over.map((l) => l.key).join(' '));
         s.stop();
@@ -95,8 +95,10 @@ LAYOUTS.forEach((L) => {
         const s = makeScene({ layout: id, options: { centre: 'map' }, data: { speed: 0 } });
         s.engine._tick();
         // (the layout's own map window, M's and Sport's, else the native map area)
-        const W = L.mapWindow || C.MAP, overMap = (r) => r.x < W.x + W.w && r.x + r.w > W.x && r.y < W.y + W.h && r.y + r.h > W.y;
-        const over = s.engine._pieces().filter((l) => overMap(l));
+        const W = L.mapWindow || C.MAP_VIEW, overMap = (r) => r.x < W.x + W.w && r.x + r.w > W.x && r.y < W.y + W.h && r.y + r.h > W.y;
+        // (the background over the KOMBI's own speed readout at the window's left edge: C.STOCK_SPEED)
+        const S = C.STOCK_SPEED, overSpeed = (l) => !L.mapWindow && /^bg\d$/.test(l.key) && l.x >= S.x && l.y >= S.y && l.x + l.w <= S.x + S.w && l.y + l.h <= S.y + S.h;
+        const over = s.engine._pieces().filter((l) => overMap(l) && !overSpeed(l));
         // a band's or a chevron's rectangle may reach into the window as long as what it draws stays out (a
         // chevron's ink: clearance.js): only those may overlap
         const { clashes } = require('./clearance');

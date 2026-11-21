@@ -21,6 +21,10 @@ in the car's map slot under the layout, seen through the window with the cluster
 0.21.0. (Its renderer, cluster-render 0.6.x, can host a target in a scene drawn from a RAMSES file, which a layout of
 shaders doesn't have yet.)
 
+Apart from ID7 M and ID8 M (their own windows), the layouts leave the middle of the car's map area open, x 592-1338
+between the cluster's own fins, with its speed readout at the left edge covered: the stock map or centre shows there
+without the fins, "km/h", the speed limit sign or "1/min" round it.
+
 Every reading goes to the cluster within a frame of arriving: the needles and bars at 60 updates a second, the
 digits every frame, and the battery's power the moment eDrive Live reads it (it writes each
 reading at once and this app watches for it, instead of a quarter-second file cycle and a half-second scan). The

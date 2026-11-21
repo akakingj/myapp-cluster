@@ -226,7 +226,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     ctx.settings.set('centre', 'map');
     await sleep(700);
     const mw = path.join(process.env.CLUSTER_INFO_DIR, 'map_window.txt');
-    check('Waze centre: the map window for Waze on cluster, the map area on the panel', () => assert.strictEqual(fs.readFileSync(mw, 'utf8'), 'panel 416 120 1088 480\n'));
+    check('Waze centre: the map window for Waze on cluster, the view the layout leaves open on the panel', () => assert.strictEqual(fs.readFileSync(mw, 'utf8'), 'panel 592 120 746 480\n'));
     ctx.settings.set('centre', 'info');
     await sleep(700);
     check('the readings centre: no map window', () => assert(!fs.existsSync(mw)));

@@ -71,14 +71,25 @@ const clock = () => require('./clock').hm(undefined, true);   // (12-hour: with 
 
 /* ---------- the map window and the extra readings ---------- */
 
-/** Where waze-on-cluster's map (and the stock map) shows on the panel: the native map area (slot 0x100). With
- * the centre set to 'map', a layout leaves this clear and puts nothing over it. */
+/** The native map area (slot 0x100), where the KOMBI draws its own map or centre: with the centre set to 'map' (or
+ * the stock centre over the car's own strip) a layout puts none of its readings over it. */
 const MAP = { x: 416, y: 120, w: 1088, h: 480 };
-/** Background rectangles round the map window (top, bottom, left, right). */
-const aroundMap = () => [
-    { x: 0, y: 0, w: 1920, h: MAP.y }, { x: 0, y: MAP.y + MAP.h, w: 1920, h: 720 - MAP.y - MAP.h },
-    { x: 0, y: MAP.y, w: MAP.x, h: MAP.h }, { x: MAP.x + MAP.w, y: MAP.y, w: 1920 - MAP.x - MAP.w, h: MAP.h },
-];
+/*
+ * What a layout leaves open of it: the middle between the KOMBI's own fins (x 574 and 1357 at the top; its "km/h",
+ * speed-limit sign and "1/min" along the bottom edges), where waze-on-cluster draws its map (map_window.js). The
+ * KOMBI's speed readout at the left of its map (x 416-703, y 343-416) is covered by STOCK_SPEED.
+ */
+const MAP_VIEW = { x: 592, y: 120, w: 746, h: 480 };
+const STOCK_SPEED = { x: 592, y: 332, w: 124, h: 96 };
+/** Background rectangles round the map's view (top, bottom, left, right, the KOMBI's speed readout). */
+const aroundMap = () => {
+    const V = MAP_VIEW;
+    return [
+        { x: 0, y: 0, w: 1920, h: V.y }, { x: 0, y: V.y + V.h, w: 1920, h: 720 - V.y - V.h },
+        { x: 0, y: V.y, w: V.x, h: V.h }, { x: V.x + V.w, y: V.y, w: 1920 - V.x - V.w, h: V.h },
+        Object.assign({}, STOCK_SPEED),
+    ];
+};
 /** True when a rectangle overlaps the map window. */
 const overMap = (r) => r.x < MAP.x + MAP.w && r.x + r.w > MAP.x && r.y < MAP.y + MAP.h && r.y + r.h > MAP.y;
 
@@ -653,5 +664,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

@@ -268,6 +268,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   vacuum (below the outside air) reads 0 psi / 0.00 bar / 0 kPa, not a minus figure.
   Boost is the car's sport display's first, as BMW's sport display shows it (once it has moved: a car whose sport
   display sends none sends one value all along), the engine unit's only without it; the target stays the engine unit's.
+- Layouts 0.50.0: with the map or the stock centre over the car's strip, every layout but ID7 M and ID8 M leaves the
+  middle of the map area open (layout_common.MAP_VIEW, x 592-1338, y 120-600; Waze on cluster's window too) and
+  covers the cluster's own speed readout at its left edge (STOCK_SPEED): the stock fins, "km/h", speed limit sign
+  and "1/min" no longer show cut off at the window's edges.
 
 ## Demo
 `cluster_demo.bat` (Windows) or `node tools/cluster_demo.js`.

@@ -340,7 +340,7 @@ function frame(body) {
         out.stripY = C && C.STRIP_Y ? C.STRIP_Y : 646;
     } else {
         out.stripY = req('layouts', 'layout_common').STRIP_Y || 646;
-        out.mapRect = req('layouts', 'layout_common').MAP || { x: 416, y: 120, w: 1088, h: 480 };
+        out.mapRect = req('layouts', 'layout_common').MAP_VIEW || { x: 416, y: 120, w: 1088, h: 480 };
     }
     return out;
 }

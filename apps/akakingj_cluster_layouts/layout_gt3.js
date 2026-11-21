@@ -155,7 +155,7 @@ module.exports = {
             // (full screen with the stock centre: its own area, x 566-1104, left as the other layouts leave it)
             const around = o.centre === 'stock' && !strip ? [{ x: 0, y: 0, w: 566, h: 720 }, { x: 1104, y: 0, w: 816, h: 720 }] : C.aroundMap();
             list.splice(0, 1, ...around.map((b, i) => C.flat('bg' + i, b.x, b.y, b.w, b.h, 'bg')));
-            if (o.centre === 'map') list.push(revBar(o, C.MAP.x, C.MAP.y + C.MAP.h + 8, C.MAP.w, 26));   // (the stock centre: nothing under it)
+            if (o.centre === 'map') list.push(revBar(o, C.MAP_VIEW.x, C.MAP.y + C.MAP.h + 8, C.MAP_VIEW.w, 26));   // (the stock centre: nothing under it)
         } else {
             // under the camera's cowl and inside the glass's slanted corners: the lights, the rev bar, its scale
             list.push(lights(o, 470, 170, 980, 40), C.text('shiftLbl', 330, 180, 120, 22, 'SHIFT', lbl, { align: 1, tracking: 0.14 }),
