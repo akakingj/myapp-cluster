@@ -22,9 +22,10 @@ in the car's map slot under the layout, seen through the window with the cluster
 shaders doesn't have yet.)
 
 ID7 M's map window runs between its blades from under the camera's cowl to the foot of the map area, the speed in its
-left card and the gear in its right one. Apart from ID7 M and ID8 M (their own windows), the layouts leave the middle of the car's map area open, x 592-1338
-between the cluster's own fins, with its speed readout at the left edge covered: the stock map or centre shows there
-without the fins, "km/h", the speed limit sign or "1/min" round it.
+left card and the gear in its right one. Apart from ID7 M and ID8 M (their own windows), the layouts leave the middle
+of the car's map area open, x 592-1338 between the cluster's own fins, and beside it on the left the cluster's own
+speed readout: the stock map or centre shows there without the fins and the bits along its bottom edge (the speed
+limit sign, "1/min").
 
 Every reading goes to the cluster within a frame of arriving: the needles and bars at 60 updates a second, the
 digits every frame, and the battery's power the moment eDrive Live reads it (it writes each

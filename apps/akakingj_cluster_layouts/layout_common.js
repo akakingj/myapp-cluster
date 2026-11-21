@@ -76,18 +76,21 @@ const clock = () => require('./clock').hm(undefined, true);   // (12-hour: with 
 const MAP = { x: 416, y: 120, w: 1088, h: 480 };
 /*
  * What a layout leaves open of it: the middle between the KOMBI's own fins (x 574 and 1357 at the top; its "km/h",
- * speed-limit sign and "1/min" along the bottom edges), where waze-on-cluster draws its map (map_window.js). The
- * KOMBI's speed readout at the left of its map (x 416-703, y 343-416) is covered by STOCK_SPEED.
+ * speed-limit sign and "1/min" along the bottom edges), where waze-on-cluster draws its map (map_window.js), and
+ * STOCK_SPEED beside it, the KOMBI's own speed readout and speed bar at the left of its map (x 416-705, y 342-415)
+ * from just inside the fin.
  */
 const MAP_VIEW = { x: 592, y: 120, w: 746, h: 480 };
-const STOCK_SPEED = { x: 592, y: 332, w: 124, h: 96 };
-/** Background rectangles round the map's view (top, bottom, left, right, the KOMBI's speed readout). */
+const STOCK_SPEED = { x: 436, y: 330, w: 156, h: 98 };
+/** Background rectangles round the map's view and the KOMBI's speed readout (top, bottom, left above, beside and
+ * below the readout, right). */
 const aroundMap = () => {
-    const V = MAP_VIEW;
+    const V = MAP_VIEW, S = STOCK_SPEED;
     return [
         { x: 0, y: 0, w: 1920, h: V.y }, { x: 0, y: V.y + V.h, w: 1920, h: 720 - V.y - V.h },
-        { x: 0, y: V.y, w: V.x, h: V.h }, { x: V.x + V.w, y: V.y, w: 1920 - V.x - V.w, h: V.h },
-        Object.assign({}, STOCK_SPEED),
+        { x: 0, y: V.y, w: V.x, h: S.y - V.y }, { x: 0, y: S.y, w: S.x, h: S.h },
+        { x: 0, y: S.y + S.h, w: V.x, h: V.y + V.h - S.y - S.h },
+        { x: V.x + V.w, y: V.y, w: 1920 - V.x - V.w, h: V.h },
     ];
 };
 /** True when a rectangle overlaps the map window. */

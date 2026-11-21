@@ -96,9 +96,9 @@ LAYOUTS.forEach((L) => {
         s.engine._tick();
         // (the layout's own map window, M's and Sport's, else the native map area)
         const W = L.mapWindow || C.MAP_VIEW, overMap = (r) => r.x < W.x + W.w && r.x + r.w > W.x && r.y < W.y + W.h && r.y + r.h > W.y;
-        // (the background over the KOMBI's own speed readout at the window's left edge: C.STOCK_SPEED)
-        const S = C.STOCK_SPEED, overSpeed = (l) => !L.mapWindow && /^bg\d$/.test(l.key) && l.x >= S.x && l.y >= S.y && l.x + l.w <= S.x + S.w && l.y + l.h <= S.y + S.h;
-        const over = s.engine._pieces().filter((l) => overMap(l) && !overSpeed(l));
+        // (and beside it the KOMBI's own speed readout, C.STOCK_SPEED, with the view the layouts leave open)
+        const S = C.STOCK_SPEED, overSpeed = (r) => !L.mapWindow && r.x < S.x + S.w && r.x + r.w > S.x && r.y < S.y + S.h && r.y + r.h > S.y;
+        const over = s.engine._pieces().filter((l) => overMap(l) || overSpeed(l));
         // a band's or a chevron's rectangle may reach into the window as long as what it draws stays out (a
         // chevron's ink: clearance.js): only those may overlap
         const { clashes } = require('./clearance');
