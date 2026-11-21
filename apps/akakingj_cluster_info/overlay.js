@@ -69,9 +69,9 @@ const NIGHT_DIM = 0.6;            // the HUD extras at night, of their brightnes
 // unit's clock that is 638 (its clock ran ~0.3 % behind the cluster's flasher there), and the car tells the head unit
 // of the stalk about 40 ms after the cluster's first flash, so the HUD starts its flashing that far in
 const BLINK_ON_MS = 335, BLINK_OFF_MS = 303, BLINK_LEAD_MS = 40;
-// the directions on the HUD (nav_view.js, 154 x 123): right-aligned with the panel, just above it, under the turn
-// signals' place; with the panel at the top, in the glass's bottom right corner (x up to 672, y up to 356)
-const NAV_RIGHT = 672, NAV_BOTTOM = 356, NAV_GAP = 4, NAV_TOP = SIGNALS_TOP + 44;   // (the lane change signs end there)
+// the directions on the HUD (nav_view.js, 149 x 120): see navRect
+const NAV_RIGHT = 672, NAV_BOTTOM = 356, NAV_GAP = 4;
+const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit sign at the bottom left (Redline's hud.js)
 const NAV_MS = 200;               // the directions looked at this often (a turn's distance counts down every second)
 const ARROW_TICK_MS = 25;        // (the flash edges within 25 ms of the cluster's)
 
@@ -363,6 +363,45 @@ function packRects(d, w, rects) {
 }
 
 /**
+ * Where the directions go (W x H), the panel at b (its place: where) and the turn signals moved down by sh: the first
+ * of these places that is on the glass a G20 shows (HUD_SEEN) and clear of the panel, the turn signal arrows, the
+ * lane change signs and BMW's own speed readout (Redline's BMW_SPEED): above the panel at its right edge, then at its
+ * left edge; beside it, right then left; under it; the glass's bottom right corner, then its top right; else the
+ * clear place nearest the panel's top right corner (8 px steps). null: none is clear (not shown, rather than over the
+ * signals, the panel or the speed).
+ */
+function navRect(b, where, sh, W, H) {
+    const g = NAV_GAP, over = (a, c) => a.x < c.x + c.w && a.x + a.w > c.x && a.y < c.y + c.h && a.y + a.h > c.y;
+    const keep = [{ x: ARROW.left, y: ARROW.y + sh, w: ARROW.w, h: ARROW.h }, { x: ARROW.right, y: ARROW.y + sh, w: ARROW.w, h: ARROW.h },
+        { x: LCW.left, y: LCW.y + sh, w: LCW.w, h: LCW.h }, { x: LCW.right, y: LCW.y + sh, w: LCW.w, h: LCW.h }, BMW_SPEED];
+    const right = (x) => Math.min(NAV_RIGHT, x) - W;
+    const at = [];
+    if (b) {
+        const bottom = b.y + b.h - H;
+        if (where !== 'top') at.push({ x: right(b.x + b.w), y: b.y - H - g }, { x: b.x, y: b.y - H - g });
+        at.push({ x: b.x + b.w + g, y: bottom }, { x: b.x - W - g, y: bottom }, { x: right(b.x + b.w), y: b.y + b.h + g });
+        if (where === 'top') at.push({ x: right(b.x + b.w), y: b.y - H - g });
+        keep.push(b);
+    }
+    at.push({ x: NAV_RIGHT - W, y: NAV_BOTTOM - H }, { x: NAV_RIGHT - W, y: HUD_SEEN.y });
+    // (NAV_GAP clear of each)
+    const ok = (r) => r.x >= HUD_SEEN.x && r.x + W <= HUD_SEEN.x + HUD_SEEN.w && r.y >= HUD_SEEN.y && r.y + H <= HUD_SEEN.y + HUD_SEEN.h
+        && keep.every((k) => !over({ x: r.x - g, y: r.y - g, w: W + 2 * g, h: H + 2 * g }, k));
+    let r = at.find(ok);
+    if (!r) {
+        const cx = b ? b.x + b.w - W : NAV_RIGHT - W, cy = b ? b.y - H : NAV_BOTTOM - H;
+        let best = Infinity;
+        for (let y = HUD_SEEN.y; y + H <= HUD_SEEN.y + HUD_SEEN.h; y += 8) {
+            for (let x = HUD_SEEN.x; x + W <= HUD_SEEN.x + HUD_SEEN.w; x += 8) {
+                const d = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+                if (d < best && ok({ x, y })) { best = d; r = { x, y }; }
+            }
+        }
+    }
+    return r ? { x: r.x, y: r.y, w: W, h: H } : null;
+}
+
+/**
  * ctx: the app's (settings, log, theme); src: what to show -
  *   power(t)   { kw, text, col } or null (no app provides it now)
  *   limits()   { outMax, inMax } the bar's ends in kW
@@ -613,11 +652,13 @@ function startOverlay(ctx, lv, opts) {
      * Shown only while this app's panel is on the HUD: the HUD's slot is this app's then, and BMW's own turn card
      * (CarPlay's, Android Auto's or its navigation's turns) is not there. Without the panel there BMW's card shows them. */
     let navRef = 0, navAt = '', navLast = '', navShown = false, navOp = 1, navCv = null;
-    function navPlace() {
-        const b = hudBadge;
-        if (b && where() !== 'top') return { x: Math.min(NAV_RIGHT, b.x + b.w) - NV.W, y: Math.max(NAV_TOP, b.y - NV.H - NAV_GAP) };
-        return { x: NAV_RIGHT - NV.W, y: NAV_BOTTOM - NV.H };
-    }
+    // (worked out again only when the panel, its place or the signals' shift changed)
+    let navMemo = { key: null, r: null };
+    const navPlace = () => {
+        const b = hudBadge, k = [b ? [b.x, b.y, b.w, b.h].join(',') : '', where(), sigShift()].join('|');
+        if (k !== navMemo.key) navMemo = { key: k, r: navRect(b, where(), sigShift(), NV.W, NV.H) };
+        return navMemo.r;
+    };
     function hideNav() {
         if (navRef && navShown && cr) cr.set(navRef, { visible: false });
         navShown = false;
@@ -626,8 +667,10 @@ function startOverlay(ctx, lv, opts) {
         const m = visible && hudBadge && !hudTaken() && typeof lv.nav === 'function' ? lv.nav() : null;    // (navCan)
         const key = NV.key(m);
         if (!key) return hideNav();
+        const p = navPlace();
+        if (!p) { if (navAt !== 'none') { navAt = 'none'; log.info('directions: no room on the HUD clear of the panel and the turn signals'); } return hideNav(); }
         if (!client()) return undefined;
-        const p = navPlace(), at = p.x + ',' + p.y;
+        const at = p.x + ',' + p.y;
         if (!navRef) {
             navOp = hudOpacity();
             navRef = cr.image({ target: 'hud', klass: 'overlay', z: 11, x: p.x, y: p.y, w: NV.W, h: NV.H, iw: NV.W, ih: NV.H, visible: false, opacity: navOp });
@@ -702,4 +745,4 @@ function startOverlay(ctx, lv, opts) {
     };
 }
 
-module.exports = { G21_GLASS, HUD_SEEN, startOverlay, mapRect, badgeRect, drawBadge, drawArrow, drawLaneSign, changed, parseStatus, underStrip, ARROW, LCW };
+module.exports = { G21_GLASS, HUD_SEEN, startOverlay, mapRect, badgeRect, navRect, drawBadge, drawArrow, drawLaneSign, changed, parseStatus, underStrip, ARROW, LCW };

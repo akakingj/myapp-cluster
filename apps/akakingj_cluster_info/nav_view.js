@@ -6,13 +6,13 @@
  * dist, unit, road, lanes }).
  *
  * The three parts are Cluster Redline's 240 x 48 / 112 / 72 designs, painted at SCALE (no resampling) and stacked
- * with their empty margins cut, into W x H (154 x 123): the part a turn hasn't (no text, no lanes) left empty.
+ * with their empty margins cut, into W x H (149 x 120): the part a turn hasn't (no text, no lanes) left empty.
  */
 const { Canvas } = require('./nav_canvas');
 const fonts = require('./kit/fonts');
 const navDraw = require('./nav_draw'), laneDraw = require('./lane_draw'), navText = require('./nav_text');
 
-const SCALE = 0.64;
+const SCALE = 0.62;
 // the rows of each 240-wide design that hold its drawing (the rest is margin)
 const PARTS = [
     { key: 'text', draw: navText, top: 8, h: 32, gap: 4 },     // (a gap: a highway diagram's label is at its top)

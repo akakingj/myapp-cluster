@@ -443,6 +443,31 @@ check('the thin kW bar: in a strip above the panel, the panel where it was, the 
     }
     assert.strictEqual(panelDiff, 0, 'the panel moved or drawn over'); assert(inStrip > 50, 'the bar drawn above it: ' + inStrip);
 });
+check('directions: wherever the HUD map and the panel are, never over the panel, the turn signals, the lane change signs or BMW\'s speed, and on the glass a G20 shows', () => {
+    const { navRect, ARROW, LCW, HUD_SEEN } = require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'overlay.js'));
+    const NV = require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'nav_view.js'));
+    const over = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    const band = { x: ARROW.left, y: ARROW.y, w: ARROW.right + ARROW.w - ARROW.left, h: ARROW.h };
+    let n = 0, none = 0;
+    for (const pct of [0, 40, 50, 60, 70, 80, 85]) for (const hx of [-200, -100, 0, 100]) for (const hy of [-150, -100, -60, -30, 0, 30, 60, 100, 150]) {
+        for (const where of ['bottom', 'top']) for (const ex of [0, 1, 2, 3]) for (const pw of [true, 'number', false]) for (const under of [false, true]) {
+            if (!pw && !ex) continue;
+            const b = badgeRect(mapRect('hud', pct, hx, hy), where, 'hud', ex, pw, under);
+            const sh = over(b, band) ? Math.max(0, b.y + b.h + 6 - band.y) : 0, r = navRect(b, where, sh, NV.W, NV.H);
+            n++;
+            if (!r) { none++; continue; }
+            const keep = [b, { x: 116, y: 320, w: 236, h: 48 }, { x: ARROW.left, y: ARROW.y + sh, w: ARROW.w, h: ARROW.h }, { x: ARROW.right, y: ARROW.y + sh, w: ARROW.w, h: ARROW.h },
+                { x: LCW.left, y: LCW.y + sh, w: LCW.w, h: LCW.h }, { x: LCW.right, y: LCW.y + sh, w: LCW.w, h: LCW.h }];
+            keep.forEach((k) => assert(!over(r, k), JSON.stringify({ pct, hx, hy, where, r, k })));
+            assert(r.x >= HUD_SEEN.x && r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w && r.y >= HUD_SEEN.y && r.y + r.h <= HUD_SEEN.y + HUD_SEEN.h, JSON.stringify(r));
+        }
+    }
+    // (no room only with the panel across the middle of the glass, the HUD map moved far: not shown then)
+    assert(none < n / 100, none + ' of ' + n + ' without room');
+    // the usual place: the standard HUD map, the panel at its bottom: just above the panel, at its right edge
+    const b0 = badgeRect(mapRect('hud', 0), 'bottom', 'hud', 3, false, false), r0 = navRect(b0, 'bottom', 0, NV.W, NV.H);
+    assert.deepStrictEqual([r0.x + r0.w, r0.y + r0.h], [b0.x + b0.w, b0.y - 4]);
+});
 console.log(ok + ' checks passed');
 })().catch((e) => { console.error(e); process.exit(1); });
 

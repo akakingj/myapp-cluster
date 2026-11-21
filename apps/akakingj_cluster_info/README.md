@@ -29,8 +29,9 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   last answer. After mlurker's HUD signals (mlurker/bmw-idrive7-apps, found on a G05), written anew; whether a G20's
   BDC answers D347 shows on the app's page (Lane change warning: mirror lamps, or the BDC has no D347).
 - **Directions on the HUD** (Settings > Directions on the HUD: while a route runs, near turns only, or off): while
-  the panel is on the HUD, the next turn above it at its right edge (with the panel at the top, in the glass's bottom
-  right corner), in jaimeen77's Cluster Redline design (`nav_draw.js`, `lane_draw.js`, `nav_text.js`, from its 1.3.9,
+  the panel is on the HUD, the next turn, usually just above it at its right edge, never over the panel, the turn
+  signal arrows, the lane change signs or BMW's speed (elsewhere on the glass when there is no room there, and not
+  shown when there is none at all), in jaimeen77's Cluster Redline design (`nav_draw.js`, `lane_draw.js`, `nav_text.js`, from its 1.3.9,
   MIT; `nav_view.js` stacks them): the instruction or street on top (Korean in the Korean build), the blue turn
   arrow, or a junction diagram for forks, highway exits and entries, roundabouts and lane changes, with the
   distance, and the lane board under it. The turn is read as Redline's (idrive7-apps, `nav.js`, `navlog.js`, MIT):

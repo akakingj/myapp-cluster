@@ -279,9 +279,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
 - Info 1.10.0 (Nov 21 2026): directions on the HUD (Settings > Directions on the HUD). The turn read as Redline's
   (nav.js, navlog.js from idrive7-apps; the event list asked only while they can show: overlay.navCan()); drawn in
   jaimeen77's Cluster Redline 1.3.9 design (nav_draw.js, lane_draw.js, nav_text.js, MIT; the owner relayed its author's
-  agreement), stacked by nav_view.js into one 154x123 layer (text / arrow or junction diagram with the distance /
-  lanes, blue): shown only while the panel is on the HUD, right-aligned with it just above (y from 148, the lane
-  change signs' end), with the panel at the top at the glass's bottom right; hidden while another app holds the HUD.
+  agreement), stacked by nav_view.js into one 149x120 layer (text / arrow or junction diagram with the distance /
+  lanes, blue): shown only while the panel is on the HUD; placed by overlay.navRect 4 px clear of the panel, the turn
+  signal arrows and lane change signs (where they are, moved under a panel at the top too) and BMW's speed, on the
+  G20's seen glass: usually just above the panel at its right edge (standard map: 472,152); with no clear place (the
+  panel across the middle, the HUD map moved far: under 1 % of the cases tried) not shown. Hidden while another app
+  holds the HUD.
   Korean text only when every syllable is in the Korean atlas. nav_canvas.js: Cluster Redline's crisp small text on a
   Canvas subclass (the panel's text unchanged).
 
