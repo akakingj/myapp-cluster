@@ -186,11 +186,12 @@ module.exports = {
             ...box('secondB', R.x, y2, R.w, h2, second.label),
             Object.assign(C.text('second', R.x + 14, y2 + 32, R.w - 28, h2 - 38, second.value, second.c, { align: 1 }), second.tone ? { tone: second.tone } : {}));
         if (map) {
-            // (each half no taller than holds three figures, '104°': the narrow tile ran them over its edges)
-            const tw = (R.w - 28) / 2, th = Math.min(h3 - 42, Math.floor(tw / 1.45)), ty = y3 + 34 + Math.round((h3 - 42 - th) / 2);
+            // (each half no taller than holds three figures and a degree, '104°', in its width, a gap between the two:
+            // the narrow tile ran them over its edges, and into each other)
+            const gap = 18, tw = (R.w - 28 - gap) / 2, th = Math.min(h3 - 42, Math.floor(tw / 2)), ty = y3 + 34 + Math.round((h3 - 42 - th) / 2);
             list.push(...box('temps', R.x, y3, R.w, h3, 'COOLANT  ·  OIL'),
                 C.text('coolant', R.x + 14, ty, tw, th, (d) => C.tempText(o, d.coolant), hot('coolant', C.hotAt(o, 'coolant')), { align: 0 }),
-                C.text('oil', R.x + R.w / 2, ty, tw, th, (d) => C.tempText(o, d.oil), hot('oil', C.hotAt(o, 'oil')), { align: 1 }));
+                C.text('oil', R.x + R.w - 14 - tw, ty, tw, th, (d) => C.tempText(o, d.oil), hot('oil', C.hotAt(o, 'oil')), { align: 1 }));
         } else if (P('box3')) {
             list.push(...box('lastB', R.x, y3, R.w, h3, Rd('box3').label), toneOf('box3', C.fitText(C.text('lastVal', R.x + 14, y3 + 36, R.w - 28, h3 - 46, Rd('box3').value, white, { align: 1 }))));
         } else {
