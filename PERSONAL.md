@@ -276,6 +276,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   inside the fin's tip: the dials end at x 410; measured at 0 km/h, a three-digit speed not yet seen on the car).
   ID7 M with the map: its window reaches from under the camera's cowl to the foot of the map area (711, 130,
   498 x 470, was 263 high), the speed in the left card and the gear in the right one, under their gauges.
+- Layouts 0.51.0 (Nov 22 2026): JDM 1 with the map in the new dash's look (layout_arc_tach.js mapDash), not the round
+  tach and dial of before (removed): left the rev bar (RTACH_FS, MCURVE cx 390 R 320 top 150 a0 -74, four slats a
+  thousand, no lines under / over it), figures 54 px out, an upright at its end, TACH and the gear inside; right the
+  speed frame from y 168 (the panel's slanted corner: x up to 1830 there), LCD, main readout, gaugeBox at 0.8 (u_k).
+  tools/clearance.js checks a rev bar by its ink (RTACH_FS geometry), not its box.
 - Info 1.10.0 (Nov 21 2026): directions on the HUD (Settings > Directions on the HUD). The turn read as Redline's
   (nav.js, navlog.js from idrive7-apps; the event list asked only while they can show: overlay.navCan()); drawn in
   jaimeen77's Cluster Redline 1.3.9 design (nav_draw.js, lane_draw.js, nav_text.js, MIT; the owner relayed its author's

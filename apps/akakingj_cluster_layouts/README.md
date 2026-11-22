@@ -111,6 +111,10 @@ follows the mode (blue, red in sport, teal in ECO PRO).
   readings under the gear - are cards on the page too, set for that layout alone (a gauge place any small gauge's
   reading, with its scale, red zone and figures; a readout place any readout). *The layout's own* keeps it as
   designed. With more than six the cards go three or four a row.
+- **JDM 1 with the map (0.51.0):** the digital dash either side of the map: left the rev bar on a quarter curve up
+  to the map's top corner (its figures outside, under the panel's slanted corner), TACH and the gear inside it; right
+  the speed's framed LCD with the main readout and a box of two bar gauges (Small gauge in the speedometer and in the
+  tach: Auto the boost or the charge, and the fuel).
 - **JDM 1's water cup, large (0.43.0):** JDM 1's page has a **Water cup view** button: the cup of water on the
   head unit's screen, as the Water Cup app draws it (no other app needed), sloshing with the same G as the cup on the
   cluster (2.2 times it, higher on the outside of the bend). **Back** (or Signals, Logs) leaves

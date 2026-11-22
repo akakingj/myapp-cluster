@@ -37,6 +37,23 @@ function clashesOf(p, o) {
         if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
         return out;
     }
+    // JDM 1's rev bar (RTACH_FS): the points of its ink, every 6 px along it, from inside the bar out to its ticks (its
+    // geometry in design px from u_off, drawn u_k times; its lines under and over it are hairlines, as the panel's)
+    if (p.kind === 'rtach' && p.params && p.params.u_geo && !p.hairline) {
+        const [gx, gy, R, a0d] = p.params.u_geo, [xe, T] = p.params.u_geo2, [ox, oy] = p.params.u_off, k = (p.params.u_k || [1])[0];
+        const a0 = a0d * Math.PI / 180, arcL = -a0 * R, L = arcL + (xe - gx), pts = [];
+        for (let sAt = 0; sAt <= L; sAt += 6) for (const off of [-T / 2, T / 2 + 4 + 18]) {
+            const q = sAt >= arcL ? [gx + (sAt - arcL), gy - R - off] : ((a) => [gx + Math.sin(a) * (R + off), gy - Math.cos(a) * (R + off)])(a0 + sAt / R);
+            pts.push([p.x + (q[0] - ox) * k, p.y + (q[1] - oy) * k]);
+        }
+        const inB = (b) => pts.some(([x, y]) => x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h);
+        if (inB(C.NOTCH)) out.push('under the cowl');
+        if (C.strip(o) && pts.some(([, y]) => y > C.STRIP_Y)) out.push('over the strip');
+        if (inB(C.TELLTALES)) out.push('over the warning lights');
+        if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
+        if (o && o.centre === 'map' && inB(C.MAP)) out.push('over the map');
+        return out;
+    }
     // a cup (JDM 1's, CUP_FS): the points of its outline - its rim's and bottom's ellipses and its sides - every 6 degrees
     if (p.kind === 'cup' && p.params && p.params.u_cup) {
         const [cx, ry, aR, aB] = p.params.u_cup, [H, e] = p.params.u_cup2, pts = [];
