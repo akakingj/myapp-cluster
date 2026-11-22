@@ -253,9 +253,7 @@ mgu.run({
                 ['cluster-render log', logs.tail(logs.RENDER_LOG, n(20, 1500))],
                 ['this app\'s log', logs.tail(path.join(ctx.dataDir || '.', 'akakingj_cluster_layouts.log'), n(30, 400))],
                 ['Cluster Centre log', logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_centre', n(20, 300))],
-                // Cluster Info's speed camera / bump test and its directions (alerts.js, navlog.js in that app)
-                // (in the codes: its last 15 lines, each cut to 200 characters)
-                ['Cluster Info camera / bump test', ((txt) => (full ? txt : txt.split('\n').map((l) => (l.length > 200 ? l.slice(0, 200) + '…' : l)).join('\n')))(logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_info', n(15, 1500), 'cluster-info-alerts.log'))],
+                // Cluster Info's directions (navlog.js in that app)
                 ['Cluster Info directions', logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_info', n(10, 600), 'cluster-info-nav.log')],
             ];
             return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''),

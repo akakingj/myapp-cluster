@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_info",
   "title": "AK Cluster Info",
   "description": "A small panel of up to three live values (battery power from eDrive Live, battery charge, battery, oil and coolant temperature) over the Waze map in the cluster or on the HUD, and turn signal arrows on the HUD",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCI",
@@ -426,23 +426,6 @@
         [
           "near",
           "Near turns (under 1 km, and lanes)"
-        ],
-        [
-          "off",
-          "Off"
-        ]
-      ],
-      "section": "HUD"
-    },
-    {
-      "key": "alertTest",
-      "label": "Speed camera and bump test (log)",
-      "type": "choice",
-      "default": "on",
-      "options": [
-        [
-          "on",
-          "On: logged while a route runs"
         ],
         [
           "off",
