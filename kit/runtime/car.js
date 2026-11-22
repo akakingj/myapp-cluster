@@ -78,6 +78,7 @@ class Car {
         const over = (ctx.spec.config && ctx.spec.config.scaling) || {};
         this.S = Object.assign({}, SCALE, over);
         this.live = {}; this.lastCar = 0; this.listeners = [];
+        this.times = { speed: [], rpm: [], gLong: [] };      // the last samples' times (rates())
         this.sim = new Sim(); this.simData = this.sim.sample();
         this.demoActive = false; this.guess = new GearGuess();
         const sc = (k, raw) => {
@@ -88,6 +89,8 @@ class Car {
         const put = (k, v, tick) => {
             if (v === null || v === undefined || (typeof v === 'number' && !isFinite(v))) return;
             this.live[k] = v; this.lastCar = Date.now();
+            const ts = this.times[k];
+            if (ts) { ts.push(this.lastCar); if (ts.length > 200) ts.splice(0, ts.length - 200); }
             // learned gear while driving; nothing at a standstill - the guess can't tell P, N or D
             // there, and "N" shown in park or in D was wrong
             if (k === 'rpm' || k === 'speed') { const g = this.guess.feed(this.live.rpm, this.live.speed); if (g !== null || this.live.speed < 3) this.guessed = this.live.speed < 3 ? undefined : g; }
@@ -157,6 +160,21 @@ class Car {
         const d = Object.assign({}, src, { demo: this.demoActive });
         if (d.gear === undefined && !this.demoActive) { d.gear = this.guessed; d.gearGuessed = true; }
         return d;
+    }
+
+    /**
+     * How the car's samples come: { speed, rpm, gLong: { perS, gapMs, maxGapMs } } over the last 10 s (perS samples a
+     * second, gapMs the middle gap between two, maxGapMs the longest), or null for one with none in that time.
+     */
+    rates() {
+        const now = Date.now(), out = {};
+        Object.keys(this.times).forEach((k) => {
+            const ts = this.times[k].filter((t) => now - t <= 10000);
+            if (ts.length < 2) { out[k] = null; return; }
+            const gaps = ts.slice(1).map((t, i) => t - ts[i]).sort((a, b) => a - b);
+            out[k] = { perS: Math.round(ts.length / Math.max(1, (now - ts[0]) / 1000) * 10) / 10, gapMs: gaps[gaps.length >> 1], maxGapMs: gaps[gaps.length - 1] };
+        });
+        return out;
     }
 
     /** fn(data, tMs) per sample; fn.reset() (optional) when the source switches live<->demo. */

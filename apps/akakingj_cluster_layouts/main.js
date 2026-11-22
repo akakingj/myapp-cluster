@@ -250,6 +250,14 @@ mgu.run({
                 // "seen" empty), so the catalog's other candidates, to pick from
                 ['cruise control signals', sigList(findSignals({ match: /cruise|tempomat|geschwindigkeitsregel|wunschgeschw|speed.?limit|limiter|set.?speed|target.?speed|abstand|distance.?control|longitudinal.?(control|guid|function|assist)|\bacc\b|acc[A-Z_]|ACC|DCC|FGR/ }), n(30, 300))],
                 ['time and date signals', sigList(findSignals({ match: /time|date|uhrzeit|datum|zone|clock/i }), n(10, 300))],
+                // the speed: how often the car's speed signal comes (the layouts' speed lags the cluster's own), and the
+                // catalog's speed fields, to find the speed the cluster and the head-up display show (indicated, not the
+                // centre of gravity's) if the head unit has it
+                ['speed signals', (() => {
+                    const r = D.rates ? D.rates() : {}, f = (x) => (x ? x.perS + ' a second, gaps ' + x.gapMs + ' ms (longest ' + x.maxGapMs + ')' : 'none in 10 s');
+                    return ['samples: speed ' + f(r.speed), 'rpm ' + f(r.rpm), 'acceleration ' + f(r.gLong)].join('\n') + '\n'
+                        + sigList(findSignals({ match: /speed|geschwind|tacho|velocity|vehiclespeed|v_?veh|anzeige|displayed|indicated/i }), n(40, 400), 16);
+                })()],
                 ['cluster-render log', logs.tail(logs.RENDER_LOG, n(20, 1500))],
                 ['this app\'s log', logs.tail(path.join(ctx.dataDir || '.', 'akakingj_cluster_layouts.log'), n(30, 400))],
                 ['Cluster Centre log', logs.siblingLog(ctx.dataDir || '.', 'akakingj_cluster_centre', n(20, 300))],

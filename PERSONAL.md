@@ -276,6 +276,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   inside the fin's tip: the dials end at x 410; measured at 0 km/h, a three-digit speed not yet seen on the car).
   ID7 M with the map: its window reaches from under the camera's cowl to the foot of the map area (711, 130,
   498 x 470, was 263 high), the speed in the left card and the gear in the right one, under their gauges.
+- Layouts 0.52.2, Centre 0.14.2, Info 1.10.2 (Nov 22 2026; the kit's car.js): the layouts' speed lags the cluster's
+  and the HUD's by about a figure (56 on the HUD, 55 accelerating, 57 slowing). Its signal is Vehicle2.statusCarSpeed2
+  (the centre of gravity's, not the indicated speed), through the head unit and the renderer back to the KOMBI. The
+  logs' "speed signals": the speed, rpm and acceleration samples a second and their gaps (car.rates(), the last 10 s),
+  and every catalog field with speed / Geschwindigkeit / Tacho / Anzeige / displayed / indicated in its name or members,
+  to find the indicated speed if the head unit has it.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

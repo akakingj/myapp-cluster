@@ -342,7 +342,8 @@ the Store's own sources; the Store installs it with the app.
 **Logs.** The apps can't be reached from a phone over Wi-Fi: the head unit's firewall lets nothing connect
 in, and an app's traffic out only through what the uplink allows. Instead, **Logs** on Cluster Layouts' page
 shows what's needed (the renderer's status and slot report, the raw signals, the data now, the last lines of
-the renderer's, this app's and Cluster Centre's logs) as QR codes, three to a page: photograph each page
+the renderer's, this app's and Cluster Centre's logs, and how often the
+car's speed signal comes with the catalog's speed fields) as QR codes, three to a page: photograph each page
 (press Logs for the next) and send the photos; `python3 tools/decode_logs.py photo*.jpg -o logs.txt` puts the
 text back together. The full logs go to a file on any USB stick plugged into the car
 (`cluster-logs/cluster-logs-<time>.txt`, with Cluster Info's directions log) and to the

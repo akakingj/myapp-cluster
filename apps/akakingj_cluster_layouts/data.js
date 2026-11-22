@@ -698,6 +698,8 @@ function startData(ctx, opts) {
         vehicle: () => ({ vehicle: vehicleNow(), fuel: vehicleNow() === 'ice' ? fuelNow() : null, how: setVehicle() ? 'set' : detected.vehicle ? 'found' : 'assumed', why: detected.why }),
         /** fn() on each new reading (the car's speed and rpm samples, every changed reading). */
         onFresh(fn) { freshFns.push(fn); },
+        /** How the car's speed, rpm and acceleration samples come (kit/car.js rates()). */
+        rates: () => car.rates(),
         /** The car's state (kit/awake.js): { on, parked, why }. */
         awake: () => ({ on: awake.on(), parked: awake.parked(), why: awake.why() }),
         stop() { clearTimeout(timer); clearInterval(wantTimer); clearInterval(vehicleTimer); providers.stop(); },
