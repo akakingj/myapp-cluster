@@ -228,6 +228,15 @@ check('pages are groups: a page is built alone, a layer a piece; a switch puts t
     check('app: a layout from before, its centre set to these pages (retired): the pages step aside too', () => assert(!visible()));
     fs.unlinkSync(path.join(process.env.CLUSTER_PRESENCE_DIR, 'layouts.json'));
     check('app: the screen shows the page preview', () => assert(pages > 0 && lastImage && lastImage.w === 1600));
+    // (0.14.3) Logs: this app's own logs as codes on its page and a file in its data folder (not in Cluster Layouts')
+    await clicks.BTN_LOGS();
+    check('app: Logs saves its own logs (the engine, the data, its log) and shows the codes', () => {
+        const dir = path.join(ctx.dataDir, 'exports'), f = fs.readdirSync(dir).filter((x) => /^cluster-logs-centre-/.test(x));
+        assert.strictEqual(f.length, 1);
+        const txt = fs.readFileSync(path.join(dir, f[0]), 'utf8');
+        ['--- engine ---', '--- data now ---', '--- this app\'s log ---'].forEach((h) => assert(txt.indexOf(h) >= 0, h));
+    });
+    await clicks.BTN_NEXT();
     check('app: warnings only for what this machine lacks (no diagnostic link, no catalog)', () => assert(warns.every((w) => /TASU|catalog/.test(w)), JSON.stringify(warns)));
     console.log(ok + ' passed');
     process.exit(0);

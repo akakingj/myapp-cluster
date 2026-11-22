@@ -110,4 +110,33 @@ function draw(cv, q, x, y, px) {
     return full;
 }
 
-module.exports = { tail, siblingLog, bundle, save, codes, draw, RENDER_LOG, CHUNK };
+/** An app's Logs button: press() saves the full bundle (bundleOf(true)) to the data folder and the USB sticks as
+ * cluster-logs-<tag>-<time>.txt and shows the short one's (bundleOf(false)) codes, three a page; each press the next
+ * page, after the last none. draw(cv, t, W) draws the page shown. */
+function pager(bundleOf, dataDir, log, tag) {
+    const PER = 3;
+    let view = null;
+    return {
+        active: () => !!view,
+        close() { view = null; },
+        press() {
+            if (view) { view.page++; if (view.page * PER >= view.codes.length) view = null; return; }
+            const saved = save(bundleOf(true), dataDir, 'cluster-logs-' + tag + '-' + new Date().toISOString().replace(/[:.]/g, '-') + '.txt');
+            saved.forEach((r) => log && log.info('logs: ' + (r.file ? 'saved ' + r.file : r.dir + ': ' + r.error)));
+            view = { codes: codes(bundleOf(false)).codes, page: 0, saved };
+        },
+        draw(cv, t) {
+            const n = view.codes.length, pages = Math.ceil(n / PER), first = view.page * PER;
+            const usb = view.saved.filter((r) => r.file && !/exports/.test(r.file));
+            cv.text('Logs: photograph each code (page ' + (view.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + Math.min(n, first + PER) + ' of ' + n + '), then press Logs for the next', 40, 34, 20, t.text, { font: 'bold', literal: true });
+            cv.text(usb.length ? 'The full logs are also on the USB stick: ' + usb[0].file : 'Plug in a USB stick and press Logs again from the start for the full logs as a file', 40, 62, 16, t.dim, { font: 'label', literal: true });
+            view.codes.slice(first, first + PER).forEach((q, i) => {
+                const px = Math.max(3, Math.floor(420 / (q.size + 8)));
+                draw(cv, q, 40 + i * 520, 84, px);
+                cv.text(String(first + i + 1) + ' / ' + n, 40 + i * 520 + 180, 84 + (q.size + 8) * px + 22, 18, t.text, { font: 'bold', literal: true });
+            });
+        },
+    };
+}
+
+module.exports = { tail, siblingLog, bundle, save, codes, draw, pager, RENDER_LOG, CHUNK };

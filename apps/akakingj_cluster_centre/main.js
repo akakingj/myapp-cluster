@@ -25,6 +25,7 @@ const { WarmUp, CoolDown, PerfTimer } = require('./features');
 const { drawPieces } = require('./cpu_preview');
 const { findSignals } = require('./signal_finder');
 const attribution = require('./attribution');
+const logs = require('./logs');
 
 /* The free / open-source notice on the app's own screen (attribution.js), dim normally, red if the build was
  * altered - matches the mark woven into the cluster pages. */
@@ -191,7 +192,7 @@ mgu.run({
         let sigPage = 0;
 
         ui.onClick('BTN_SHOW', () => { settings.set('show', showing() ? 'off' : 'on'); return safeRender(); });
-        ui.onClick('BTN_NEXT', () => { sigPage = 0; next(); return safeRender(); });
+        ui.onClick('BTN_NEXT', () => { sigPage = 0; logPages.close(); next(); return safeRender(); });
         ui.onClick('BTN_ARM', () => {
             if (perf.mode === 'off' || perf.mode === 'done') perf.arm(); else perf.cancel();
             // arming shows the timer page, turned on if it was off
@@ -199,11 +200,33 @@ mgu.run({
             goTo('timer');
             return safeRender();
         });
-        ui.onClick('BTN_SIGNALS', () => { sigPage = (sigPage + 1) % (1 + Math.ceil(sigList.length / 7)); return safeRender(); });
+        ui.onClick('BTN_SIGNALS', () => { logPages.close(); sigPage = (sigPage + 1) % (1 + Math.ceil(sigList.length / 7)); return safeRender(); });
+
+        /* ---------- Logs: this app's own, as QR codes to photograph and a file on a USB stick (logs.js) ---------- */
+        const dataDir = ctx.dataDir || '.';
+        function logBundle(full) {
+            const n = (short, long) => (full ? long : short), d = all(), snap = {}, sets = {};
+            Object.keys(d).forEach((k) => { const v = d[k]; if (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean') snap[k] = typeof v === 'number' ? Math.round(v * 100) / 100 : v; });
+            (settings.schema || []).forEach((x) => { sets[x.key] = settings.get(x.key); });
+            const sections = [
+                ['settings', JSON.stringify(sets)],
+                ['page', JSON.stringify({ shown: showing(), page, pages: enabled(), layoutCovers: blockedByLayout(), timer: perf.mode })],
+                ['engine', JSON.stringify(cluster.status())],
+                ['data status', JSON.stringify(data.status())],
+                ['data now', JSON.stringify(snap)],
+                ['signals found', sigList.slice(0, n(20, 400)).map((s) => s.what + ': ' + s.iface.replace(/^de\.bmw\./, '') + '.' + s.field).join('\n')],
+                ['this app\'s log', logs.tail(path.join(dataDir, 'akakingj_cluster_centre.log'), n(40, 600))],
+            ];
+            if (full) sections.push(['cluster-render log', logs.tail(logs.RENDER_LOG, 1500)]);
+            return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Centre') + ' ' + ((ctx.spec && ctx.spec.version) || ''), sections);
+        }
+        const logPages = logs.pager(logBundle, dataDir, log, 'centre');
+        ui.onClick('BTN_LOGS', () => { sigPage = 0; logPages.press(); return safeRender(); });
 
         function render() {
             const t = ctx.theme();
             const cv = ctx.canvas(W, H).clear(t.bg);
+            if (logPages.active()) { logPages.draw(cv, t); return ui.image('MAIN_GFX', cv); }
             if (sigPage > 0) {
                 cv.text('Signals on this car for steering, yaw and engine starts (' + sigList.length + ')   ·   page ' + sigPage, 48, 60, 26, t.text, { font: 'bold', literal: true });
                 if (found[0].error) cv.text(found[0].error, 48, 110, 20, t.dim, { font: 'label', literal: true });

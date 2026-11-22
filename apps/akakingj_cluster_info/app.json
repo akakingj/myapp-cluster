@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_info",
   "title": "AK Cluster Info",
   "description": "A small panel of up to three live values (battery power from eDrive Live, battery charge, battery, oil and coolant temperature) over the Waze map in the cluster or on the HUD, and turn signal arrows on the HUD",
-  "version": "1.10.5",
+  "version": "1.10.6",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCI",
@@ -108,6 +108,10 @@
       "kind": "canvas",
       "title": "AK Cluster Info",
       "buttons": [
+        [
+          "BTN_LOGS",
+          "Logs"
+        ],
         [
           "BTN_SETTINGS",
           "Settings"
@@ -664,5 +668,9 @@
   "requires": {
     "idrive7-renderd": "2.1.7",
     "mgu-inputgate": "1.0.0"
-  }
+  },
+  "shared": [
+    "logs.js",
+    "qr.js"
+  ]
 }

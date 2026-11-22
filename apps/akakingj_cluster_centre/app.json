@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_centre",
   "title": "AK Cluster Centre",
   "description": "Pages of engine, gearbox and eDrive data, warm-up, turbo cool-down, a shift light and a 0-60 timer in the centre of the factory cluster, drawn by the cluster itself",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCC",
@@ -110,6 +110,10 @@
         [
           "BTN_SIGNALS",
           "Signals"
+        ],
+        [
+          "BTN_LOGS",
+          "Logs"
         ],
         [
           "BTN_SETTINGS",

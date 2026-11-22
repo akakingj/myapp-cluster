@@ -41,10 +41,10 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     SPEC.settings.forEach((s) => { S[s.key] = s.default; });
     // (the personal build's defaults are Korean and petrol; these checks are written for the original's)
     Object.assign(S, { tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', slot1: 'power', slot2: 'battery', slot3: 'oil' });
-    const handlers = {}, warns = [], loops = {}, drawn = [];
+    const handlers = {}, warns = [], loops = {}, drawn = [], clicks = {};
     process.env.SOMEIP_CATALOG = path.join(tmp, 'no-catalog.json');
     const ctx = {
-        app: {}, ui: { onClick() {}, text() {}, image: async () => {} },
+        app: {}, ui: { onClick: (k, fn) => { clicks[k] = fn; }, text() {}, image: async () => {} },
         settings: { get: (k) => S[k], set: (k, v) => { S[k] = v; }, onChange() {}, display: (k) => String(S[k]) },
         log: { info() {}, warn: (m) => warns.push(m), error: (m, e) => warns.push(m + ' ' + e) },
         spec: SPEC, dataDir: tmp,
@@ -108,6 +108,17 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     drawn.length = 0; await loops.MAIN();
     check('the driving assistant check, catalog: why it is not read when it isn\'t there', () => assert(drawn.some((d) => /^catalog not readable/.test(d)), drawn.join(' | ')));
     S.adasCheck = 'off';
+    // (1.10.6) Logs: this app's own logs as codes on its page and a file in its data folder (not in Cluster Layouts')
+    drawn.length = 0; await clicks.BTN_LOGS();
+    check('Logs: the codes on the page, the full logs in a file with the check, the directions and the app\'s log', () => {
+        assert(drawn.some((d) => /^Logs: photograph each code \(page 1 of/.test(d)), drawn.join(' | '));
+        const f = fs.readdirSync(path.join(tmp, 'exports')).filter((x) => /^cluster-logs-info-/.test(x));
+        assert.strictEqual(f.length, 1);
+        const txt = fs.readFileSync(path.join(tmp, 'exports', f[0]), 'utf8');
+        ['--- page ---', '--- driving assistant check ---', '--- driving assistant log ---', '--- directions log ---', '--- this app\'s log ---'].forEach((h) => assert(txt.indexOf(h) >= 0, h));
+    });
+    for (let i = 0; i < 20 && drawn.some((d) => /^Logs: photograph/.test(d)); i++) { drawn.length = 0; await clicks.BTN_LOGS(); }
+    check('Logs pressed past the last page: the page as before', () => assert(!drawn.some((d) => /^Logs: photograph/.test(d)) && drawn.length > 0));
     // (2026-11-15) the engine's values (here rpm) as bright as the oil's: they went through the temperatures' colours
     // and came out dim grey beside a white oil
     handlers.statusEngineSpeed2 && handlers.statusEngineSpeed2({ actualValueRPMEngineCrankshaft: 2500 * 4 });

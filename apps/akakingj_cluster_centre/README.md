@@ -70,7 +70,8 @@ The screen shows the page as the cluster shows it now (drawn on the head unit, s
 flat cards, dots for icons, no trend lines or glow),
 and what feeds it: the cluster renderer, the diagnostic link to the engine units, eDrive Live, the timer.
 Buttons: **Show in the cluster**, **Next page**, **Arm 0-60 timer** (it turns the timer page on and shows it),
-**Signals**, **Settings**.
+**Signals**, **Logs** (this app's logs as QR codes, three to a page, and the full logs in
+`cluster-logs/cluster-logs-centre-<time>.txt` on a USB stick: as Cluster Layouts' Logs), **Settings**.
 
 Settings, 52 of them, kept for each driver profile:
 

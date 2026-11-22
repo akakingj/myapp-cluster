@@ -23,6 +23,7 @@ const { startBlindSpot } = require('./blindspot');
 const { startHvSoc } = require('./hvsoc');
 const { ReadOnlyDiag } = require('./kit/readonly-diag');
 const { startAdasProbe, catalogLine } = require('./adas_probe');
+const logs = require('./logs');
 
 const W = 1600, H = 520;
 const GO = '#2fd27a';
@@ -267,10 +268,55 @@ mgu.run({
         src.nav = () => (tracker && navMode() !== 'off' ? tracker.view(navMode()).show : null);
         try { overlay = startOverlay(ctx, src); } catch (e) { overlayError = String(e); log.warn('overlay: ' + e); }
 
+        /** The page's rows, [name, text]: what each source does now (on the page and in the logs). */
+        function statusLines() {
+            const ov = overlay && overlay.status ? overlay.status() : null, pw = src.power(ctx.theme());
+            const st = (k) => sigStatus[k] || 'waiting';
+            const provs = providers.list(), pnames = Object.keys(provs).map((k) => provs[k]);
+            return [
+                ['Shown', settings.display('show') + (settings.get('show') === 'off' ? '' : ', ' + settings.display('place').toLowerCase())
+                    + '   ·   Waze map: ' + (ov ? ov.map : '--') + '   ·   Cluster renderer: ' + (overlayError ? 'error: ' + overlayError : ov ? ov.renderer : 'not started')
+                    + '   ·   Directions: ' + (navError ? 'error: ' + navError : navMode() === 'off' ? 'off' : !tracker || !tracker.routing() ? 'no route' : overlay && overlay.nav().shown ? 'on the HUD' : 'route, not shown (panel not on the HUD)')],
+                ['Apps providing', (pnames.length ? pnames.join(', ') : 'none') + (pw ? '   ·   power ' + pw.text + ' kW' : '') + '   (folder ' + DIR + ')'],
+                ['Values', (chosen().map((k) => { const v = valueNow(k); return VALUES[k].label + ' ' + (v ? (G.isNum(v.c) ? temp(v.c) : v.text) + ' from ' + v.src : 'no reading'); }).join('   ·   ') || 'none chosen')
+                    + (chosen().indexOf('soc') >= 0 && hv ? '   ·   battery unit: ' + hv.status() : '') + (linkError ? '   ·   diagnostic link: ' + linkError : '')],
+                ['Lane change warning', settings.get('blindSpot') === 'off' ? 'off (settings)' : (() => { const b = bs.status();
+                    return (b.refused ? 'the BDC has no D347 (' + b.refused + ')' : b.left !== null ? 'mirror lamps: left ' + b.left + ', right ' + b.right : b.reading ? 'no answer yet' : 'not read now (panel off or parked)')
+                        + '   ·   BDC 22 D347: ' + b.good + ' of ' + b.reads + ' answered   ·   link ' + b.link; })()],
+                ['Turn signals', st('turn signals') + (live.indicator !== 'off' ? ' (now ' + live.indicator + ')' : '')
+                    + '   ·   Day / night: ' + (live.night === null ? st('day / night') + ', none received' : live.night ? 'night' : 'day')
+                    + '   ·   Driver profile: ' + (live.profile || (st('driver profile') === 'subscribed' ? 'none read yet' : st('driver profile')))],
+            ];
+        }
+
+        /* ---------- Logs: this app's own, as QR codes to photograph and a file on a USB stick (logs.js) ---------- */
+        const dataDir = ctx.dataDir || '.';
+        function logBundle(full) {
+            const n = (short, long) => (full ? long : short), ov = overlay && overlay.status ? overlay.status() : null;
+            const sets = {};
+            (settings.schema || []).forEach((x) => { sets[x.key] = settings.get(x.key); });
+            const st = adas ? adas.status() : null;
+            const sections = [
+                ['settings', JSON.stringify(sets)],
+                ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
+                ['overlay', JSON.stringify(ov)],
+                ['turn signals and day / night (raw)', JSON.stringify(live.raw)],
+                ['driving assistant check', st ? JSON.stringify(full ? st : { sources: st.sources, hud: st.hud, catalog: st.catalog && { total: st.catalog.total, found: (st.catalog.list || []).length, error: st.catalog.error } }) : 'not started'],
+                ['driving assistant log', logs.tail(path.join(dataDir, 'cluster-info-adas.log'), n(40, 3000))],
+                ['directions log', logs.tail(path.join(dataDir, 'cluster-info-nav.log'), n(15, 1500))],
+                ['this app\'s log', logs.tail(path.join(dataDir, 'akakingj_cluster_info.log'), n(40, 600))],
+            ];
+            if (full) sections.push(['cluster-render log', logs.tail(logs.RENDER_LOG, 1500)]);
+            return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Info') + ' ' + ((ctx.spec && ctx.spec.version) || ''), sections);
+        }
+        const logPages = logs.pager(logBundle, dataDir, log, 'info');
+        ui.onClick('BTN_LOGS', () => { logPages.press(); return render(); });
+
         /* ---------- this app's page: the panel as it is now, larger, and every source's state ---------- */
         function render() {
             const t = ctx.theme();
             const cv = ctx.canvas(W, H).clear(t.bg);
+            if (logPages.active()) { logPages.draw(cv, t); return ui.image('MAIN_GFX', cv); }
             G.panel(cv, t, 24, 44, 1552, 468, ((ctx.spec && ctx.spec.title) || 'Cluster Info'));
             const pw = src.power(t), ex = src.extras(t).filter((e) => e.text !== '--');
             if (pw || ex.length) {
@@ -291,25 +337,8 @@ mgu.run({
             } else {
                 cv.text('Nothing to show now: no power from an app, and no value chosen has a reading', 800, 150, 24, t.dim, { align: 'center' });
             }
-            const ov = overlay && overlay.status ? overlay.status() : null;
-            const st = (k) => sigStatus[k] || 'waiting';
-            const provs = providers.list(), pnames = Object.keys(provs).map((k) => provs[k]);
-            const lines = [
-                ['Shown', settings.display('show') + (settings.get('show') === 'off' ? '' : ', ' + settings.display('place').toLowerCase())
-                    + '   ·   Waze map: ' + (ov ? ov.map : '--') + '   ·   Cluster renderer: ' + (overlayError ? 'error: ' + overlayError : ov ? ov.renderer : 'not started')
-                    + '   ·   Directions: ' + (navError ? 'error: ' + navError : navMode() === 'off' ? 'off' : !tracker || !tracker.routing() ? 'no route' : overlay && overlay.nav().shown ? 'on the HUD' : 'route, not shown (panel not on the HUD)')],
-                ['Apps providing', (pnames.length ? pnames.join(', ') : 'none') + (pw ? '   ·   power ' + pw.text + ' kW' : '') + '   (folder ' + DIR + ')'],
-                ['Values', (chosen().map((k) => { const v = valueNow(k); return VALUES[k].label + ' ' + (v ? (G.isNum(v.c) ? temp(v.c) : v.text) + ' from ' + v.src : 'no reading'); }).join('   ·   ') || 'none chosen')
-                    + (chosen().indexOf('soc') >= 0 && hv ? '   ·   battery unit: ' + hv.status() : '') + (linkError ? '   ·   diagnostic link: ' + linkError : '')],
-                ['Lane change warning', settings.get('blindSpot') === 'off' ? 'off (settings)' : (() => { const b = bs.status();
-                    return (b.refused ? 'the BDC has no D347 (' + b.refused + ')' : b.left !== null ? 'mirror lamps: left ' + b.left + ', right ' + b.right : b.reading ? 'no answer yet' : 'not read now (panel off or parked)')
-                        + '   ·   BDC 22 D347: ' + b.good + ' of ' + b.reads + ' answered   ·   link ' + b.link; })()],
-                ['Turn signals', st('turn signals') + (live.indicator !== 'off' ? ' (now ' + live.indicator + ')' : '')
-                    + '   ·   Day / night: ' + (live.night === null ? st('day / night') + ', none received' : live.night ? 'night' : 'day')
-                    + '   ·   Driver profile: ' + (live.profile || (st('driver profile') === 'subscribed' ? 'none read yet' : st('driver profile')))],
-            ];
             if (adas && adasMode() !== 'off') { drawAdas(cv, t); G.frame(cv, t, [((ctx.spec && ctx.spec.title) || 'Cluster Info')], 0, []); return ui.image('MAIN_GFX', cv); }
-            const step = lines.length > 5 ? 31 : 36;
+            const lines = statusLines(), step = lines.length > 5 ? 31 : 36;
             lines.forEach(([k, v], i) => {
                 cv.text(k, 48, 296 + i * step, 20, t.dim, { font: 'bold' });
                 cv.text(v, 260, 296 + i * step, 20, t.text, { font: 'label', literal: true });

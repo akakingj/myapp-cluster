@@ -53,6 +53,11 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   the cluster and never reaches the head unit, so only its data can be looked for.
 - **Its page** shows the panel as it is now, larger, and whether each source works (turn signals, day / night,
   driver profile, the apps providing, the cluster renderer, the Waze map, the directions).
+- **Logs** on its page shows this app's logs as QR codes, three to a page (press Logs for the next):
+  its page's rows, the overlay's state, the raw turn signals, the driving assistant check with its log, the
+  directions' log and the app's own log. `python3 tools/decode_logs.py photo*.jpg -o logs.txt` puts the text
+  back together; the full logs (with the renderer's) go to `cluster-logs/cluster-logs-info-<time>.txt` on a USB
+  stick plugged into the car and to the app's data folder.
 
 ## Providing values from your app
 

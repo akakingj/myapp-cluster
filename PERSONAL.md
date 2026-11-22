@@ -294,6 +294,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   the G20 whether the head unit gets the cluster's assisted driving view data (the four de.bmw.dass.* services of
   shared/dap.js, all optional in app.json, and DisplayDataServer.functionalLibraryData), and which such services
   its catalog has; the page shows it, cluster-info-adas.log keeps it. The owner asked for it in Info, not AK Map Test.
+- Info 1.10.6, Centre 0.14.3, Layouts 0.52.5 (Nov 22 2026): each app's Logs its own (logs.pager in shared/logs.js:
+  codes three a page, the full file cluster-logs-<info|centre>-<time>.txt on USB sticks and in its data folder); Cluster
+  Layouts' logs no longer carry Cluster Centre's log or Cluster Info's, so its codes stay few. Info's: its page's rows,
+  the overlay, the raw turn signals, the driving assistant check and its log, the directions' log, its own log.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide
