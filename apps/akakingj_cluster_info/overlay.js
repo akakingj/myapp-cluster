@@ -41,6 +41,9 @@ const HUD_VISIBLE_BOTTOM = 400;
 const HUD_RIGHT_GAP = 4;        // HUD: the panel's gap from the right edge of what the HUD shows
 const HUD_SPEED_CLEAR = 405;     // left edge limit: the speed readout ends at x ~331 and Waze's car icon at ~400 (85 % map, G05)
 const HUD_MAX_H = 60;             // the HUD panel's height at most (the room right of the speed limits it first)
+// with no Waze map on the HUD the panel is sized to the glass, not to the map's picture: this high at most, out to
+// the glass's right (HUD_SEEN), read at a glance like the directions above it
+const HUD_GLASS_H = 72;
 const HUD_MAX_PCT = 85;           // the HUD map's widest (waze-on-cluster hud_width_pct)
 // turn signal arrows on the HUD, small, where Redline (idrive7-apps apps/redline hud-signals.js) puts its own with its
 // rev counter switched off: near the top of what a G20 shows, the left at x 240, the right at 530, y 114 (2026-11-15).
@@ -175,7 +178,8 @@ function badgeRect(r, where, target, extras, hasPower, underOn) {
     if (hasPower === undefined) hasPower = true;      // true: the kW and its bar, 'number': the kW alone, false: neither
     // the HUD's size to its map's width; on the cluster 1.3 times it (72 high), read at a glance past the wheel;
     // each extra value (a temperature) adds a column EXTRA_COL times the height wide
-    let s = target === 'hud' ? Math.max(0.62, Math.min(HUD_MAX_H / 56, r.w / 400)) : 1.3;   // (HUD: up to HUD_MAX_H high)
+    // (r.glass: no Waze map on the HUD, the panel to the glass's size)
+    let s = target !== 'hud' ? 1.3 : r.glass ? (underOn ? HUD_GLASS_H - underStrip(HUD_GLASS_H).total : HUD_GLASS_H) / 56 : Math.max(0.62, Math.min(HUD_MAX_H / 56, r.w / 400));   // (HUD: up to HUD_MAX_H high)
     const size = (sc) => {
         const hh = Math.round(56 * sc / 2) * 2;
         const L = layout(hh, hasPower !== 'number'), ww = (hasPower ? L.w : L.pad) + (extras || 0) * colW(hh) + (hasPower && extras ? edgePad(hh) : 0) + (hasPower ? 0 : L.pad);
@@ -184,9 +188,9 @@ function badgeRect(r, where, target, extras, hasPower, underOn) {
     let [h, w] = size(s);
     // the HUD: right of the speed readout. A panel too wide to end inside the map there first moves left (under
     // the car arrow's stem, as far as HUD_SPEED_CLEAR), and only then is made smaller
-    const hudRight = Math.min(r.x + r.w, HUD_VISIBLE_RIGHT);
+    const hudRight = r.glass ? HUD_SEEN.x + HUD_SEEN.w : Math.min(r.x + r.w, HUD_VISIBLE_RIGHT);
     if (target === 'hud' && where !== 'top' && HUD_SPEED_CLEAR + w > hudRight) {
-        const min = s * 0.7;
+        const min = r.glass ? 0.62 : s * 0.7;   // (on the glass down to the map's smallest)
         s = Math.max(min, s * (hudRight - HUD_SPEED_CLEAR) / w);
         [h, w] = size(s);
         // (rounding to whole pixels and multiples of 4 can leave it a little too wide)
@@ -200,6 +204,8 @@ function badgeRect(r, where, target, extras, hasPower, underOn) {
     const ph = h;
     h = ph + (underOn ? underStrip(ph).total : 0);
     let y = where === 'top' ? r.y + m : r.y + r.h - h - m;
+    // (no map on the HUD: at the glass's bottom, the directions' room above it kept clear of the turn signals)
+    if (r.glass && where !== 'top') y = HUD_SEEN.y + HUD_SEEN.h - h - m;
     if (target === 'hud') y = Math.max(0, Math.min(y, HUD_VISIBLE_BOTTOM - h));
     let x = r.x + Math.floor((r.w - w) / 2);
     if (target === 'hud' && where !== 'top') {
@@ -506,8 +512,9 @@ function startOverlay(ctx, lv, opts) {
         * (settings.get('nightDim') !== 'off' && lv.night && lv.night() ? NIGHT_DIM : 1);
     function layer(nExtras, hasPower) {
         const pl = place();
-        const r = pl && mapRect(pl.target, pl.pct, pl.hx, pl.hy);
-        if (!r) return 0;
+        const m = pl && mapRect(pl.target, pl.pct, pl.hx, pl.hy);
+        if (!m) return 0;
+        const r = pl.target === 'hud' && !(map.showing && map.target === 'hud') ? Object.assign({ glass: true }, m) : m;
         const b = badgeRect(r, where(), pl.target, nExtras, hasPower, !!(lv.underOn && lv.underOn(pl.target)));
         const key = [pl.target, b.x, b.y, b.w, b.h, b.ph].join(',');
         hudBadge = pl.target === 'hud' ? b : null;

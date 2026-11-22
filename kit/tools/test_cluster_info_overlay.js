@@ -211,8 +211,9 @@ class FakeCR extends EventEmitter {
     write({ state: 'showing', target: 'map', hud_width_pct: 70 });
     await step();
     settings.v.show = 'hud'; t += 300; ov._tick();
-    check('Always on the HUD, the map on the cluster: the panel where it is with the map on the HUD (its 70 % size), not moved up', () => {
-        const l = [...cr.layers.values()][0], b = badgeRect(mapRect('hud', 70), 'bottom', 'hud', 0, true);
+    check('Always on the HUD, the map on the cluster: the panel to the glass (no map on the HUD to sit in), at its bottom right', () => {
+        const l = [...cr.layers.values()][0], b = badgeRect(Object.assign({ glass: true }, mapRect('hud', 70)), 'bottom', 'hud', 0, true);
+        assert.deepStrictEqual([b.x + b.w, b.y + b.h, b.h], [672, 352, 72]);
         assert.strictEqual(l.target, 'hud'); assert(ov.shown());
         assert.deepStrictEqual([l.x, l.y, l.w, l.h], [b.x, b.y, b.w, b.h]);
     });
@@ -462,6 +463,15 @@ check('directions: wherever the HUD map and the panel are, never over the panel,
             assert(r.x >= HUD_SEEN.x && r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w && r.y >= HUD_SEEN.y && r.y + r.h <= HUD_SEEN.y + HUD_SEEN.h, JSON.stringify(r));
         }
     }
+    // no Waze map on the HUD: the panel to the glass (bigger), the directions still just above it at its right edge
+    for (const ex of [0, 1, 2, 3, 4]) for (const pw of [true, 'number', false]) for (const under of [false, true]) {
+        if (!pw && !ex) continue;
+        const b = badgeRect(Object.assign({ glass: true }, mapRect('hud', 0)), 'bottom', 'hud', ex, pw, under), r = navRect(b, 'bottom', 0, NV.W, NV.H);
+        assert(b.x >= 405 && b.x + b.w <= HUD_SEEN.x + HUD_SEEN.w && b.y + b.h <= HUD_SEEN.y + HUD_SEEN.h, JSON.stringify(b));
+        assert(r && r.x + r.w <= b.x + b.w && r.y + r.h <= b.y - 4, JSON.stringify({ ex, pw, under, b, r }));
+    }
+    const g3 = badgeRect(Object.assign({ glass: true }, mapRect('hud', 0)), 'bottom', 'hud', 3, false, false);
+    assert.strictEqual(g3.h, 72, 'three values on the glass: 72 high (60 in the standard map)');
     // (no room only with the panel across the middle of the glass, the HUD map moved far: not shown then)
     assert(none < n / 100, none + ' of ' + n + ' without room');
     // the usual place: the standard HUD map, the panel at its bottom: just above the panel, at its right edge

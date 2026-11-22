@@ -12,7 +12,9 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   slots (whether or not one of them is the kW meter): use to the right, recuperation to the left in green.
 - **Where:** where the Waze map is (cluster or HUD), or always on the HUD; at the bottom or top of the map.
   It follows Robert's Waze on cluster (robertnisipeanu/idrive-apps), with the map on the cluster, the HUD or
-  both (then on the cluster), and the HUD map's size and position as set there.
+  both (then on the cluster), and the HUD map's size and position as set there. With no Waze map on the HUD,
+  the panel there is sized to the glass instead: up to 72 of the HUD's 480 high, at the bottom right of what a
+  G20 shows.
   Shown only while the map is (or, on the HUD, while there is something to show), so it never holds the
   cluster or HUD on its own.
 - **Turn signals on the HUD:** a small green arrow each side, near the top of what a G20 shows (x 240 and 530, y 114
