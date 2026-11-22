@@ -290,6 +290,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   its bottom right at HUD_SEEN's less 4), not to the standard map's picture, and the directions are 16 % bigger
   (nav_view SCALE 0.72, 173 x 138; MAP_SCALE 0.62 over a Waze map on the HUD). The room between the turn signals
   (y 148) and the glass's bottom (356) is 200 px for both; the owner chose the directions first.
+- Info 1.10.5 (Nov 22 2026): Settings > Driving assistant check (off by default; adas_probe.js, read only), to see on
+  the G20 whether the head unit gets the cluster's assisted driving view data (the four de.bmw.dass.* services of
+  shared/dap.js, all optional in app.json, and DisplayDataServer.functionalLibraryData), and which such services
+  its catalog has; the page shows it, cluster-info-adas.log keeps it. The owner asked for it in Info, not AK Map Test.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

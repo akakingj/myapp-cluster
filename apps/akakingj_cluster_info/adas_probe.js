@@ -1,0 +1,166 @@
+'use strict';
+/**
+ * adas_probe.js - whether this car's head unit gets what the instrument cluster's assisted driving view is drawn
+ * from (lanes, the cars around, the cruise control and the steering assist), for Settings > Driving assistant check.
+ * Read only: it subscribes and lists, it never calls a method or writes a field.
+ *
+ *   - The services the view is built from on a G05 (de.bmw.dass.*, as shared/dap.js reads them), each subscribed
+ *     with its broadcast: whether this car's catalog has it (the installer made its config), whether anything
+ *     provides it, how many values came and the last one.
+ *   - The head-up display's own data (DisplayDataServer.functionalLibraryData): the HUD is fed from the head unit,
+ *     so what the HUD shows of the driving assistant may come this way; its members that look like the driving
+ *     assistant's are picked out.
+ *   - The head unit's service catalog (/etc/oap/someip/someip-interfaces.json): every service whose name looks like
+ *     the driving assistant's, with its fields and broadcasts, to be declared in app.json by a later version.
+ *
+ * The cluster's picture itself is drawn in the cluster, from the car's own bus: nothing of it reaches the head
+ * unit, so only its data can be looked for here.
+ *
+ * Everything goes to cluster-info-adas.log in the app's data folder too (the catalog once, each source's first three
+ * values and one a minute, every change of state; at most 2 x 256 KiB).
+ *
+ *   const pr = startAdasProbe(ctx, log, { want: () => settings.get('adasCheck') !== 'off' });
+ *   pr.status()   -> { sources: [...], hud: {...}, catalog: {...} }
+ */
+const fs = require('fs');
+const path = require('path');
+
+const CATALOG = process.env.SOMEIP_CATALOG || '/etc/oap/someip/someip-interfaces.json';
+const SOURCES = [
+    { iface: 'de.bmw.dass.AssistedDrivingViewFunctionInput', name: 'assistedDrivingViewFunctionInputIbVip', short: 'cruise control (IbVip)' },
+    { iface: 'de.bmw.dass.pad.communication.AssistedDrivingViewLateralFunctionInput', name: 'lateralFunctionInputAssistedDrivingView', short: 'steering assist (lateral)' },
+    { iface: 'de.bmw.dass.driverassistanceapplications.AssistedDrivingViewLateralCollisionAvoidance', name: 'assistedDrivingViewLcaInput', short: 'lane warnings (LCA)' },
+    { iface: 'de.bmw.dass.pad.communication.ObjectListSuAAR', name: 'suAARObjectList', short: 'cars around (object list)' },
+];
+const HUD = { iface: 'de.bmw.infotainment.displaydataserver.DisplayDataServer', name: 'functionalLibraryData' };
+/* a service's name that looks like the driving assistant's (or the HUD's) */
+const IFACE_RE = /\.dass\.|assistedDriving|driverAssist|drivingAssist|kafas|\badas|objectList|surround|laneDeparture|laneChange|laneKeep|headUp|\bhud|displaydataserver/i;
+/* a member of the HUD's data that looks like the driving assistant's */
+const MEMBER_RE = /acc|cruise|lane|ldw|lka|lcw|lca|assist|object|target|distance|gap|follow|steer|lateral|longitud|vehicle(ahead|front)|warn|collision|speedlimit|sli\b/i;
+const LOG_MAX = 256 * 1024;
+
+/** Every leaf of a value as 'a.b.c=v' (arrays: their length and the first two), at most `max`. */
+function leaves(v, max) {
+    const out = [];
+    const walk = (x, p, d) => {
+        if (out.length >= max) return;
+        if (x === null || typeof x !== 'object') { out.push(p + '=' + (typeof x === 'string' ? JSON.stringify(x) : String(x))); return; }
+        if (d > 6) { out.push(p + '=…'); return; }
+        if (Array.isArray(x)) { out.push(p + '.length=' + x.length); x.slice(0, 2).forEach((e, i) => walk(e, p + '[' + i + ']', d + 1)); return; }
+        Object.keys(x).forEach((k) => walk(x[k], p ? p + '.' + k : k, d + 1));
+    };
+    walk(v, '', 0);
+    return out;
+}
+
+/** The catalog's services whose name matches: [{ iface, parts: { fields: [names], broadcasts: [...], ... } }]. */
+function scanCatalog(file, re) {
+    let db;
+    try { db = JSON.parse(fs.readFileSync(file || CATALOG, 'utf8')); } catch (e) { return { list: [], total: 0, error: 'catalog not readable: ' + (e.code || e.message) }; }
+    const ifs = db.interfaces || {}, list = [];
+    Object.keys(ifs).forEach((iface) => {
+        if (!(re || IFACE_RE).test(iface)) return;
+        const parts = {};
+        Object.keys(ifs[iface] || {}).forEach((k) => {
+            const v = ifs[iface][k];
+            if (v && typeof v === 'object' && !Array.isArray(v)) parts[k] = Object.keys(v);
+            else if (Array.isArray(v)) parts[k] = v.map((e) => (e && typeof e === 'object' ? e.name || JSON.stringify(e).slice(0, 40) : String(e)));
+        });
+        list.push({ iface, parts });
+    });
+    list.sort((a, b) => a.iface.localeCompare(b.iface));
+    return { list, total: Object.keys(ifs).length, error: null };
+}
+
+/** One line for a catalog entry: 'de.bmw.dass.X  fields a, b  broadcasts c'. */
+const catalogLine = (e) => e.iface + '  ' + Object.keys(e.parts).filter((k) => e.parts[k].length).map((k) => k + ' ' + e.parts[k].join(', ')).join('  ');
+
+function startAdasProbe(ctx, log, opts) {
+    opts = opts || {};
+    const now = opts.now || Date.now;
+    const want = opts.want || (() => true);
+    const dir = opts.dir || ctx.dataDir || '.';
+    const file = path.join(dir, 'cluster-info-adas.log');
+    const state = SOURCES.concat([HUD]).map((s) => ({ iface: s.iface, name: s.name, short: s.short || 'HUD data (DisplayDataServer)',
+        status: 'not started', available: false, count: 0, last: null, lastAt: 0, logged: 0, loggedAt: 0, sub: null }));
+    const hud = state[state.length - 1];
+    let catalog = null, started = false, said = {};
+
+    function write(line) {
+        try {
+            try { if (fs.statSync(file).size > LOG_MAX) fs.renameSync(file, file + '.1'); } catch (e) { /* none yet */ }
+            fs.appendFileSync(file, new Date(now()).toISOString() + ' ' + line + '\n');
+        } catch (e) { /* the data folder not writable: the page still shows it */ }
+    }
+    const note = (s, what) => {
+        if (said[s.iface] === what) return;
+        said[s.iface] = what;
+        write(s.short + ': ' + what);
+        if (log) log.info('driving assistant check: ' + s.short + ': ' + what);
+    };
+
+    function onValue(s) {
+        return (v) => {
+            const t = now();
+            s.count++; s.last = v; s.lastAt = t;
+            if (s.logged < 3 || t - s.loggedAt > 60000) {
+                s.logged++; s.loggedAt = t;
+                write(s.short + ' value ' + s.count + ': ' + JSON.stringify(v).slice(0, 4000));
+            }
+        };
+    }
+
+    function start() {
+        if (started) return;
+        started = true;
+        catalog = scanCatalog(opts.catalog);
+        write('catalog ' + (opts.catalog || CATALOG) + ': ' + (catalog.error || catalog.list.length + ' of ' + catalog.total + ' services look like the driving assistant\'s or the HUD\'s'));
+        catalog.list.forEach((e) => write('  ' + catalogLine(e)));
+        if (log) log.info('driving assistant check: ' + (catalog.error || catalog.list.length + ' catalog services'));
+        state.forEach((s) => {
+            s.status = 'subscribing';
+            Promise.resolve().then(() => ctx.signals.watch(s.iface, '1', { [s.name]: onValue(s) }, log, s === hud ? { pollMs: 2000, active: want } : undefined))
+                .then((sub) => {
+                    s.sub = sub;
+                    if (sub && sub.error) s.status = /no SOME\/IP config/.test(sub.error) ? 'not in this car\'s catalog' : 'error: ' + sub.error;
+                    else s.status = 'subscribed';
+                    note(s, s.status);
+                })
+                .catch((e) => { s.status = 'error: ' + e; note(s, s.status); });
+        });
+    }
+
+    /** Each source's state now, for the page. */
+    function sources() {
+        const t = now();
+        return state.map((s) => {
+            const avail = !!(s.sub && s.sub.available);
+            const what = s.status !== 'subscribed' ? s.status
+                : !avail && !s.count ? 'in the catalog, nothing provides it'
+                    : !s.count ? 'provided, no value yet' : 'values coming';
+            note(s, what);
+            return { short: s.short, iface: s.iface, what, available: avail, count: s.count,
+                age: s.lastAt ? t - s.lastAt : null, sample: s.last === null ? '' : JSON.stringify(s.last) };
+        });
+    }
+
+    /** The HUD data's members that look like the driving assistant's, as 'name=value'. */
+    function hudMembers(max) {
+        if (hud.last === null) return [];
+        return leaves(hud.last, 400).filter((l) => MEMBER_RE.test(l.split('=')[0])).slice(0, max || 30);
+    }
+
+    const timer = opts.manual ? null : setInterval(() => { if (want()) start(); }, 1000);
+    if (timer && timer.unref) timer.unref();
+    if (want()) start();
+
+    return {
+        start,
+        started: () => started,
+        stop() { if (timer) clearInterval(timer); },
+        status: () => ({ started, sources: started ? sources() : [], hud: hudMembers(30), catalog: catalog || { list: [], total: 0, error: null } }),
+        file,
+    };
+}
+
+module.exports = { startAdasProbe, scanCatalog, catalogLine, leaves, SOURCES, HUD, IFACE_RE, MEMBER_RE };

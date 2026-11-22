@@ -41,7 +41,8 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     SPEC.settings.forEach((s) => { S[s.key] = s.default; });
     // (the personal build's defaults are Korean and petrol; these checks are written for the original's)
     Object.assign(S, { tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', slot1: 'power', slot2: 'battery', slot3: 'oil' });
-    const handlers = {}, warns = [], loops = {};
+    const handlers = {}, warns = [], loops = {}, drawn = [];
+    process.env.SOMEIP_CATALOG = path.join(tmp, 'no-catalog.json');
     const ctx = {
         app: {}, ui: { onClick() {}, text() {}, image: async () => {} },
         settings: { get: (k) => S[k], set: (k, v) => { S[k] = v; }, onChange() {}, display: (k) => String(S[k]) },
@@ -52,7 +53,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
             proxy: () => Promise.reject(new Error('no TASU here')), on: () => Promise.resolve(), onAvailable: () => Promise.resolve() },
         onTab() {}, hideButton() {}, onScroll() {},
         loop: (name, fps, fn) => { loops[name] = fn; },
-        theme: () => themes.theme('m_tricolour'), canvas: (w, h) => new Canvas(w, h),
+        theme: () => themes.theme('m_tricolour'), canvas: (w, h) => { const c = new Canvas(w, h), tx = c.text.bind(c); c.text = (str, ...a) => { drawn.push(String(str)); return tx(str, ...a); }; return c; },
     };
     require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'main.js'));
     await app.start(ctx);
@@ -94,6 +95,19 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     await sleep(400);
     await loops.MAIN();
     check('the page draws without errors', () => assert(!warns.some((w) => /TypeError|ReferenceError|is not a function/.test(w)), warns.join(' | ')));
+    // (1.10.5) Settings > Driving assistant check: the page shows each source's state, or the catalog's services
+    check('the driving assistant check off by default: the page as before', () => assert(!drawn.some((d) => /Driving assistant check/.test(d))));
+    S.adasCheck = 'live';
+    await sleep(1200);
+    drawn.length = 0; await loops.MAIN();
+    check('the driving assistant check on: each source\'s state on the page', () => {
+        assert(drawn.some((d) => /^Driving assistant check/.test(d)), drawn.join(' | '));
+        assert(drawn.indexOf('cars around (object list)') >= 0 && drawn.some((d) => /^HUD data, its driving assistant members/.test(d)));
+    });
+    S.adasCheck = 'catalog';
+    drawn.length = 0; await loops.MAIN();
+    check('the driving assistant check, catalog: why it is not read when it isn\'t there', () => assert(drawn.some((d) => /^catalog not readable/.test(d)), drawn.join(' | ')));
+    S.adasCheck = 'off';
     // (2026-11-15) the engine's values (here rpm) as bright as the oil's: they went through the temperatures' colours
     // and came out dim grey beside a white oil
     handlers.statusEngineSpeed2 && handlers.statusEngineSpeed2({ actualValueRPMEngineCrankshaft: 2500 * 4 });

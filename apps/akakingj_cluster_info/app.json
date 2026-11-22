@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_info",
   "title": "AK Cluster Info",
   "description": "A small panel of up to three live values (battery power from eDrive Live, battery charge, battery, oil and coolant temperature) over the Waze map in the cluster or on the HUD, and turn signal arrows on the HUD",
-  "version": "1.10.4",
+  "version": "1.10.5",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCI",
@@ -63,6 +63,34 @@
       "_instances": "AndroidAutoProjectedManagerInst1",
       "projectedGuidanceActive": "rs",
       "projectedGuidanceMetadataAvailable": "rs"
+    },
+    "de.bmw.dass.AssistedDrivingViewFunctionInput": {
+      "_optional": "Driving assistant check: the cruise control (the assisted driving view's)",
+      "_broadcasts": [
+        "assistedDrivingViewFunctionInputIbVip"
+      ]
+    },
+    "de.bmw.dass.pad.communication.AssistedDrivingViewLateralFunctionInput": {
+      "_optional": "Driving assistant check: the steering assist (the assisted driving view's)",
+      "_broadcasts": [
+        "lateralFunctionInputAssistedDrivingView"
+      ]
+    },
+    "de.bmw.dass.driverassistanceapplications.AssistedDrivingViewLateralCollisionAvoidance": {
+      "_optional": "Driving assistant check: lane departure and lane change warnings (the assisted driving view's)",
+      "_broadcasts": [
+        "assistedDrivingViewLcaInput"
+      ]
+    },
+    "de.bmw.dass.pad.communication.ObjectListSuAAR": {
+      "_optional": "Driving assistant check: the cars around (the assisted driving view's)",
+      "_broadcasts": [
+        "suAARObjectList"
+      ]
+    },
+    "de.bmw.infotainment.displaydataserver.DisplayDataServer": {
+      "_optional": "Driving assistant check: the head-up display's data",
+      "functionalLibraryData": "rs"
     },
     "com.harman.infotainment.systemfunctions.tasu.tasu.InternalTasu": {
       "_instances": "SystemFunctionsInternalTasuInst1",
@@ -607,6 +635,27 @@
         [
           "off",
           "Never"
+        ]
+      ],
+      "section": "Screen"
+    },
+    {
+      "key": "adasCheck",
+      "label": "Driving assistant check",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "live",
+          "Signals: what comes in"
+        ],
+        [
+          "catalog",
+          "Catalog: the services this car has"
         ]
       ],
       "section": "Screen"

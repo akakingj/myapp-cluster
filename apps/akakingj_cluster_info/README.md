@@ -41,6 +41,16 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   the car their turns (Apple Maps, TMAP; Waze over CarPlay doesn't). With the panel off the HUD BMW's own turn card shows them; while Redline
   holds the HUD, its own. A turn older than 3 s isn't shown. `cluster-info-nav.log` in the app's data folder (at most
   2 x 256 KiB, written only while directions show) records what the car sends, street names as their length only.
+- **Driving assistant check** (1.10.5, Settings > Driving assistant check, off by default; `adas_probe.js`, read
+  only): whether this car's head unit gets what the cluster's assisted driving view is drawn from. **Signals** shows,
+  for the four services that view is built from on a G05 (`de.bmw.dass.*`: the cruise control, the steering assist,
+  the lane warnings, the cars around) and for the HUD's own data (DisplayDataServer.functionalLibraryData, with its
+  members that look like the driving assistant's): not in this car's catalog, in the catalog but nothing provides
+  it, or values coming (how many, the last one). **Catalog** lists every service in the head unit's catalog whose
+  name looks like the driving assistant's or the HUD's, with its fields and broadcasts. Subscribed from the first
+  time it is turned on; everything also goes to `cluster-info-adas.log` in the app's data folder (the catalog once,
+  each source's first three values and one a minute; at most 2 x 256 KiB). The cluster's picture itself is drawn in
+  the cluster and never reaches the head unit, so only its data can be looked for.
 - **Its page** shows the panel as it is now, larger, and whether each source works (turn signals, day / night,
   driver profile, the apps providing, the cluster renderer, the Waze map, the directions).
 

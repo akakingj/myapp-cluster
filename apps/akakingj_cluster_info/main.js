@@ -22,6 +22,7 @@ const IND = require('./indicators');
 const { startBlindSpot } = require('./blindspot');
 const { startHvSoc } = require('./hvsoc');
 const { ReadOnlyDiag } = require('./kit/readonly-diag');
+const { startAdasProbe, catalogLine } = require('./adas_probe');
 
 const W = 1600, H = 520;
 const GO = '#2fd27a';
@@ -244,6 +245,12 @@ mgu.run({
         const bs = startBlindSpot(ctx, log, { link, want: () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !awake.parked()
             && !(overlay && overlay.lcwWanted && !overlay.lcwWanted()) });
         src.blindSpot = () => bs.state();
+        /* ---------- Settings > Driving assistant check (adas_probe.js, read only, 1.10.5) ----------
+         * whether the head unit gets what the cluster's assisted driving view is drawn from: subscribed from the
+         * first time it is turned on; the page shows it instead of the sources' states. */
+        const adasMode = () => (settings.get('adasCheck') === 'live' || settings.get('adasCheck') === 'catalog' ? settings.get('adasCheck') : 'off');
+        let adas = null;
+        try { adas = startAdasProbe(ctx, log, { want: () => adasMode() !== 'off' }); } catch (e) { log.warn('driving assistant check: ' + e); }
         /* ---------- directions on the HUD (Settings > Directions on the HUD), as Redline's (nav.js, navlog.js) ----------
          * BMW's guidance service, read only: the next turn, its distance, the street and the lanes, the same way for
          * CarPlay, Android Auto and BMW's navigation (only apps that hand the car their turns: Waze over CarPlay doesn't).
@@ -301,6 +308,7 @@ mgu.run({
                     + '   ·   Day / night: ' + (live.night === null ? st('day / night') + ', none received' : live.night ? 'night' : 'day')
                     + '   ·   Driver profile: ' + (live.profile || (st('driver profile') === 'subscribed' ? 'none read yet' : st('driver profile')))],
             ];
+            if (adas && adasMode() !== 'off') { drawAdas(cv, t); G.frame(cv, t, [((ctx.spec && ctx.spec.title) || 'Cluster Info')], 0, []); return ui.image('MAIN_GFX', cv); }
             const step = lines.length > 5 ? 31 : 36;
             lines.forEach(([k, v], i) => {
                 cv.text(k, 48, 296 + i * step, 20, t.dim, { font: 'bold' });
@@ -310,6 +318,32 @@ mgu.run({
             cv.text(raws || 'No raw turn signal or day / night value received yet.', 48, 494, 16, t.dim, { font: 'label', literal: true });
             G.frame(cv, t, [((ctx.spec && ctx.spec.title) || 'Cluster Info')], 0, []);
             return ui.image('MAIN_GFX', cv);
+        }
+        /** The driving assistant check on the page (from y 280): each source's state and last value, the HUD data's
+         *  driving assistant members, or the catalog's services (Settings > Driving assistant check). */
+        function drawAdas(cv, t) {
+            const st = adas.status(), L = (str, y, size, col, bold, x) => cv.text(String(str), x || 48, y, size, col, { font: bold ? 'bold' : 'label', literal: true });
+            const head = 'Driving assistant check (read only)   ·   log: cluster-info-adas.log in the app\'s data folder';
+            L(head, 280, 18, t.dim, true);
+            if (!st.started) { L('Starting…', 310, 18, t.text); return; }
+            if (adasMode() === 'catalog') {
+                const c = st.catalog;
+                L(c.error || ('Catalog: ' + c.list.length + ' of ' + c.total + ' services look like the driving assistant\'s or the HUD\'s'), 306, 18, t.text, true);
+                const rows = [];
+                (c.list.length ? c.list.map(catalogLine) : ['(none)']).forEach((r) => { for (let i = 0; i < r.length; i += 170) rows.push((i ? '      ' : '') + r.slice(i, i + 170)); });
+                rows.slice(0, 9).forEach((r, i) => L(r, 330 + i * 20, 15, t.text));
+                if (rows.length > 9) L('… ' + (rows.length - 9) + ' more lines in the log', 330 + 9 * 20, 15, t.dim);
+                return;
+            }
+            const age = (ms) => (ms === null ? '' : ms < 1000 ? 'now' : Math.round(ms / 1000) + ' s ago');
+            st.sources.forEach((s, i) => {
+                const y = 306 + i * 30, ok = s.count > 0;
+                L(s.short, y, 17, ok ? GO : t.dim, true);
+                L((s.what + (s.count ? '   ·   ' + s.count + ' values, last ' + age(s.age) : '') + (s.sample ? '   ·   ' + s.sample : '')).slice(0, 140), y, 15, ok ? t.text : t.dim, false, 330);
+            });
+            const hy = 306 + st.sources.length * 30 + 4;
+            L('HUD data, its driving assistant members: ' + (st.hud.length ? st.hud.join('  ').slice(0, 150) : 'none yet'), hy, 15, st.hud.length ? t.text : t.dim);
+            if (st.hud.length > 0) L(st.hud.join('  ').slice(150, 320), hy + 20, 15, t.text);
         }
         ctx.loop('MAIN', 2, render);
         Promise.resolve().then(render).then(() => log.info('first frame done')).catch((e) => log.warn('first render: ' + e));
