@@ -10,7 +10,16 @@ const speedIn = (o, kmh) => (o.speedUnit === 'kmh' ? kmh : kmh / KMH_PER_MPH);
 const speedUnit = (o) => (o.speedUnit === 'kmh' ? 'km/h' : 'mph');
 const tempIn = (o, c) => (o.tempUnit === 'c' ? c : c * 9 / 5 + 32);
 const tempText = (o, c) => (isNum(c) ? Math.round(tempIn(o, c)) + '°' : '--');
-const speedText = (o, d) => (isNum(d.speed) ? String(Math.round(speedIn(o, d.speed))) : '--');
+// The speed figure: it moves to the next figure only once the speed is 0.75 past the one shown, as the car's own cluster
+// holds its figure, so a speed about 79.5 stays 79 or 80 rather than flickering between them (one held figure a unit)
+const heldSpeed = { kmh: null, mph: null };
+const speedShown = (o, d) => {
+    if (!isNum(d.speed)) return null;
+    const v = Math.max(0, speedIn(o, d.speed)), u = o.speedUnit === 'kmh' ? 'kmh' : 'mph', h = heldSpeed[u];
+    if (h === null || Math.abs(v - h) >= 0.75) heldSpeed[u] = Math.round(v);
+    return heldSpeed[u];
+};
+const speedText = (o, d) => (isNum(d.speed) ? String(speedShown(o, d)) : '--');
 
 /** The speed scale for the unit: { max, major, minor }. */
 const speedScale = (o) => (o.speedUnit === 'kmh' ? { max: 260, major: 20, minor: 10 } : { max: 160, major: 20, minor: 5 });
@@ -666,6 +675,6 @@ const text = (key, x, y, w, h, txt, colors, extra) => Object.assign({ key, kind:
 const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colors: (t, d) => ({ color: [typeof colour === 'function' ? colour(t, d) : t[colour], 1] }) });
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedText, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

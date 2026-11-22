@@ -127,7 +127,7 @@ function dash(o) {
         { key: 'spLcd', kind: 'rseg', x: sp.x + 108, y: sp.y + 18, w: sp.w - 126, h: 154, z: 2,
             params: { u_dig: [sp.w - 126 - 110, 22, 62, 110], u_seg2: [13, 0.14, 3] },
             colors: (t) => ({ fill: t.panel, on: t.lcd, off: t.lcdOff }),
-            dyn: (d) => ({ u_num: [C.isNum(d.speed) ? Math.max(0, Math.min(999, Math.round(C.speedIn(o, d.speed)))) : 0] }) },
+            dyn: (d) => ({ u_num: [C.isNum(d.speed) ? Math.min(999, C.speedShown(o, d)) : 0] }) },
         C.text('spUnit', sp.x + sp.w - 112, sp.y + 112, 90, 30, C.speedUnit(o), grn, { align: 0, z: 22 }));
     // the main readout under the display, its name first (Settings > Main readout; a plug-in hybrid's battery power)
     const pv = C.focus.power(o), pl = C.focus.powerLabel(o, true);
@@ -190,7 +190,7 @@ function mapDash(o) {
         { key: 'spLcd', kind: 'rseg', x: sp.x + 88, y: sp.y + 14, w: sp.w - 102, h: 106, z: 2,
             params: { u_dig: [sp.w - 102 - 76, 16, 40, 78], u_seg2: [9, 0.14, 3], u_k: [1] },
             colors: (t) => ({ fill: t.panel, on: t.lcd, off: t.lcdOff }),
-            dyn: (d) => ({ u_num: [C.isNum(d.speed) ? Math.max(0, Math.min(999, Math.round(C.speedIn(o, d.speed)))) : 0] }) },
+            dyn: (d) => ({ u_num: [C.isNum(d.speed) ? Math.min(999, C.speedShown(o, d)) : 0] }) },
         C.text('spUnit', sp.x + sp.w - 70, sp.y + 76, 60, 22, C.speedUnit(o), grn, { align: 0, z: 22 }));
     const pv = C.focus.power(o), pl = C.focus.powerLabel(o, true);
     if (pv) list.push(Object.assign(C.fitText(C.text('kwNow', sp.x + 14, sp.y + 134, sp.w - 28, 26, (d) => (pl ? pl + '   ' : '') + (typeof pv === 'function' ? pv(d) : pv), ink), 'wide'), { z: 22 }));
