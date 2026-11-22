@@ -6,20 +6,24 @@
  * dist, unit, road, lanes }).
  *
  * The three parts are Cluster Redline's 240 x 48 / 112 / 72 designs, painted at SCALE (no resampling) and stacked
- * with their empty margins cut, into W x H (149 x 120): the part a turn hasn't (no text, no lanes) left empty.
+ * with their empty margins cut, into W x H (173 x 138 on the glass, 149 x 120 over a Waze map on the HUD: sizeAt):
+ * the part a turn hasn't (no text, no lanes) left empty.
  */
 const { Canvas } = require('./nav_canvas');
 const fonts = require('./kit/fonts');
 const navDraw = require('./nav_draw'), laneDraw = require('./lane_draw'), navText = require('./nav_text');
 
-const SCALE = 0.62;
+const SCALE = 0.72;        // with no Waze map on the HUD (the panel to the glass)
+const MAP_SCALE = 0.62;    // over a Waze map on the HUD, the panel in its picture
 // the rows of each 240-wide design that hold its drawing (the rest is margin)
 const PARTS = [
     { key: 'text', draw: navText, top: 8, h: 32, gap: 4 },     // (a gap: a highway diagram's label is at its top)
     { key: 'turn', draw: navDraw, top: 14, h: 98 },
     { key: 'lanes', draw: laneDraw, top: 6, h: 56 },
 ];
-const W = Math.round(240 * SCALE), H = PARTS.reduce((n, p) => n + Math.round(p.h * SCALE) + (p.gap || 0), 0);
+/** The picture's size at scale s: { W, H }. */
+const sizeAt = (s) => ({ W: Math.round(240 * s), H: PARTS.reduce((n, p) => n + Math.round(p.h * s) + (p.gap || 0), 0) });
+const { W, H } = sizeAt(SCALE);
 
 /** Every character drawable: printable ASCII, or a Hangul syllable the Korean build's atlas has. */
 function drawable(t) {
@@ -65,20 +69,21 @@ function key(m) {
     return s ? JSON.stringify([s.maneuver, s.branchType, s.exitNumber, s.distanceText, s.description, s.lanes]) : '';
 }
 
-/** Draws the turn into cv (W x H, cleared); false when there is nothing to show. */
-function draw(cv, m) {
+/** Draws the turn into cv (sizeAt(scale), cleared); false when there is nothing to show. */
+function draw(cv, m, scale) {
+    const sc = scale || SCALE, w = cv.w;
     cv.clear();
     const s = stateOf(m);
     if (!s) return false;
     let y = 0;
     PARTS.forEach((p) => {
-        const h = Math.round(p.h * SCALE);
+        const h = Math.round(p.h * sc);
         const value = p.key === 'lanes' ? (s.lanes ? Object.assign({ color: 'blue' }, s.lanes) : null) : p.key === 'turn' ? Object.assign({ color: 'blue' }, s) : s;
         if (value) {
             // (only its own rows: a junction diagram reaches the bottom of its box)
-            const part = p.draw.drawSized(value, W), top = Math.round(p.top * SCALE), rows = Math.min(h, part.h - top);
+            const part = p.draw.drawSized(value, w), top = Math.round(p.top * sc), rows = Math.min(h, part.h - top);
             if (rows > 0) {
-                const cut = new Canvas(W, rows);
+                const cut = new Canvas(w, rows);
                 cut.d.set(part.d.subarray(top * part.w * 4, (top + rows) * part.w * 4));
                 cv.blit(cut, 0, y);
             }
@@ -88,4 +93,4 @@ function draw(cv, m) {
     return true;
 }
 
-module.exports = { W, H, SCALE, stateOf, key, draw, drawable, Canvas };
+module.exports = { W, H, SCALE, MAP_SCALE, sizeAt, stateOf, key, draw, drawable, Canvas };

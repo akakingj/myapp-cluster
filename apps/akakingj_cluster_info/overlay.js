@@ -43,7 +43,7 @@ const HUD_SPEED_CLEAR = 405;     // left edge limit: the speed readout ends at x
 const HUD_MAX_H = 60;             // the HUD panel's height at most (the room right of the speed limits it first)
 // with no Waze map on the HUD the panel is sized to the glass, not to the map's picture: this high at most, out to
 // the glass's right (HUD_SEEN), read at a glance like the directions above it
-const HUD_GLASS_H = 72;
+const HUD_GLASS_H = 58;
 const HUD_MAX_PCT = 85;           // the HUD map's widest (waze-on-cluster hud_width_pct)
 // turn signal arrows on the HUD, small, where Redline (idrive7-apps apps/redline hud-signals.js) puts its own with its
 // rev counter switched off: near the top of what a G20 shows, the left at x 240, the right at 530, y 114 (2026-11-15).
@@ -72,7 +72,7 @@ const NIGHT_DIM = 0.6;            // the HUD extras at night, of their brightnes
 // unit's clock that is 638 (its clock ran ~0.3 % behind the cluster's flasher there), and the car tells the head unit
 // of the stalk about 40 ms after the cluster's first flash, so the HUD starts its flashing that far in
 const BLINK_ON_MS = 335, BLINK_OFF_MS = 303, BLINK_LEAD_MS = 40;
-// the directions on the HUD (nav_view.js, 149 x 120): see navRect
+// the directions on the HUD (nav_view.js, 173 x 138 on the glass, 149 x 120 over a Waze map there): see navRect
 const NAV_RIGHT = 672, NAV_BOTTOM = 356, NAV_GAP = 4;
 const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit sign at the bottom left (Redline's hud.js)
 const NAV_MS = 200;               // the directions looked at this often (a turn's distance counts down every second)
@@ -179,7 +179,7 @@ function badgeRect(r, where, target, extras, hasPower, underOn) {
     // the HUD's size to its map's width; on the cluster 1.3 times it (72 high), read at a glance past the wheel;
     // each extra value (a temperature) adds a column EXTRA_COL times the height wide
     // (r.glass: no Waze map on the HUD, the panel to the glass's size)
-    let s = target !== 'hud' ? 1.3 : r.glass ? (underOn ? HUD_GLASS_H - underStrip(HUD_GLASS_H).total : HUD_GLASS_H) / 56 : Math.max(0.62, Math.min(HUD_MAX_H / 56, r.w / 400));   // (HUD: up to HUD_MAX_H high)
+    let s = target !== 'hud' ? 1.3 : r.glass ? (underOn ? HUD_GLASS_H - underStrip(HUD_GLASS_H).total - 1 : HUD_GLASS_H) / 56 : Math.max(0.62, Math.min(HUD_MAX_H / 56, r.w / 400));   // (HUD: up to HUD_MAX_H high)
     const size = (sc) => {
         const hh = Math.round(56 * sc / 2) * 2;
         const L = layout(hh, hasPower !== 'number'), ww = (hasPower ? L.w : L.pad) + (extras || 0) * colW(hh) + (hasPower && extras ? edgePad(hh) : 0) + (hasPower ? 0 : L.pad);
@@ -466,6 +466,7 @@ function startOverlay(ctx, lv, opts) {
     let CR = opts.ClusterRender;
     let cr = null, ref = 0, geo = '', cv = null, last = null, visible = false, lastT = 0, lastKey = '';
     let hudBadge = null;          // the panel's rectangle while it is on the HUD (the signals keep clear of it)
+    let hudGlass = false;         // ... sized to the glass (no Waze map on the HUD): the directions bigger too
     let map = { showing: false, target: null, pct: 0, hx: 0, hy: 0 }, statusText = '';
     let warned = '';
     const warnOnce = (m) => { if (m !== warned) { warned = m; log.warn('map overlay: ' + m); } };
@@ -518,6 +519,7 @@ function startOverlay(ctx, lv, opts) {
         const b = badgeRect(r, where(), pl.target, nExtras, hasPower, !!(lv.underOn && lv.underOn(pl.target)));
         const key = [pl.target, b.x, b.y, b.w, b.h, b.ph].join(',');
         hudBadge = pl.target === 'hud' ? b : null;
+        hudGlass = !!r.glass;
         if (key === geo && ref) return ref;
         if (!client()) return 0;
         if (ref) cr.drop(ref);
@@ -658,12 +660,14 @@ function startOverlay(ctx, lv, opts) {
     /* ---------- directions on the HUD (lv.nav(): the next turn, nav.js's object, while a route runs; else null) ----------
      * Shown only while this app's panel is on the HUD: the HUD's slot is this app's then, and BMW's own turn card
      * (CarPlay's, Android Auto's or its navigation's turns) is not there. Without the panel there BMW's card shows them. */
-    let navRef = 0, navAt = '', navLast = '', navShown = false, navOp = 1, navCv = null;
+    let navRef = 0, navAt = '', navLast = '', navShown = false, navOp = 1, navCv = null, navSize = null;
+    // (the directions' scale and size: bigger with the panel to the glass)
+    const navScale = () => (hudGlass ? NV.SCALE : NV.MAP_SCALE), navDim = () => NV.sizeAt(navScale());
     // (worked out again only when the panel, its place or the signals' shift changed)
     let navMemo = { key: null, r: null };
     const navPlace = () => {
-        const b = hudBadge, k = [b ? [b.x, b.y, b.w, b.h].join(',') : '', where(), sigShift()].join('|');
-        if (k !== navMemo.key) navMemo = { key: k, r: navRect(b, where(), sigShift(), NV.W, NV.H) };
+        const b = hudBadge, d = navDim(), k = [b ? [b.x, b.y, b.w, b.h].join(',') : '', where(), sigShift(), d.W].join('|');
+        if (k !== navMemo.key) navMemo = { key: k, r: navRect(b, where(), sigShift(), d.W, d.H) };
         return navMemo.r;
     };
     function hideNav() {
@@ -677,16 +681,18 @@ function startOverlay(ctx, lv, opts) {
         const p = navPlace();
         if (!p) { if (navAt !== 'none') { navAt = 'none'; log.info('directions: no room on the HUD clear of the panel and the turn signals'); } return hideNav(); }
         if (!client()) return undefined;
-        const at = p.x + ',' + p.y;
+        const at = p.x + ',' + p.y, d = navDim();
+        // (another size: the layer made anew)
+        if (navRef && navSize !== d.W) { cr.drop(navRef); navRef = 0; navShown = false; }
         if (!navRef) {
             navOp = hudOpacity();
-            navRef = cr.image({ target: 'hud', klass: 'overlay', z: 11, x: p.x, y: p.y, w: NV.W, h: NV.H, iw: NV.W, ih: NV.H, visible: false, opacity: navOp });
+            navRef = cr.image({ target: 'hud', klass: 'overlay', z: 11, x: p.x, y: p.y, w: d.W, h: d.H, iw: d.W, ih: d.H, visible: false, opacity: navOp });
             if (!navRef) { warnOnce('the renderer refused the directions layer'); return undefined; }
-            navCv = new NV.Canvas(NV.W, NV.H); navAt = at; navLast = '';
+            navCv = new NV.Canvas(d.W, d.H); navAt = at; navLast = ''; navSize = d.W;
             log.info('directions: on the HUD at ' + at);
         } else if (at !== navAt) { cr.set(navRef, { x: p.x, y: p.y }); navAt = at; }
         if (key !== navLast) {
-            NV.draw(navCv, m);
+            NV.draw(navCv, m, navScale());
             cr.pixels(navRef, null, Buffer.from(navCv.d.buffer, navCv.d.byteOffset, navCv.d.length));
             navLast = key;
         }

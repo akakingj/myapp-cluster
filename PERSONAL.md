@@ -286,9 +286,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   does: plain rounding flickered 79 / 80 about 79.5 and turned before the cluster's figure.
 - Layouts 0.52.4 (Nov 22 2026): the rpm figures (GT3, Pulse, Simple, Track) in tens, held until the rpm is 15 past
   the one shown (C.rpmShown), in place of fifties.
-- Info 1.10.3 (Nov 22 2026): with no Waze map on the HUD the HUD panel is sized to the glass (r.glass: up to 72 high,
-  its bottom right at HUD_SEEN's less 4), not to the standard map's picture (60 high, ending at x 621): 20 % bigger
-  values, the directions still just above it.
+- Info 1.10.3, 1.10.4 (Nov 22 2026): with no Waze map on the HUD the HUD panel is sized to the glass (r.glass: up to 58 high,
+  its bottom right at HUD_SEEN's less 4), not to the standard map's picture, and the directions are 16 % bigger
+  (nav_view SCALE 0.72, 173 x 138; MAP_SCALE 0.62 over a Waze map on the HUD). The room between the turn signals
+  (y 148) and the glass's bottom (356) is 200 px for both; the owner chose the directions first.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide
