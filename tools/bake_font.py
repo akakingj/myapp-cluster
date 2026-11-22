@@ -4,8 +4,8 @@ bake_font.py - the cluster's glyph atlases, made once from real font files and c
 the distance field's bytes, and shared/font_baked.js, their metrics; .wad so the app build packages them), so the apps no longer enlarge the kit's small baked bitmaps (64 px at most, drawn at ~250 px: the
 letters came out soft and odd).
 
-Font: IBM Plex Sans Condensed (SIL Open Font License 1.1, shared/NOTICE; the personal build's choice, Nov 2026: was
-Barlow Semi Condensed), a condensed face with clear figures, with upper and lower case. Families:
+Font: Barlow (SIL Open Font License 1.1, shared/NOTICE; the owner's choice, Nov 22 2026: IBM Plex Sans Condensed
+from Nov 18, Barlow Semi Condensed before), with upper and lower case. Families:
   bold   SemiBold (figures and text the layouts call bold: every layout but ID7 M, ID8 M and JDM 1; Centre's modern look)
   light  Regular (KO 1, KO 2; Centre's native look)
   wide   Michroma (SIL OFL 1.1, shared/NOTICE), thickened, with Barlow Medium for the small print: Sport's face
@@ -43,8 +43,8 @@ BASE = 0.79                  # the baseline, of the cell's height
 # signs a family with a second face for its lower case takes from it too (Michroma's degree sits on the line)
 LOWER_SIGNS = '°%'
 FAMILIES = {
-    'bold': {'ttf': 'IBMPlexSansCondensed-SemiBold.ttf'},
-    'light': {'ttf': 'IBMPlexSansCondensed-Regular.ttf'},
+    'bold': {'ttf': 'Barlow-SemiBold.ttf'},
+    'light': {'ttf': 'Barlow-Regular.ttf'},
     # cells 60 x 40 and 16 to a row: the atlas 960 x 320 (300 KB with the small print: within the 2048 px any GLES 2
     # GPU takes, and a layout's start-up under 600 KB); scale: Michroma's capitals the height of Barlow's; grow: atlas px added round each glyph (thickened)
     # (Sport's: Michroma thickened, Barlow Medium for the small print, as bimmer-lab's Cluster Themes bakes them)
@@ -114,6 +114,6 @@ if __name__ == '__main__':
             meta[fam] = bake(src, fam, spec)
     meta = {k: meta[k] for k in FAMILIES if k in meta}
     with open(out, 'w') as f:
-        f.write("'use strict';\n/* The baked glyph atlases' metrics (tools/bake_font.py; IBM Plex Sans Condensed, Michroma, Orbitron, Barlow, SIL OFL 1.1: NOTICE). */\n"
+        f.write("'use strict';\n/* The baked glyph atlases' metrics (tools/bake_font.py; Barlow, Michroma, Orbitron, SIL OFL 1.1: NOTICE). */\n"
                 'module.exports = ' + json.dumps(meta, ensure_ascii=False) + ';\n')
     # (shared/NOTICE carries the fonts' copyright and the OFL: edited by hand, it has the layouts' notices too)

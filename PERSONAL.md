@@ -276,6 +276,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   inside the fin's tip: the dials end at x 410; measured at 0 km/h, a three-digit speed not yet seen on the car).
   ID7 M with the map: its window reaches from under the camera's cowl to the foot of the map area (711, 130,
   498 x 470, was 263 high), the speed in the left card and the gear in the right one, under their gauges.
+- Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
+  (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
+  (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide
+  (Plex 0.50): check_fit and clearance clear as they were. The page's layout pictures made again. Info's panel keeps
+  its own Plex atlas.
 - Layouts 0.51.0 (Nov 22 2026): JDM 1 with the map in the new dash's look (layout_arc_tach.js mapDash), not the round
   tach and dial of before (removed): left the rev bar (RTACH_FS, MCURVE cx 390 R 320 top 150 a0 -74, four slats a
   thousand, no lines under / over it), figures 54 px out, an upright at its end, TACH and the gear inside; right the

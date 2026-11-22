@@ -60,7 +60,7 @@ function tile(key, x, y, w, h, label, value, colours, valueH) {
     return [
         { key: key + 'Card', kind: 'panel', x, y, w, h, params: { u_box: [10, 2, 0.3, 1] }, colors: (t) => ({ top: t.tileTop, bottom: t.tileBottom, border: t.tileEdge }) },
         C.text(key + 'Lbl', x + 14, y + 10, w - 28, 18, label, lbl, { align: 0, tracking: 0.12 }),
-        // (the figures from 10 px in, to 10 px of the right edge: IBM Plex's are wider than Barlow's were)
+        // (the figures from 10 px in, to 10 px of the right edge: room for Barlow's)
         C.text(key, x + 10, y + 34, w - 20, vh, value, colours || white, { align: 0 }),
     ];
 }

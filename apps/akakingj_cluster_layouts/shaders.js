@@ -56,7 +56,7 @@ float digitOf(float v, float i, float n) {
  *     dial's centre; n figures of advance adv, the cell h tall) so the side of its box towards the ticks keeps the gap
  *     twelve o'clock's has: its half width along dir's sideways part, less what its half height there gives back (the
  *     figures' ink about 0.6 h tall) - a wide '220' at three o'clock in from its tick, a '4' at twelve where it was.
- *     Only for the narrow faces (IBM Plex: a figure 0.5 wide): the wide ones' layouts - JDM 1's Michroma, 0.88 - are
+ *     Only for the narrow faces (Barlow: a figure 0.52 wide): the wide ones' layouts - JDM 1's Michroma, 0.88 - are
  *     drawn for their own figures, kept as they are. */
 const NUMERAL = `
 float figuresOf(float v) { return v >= 99.5 ? 3.0 : v >= 9.5 ? 2.0 : 1.0; }
