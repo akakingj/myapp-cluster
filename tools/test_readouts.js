@@ -257,6 +257,16 @@ check('too hot: Settings > Too hot (the Car profile\'s) for the colours, the sma
         assert.strictEqual(s.profile, k); assert.strictEqual(s.default, [130, 118, 115][i]);
     });
 });
+check('the speed and rpm figures hold until the reading is past them, as the cluster holds its own', () => {
+    const sp = (s, u) => C.speedText(o({ speedUnit: u || 'kmh' }), { speed: s });
+    assert.deepStrictEqual([78.6, 79.4, 79.6, 79.9, 80.1, 79.3, 79.2, 120, 0.4].map((s) => sp(s)), ['79', '79', '79', '80', '80', '80', '79', '120', '0']);
+    assert.strictEqual(sp(undefined), '--');
+    assert.strictEqual(sp(100, 'mph'), '62');
+    const rp = (r) => C.rpmShown({ rpm: r });
+    assert.deepStrictEqual([702, 695, 712, 688, 716, 731, 744, 6118, 6106, 6131, 6136].map(rp), [700, 700, 700, 700, 720, 720, 740, 6120, 6120, 6120, 6140]);
+    assert.strictEqual(rp(undefined), null);
+});
+
 console.log(n + ' passed');
 
 /* Settings > Vehicle: Diesel (0.35.7): no ignition timing read or shown; the intake air in its place */

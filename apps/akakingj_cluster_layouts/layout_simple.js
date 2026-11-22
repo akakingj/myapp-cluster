@@ -27,7 +27,7 @@ const rpmC = (o) => (t, d) => { const l = level(o, d), c = l >= 2 ? RED : l === 
 const warnC = (o, base) => (t, d) => (level(o, d) === 3 ? { color: [RED, 1], glow: [RED, 0.5] } : base(t, d));
 const gearC = (t, d) => ({ color: [C.gearText(d) === 'R' ? RED : t.text, 1], glow: [t.glow, 0.5] });
 /** The engine speed to 50 rpm with a thousands comma (6,100), OFF with the engine off. */
-const rpmNum = (d) => (d.engineOn === false ? 'OFF' : C.isNum(d.rpm) ? String(Math.round(d.rpm / 50) * 50).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '--');
+const rpmNum = (d) => (d.engineOn === false ? 'OFF' : C.isNum(d.rpm) ? String(C.rpmShown(d)).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '--');
 
 // the three figures on one baseline (a digit's foot sits 0.785 of its box down, measured off the atlas as drawn),
 // the units' line under it, the rule, the trip computer's names and figures

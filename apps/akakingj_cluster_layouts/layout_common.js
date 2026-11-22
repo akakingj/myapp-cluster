@@ -20,6 +20,15 @@ const speedShown = (o, d) => {
     return heldSpeed[u];
 };
 const speedText = (o, d) => (isNum(d.speed) ? String(speedShown(o, d)) : '--');
+// The rpm figure, in tens: it moves only once the rpm is 15 past the one shown, so the idle's few rpm either way
+// do not flicker its last digit
+let heldRpm = null;
+const rpmShown = (d) => {
+    if (!isNum(d.rpm)) return null;
+    const v = Math.max(0, d.rpm);
+    if (heldRpm === null || Math.abs(v - heldRpm) >= 15) heldRpm = Math.round(v / 10) * 10;
+    return heldRpm;
+};
 
 /** The speed scale for the unit: { max, major, minor }. */
 const speedScale = (o) => (o.speedUnit === 'kmh' ? { max: 260, major: 20, minor: 10 } : { max: 160, major: 20, minor: 5 });
@@ -675,6 +684,6 @@ const text = (key, x, y, w, h, txt, colors, extra) => Object.assign({ key, kind:
 const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colors: (t, d) => ({ color: [typeof colour === 'function' ? colour(t, d) : t[colour], 1] }) });
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

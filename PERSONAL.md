@@ -284,6 +284,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   to find the indicated speed if the head unit has it.
 - Layouts 0.52.3 (Nov 22 2026): the speed figure holds until the speed is 0.75 past it (C.speedShown), as the cluster's
   does: plain rounding flickered 79 / 80 about 79.5 and turned before the cluster's figure.
+- Layouts 0.52.4 (Nov 22 2026): the rpm figures (GT3, Pulse, Simple, Track) in tens, held until the rpm is 15 past
+  the one shown (C.rpmShown), in place of fifties.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

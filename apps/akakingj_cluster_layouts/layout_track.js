@@ -86,7 +86,7 @@ function rpmBar(o, x, y, w, h) {
         colors: (t) => ({ track: t.track, fill0: t.text, fill1: t.accent, redc: t.red, tip: t.accent, tick: t.dim, num: t.num }),
         value: (d) => (C.isNum(d.rpm) ? d.rpm / 1000 / r.max : 0), max: 1, sweep: true };
 }
-const rpmText = (d) => (C.isNum(d.rpm) && d.engineOn !== false ? String(Math.round(d.rpm / 50) * 50) : 'OFF');
+const rpmText = (d) => (C.isNum(d.rpm) && d.engineOn !== false ? String(C.rpmShown(d)) : 'OFF');
 const gearC = (t, d) => ({ color: [C.gearText(d) === 'R' ? t.red : t.text, 1], glow: [t.glow, 0.25] });
 const powerC = (o) => (t, d) => (C.engineFocus(o) ? white(t) : { color: [C.isNum(d.kw) && d.kw < -0.3 ? t.regen : t.ev, 1], glow: [t.ev, 0.15] });
 /* the tiles' numbers alone (their units in the labels: a unit beside a big number didn't fit a tile) */

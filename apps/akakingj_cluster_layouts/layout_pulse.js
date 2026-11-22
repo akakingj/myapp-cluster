@@ -34,7 +34,7 @@ const accent = (t) => ({ color: [t.glow, 1], glow: [t.glow, 0.6] });
 const bg = (key, x, y, w, h) => ({ key, kind: 'panel', x, y, w, h, params: { u_box: [0, 0, 0, 1] }, colors: (t) => ({ top: t.bgTop, bottom: t.bgBottom, border: t.bgBottom }) });
 const hotC = (k, lim) => (t, d) => ({ color: [C.isNum(d[k]) && d[k] >= lim ? '#ff3b30' : t.text, 1], glow: [t.glow, 0] });
 const gearC = (t, d) => ({ color: [C.gearText(d) === 'R' ? '#ff3b30' : t.text, 1], glow: [t.glow, 0.5] });
-const rpmTxt = (d) => (C.isNum(d.rpm) ? Math.round(d.rpm / 50) * 50 + ' RPM' : '-- RPM');
+const rpmTxt = (d) => (C.isNum(d.rpm) ? C.rpmShown(d) + ' RPM' : '-- RPM');
 
 /** The engine speed as a long segmented bar, red from the redline. */
 function rpmBar(o, key, x, y, w, h, segments) {
@@ -111,7 +111,7 @@ module.exports = {
             // temperature): the speed large in the middle, the battery's power and the engine speed either side of
             // it at the same height, the engine speed's bar under all three, one row of readings along the bottom
             const kwC = C.engineFocus(o) ? txt : (t, d) => ({ color: [C.isNum(d.kw) && d.kw < -0.3 ? t.regen || '#3ddc84' : t.text, 1], glow: [t.glow, 0] });   // (its palettes have no regen colour: NaN on the car)
-            const rpmNum = (d) => (d.engineOn === false ? 'OFF' : C.isNum(d.rpm) ? String(Math.round(d.rpm / 50) * 50) : '--');
+            const rpmNum = (d) => (d.engineOn === false ? 'OFF' : C.isNum(d.rpm) ? String(C.rpmShown(d)) : '--');
             // (the gear stays: the layout is made round it and the speed)
             // (each reading in the row as designed, or the one set there on the page: places row1-row6, the main
             // readout's own setting in the third)
