@@ -163,7 +163,7 @@ class FakeCR extends EventEmitter {
     let navM = null;
     lv.nav = () => navM;
     const NV = require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'nav_view.js'));
-    // (the directions: 173 x 138 with the panel to the glass, 149 x 120 over a Waze map on the HUD)
+    // (the directions: 173 x 132 with the panel to the glass, 149 x 114 over a Waze map on the HUD)
     const MS = NV.sizeAt(NV.MAP_SCALE), isNav = (l) => (l.w === NV.W && l.h === NV.H) || (l.w === MS.W && l.h === MS.H);
     const navLayer = () => [...cr.layers.values()].find(isNav);
     ov._navTick();
@@ -473,7 +473,7 @@ check('directions: wherever the HUD map and the panel are, never over the panel,
         assert(r && r.x + r.w <= b.x + b.w && r.y + r.h <= b.y - 4, JSON.stringify({ ex, pw, under, b, r }));
     }
     const g3 = badgeRect(Object.assign({ glass: true }, mapRect('hud', 0)), 'bottom', 'hud', 3, false, false);
-    assert.strictEqual(g3.h, 58, 'three values on the glass: 58 high, the directions 173 x 138 above them');
+    assert.strictEqual(g3.h, 58, 'three values on the glass: 58 high, the directions 173 x 132 above them');
     // (no room only with the panel across the middle of the glass, the HUD map moved far: not shown then)
     assert(none < n / 100, none + ' of ' + n + ' without room');
     // the usual place: the standard HUD map, the panel at its bottom: just above the panel, at its right edge

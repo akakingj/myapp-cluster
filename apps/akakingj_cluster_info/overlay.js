@@ -72,7 +72,7 @@ const NIGHT_DIM = 0.6;            // the HUD extras at night, of their brightnes
 // unit's clock that is 638 (its clock ran ~0.3 % behind the cluster's flasher there), and the car tells the head unit
 // of the stalk about 40 ms after the cluster's first flash, so the HUD starts its flashing that far in
 const BLINK_ON_MS = 335, BLINK_OFF_MS = 303, BLINK_LEAD_MS = 40;
-// the directions on the HUD (nav_view.js, 173 x 138 on the glass, 149 x 120 over a Waze map there): see navRect
+// the directions on the HUD (nav_view.js, 173 x 132 on the glass, 149 x 114 over a Waze map there): see navRect
 const NAV_RIGHT = 672, NAV_BOTTOM = 356, NAV_GAP = 4;
 const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit sign at the bottom left (Redline's hud.js)
 const NAV_MS = 200;               // the directions looked at this often (a turn's distance counts down every second)

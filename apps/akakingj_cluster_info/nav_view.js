@@ -6,7 +6,7 @@
  * dist, unit, road, lanes }).
  *
  * The three parts are Cluster Redline's 240 x 48 / 112 / 72 designs, painted at SCALE (no resampling) and stacked
- * with their empty margins cut, into W x H (173 x 138 on the glass, 149 x 120 over a Waze map on the HUD: sizeAt):
+ * with their empty margins cut, into W x H (173 x 132 on the glass, 149 x 114 over a Waze map on the HUD: sizeAt):
  * the part a turn hasn't (no text, no lanes) left empty.
  */
 const { Canvas } = require('./nav_canvas');
@@ -19,7 +19,7 @@ const MAP_SCALE = 0.62;    // over a Waze map on the HUD, the panel in its pictu
 const PARTS = [
     { key: 'text', draw: navText, top: 8, h: 32, gap: 4 },     // (a gap: a highway diagram's label is at its top)
     { key: 'turn', draw: navDraw, top: 14, h: 98 },
-    { key: 'lanes', draw: laneDraw, top: 6, h: 56 },
+    { key: 'lanes', draw: laneDraw, top: 15, h: 47 },   // (lane_draw's board from y 17.4 to 60, two above, one below)
 ];
 /** The picture's size at scale s: { W, H }. */
 const sizeAt = (s) => ({ W: Math.round(240 * s), H: PARTS.reduce((n, p) => n + Math.round(p.h * s) + (p.gap || 0), 0) });

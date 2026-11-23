@@ -14,7 +14,7 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   It follows Robert's Waze on cluster (robertnisipeanu/idrive-apps), with the map on the cluster, the HUD or
   both (then on the cluster), and the HUD map's size and position as set there. With no Waze map on the HUD,
   the panel there is sized to the glass instead (up to 58 of the HUD's 480 high, at the bottom right of what a
-  G20 shows) and the directions above it are bigger (173 x 138, 149 x 120 over a Waze map on the HUD).
+  G20 shows) and the directions above it are bigger (173 x 132, 149 x 114 over a Waze map on the HUD).
   Shown only while the map is (or, on the HUD, while there is something to show), so it never holds the
   cluster or HUD on its own.
 - **Turn signals on the HUD:** a small green arrow each side, near the top of what a G20 shows (x 240 and 530, y 114

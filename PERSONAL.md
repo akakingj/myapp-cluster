@@ -288,7 +288,7 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   the one shown (C.rpmShown), in place of fifties.
 - Info 1.10.3, 1.10.4 (Nov 22 2026): with no Waze map on the HUD the HUD panel is sized to the glass (r.glass: up to 58 high,
   its bottom right at HUD_SEEN's less 4), not to the standard map's picture, and the directions are 16 % bigger
-  (nav_view SCALE 0.72, 173 x 138; MAP_SCALE 0.62 over a Waze map on the HUD). The room between the turn signals
+  (nav_view SCALE 0.72, 173 x 132; MAP_SCALE 0.62 over a Waze map on the HUD). The room between the turn signals
   (y 148) and the glass's bottom (356) is 200 px for both; the owner chose the directions first.
 - Info 1.10.5 (Nov 22 2026): Settings > Driving assistant check (off by default; adas_probe.js, read only), to see on
   the G20 whether the head unit gets the cluster's assisted driving view data (the four de.bmw.dass.* services of
@@ -301,6 +301,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
 - Layouts 0.52.6 (Nov 23 2026): its Logs file is cluster-logs-layout-<time>.txt, like Info's and Centre's.
 - Info 1.10.7 (Nov 23 2026): the directions' lanes up to 36 of the board's 240 wide (lane_draw.js CELL_WIDE; 29
   before, still 29 each for 7 or 8 lanes), the arrows as they were: wider lane boards, as the owner asked.
+- Info 1.10.8 (Nov 23 2026): the lane board and its arrows 82 % as high (lane_draw.js LOW, from y 17.4; nav_view's
+  lanes part 47 high from 15): the directions 173 x 132 (149 x 114 over a Waze map), as the owner asked.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide
