@@ -2356,9 +2356,9 @@ const MROUND_FS_MODES = byMode(MROUND_FS, 3);
  * (Layouts 0.53.0) Retro M's parts, after a VDO-era M car's round dials (an original drawing of the idea): black dials on
  * a grey plastic panel, white figures and bar ticks, orange needles.
  *
- * RM_PANEL: the panel's grey plastic (u_panel, its grain a 6 px checker of 3 px squares a tenth lighter and darker), x 40 - 1880,
- * y 66 - 640 of the panel with its top corners rounded (radius 100); black outside. P: a point in panel px (u_origin: the
- * layer's place on the panel), so the pieces' grain runs on from one to the next.
+ * RM_PANEL: the panel's grey plastic over the whole screen, as JDM 2's carbon (u_panel, its grain a 6 px checker of 3 px
+ * squares a tenth lighter and darker). P: a point in panel px (u_origin: the layer's place on the panel), so the grain runs
+ * on from one piece to the next.
  *
  * RMDIAL_FS: a round gauge in one layer - the panel's plastic round it (u_look.x 1; 0: see-through), its rings (u_rings:
  * the face's radius, the border's, the outer ring's, at u_c, the gauge's centre in the layer), its scale and needle,
@@ -2375,11 +2375,8 @@ const RM_PANEL = `
 uniform vec2 u_origin;
 uniform vec3 u_panel;
 vec4 rmPanel(vec2 P) {
-    vec2 c = vec2(clamp(P.x, 140.0, 1780.0), max(P.y, 166.0));
-    float d = max(length(P - c) - 100.0, max(max(40.0 - P.x, P.x - 1880.0), max(66.0 - P.y, P.y - 640.0)));
     vec2 m = mod(floor(P / 3.0), 2.0);
-    vec3 g = u_panel * (m.x < 0.5 && m.y < 0.5 ? 1.1 : m.x > 0.5 && m.y > 0.5 ? 0.915 : 1.0);
-    return vec4(mix(g, vec3(0.0), clamp(d + 0.5, 0.0, 1.0)), 1.0);
+    return vec4(u_panel * (m.x < 0.5 && m.y < 0.5 ? 1.1 : m.x > 0.5 && m.y > 0.5 ? 0.915 : 1.0), 1.0);
 }
 `;
 const RMDIAL_FS = `#version 100
@@ -2468,7 +2465,7 @@ void main() {
     gl_FragColor = u_look.x > 0.5 ? vec4(mix(bg.rgb, col, a), 1.0) : vec4(col, a);
 }`;
 
-/** Retro M's panel between its gauges: the grey plastic (RM_PANEL), black outside it. */
+/** Retro M's background: the grey plastic (RM_PANEL). */
 const RMBG_FS = `#version 100
 ${HIGHP}${COMMON}${RM_PANEL}
 uniform vec2 u_size;

@@ -324,6 +324,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
   Korean for Retro M's place (kit locales), and Centre's shared font list. Every layout's name in English in Korean
   too (Simple, Track: they were 간단, 트랙), as the owner asked.
+- Layouts 0.55.0, Centre 0.14.9, Info 1.10.12 (Nov 23 2026, the owner's review of Retro M): its grey plastic over the
+  whole screen, as JDM 2's carbon (RM_PANEL without the panel's edge and rounded corners; one RMBG_FS layer, cut at the
+  car's strip; round the map too); every gauge but the speed's and the revs' a place on the page - rmSpeedSub (the
+  economy), rmRpmSub (the oil), rmLeft (the fuel), rmRight (the coolant) - any GAUGES reading or the economy (the
+  Settings' Small gauge in the speedometer / tach no longer reach it: the owner found the speedometer's small gauge and
+  its window set alike). Korean for the four places (kit locales: Centre and Info bumped with them).
 - Layouts 0.54.0, Centre 0.14.8 (Nov 23 2026, the owner's choice: the iDrive 8 look is AK Cluster ID8's now): ID8 M
   (layout_sport.js, bimmer-lab's Sport view) removed, with its shader (SDASH_FS, out of the shared shaders Centre carries
   too) and pictures; fifteen layouts. A saved choice of it
