@@ -42,7 +42,7 @@ function hanging(o, which) {
         value: (d) => C.chFrac(ch, d[ch]) };
     if (!g && speed) {
         // (its scale in the unit the trip computer's figures come in: mpg to 60, else to 20)
-        const scaleOf = (d) => (C.econUnitOf(o, d) === 'mpg' ? [0, 60, 7.5, 15] : [0, 20, 2.5, 5]);
+        const scaleOf = (d) => (C.ECON_UNITS[C.econUnitOf(o, d)] === 'mpg' ? [0, 60, 7.5, 15] : [0, 20, 2.5, 5]);
         return { V: scaleOf({}), scaleOf, red: [NONE, -NONE], figs: true,
             label: (d) => 'AVG ' + C.ECON_UNITS[C.econUnitOf(o, d)], dimLabel: (d) => !C.econ(o, d),
             value: (d) => { const e = C.econ(o, d); return e ? Math.min(scaleOf(d)[1], e.v) : 0; } };
