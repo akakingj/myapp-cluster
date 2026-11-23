@@ -10,8 +10,11 @@ const { spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const GUARD = path.join(__dirname, 'node8_guard.js');
+const built = () => { try { return fs.readdirSync(path.join(ROOT, 'dist')).some((f) => /\.mgu$/.test(f)); } catch (e) { return false; } };
 const list = [].concat(
-    fs.readdirSync(path.join(ROOT, 'tools')).filter((f) => /^test_.*\.js$/.test(f) && f !== 'test_node8.js').map((f) => path.join('tools', f)),
+    // (test_built.js only with the apps built with the SDK: a .mgu in dist/)
+    fs.readdirSync(path.join(ROOT, 'tools')).filter((f) => /^test_.*\.js$/.test(f) && f !== 'test_node8.js' && (f !== 'test_built.js' || built()))
+        .map((f) => path.join('tools', f)),
     fs.readdirSync(path.join(ROOT, 'kit', 'tools')).filter((f) => /^test_.*\.js$/.test(f)).map((f) => path.join('kit', 'tools', f)),
     ['tools/check_runtime.js', 'tools/check_fit.js']);
 let failed = 0;
