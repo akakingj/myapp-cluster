@@ -299,6 +299,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   Layouts' logs no longer carry Cluster Centre's log or Cluster Info's, so its codes stay few. Info's: its page's rows,
   the overlay, the raw turn signals, the driving assistant check and its log, the directions' log, its own log.
 - Layouts 0.52.6 (Nov 23 2026): its Logs file is cluster-logs-layout-<time>.txt, like Info's and Centre's.
+- Info 1.10.7 (Nov 23 2026): the directions' lanes up to 36 of the board's 240 wide (lane_draw.js CELL_WIDE; 29
+  before, still 29 each for 7 or 8 lanes), the arrows as they were: wider lane boards, as the owner asked.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

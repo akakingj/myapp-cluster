@@ -1,7 +1,8 @@
 'use strict';
 /*
  * From jaimeen77's Cluster Redline 1.3.9 (jaimeen77-cmyk/apps, apps/cluster_redline/lane-draw.js at 07d7925, MIT licence:
- * LICENSE-MIT in this repository), for Cluster Info's directions on the HUD (nav_view.js); only its module paths changed.
+ * LICENSE-MIT in this repository), for Cluster Info's directions on the HUD (nav_view.js); its module paths changed, and
+ * the lanes are up to CELL_WIDE wide where the board has room (as many as before fit: CELL each).
  */
 const {Canvas}=require('./nav_canvas');
 // HUD lane guidance in the style of stock lane boards: fixed-size lanes with
@@ -10,7 +11,7 @@ const {Canvas}=require('./nav_canvas');
 // pixel size so the image is not resampled (resampling broke thin strokes).
 // Arrows use only straight lines, single-pass arcs and filled triangles; a
 // many-segment polyline blends its overlapping joints and looks jagged.
-const W=240,H=72,CELL=29,BOTTOM=60,TOP=8,SW=4.6,HB=12.5,HL=9.5,PAD=2;
+const W=240,H=72,CELL=29,CELL_WIDE=36,BOTTOM=60,TOP=8,SW=4.6,HB=12.5,HL=9.5,PAD=2;
 const DIM='#5d6670',OTHER='#3f4750',LINE='#68717c';
 const D2R=Math.PI/180;
 const dir=a=>[Math.sin(a*D2R),-Math.cos(a*D2R)];        // heading, degrees clockwise from up
@@ -56,14 +57,14 @@ function paint(cv,parts,map,k,width,color){
 function drawSized(state,w,h){
  const s=(w||W)/W,cv=new Canvas(Math.max(1,Math.round(w||W)),Math.max(1,Math.round(h||H*s)));cv.clear([0,0,0,0]);
  if(!state||!state.visible||!Array.isArray(state.lanes)||!state.lanes.length)return cv;
- const lanes=state.lanes.slice(0,Math.floor(W/CELL)),n=lanes.length,left=(W-CELL*n)/2;
+ const lanes=state.lanes.slice(0,Math.floor(W/CELL)),n=lanes.length,cell=Math.min(CELL_WIDE,W/n),left=(W-cell*n)/2;
  const selected=state.color==='gray'?'#a3abb4':state.color==='white'?'#f2f4f8':'#29c5ff';
  const vline=(x,y0,y1,width)=>cv.line(x*s,y0*s,x*s,y1*s,width*s,LINE);
  // Solid outer edges, dashed lane dividers.
- vline(left,TOP,BOTTOM,1.8);vline(left+CELL*n,TOP,BOTTOM,1.8);
- for(let i=1;i<n;i++)for(let y=TOP+1;y<BOTTOM;y+=10)vline(left+CELL*i,y,Math.min(BOTTOM,y+5),1.6);
+ vline(left,TOP,BOTTOM,1.8);vline(left+cell*n,TOP,BOTTOM,1.8);
+ for(let i=1;i<n;i++)for(let y=TOP+1;y<BOTTOM;y+=10)vline(left+cell*i,y,Math.min(BOTTOM,y+5),1.6);
  lanes.forEach((lane,i)=>{
-  const cx=left+CELL*(i+0.5),on=lane.highlighted;
+  const cx=left+cell*(i+0.5),on=lane.highlighted;
   const list=lane.other.map(d=>({d,color:OTHER})).concat(lane.directions.map(d=>({d,color:on?selected:DIM})));
   const all=lane.directions.concat(lane.other),side=d=>(d.match(/LEFT|RIGHT/)||[''])[0],paired=d=>(d==='LEFT'||d==='RIGHT'||/^UTURN_/.test(d))&&all.includes(side(d))&&all.includes('UTURN_'+side(d));
   const shapes=list.map(e=>Object.assign(e,{parts:glyph(e.d,paired(e.d))})).filter(e=>e.parts);
@@ -71,7 +72,7 @@ function drawSized(state,w,h){
    // One transform per lane: centre the combined glyph; shrink only a lane whose
    // combined directions are wider than its cell, never because of the lane count.
    let lo=0,hi=0;shapes.forEach(e=>{const b=bounds(e.parts);lo=Math.min(lo,b[0]);hi=Math.max(hi,b[1]);});
-   const k=Math.min(1,(CELL-2*PAD)/(hi-lo)),x0=cx-(lo+hi)/2*k;
+   const k=Math.min(1,(cell-2*PAD)/(hi-lo)),x0=cx-(lo+hi)/2*k;
    const map=p=>[(x0+p[0]*k)*s,(BOTTOM+(p[1]-BOTTOM)*k)*s];
    shapes.forEach(e=>paint(cv,e.parts,map,k*s,SW,e.color));
   }
