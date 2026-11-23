@@ -324,6 +324,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
   Korean for Retro M's place (kit locales), and Centre's shared font list. Every layout's name in English in Korean
   too (Simple, Track: they were 간단, 트랙), as the owner asked.
+- Layouts 0.55.2, Centre 0.14.11, Info 1.10.14 (Nov 23 2026, a check of the files): the chevron gauge Sport alone
+  drew (CHEVRON_FS, its engine kind and its clearance check) out of the shared files; the notices, comments and the
+  Korean locale without Sport and ID8 M (two rows no setting uses); the READMEs' links to the apps' folders, the
+  layout count (fifteen) and 90's map picture (docs/retro_map.png).
 - Layouts 0.55.1, Centre 0.14.10, Info 1.10.13 (Nov 23 2026): the log screen's two lines in Korean in the Korean build
   (shared/logs.js, kit i18n's language; they are drawn as literal text, so the locales never reached them).
 - Layouts 0.55.0, Centre 0.14.9, Info 1.10.12 (Nov 23 2026, the owner's review of Retro M): its grey plastic over the

@@ -24,7 +24,7 @@ const B = require('./bimmer');
 
 /* their theme (hud_themes.js mdash), following the drive mode (themes.js lookNow) as the M8's does: in comfort
  * theirs; in a sport mode the bars' fill warm; in ECO PRO and on electricity alone blue. (0.39.5) The blades filled
- * as ID8 M's rev band, in its colours: dark glass (band), lit up to the rpm in white (comfort), red (sport), teal
+ * as a rev band, in the look's colours: dark glass (band), lit up to the rpm in white (comfort), red (sport), teal
  * (ECO PRO), a white marker line */
 const PAL = { bg: '#000000', text: '#eef1f6', fg: '#eef1f6', dim: '#848c98', faint: '#606876', red: '#e2242c', regen: '#3ddc84', glow: '#e2242c', track: '#5c6068', ev: '#4ab4ff',
     mark: '#ffffff', lit: '#e8edf5', band: '#262c38', fill: '#eef1f6' };
@@ -169,7 +169,7 @@ module.exports = {
         // (with the map the centre line and the stripes would be under its window: left out)
         if (!map) list.push(part('centreLine', 2, 734, 366, 456, 22), part('mStripes', 4, 918, 144, 84, 36));
         // the rev blades: the engine speed, eased by the engine; in an electric drive (layout_common.electric) the
-        // battery's power, as Sport's ePower: 0 a quarter up (the 2000 mark), regeneration below it in green to the
+        // battery's power: 0 a quarter up (the 2000 mark), regeneration below it in green to the
         // battery's limit, the power drawn above it to the blades' top (bladeRange)
         const elec = (d) => C.electric(o, d);
         const blade = (key, right) => ({

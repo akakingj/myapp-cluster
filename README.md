@@ -21,8 +21,8 @@ refund.**
 | App | What it does |
 |---|---|
 | **[Cluster Info](#cluster-info)** | a small panel of live values over the Waze map in the cluster or on the HUD, and turn signal arrows on the HUD |
-| **[Cluster Layouts](apps/cluster_layouts/README.md)** | your own layout on the whole instrument cluster, drawn by the cluster itself: fourteen layouts, each in three colour sets and with three centres (readings, Waze over the layout, stock) |
-| **[Cluster Centre](apps/cluster_centre/README.md)** | the factory cluster kept, its centre taken over by pages of live data (temperatures, fuel and boost, warm-up, turbo cool-down, eDrive, a 0-60 timer, custom pages) |
+| **[Cluster Layouts](apps/akakingj_cluster_layouts/README.md)** | your own layout on the whole instrument cluster, drawn by the cluster itself: fifteen layouts, each in three colour sets and with three centres (readings, Waze over the layout, stock) |
+| **[Cluster Centre](apps/akakingj_cluster_centre/README.md)** | the factory cluster kept, its centre taken over by pages of live data (temperatures, fuel and boost, warm-up, turbo cool-down, eDrive, a 0-60 timer, custom pages) |
 
 ![Cluster Layouts: 20's](docs/analog_sport.png)
 
@@ -49,7 +49,7 @@ the Store adds the second beside the first as a separate app (`cluster_info2`).
 A small panel of up to three live values over the Waze map in the instrument cluster or on the HUD, and turn
 signal arrows on the HUD. It works with [Waze on cluster](https://github.com/robertnisipeanu/idrive-apps), which puts
 the map there. What it shows, its settings and how other apps can give it values are in
-[apps/cluster_info/README.md](apps/cluster_info/README.md).
+[apps/akakingj_cluster_info/README.md](apps/akakingj_cluster_info/README.md).
 
 ### What it looks like
 
@@ -71,8 +71,8 @@ the map there. What it shows, its settings and how other apps can give it values
 
 | Path | What |
 |---|---|
-| `apps/cluster_info/` | Cluster Info: `main.js` (its page), `overlay.js` (the panel over the map), `providers.js` (values from other apps), `indicators.js` (turn signals and day / night), `cluster_render_client.js` (the cluster renderer's protocol), `app.json` (manifest, signals and settings) |
-| `apps/cluster_layouts/`, `apps/cluster_centre/` | the other two apps; each holds its own copy of the shared files it uses |
+| `apps/akakingj_cluster_info/` | Cluster Info: `main.js` (its page), `overlay.js` (the panel over the map), `providers.js` (values from other apps), `indicators.js` (turn signals and day / night), `cluster_render_client.js` (the cluster renderer's protocol), `app.json` (manifest, signals and settings) |
+| `apps/akakingj_cluster_layouts/`, `apps/akakingj_cluster_centre/` | the other two apps; each holds its own copy of the shared files it uses |
 | `shared/` | the code those two share (the cluster engine and shaders, car data, fonts, the clock, logs, the signed credit); `node tools/sync_shared.js` copies it into each app |
 | `tools/` | their tests, the cluster previews (`preview.js`, `preview_centre.js`), the font baker and the credit signer |
 | `kit/runtime/` | the app kit's runtime the build bundles into each app (canvas, fonts, gauges, themes, settings, the controller and renderer clients) |

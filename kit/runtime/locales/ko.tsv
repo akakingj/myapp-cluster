@@ -2446,7 +2446,6 @@ AK Cluster Layouts	AK Cluster Layouts
 Accelerator pedal (0 - 100 %)	가속 페달 (0 - 100 %)
 Alaska	알래스카
 Always on the HUD	HUD에 항상 표시
-Amber zone below the red zone (ID6 M, ID7 M, ID8 M)	레드 존 아래 주황 구간 (ID6 M, ID7 M, ID8 M)
 Arc gauge	원호 게이지
 JDM 1: the gear in the arc (the layout's own strip)	JDM 1: 아크 안 기어 표시 (레이아웃 자체 하단 띠)
 Arizona (no DST)	애리조나 (서머타임 없음)
@@ -2680,7 +2679,6 @@ Readouts per layout	레이아웃별 표시값
 90's	90's
 ID6 M	ID6 M
 ID7 M	ID7 M
-ID8 M	ID8 M
 JDM 1	JDM 1
 GM	GM
 JDM 2	JDM 2

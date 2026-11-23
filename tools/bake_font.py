@@ -8,7 +8,7 @@ Font: Barlow (SIL Open Font License 1.1, shared/NOTICE; the owner's choice, Nov 
 from Nov 18, Barlow Semi Condensed before), with upper and lower case. Families:
   bold   SemiBold (figures and text the layouts call bold: every layout but ID7 M and JDM 1; Centre's modern look)
   light  Regular (KO 1, KO 2; Centre's native look)
-  wide   Michroma (SIL OFL 1.1, shared/NOTICE), thickened, with Barlow Medium for the small print: Sport's face
+  wide   Michroma (SIL OFL 1.1, shared/NOTICE), thickened, with Barlow Medium for the small print: JDM 1's face
   orb    Orbitron Black (SIL OFL 1.1), with Barlow Medium for the small print: M's face
          (both as bimmer-lab's Cluster Themes bakes them; wider cells, 60 x 40, for the wide faces)
 
@@ -47,7 +47,7 @@ FAMILIES = {
     'light': {'ttf': 'Barlow-Regular.ttf'},
     # cells 60 x 40 and 16 to a row: the atlas 960 x 320 (300 KB with the small print: within the 2048 px any GLES 2
     # GPU takes, and a layout's start-up under 600 KB); scale: Michroma's capitals the height of Barlow's; grow: atlas px added round each glyph (thickened)
-    # (Sport's: Michroma thickened, Barlow Medium for the small print, as bimmer-lab's Cluster Themes bakes them)
+    # (JDM 1's: Michroma thickened, Barlow Medium for the small print, as bimmer-lab's Cluster Themes bakes them)
     'wide': {'ttf': 'Michroma-Regular.ttf', 'lower': 'Barlow-Medium.ttf', 'cellW': 60, 'cellH': 40, 'cols': 16, 'scale': 0.93, 'grow': 1.375},
     # M's: Orbitron Black (its zero slashed: the O drawn for it, plain as the M8's), Barlow Medium for the small print
     'orb': {'ttf': 'Orbitron[wght].ttf', 'weight': 'Black', 'subs': {'0': 'O'}, 'lower': 'Barlow-Medium.ttf', 'cellW': 60, 'cellH': 40, 'cols': 16, 'scale': 1.0, 'grow': 0.42},

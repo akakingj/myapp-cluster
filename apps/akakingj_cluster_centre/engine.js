@@ -17,7 +17,7 @@
  * layer is hidden, the service releases the panel and the stock gauges are back.
  *
  * A piece (layout_*.js pieces(o)):
- *   { key, kind: 'flat' | 'panel' | 'dial' | 'band' | 'ring' | 'chevron' | 'mdash' | 'mtach' | 'text' | 'bg' | 'icon' | 'spark' | 'car' | 'leds' | 'jdm' | 'mround' | 'aclock' | 'rmdial' | 'rmbg', x, y, w, h, z,
+ *   { key, kind: 'flat' | 'panel' | 'dial' | 'band' | 'ring' | 'mdash' | 'mtach' | 'text' | 'bg' | 'icon' | 'spark' | 'car' | 'leds' | 'jdm' | 'mround' | 'aclock' | 'rmdial' | 'rmbg', x, y, w, h, z,
  *     params: { u_name: [numbers] }       fixed uniforms (sent once),
  *     colors(t, d) -> { name: '#rrggbb' | ['#rrggbb', a] }   sent as u_<name> (vec3, or vec4 with a) when they change,
  *     value(d) -> number, max             dial: the reading on its scale (max: the scale's end); band: 0..1,
@@ -51,13 +51,13 @@ const STALE_MS = 3000;
 const MIN_GAP_MS = 4;        // a reading's update at most this soon after the last
 const EPS = 0.0015;          // a value moving less than this (of its max) is not sent
 const SWEEP_MS = 700;        // up, then as long back down
-const FS = { flat: SH.FLAT_FS, panel: SH.PANEL_FS, dial: SH.DIAL_FS, band: SH.BAND_FS, text: SH.TEXT_FS, bg: SH.BG_FS, icon: SH.ICON_FS, spark: SH.SPARK_FS, car: SH.CAR_FS, leds: SH.LEDS_FS, flag: SH.FLAG_FS, eagles: SH.EAGLE_FS, fireworks: SH.FIREWORKS_FS, road: SH.ROAD_FS, chevron: SH.CHEVRON_FS, mdash: SH.MDASH_FS, mtach: SH.MTACH_FS, licon: SH.LICON_FS, e9x: SH.E9X_FS, mbar: SH.MBAR_FS, jdm: SH.JDM_FS, mround: SH.MROUND_FS, aclock: SH.ACLOCK_FS, ring: SH.RING_FS, rtach: SH.RTACH_FS, rbox: SH.RBOX_FS, rseg: SH.RSEG_FS, cup: SH.CUP_FS, wakaba: SH.WAKABA_FS, rmdial: SH.RMDIAL_FS, rmbg: SH.RMBG_FS };
+const FS = { flat: SH.FLAT_FS, panel: SH.PANEL_FS, dial: SH.DIAL_FS, band: SH.BAND_FS, text: SH.TEXT_FS, bg: SH.BG_FS, icon: SH.ICON_FS, spark: SH.SPARK_FS, car: SH.CAR_FS, leds: SH.LEDS_FS, flag: SH.FLAG_FS, eagles: SH.EAGLE_FS, fireworks: SH.FIREWORKS_FS, road: SH.ROAD_FS, mdash: SH.MDASH_FS, mtach: SH.MTACH_FS, licon: SH.LICON_FS, e9x: SH.E9X_FS, mbar: SH.MBAR_FS, jdm: SH.JDM_FS, mround: SH.MROUND_FS, aclock: SH.ACLOCK_FS, ring: SH.RING_FS, rtach: SH.RTACH_FS, rbox: SH.RBOX_FS, rseg: SH.RSEG_FS, cup: SH.CUP_FS, wakaba: SH.WAKABA_FS, rmdial: SH.RMDIAL_FS, rmbg: SH.RMBG_FS };
 /* a piece's program: JDM 2's and ID6 M's kinds one program per mode (shaders.js JDM_FS_MODES), u_mode a constant in it */
 const MODES = { jdm: SH.JDM_FS_MODES, mround: SH.MROUND_FS_MODES };
 const modeOf = (s) => (MODES[s.kind] && s.params && s.params.u_mode ? Math.round(s.params.u_mode[0]) : -1);
 /*
  * A program as it is sent: without its comments, its indentation and its empty lines (each piece sends its own program
- * and the renderer takes no shared one: ID8 M's four programs went 54 times, 198 KB of its start-up; about a third of
+ * and the renderer takes no shared one: a layout of four programs sent them 54 times, 198 KB of its start-up; about a third of
  * it was comments and spaces). Only what the GLSL compiler never reads goes: the preprocessor's lines (#version, #ifdef
  * ...) stay whole on their own lines, every other line keeps its words and signs as they were, inner runs of spaces made
  * one, spaces only dropped beside ; , ( ) { } where nothing can join. Worked out once a program.
@@ -75,7 +75,7 @@ function tight(src) {
     return t;
 }
 const fsOf = (s) => { const m = modeOf(s); return tight(m >= 0 && MODES[s.kind][m] ? MODES[s.kind][m] : FS[s.kind]); };
-const Z = { flag: -210, bg: -200, road: -40, fireworks: -190, eagles: -180, flat: -100, panel: -50, spark: -20, band: 0, chevron: 0, mdash: -90, mtach: 0, e9x: 0, mbar: 0, jdm: 0, mround: 0, aclock: 0, ring: 0, rtach: 0, rbox: 0, rseg: 0, cup: 0, wakaba: 0, rmdial: 0, rmbg: -95, dial: 0, car: 0, leds: 0, text: 20, icon: 20, licon: 20 };
+const Z = { flag: -210, bg: -200, road: -40, fireworks: -190, eagles: -180, flat: -100, panel: -50, spark: -20, band: 0, mdash: -90, mtach: 0, e9x: 0, mbar: 0, jdm: 0, mround: 0, aclock: 0, ring: 0, rtach: 0, rbox: 0, rseg: 0, cup: 0, wakaba: 0, rmdial: 0, rmbg: -95, dial: 0, car: 0, leds: 0, text: 20, icon: 20, licon: 20 };
 /* kinds that animate (u_time): their clock sent from the head unit every frame (values()) */
 const TIMED = { car: true, leds: true, flag: true, eagles: true, fireworks: true };
 const HIST = 64;
@@ -153,7 +153,7 @@ function startCluster(opts) {
     function build(keep) {
         const L = opts.layout(), o = opts.options();
         const a = font.atlas(fam());
-        // another glyph family (a switch to or from M or Sport): a new atlas beside the old one, and the old
+        // another glyph family (a switch to or from M): a new atlas beside the old one, and the old
         // pieces (drawn with the old one) go only once the new ones are up, as on any switch. Dropping them all
         // first left the target empty for a moment, and the KOMBI took it back to the stock HMI: the cluster
         // flashed between the stock gauges and the layout.
@@ -184,7 +184,7 @@ function startCluster(opts) {
             if (!ref) { warnOnce('piece ' + s.key + ' refused here'); return; }
             const p = { ref, spec: s, colours: '', text: null, value: 0, sent: -1, anim: 0, dyn: '', histSent: -1, vis, clock: !!(s.time || TIMED[s.kind]) };
             if (s.kind !== 'flat') cr.uniform(ref, 'u_size', [s.w, s.h]);
-            if (s.kind === 'dial' || s.kind === 'band' || s.kind === 'chevron' || s.kind === 'e9x' || s.kind === 'mbar' || s.kind === 'jdm' || s.kind === 'mround' || s.kind === 'aclock' || s.kind === 'rmdial' || s.kind === 'text') {
+            if (s.kind === 'dial' || s.kind === 'band' || s.kind === 'e9x' || s.kind === 'mbar' || s.kind === 'jdm' || s.kind === 'mround' || s.kind === 'aclock' || s.kind === 'rmdial' || s.kind === 'text') {
                 cr.bind(ref, 'u_font', fontRef);
                 cr.uniform(ref, 'u_font_cells', fontCells());
                 cr.uniform(ref, 'u_digit_adv', [Math.round(font.digitAdvance(fam()) * 1000) / 1000]);

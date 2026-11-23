@@ -139,7 +139,7 @@ mgu.run({
         const start = () => startCluster({
             client: new ClusterRender('akakingj_cluster_layouts'),
             layout: () => layout,
-            // (the glyphs: the layout's own family, M and Sport's wide one, else the bold)
+            // (the glyphs: the layout's own family, else the bold)
             font: () => layout.font || 'bold',
             options, log, live, data,
             theme: () => themeNow(),
@@ -158,7 +158,7 @@ mgu.run({
             // Cluster Centre steps aside while a layout shows
             if (cluster.status().shown) presence.mark('layouts', { centre: options().centre });
             // the Waze centre: Waze on cluster draws its map over the layout, filling the window (map_window.js): the
-            // layout's own (M's and Sport's: where bimmer-lab's put it), else the view the layouts leave open
+            // layout's own (M's: where bimmer-lab's put it), else the view the layouts leave open
             mapWindow.set(cluster.status().shown && options().centre === 'map' ? (layout.mapWindow || require('./layout_common').MAP_VIEW) : null);
             // the vehicle found (Settings > Vehicle: Auto): the layout redrawn for it once known
             const v = D.vehicle().vehicle;

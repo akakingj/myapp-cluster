@@ -1,6 +1,6 @@
 'use strict';
 /**
- * bimmer.js - what the M and Sport layouts (layout_m.js, layout_sport.js) share to stand where bimmer-lab's Cluster
+ * bimmer.js - what the layouts after bimmer-lab's (layout_m.js and the others that require it) share to stand where bimmer-lab's Cluster
  * Themes (github.com/bimmer-lab/apps, MIT: NOTICE) put them: its texts' fonts (their sizes and baselines, from its
  * hud/fonts/*.json) and a text piece placed from one of its text widgets' boxes, so a glyph comes out the size and on
  * the line theirs does. Their texts are pre-drawn bitmaps; ours are the distance-field atlas (font.js), the same faces

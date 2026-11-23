@@ -212,7 +212,7 @@ const powerPct = (d) => {
     if (!isNum(d.pedal) && isNum(d.kw) && d.kw > 0) return Math.min(100, d.kw / kwRange(d).out * 100);
     return 0;
 };
-/** Power % as a place along a bar (0..1, 0 % at z; ID7 M's blades, ID8 M's bracket) */
+/** Power % as a place along a bar (0..1, 0 % at z; ID7 M's blades) */
 const powerFrac = (d, z) => { const zz = isNum(z) ? z : KW_ZERO, p = powerPct(d); return p >= 0 ? zz + (1 - zz) * p / 100 : zz * (1 + p / 100); };
 /** The gauge's ends now: { out, in } kW. */
 const kwRange = (d) => ({ out: d && isNum(d.kwOut) && d.kwOut >= 20 ? d.kwOut : 100, in: d && isNum(d.kwIn) && d.kwIn >= 5 ? d.kwIn : 35 });

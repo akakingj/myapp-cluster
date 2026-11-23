@@ -1,6 +1,6 @@
 # Cluster Layouts
 
-*Part of [iDrive 7 cluster apps](../../README.md), with Cluster Info and [Cluster Centre](../cluster_centre/README.md).*
+*Part of [iDrive 7 cluster apps](../../README.md), with Cluster Info and [Cluster Centre](../akakingj_cluster_centre/README.md).*
 
 Custom layouts for the whole instrument cluster of a BMW with iDrive 7 (MGU), **drawn by the cluster
 itself**. Fifteen layouts, in the page's order: 90's, 20's, Retro M, Old M, ID6 M, ID7 M (after
@@ -136,6 +136,8 @@ maker's marks or names.
 | Sport colours | Efficient colours |
 |---|---|
 | ![](../../docs/retro_sport.png) | ![](../../docs/retro_efficient.png) |
+| **Map in the centre** | |
+| ![](../../docs/retro_map.png) | |
 
 ### 20's
 
@@ -313,7 +315,7 @@ or with Show: Engine, boost and the shift point take the battery's places.
 
 | Reading | Source |
 |---|---|
-| speed, engine speed, gear, oil, coolant | the car's signals (`kit/car.js`); both apps read through `shared/data.js` |
+| speed, engine speed, gear, oil, coolant | the car's signals (`kit/runtime/car.js`); both apps read through `shared/data.js` |
 | S / M programme (the gear's letter, the Auto colours) | `MDrive.dataDisplayGearbox` |
 | outside temperature | `EnvironmentalInformation.ExteriorTemperature` |
 | gearbox oil | `BasicDataSet.basicDataSet` |
@@ -368,7 +370,7 @@ wakes its networks. **Show** stays on with the car locked, so the layout alone c
 it kept asking, and the car couldn't sleep (body controller 801C16 - 801C18 "no sleep in parking state", the engine
 unit's switch-off time missing, *Battery management: malfunction while shutting down the vehicle electronics*). Now
 `shared/data.js` reads nothing and asks eDrive Live for nothing unless the car is switched on, by its own state
-(`VehicleCondition`, `kit/awake.js`: ignition on, ready to drive, driving), or, before the car has said, moved or ran
+(`VehicleCondition`, `kit/runtime/awake.js`: ignition on, ready to drive, driving), or, before the car has said, moved or ran
 in the last 3 minutes. The layout itself stays up; its readings simply stop until the car is on again. After
 installing, clear the stored faults once (Fault Scanner) and check they stay away.
 
@@ -462,7 +464,7 @@ the KOMBI carries about 11.5 MB/s for everything, including the HMI's own conten
 The renderer side both apps use (engine, shaders, glyph atlas, render client, providers, signal finder) lives
 in `shared/`; edit it there and run `node tools/sync_shared.js` (each app ships its own copy).
 
-A layout is one file, `apps/cluster_layouts/layout_<id>.js`, listed in `layouts.js` and in `app.json`'s
+A layout is one file, `apps/akakingj_cluster_layouts/layout_<id>.js`, listed in `layouts.js` and in `app.json`'s
 `layout` setting. It lists **pieces** and draws nothing; `layout_common.js` has helpers (texts, readings,
 bars, units, the map window). A piece is one shader in its rectangle (`engine.js` has the full list of fields; a
 dynamic text's `chars` sets how many glyphs it can show):

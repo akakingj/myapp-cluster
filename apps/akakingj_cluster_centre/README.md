@@ -100,7 +100,7 @@ Layouts shows a layout over the whole panel, Cluster Centre waits (its page woul
 screen says so.
 
 With the car switched off or locked it asks nothing of the car's units or of eDrive Live (`shared/data.js` with
-`kit/awake.js`, as Cluster Layouts: its README, *Nothing asked of a parked car*): until 0.8.1, Show on kept those
+`kit/runtime/awake.js`, as Cluster Layouts: its README, *Nothing asked of a parked car*): until 0.8.1, Show on kept those
 requests going with the car locked, and the car couldn't sleep.
 
 ## Not seen on the car yet

@@ -1,6 +1,6 @@
 'use strict';
 /**
- * test_dap.js - the driving assistant's feed (apps/akakingj_cluster_layouts/dap.js; ID8 M's cruise icon): the cruise
+ * test_dap.js - the driving assistant's feed (apps/akakingj_cluster_layouts/dap.js; the previews' sample): the cruise
  * control, the steering assist, the warnings and the object list decoded from names or numbers however the
  * binding wraps them, the cars picked for the picture, and the subscriptions: node tools/test_dap.js
  */

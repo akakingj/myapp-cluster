@@ -69,7 +69,7 @@ LAYOUTS.forEach((L) => {
         // (Retro M has no speed in figures: L.speedDigits false - the car's strip shows it)
         [...(L.stripGear ? [L.gearNumber ? '3' : 'D3'] : []), ...(L.speedDigits === false ? [] : ['50'])].forEach((x) => assert(t.indexOf(x) >= 0 || (x === '50' && segNum), x + ' in ' + JSON.stringify(t)));
         const vals = s.engine._pieces().filter((p) => p.value !== null).map((p) => p.value);
-        // (on the scale's 160 mph, or a layout's own scale: L._speedFrac; M's and Sport's speed not a value: L.speedGauge)
+        // (on the scale's 160 mph, or a layout's own scale: L._speedFrac; a speed in figures only: L.speedGauge)
         assert(L.speedGauge === false || vals.some((v) => Math.abs(v - 50) < 0.3 || Math.abs(v - 50 / 160) < 0.003 || (L._speedFrac && Math.abs(v - L._speedFrac(50)) < 0.003)), 'speed ' + vals);
         s.stop();
     });
@@ -82,7 +82,7 @@ LAYOUTS.forEach((L) => {
     check(id + ': centre left to the stock cluster: nothing over the middle', () => {
         const s = makeScene({ layout: id, options: { centre: 'stock' }, data: { speed: 0 } });
         s.engine._tick();
-        // (a whole-view backdrop, M's and Sport's, with that area cut see-through: u_hole)
+        // (a whole-view backdrop, M's, with that area cut see-through: u_hole)
         const cutOut = (l) => /^mdash$/.test(l.kind) && l.params.u_hole && l.params.u_hole[0] <= 820 && l.params.u_hole[0] + l.params.u_hole[2] >= 1100;
         // (over the car's strip the stock centre shows in the map's window: the backgrounds round it and the black band
         // under the layout may span the middle above and below the window, nothing in it)
@@ -95,17 +95,14 @@ LAYOUTS.forEach((L) => {
         const C = require(path.join(APP, 'layout_common'));
         const s = makeScene({ layout: id, options: { centre: 'map' }, data: { speed: 0 } });
         s.engine._tick();
-        // (the layout's own map window, M's and Sport's, else the native map area)
+        // (the layout's own map window, M's, else the native map area)
         const W = L.mapWindow || C.MAP_VIEW, overMap = (r) => r.x < W.x + W.w && r.x + r.w > W.x && r.y < W.y + W.h && r.y + r.h > W.y;
         // (and beside it the KOMBI's own speed readout, C.STOCK_SPEED, with the view the layouts leave open)
         const S = C.STOCK_SPEED, overSpeed = (r) => !L.mapWindow && r.x < S.x + S.w && r.x + r.w > S.x && r.y < S.y + S.h && r.y + r.h > S.y;
         const over = s.engine._pieces().filter((l) => overMap(l) || overSpeed(l));
-        // a band's or a chevron's rectangle may reach into the window as long as what it draws stays out (a
-        // chevron's ink: clearance.js): only those may overlap
-        const { clashes } = require('./clearance');
-        const o = { speedUnit: 'mph', tempUnit: 'f', centre: 'map', redline: 7000, rpmMax: 8000 };
+        // a band's rectangle may reach into the window as long as what it draws stays out: only those may overlap
         const hole = (l) => /^mdash$/.test(l.kind) && l.params.u_hole && l.params.u_hole[2] > 0;   // (cut see-through there)
-        assert(over.every((l) => (l.geo && l.geo[2] > 0) || hole(l) || (l.kind === 'chevron' && clashes(l, o).indexOf('over the map') < 0)), 'over the map: ' + over.map((l) => l.key).join(' '));
+        assert(over.every((l) => (l.geo && l.geo[2] > 0) || hole(l)), 'over the map: ' + over.map((l) => l.key).join(' '));
         s.stop();
     });
     ['comfort', 'sport', 'efficient'].forEach((look) => check(id + ': ' + look + ' palette has every colour its pieces use', () => {

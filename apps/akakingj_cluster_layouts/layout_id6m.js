@@ -25,7 +25,7 @@ const powerTxt = (t, d) => ({ color: [kwNow(d) < -0.3 ? '#3ddc84' : t.ev, 1], gl
 const A0 = -125, A1 = 125;     // the big dials' sweep
 const NUM_H = 0.13;            // their numerals' height, of the radius
 /** Where the amber zone starts, in thousands of rpm: Settings > Yellow light at (Auto: 700 rpm under the red,
- * as ID7 M's and ID8 M's). */
+ * as ID7 M's). */
 const amberAt = (o, d) => C.yellowAt(o, d || {}) / 1000;
 
 /** The speedometer at (cx, cy), radius R: its unit over the middle, the M tricolour in its open foot. */

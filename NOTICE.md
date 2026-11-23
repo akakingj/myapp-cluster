@@ -8,8 +8,8 @@
   Node client from
   [robertnisipeanu/idrive-apps](https://github.com/robertnisipeanu/idrive-apps) (`native/cluster-render`),
   MPL-2.0, as its header says.
-- The GT3, M and Sport layouts of Cluster Layouts (`layout_gt3.js`, `layout_m.js`, `layout_sport.js`, `bimmer.js`),
-  the M and Sport shaders and line icons (`MDASH_FS`, `MTACH_FS`, `SDASH_FS`, `LICON_FS` in `shared/shaders.js`) and
+- The GT3 and M layouts of Cluster Layouts (`layout_gt3.js`, `layout_m.js`, `bimmer.js`),
+  the M shaders and line icons (`MDASH_FS`, `MTACH_FS`, `LICON_FS` in `shared/shaders.js`) and
   the tyre readings come from or follow bimmer-lab's Cluster Themes
   ([bimmer-lab/apps](https://github.com/bimmer-lab/apps)), MIT licence: its notice ships with each app in `NOTICE`
   (`shared/NOTICE`).
