@@ -69,8 +69,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         // (the row the Stock card is on, it being chosen while off: the twelve layouts before KO 1 and KO 2 filling the two
         // rows before; the pictures with the car's own bottom strip, the only form; the Stock card its own picture,
         // the car's cluster drawn, 0.39.6: IMG_CARD + 0x3f)
-        // (0.44.0: KO 1 and KO 2 before it on that row; 0.49.0: Simple after Pulse, GT3 moved onto that row; 0.53.0: Custom 1
-        // and 2 after it with no picture of their own, Custom 3 on the next row)
+        // (0.44.0: KO 1 and KO 2 before it on that row; 0.49.0: Simple after Pulse, GT3 moved onto that row)
         assert(ids.indexOf(0x434c0100) >= 0 && ids.filter((i) => i >= 0x434c0200 && i < 0x434c0300).sort().join() === [0x434c0200 + 0x3f, 0x434c0200 + 0x40 + 12, 0x434c0200 + 0x40 + 13, 0x434c0200 + 0x40 + 14].join(), ids.map((i) => i.toString(16)).join(','));
         assert(rec.imageById.get(0x434c0200 + 0x3f).w === 216 && rec.imageById.get(0x434c0200 + 0x3f).data.length === 216 * 81 * 4);
         assert(rec.imageById.get(0x434c0100).w === 600 && rec.imageById.get(0x434c0100).data.length === 600 * 225 * 4);

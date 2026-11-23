@@ -310,9 +310,6 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   (ko 톨게이트) over the distance; lane_draw tints TOLL_ETC lanes blue (half for
   TOLL_ETC_CASH). None of the three seen from TMAP over CarPlay yet (INCLUDE_TOLLGATES was rejected by the car on the
   Nov 22 drive; cluster-info-nav.log will show what a toll plaza sends).
-- Layouts 0.53.0 (Nov 23 2026): Custom 1, 2 and 3 (custom.js, layout_custom1-3.js), the owner's own designs from the
-  MGU demo's layout editor (custom_layouts.json in the data folder, or custom_layouts.js shipped), drawn with the
-  existing piece kinds only and kept within 36 pieces and the panel; tools/test_custom.js. Based on idv7lol's Studio.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

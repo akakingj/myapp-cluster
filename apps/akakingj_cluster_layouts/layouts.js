@@ -3,9 +3,7 @@
  * layouts.js - the layouts this app offers, by id. A layout is one file, layout_<id>.js, next to this one
  * (the build ships only top-level .js files); list it here and in app.json's "layout" setting (README.md).
  */
-const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_simple'), require('./layout_gt3'), require('./layout_ko1'), require('./layout_ko2'),
-    // (Custom 1-3: the MGU demo's layout editor, custom.js)
-    require('./layout_custom1'), require('./layout_custom2'), require('./layout_custom3')];
+const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_sport'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_simple'), require('./layout_gt3'), require('./layout_ko1'), require('./layout_ko2')];
 const C0 = require('./layout_common');
 /** A readout put in the time's or the outside temperature's place, two side by side: made to hold its widest
  * figures ('TRANS 140°') with a gap to the other (layout_common.fitText). */
@@ -180,8 +178,6 @@ const SLOTS = {
     // (0.44.0: the display between the dials, as 20's; the arcs across the dials' feet)
     ko1: Object.assign({ infoMain: (o) => !MAPFORM(o) }, DIALS, STRIP2),
     ko2: Object.assign({ infoMain: (o) => !MAPFORM(o) }, DIALS, STRIP2),
-    // (Custom 1-3: their readouts are the design's own)
-    custom1: {}, custom2: {}, custom3: {},
 };
 /** The readout places layout id has (all: whatever the car and settings; else those that show with options o). */
 /*
