@@ -136,7 +136,8 @@ function windowText(o) {
 }
 
 const ECON = ['econ', "Average fuel economy (the car's trip computer)"];
-const noMap = (o) => o.centre !== 'map';
+// (with the map or the stock centre - over the car's strip, the stock centre is the map's form too - the two dials alone)
+const noMap = (o) => (o.centre || 'info') === 'info';
 
 /* the big dials' centres' height: their outer rings clear of the camera's cowl (its corners at x 730 and 1190, y 128) */
 const CY = 360;
