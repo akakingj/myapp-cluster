@@ -76,18 +76,18 @@ mgu.run({
         clockNow();
         settings.onChange((k) => { if (k === 'timeZone' || k === 'clock') clockNow(); });
         // Three pods and Freedom are gone (akakingj's build): a layout saved as either is Arc tach now
-        // layouts taken out: a saved one moves to the nearest kept (0.30.0: Digital round, Modern wide and Digital dash)
+        // layouts taken out: a saved one moves to the nearest kept (0.30.0: Digital round, Modern wide and Digital dash; 0.54.0: ID8 M, to ID7 M)
         // (Settings > Vehicle: 'ice', petrol or diesel, became Petrol and Diesel apart in 0.35.7)
         if (settings.get('vehicle') === 'ice') settings.set('vehicle', 'petrol');
-        const GONE = { three_pods: 'arc_tach', freedom: 'arc_tach', digital_round: 'analog_sport', modern_wide: 'pulse', digital_dash: 'track' };
+        const GONE = { three_pods: 'arc_tach', freedom: 'arc_tach', digital_round: 'analog_sport', modern_wide: 'pulse', digital_dash: 'track', sport: 'm' };
         ['layout', 'layoutSport', 'layoutEco'].forEach((k) => { if (GONE[settings.get(k)]) settings.set(k, GONE[settings.get(k)]); });
         const showing = () => settings.get('show') === 'on';
         // every reading (data.js, shared with Cluster Centre): the car's signals, the engine unit over UDS for
         // what a layout needs (layout.needs), eDrive Live's charge and power while shown
         const D = startData(ctx, { shown: showing, tyres: true });
         const car = D.car;
-        // the driving assistant (dap.js): none of its services is subscribed (0.36.7). ID8 M's cruise control reads the
-        // head-up display's set speed (data.js cruise); dap.js stays for the previews' sample (DAP_DEMO) and later use
+        // the driving assistant (dap.js): none of its services is subscribed (0.36.7); the cruise
+        // control's set speed comes from the head-up display (data.js cruise); dap.js stays for the previews' sample (DAP_DEMO) and later use
         const data = () => {
             const d = D.data();
             d.dap = d.demo ? DAP_DEMO : null;
@@ -217,14 +217,14 @@ mgu.run({
             // (0.48.7) the QR codes (not full) leave out the catalog listings - the car's signal names for the range,
             // power, cruise control and time, found long since - and list only the reset-logic and trip computer
             // services' fields: about a quarter of the codes (45 were 15 pages); the USB file keeps everything
-            const QR_OUT = ['range and charge signals', 'power and consumption signals', 'cruise control signals', 'time and date signals', 'driving assistant (ID8 M)'];
+            const QR_OUT = ['range and charge signals', 'power and consumption signals', 'cruise control signals', 'time and date signals', 'driving assistant'];
             const sections = [
                 ['settings', JSON.stringify({ layout: settings.get('layout'), centre: o.centre, look: settings.get('look'), show: settings.get('show') })],
                 ['engine', JSON.stringify(cluster.status())],
                 ['cluster renderer status', squeeze(cluster.rendererStatus() || '(no answer yet)', full)],
                 ['data now', JSON.stringify(snap)],
                 ['raw signals', JSON.stringify(D.status().raw || {})],
-                ['driving assistant (ID8 M)', 'not subscribed (0.36.7): the cruise control from the head-up display\'s set speed'],
+                ['driving assistant', 'not subscribed (0.36.7): the cruise control from the head-up display\'s set speed'],
                 // (0.48.4) the trip data: the car's trip computer follows the head unit's "values shown since" choice
                 // (start, refuelling, charging, delivery, own reset); every field of its reset-logic services and the
                 // catalog's trip, distance and duration fields with all their members, to find the one with each choice

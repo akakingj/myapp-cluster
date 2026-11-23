@@ -6,7 +6,7 @@ letters came out soft and odd).
 
 Font: Barlow (SIL Open Font License 1.1, shared/NOTICE; the owner's choice, Nov 22 2026: IBM Plex Sans Condensed
 from Nov 18, Barlow Semi Condensed before), with upper and lower case. Families:
-  bold   SemiBold (figures and text the layouts call bold: every layout but ID7 M, ID8 M and JDM 1; Centre's modern look)
+  bold   SemiBold (figures and text the layouts call bold: every layout but ID7 M and JDM 1; Centre's modern look)
   light  Regular (KO 1, KO 2; Centre's native look)
   wide   Michroma (SIL OFL 1.1, shared/NOTICE), thickened, with Barlow Medium for the small print: Sport's face
   orb    Orbitron Black (SIL OFL 1.1), with Barlow Medium for the small print: M's face

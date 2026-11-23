@@ -324,6 +324,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
   Korean for Retro M's place (kit locales), and Centre's shared font list. Every layout's name in English in Korean
   too (Simple, Track: they were 간단, 트랙), as the owner asked.
+- Layouts 0.54.0, Centre 0.14.8 (Nov 23 2026, the owner's choice: the iDrive 8 look is AK Cluster ID8's now): ID8 M
+  (layout_sport.js, bimmer-lab's Sport view) removed, with its shader (SDASH_FS, out of the shared shaders Centre carries
+  too) and pictures; fifteen layouts. A saved choice of it
+  (Layout, Layout in Sport, Layout in ECO PRO) moves to ID7 M, as removed layouts before (main.js GONE).
 - Layouts 0.53.1, Centre 0.14.7, Info 1.10.11 (Nov 23 2026, the owner's review of Retro M): Retro M in Barlow, as the
   other layouts (font_cond.wad and bake_font.py's 'cond' removed), and going as the other analog layouts: the tach's
   red zone lower while the oil is cold (shiftPoint) and Power % in a plug-in hybrid's electric modes; the oil and the

@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.53.1",
+  "version": "0.54.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -166,10 +166,6 @@
           "ID7 M"
         ],
         [
-          "sport",
-          "ID8 M"
-        ],
-        [
           "arc_tach",
           "JDM 1"
         ],
@@ -266,10 +262,6 @@
           "ID7 M"
         ],
         [
-          "sport",
-          "ID8 M"
-        ],
-        [
           "arc_tach",
           "JDM 1"
         ],
@@ -341,10 +333,6 @@
         [
           "m",
           "ID7 M"
-        ],
-        [
-          "sport",
-          "ID8 M"
         ],
         [
           "arc_tach",

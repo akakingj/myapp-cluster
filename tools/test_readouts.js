@@ -154,9 +154,9 @@ check('the pedal from the engine unit (as Live Data: 5814 / 480B, OBD 49), asked
 });
 check('the layout for the drive mode: Sport / ECO PRO when set, else Layout; the gear selector\'s S doesn\'t switch', () => {
     const L = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'layouts.js'));
-    const S = { layout: 'analog_sport', layoutSport: 'sport', layoutEco: 'same' }, get = (k) => S[k];
+    const S = { layout: 'analog_sport', layoutSport: 'm', layoutEco: 'same' }, get = (k) => S[k];
     assert.strictEqual(L.layoutFor(get, { driveMode: 'COMFORT' }), 'analog_sport');
-    assert.strictEqual(L.layoutFor(get, { driveMode: 'SPORT INDIVIDUAL' }), 'sport');
+    assert.strictEqual(L.layoutFor(get, { driveMode: 'SPORT INDIVIDUAL' }), 'm');
     assert.strictEqual(L.layoutFor(get, { driveMode: 'ECO PRO' }), 'analog_sport');
     assert.strictEqual(L.layoutFor(get, { driveMode: 'COMFORT', mode: 'S' }), 'analog_sport');
     assert.strictEqual(L.layoutFor(get, {}), 'analog_sport');

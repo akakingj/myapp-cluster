@@ -1355,11 +1355,11 @@ void main() {
 }`;
 
 /*
- * The M and Sport layouts' shaders (layout_m.js, layout_sport.js): bimmer-lab's Cluster Themes shaders (shared/shaders.js
- * of github.com/bimmer-lab/apps; MIT, Copyright (c) 2026 bimmer-lab: NOTICE), as they wrote them, so the two look as
- * theirs do on the car. MDASH the M backdrop (the cards, the centre line, the side dials, the M stripes; here each
- * part in its own small layer, u_part: theirs in one full-screen layer restarted the cluster), MTACH an M rev blade, SDASH the Sport view (here likewise in three layers: each bracket, the bottom line and strip; its engine speed here u_value, eased
- * by the engine as every gauge's). Their uniforms are set from the layouts' pieces (bimmer-lab's layout JSON's
+ * The M layout's shaders (layout_m.js): bimmer-lab's Cluster Themes shaders (shared/shaders.js
+ * of github.com/bimmer-lab/apps; MIT, Copyright (c) 2026 bimmer-lab: NOTICE), as they wrote them, so it looks as
+ * theirs does on the car. MDASH the M backdrop (the cards, the centre line, the side dials, the M stripes; here each
+ * part in its own small layer, u_part: theirs in one full-screen layer restarted the cluster), MTACH an M rev blade.
+ * Their uniforms are set from the layouts' pieces (bimmer-lab's layout JSON's
  * numbers), the readings through dyn (60 a second, when they change).
  */
 const MDASH_FS = `// The M theme's backdrop (GLSL ES 1.00), traced off a photo of a current M8's cluster (design/photos/ref-m8-cluster.png,
@@ -1563,204 +1563,6 @@ void main() {
         c = over(vec4(onLit ? vec3(0.08, 0.09, 0.11) : vec3(0.93, 0.95, 0.98), onLit ? 0.55 * cov(ty) : cov(ty)), c);
     }
     gl_FragColor = c;
-}
-`;
-const SDASH_FS = `// The Sport theme in one cluster-render "effect" layer (GLSL ES 1.00), after BMW's Live Cockpit Sport view:
-// a blue speed bracket left and a red rev bracket right (the left one mirrored). Each is a thin bright outer
-// line, a band that fills from the bottom (white marker at the value), a dark gap and a thin inner line round a
-// black middle: plain black, or the map through a see-through rounded hole (u_hole; only the bottom strip draws
-// over it, the fuel and oil bars are off while it is open). Two-tone fuel and oil bars inside the brackets, a blue / red strip at the bottom. v_uv (0,0) is
-// the top-left. The backdrop is pure black: the car brightens dark tints (seen Nov 5 2026), so no dark panels.
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-varying vec2 v_uv;
-uniform vec2 u_size;
-uniform vec4 u_geo;       // outer line: y at the top, y at the bend, y at the bottom, x at the bend (left side)
-uniform vec3 u_k;         // x per y px above the bend, below it, bend roundness px
-uniform float u_w;        // band width
-uniform float u_inner;    // the inner line's distance from the outer line
-uniform vec2 u_scale;     // y of the scale's 0 and of its top mark
-uniform vec2 u_ticks;     // marks left (speed), right (rpm)
-uniform float u_speed;    // 0..1 along the scale
-uniform float u_value;    // 0..1, the engine speed (the engine's value: eased, every frame)
-#define u_rpm u_value
-uniform float u_redFrom;  // 0..1 (the redline)
-uniform float u_orange;   // 0..1, yellow marks from here to the redline
-uniform float u_fuel;     // 0..1
-uniform float u_oil;      // 0..1
-uniform vec4 u_fuelSeg;   // full end x, y, empty end x, y
-uniform vec4 u_oilSeg;
-uniform vec4 u_hole;      // map window x, y, w, h, already inset (w 0 = none)
-uniform float u_holeR;    // the hole's corner radius px
-uniform vec4 u_strip;     // bottom strip: left end x, top y, height, slant px
-uniform float u_topEnd;   // the top lines run from the bracket to this x (left; mirrored on the right)
-uniform vec2 u_off;       // (here) the layer's place on the panel
-uniform float u_part;     // (here) 1 the speed bracket (and the fuel bar), 2 the rev bracket (and the oil bar), 3 the bottom line and strip
-uniform vec2 u_stripFill; // (here) the bottom strip's halves as gauges: the left half lit from its left end to x, the right from the middle to y (0..1; negative: all lit)
-uniform float u_regenR;   // (here) flags: 1 the bottom strip's right half is regeneration (green); 2 its left half red (a plug-in's charge low); in the rev bracket: 4 its bar with the fuel's zones (the fuel there), 8 without zones (a plug-in's charge), 12 that all red (the charge low)
-uniform float u_zero;     // (here) the rev bracket's 0 (0..1 up it): above 0 a power gauge's regeneration below it, lit green
-                          // from the 0 down to the value, its marks counted from the 0
-
-const vec3 BLUE_LINE = vec3(0.36, 0.62, 1.0);
-const vec3 BLUE_BAND = vec3(0.13, 0.3, 0.78);
-const vec3 BLUE_LIT = vec3(0.62, 0.86, 1.0);
-const vec3 BLUE_IN = vec3(0.2, 0.45, 0.98);
-// (here) the rev bracket's colours are the look's (red in sport, as theirs; silver in comfort, teal in efficient)
-uniform vec3 u_rline;
-uniform vec3 u_rband;
-uniform vec3 u_rlit;
-uniform vec3 u_rin;
-#define RED_LINE u_rline
-#define RED_BAND u_rband
-#define RED_LIT u_rlit
-#define RED_IN u_rin
-const vec3 REGEN_LIT = vec3(0.24, 0.86, 0.52);
-
-const vec3 WHITE = vec3(1.0);
-// (0.38.1) worked out once on the head unit (layout_sport.js): the outer line's x at its top and at its bottom, the
-// inner line's x at its top run, 1 / the scale's height
-uniform vec4 u_pts;
-
-float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
-// (0.38.1) colour laid over the colour so far, premultiplied: no division a pixel (the old over() had one in each of
-// its dozen calls); back to straight alpha once at the end
-vec4 put(vec4 c, vec3 col, float a) { return vec4(col * a + c.rgb * (1.0 - a), a + c.a * (1.0 - a)); }
-float segD(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0); return length(pa - ba * h); }
-// px from a level run at y from x0 to x1 (square ends)
-float runD(vec2 q, float x0, float x1, float y) { return max(abs(q.y - y), max(x0 - q.x, q.x - x1)); }
-
-// one bracket in the left frame (q mirrored for the right one)
-vec4 bracket(vec2 q, float val, float zero, float redFrom, float orange, float ticks, vec3 line, vec3 band, vec3 lit, vec3 inner, vec4 c) {
-    // px from the outer line, inwards (perpendicular): one square root and one inverse one
-    float dy = q.y - u_geo.y;
-    float k = dy < 0.0 ? u_k.x : u_k.y;
-    float r = sqrt(dy * dy + u_k.z * u_k.z);
-    float sl = k * dy / r;
-    float d = (q.x - u_geo.w - k * (r - u_k.z)) * inversesqrt(1.0 + sl * sl);
-    float yTopI = u_geo.x + 8.0;                              // the inner line's top run
-    float t = (u_scale.x - q.y) * u_pts.w;                    // 0 at the scale's 0
-    float inY = step(u_geo.x + 5.0, q.y) * step(q.y, u_geo.z - 4.0);
-    // the band: lit from the 0 to the value (up from it, or below it, regeneration, down from it in green), white
-    // marker on top; amber in the run-up to the redline, red from it (brighter where the value has reached them)
-    float inB = inY * cov(5.0 - d) * cov(d - 5.0 - u_w);
-    float f = clamp((d - 5.0) / u_w, 0.0, 1.0);
-    float on = step(min(zero, val), t) * step(t, max(zero, val));
-    float below = 1.0 - step(zero, t);
-    vec3 lc = mix(lit, REGEN_LIT, below);
-    vec3 litC = (lc + (WHITE - lc) * (0.25 * f)) * mix(0.8, 1.0, clamp(abs(t - zero) / max(abs(val - zero), 0.01), 0.0, 1.0));
-    vec3 dimC = mix(band, mix(band, REGEN_LIT * 0.3, 0.6), below * step(0.0001, zero));
-    float zr = step(redFrom, t) * step(t, 1.02), za = step(orange, t) * (1.0 - step(redFrom, t));
-    vec3 zOn = mix(mix(vec3(1.0, 0.78, 0.12), vec3(1.0, 0.92, 0.55), f * 0.4), mix(vec3(0.95, 0.12, 0.12), vec3(1.0, 0.5, 0.45), f * 0.4), zr);
-    vec3 zOff = mix(mix(vec3(0.55, 0.4, 0.04), vec3(0.8, 0.6, 0.08), f), mix(vec3(0.62, 0.04, 0.05), vec3(0.85, 0.1, 0.1), f), zr);
-    vec3 col = mix(mix(dimC, litC, on), mix(zOff, zOn, on), za + zr);
-    c = put(c, col, 0.96 * inB);
-    float yv = u_scale.x - val / u_pts.w;
-    c = put(c, WHITE, inB * cov(abs(q.y - yv) - 2.0) * max(step(0.002, val), step(0.0001, zero)));
-    // marks at every label, on the band's outer half (counted from the 0; below it at its half and its end)
-    float st = max(mix((1.0 - zero) / ticks, zero * 0.5, below), 0.001);
-    float kk = floor((t - zero) / st + 0.5), tk = zero + kk * st;
-    float yk = u_scale.x - tk / u_pts.w;
-    float mk = inB * step(-0.001, tk) * step(kk, ticks) * step(7.0, d) * step(d, 19.0) * max(1.0 - below, step(0.0001, zero));
-    c = put(c, mix(line, REGEN_LIT, step(kk, -0.5)), 0.9 * mk * cov(abs(q.y - yk) - 1.2));
-    // the outer line with its glow outside it, its top run and its bottom run
-    float o = max(inY, step(abs(q.y - u_geo.x), 6.0) + step(abs(q.y - u_geo.z), 6.0)) * cov(abs(d - 1.0) - 1.8);
-    o = max(o, cov(runD(q, u_pts.x, u_topEnd, u_geo.x) - 2.2));
-    o = max(o, cov(runD(q, u_pts.y, u_pts.y + u_inner + 40.0, u_geo.z) - 2.2));
-    c = put(c, line, 0.35 * exp2(min(d, 0.0) * 0.2885) * inY * step(d, 0.0));
-    c = put(c, line, min(o, 1.0));
-    // the inner line: down the bracket from its top run to the bottom
-    float il = step(yTopI, q.y) * step(q.y, u_geo.z - 6.0) * cov(abs(d - u_inner) - 1.6);
-    il = max(il, cov(runD(q, u_pts.z, u_topEnd - 14.0, yTopI) - 1.6));
-    return put(c, inner, 0.95 * il);
-}
-
-// a two-tone slanted bar from the empty end b to the full end a, with a thin rail beside it
-vec4 bar(vec2 p, vec4 s, float val, float zones, vec4 c) {
-    vec2 a = s.xy, b = s.zw, ba = a - b;
-    float L = length(ba);
-    vec2 dir = ba / L, nrm = vec2(-dir.y, dir.x);
-    float side = dot(p - b, nrm), al = dot(p - b, dir);
-    float sd = length(vec2(max(max(-al, al - L), 0.0), side));   // px from the bar's middle line
-    float h = clamp(al / L, 0.0, 1.0);
-    float body = cov(abs(side) - 7.0) * cov(sd - 7.5);
-    // (here) in segments, as BMW's: white at the full end shading to blue at the empty one, the end zones coloured
-    float sg = fract(h * 8.0) * L / 8.0;
-    body *= clamp(sg - 1.5, 0.0, 1.0) * clamp(L / 8.0 - 1.5 - sg, 0.0, 1.0);
-    vec3 col = mix(vec3(0.35, 0.6, 1.0), vec3(0.96, 0.97, 1.0), smoothstep(0.0, 0.6, h));
-    if (zones < 0.5 && h < 0.125) col = vec3(1.0, 0.2, 0.22);
-    if (zones > 0.5 && zones < 1.5 && h > 0.875) col = vec3(1.0, 0.2, 0.22);
-    if (zones > 0.5 && zones < 1.5 && h < 0.125) col = vec3(0.25, 0.5, 1.0);
-    // (2: no zones, a plug-in's charge; 3: the same, all red: the charge low)
-    if (zones > 2.5) col = mix(vec3(0.8, 0.1, 0.12), vec3(1.0, 0.3, 0.3), smoothstep(0.0, 0.6, h));
-    c = put(c, vec3(0.3, 0.32, 0.38), 0.9 * body);
-    c = put(c, col, body * step(h, val + 0.0001) * step(0.001, val));
-    return put(c, vec3(0.5, 0.52, 0.58), 0.8 * cov(abs(side + 12.0) - 1.0) * cov(sd - 13.0));
-}
-
-// (here) a flare where a bracket's outer line bends, as BMW's own: a soft glow and a four-pointed star. (0.38.1) Three
-// exp2 a pixel (the streaks' two products each one exp2), the streaks shorter: all of it inside the bracket's layers
-vec4 flare(vec2 q, vec2 c, vec3 col, float s, vec4 acc) {
-    vec2 d = abs(q - c) / s;
-    float star = exp2(-(d.x * 1.2 + d.y * 20.6)) + exp2(-(d.y * 1.44 + d.x * 20.6));
-    float glow = exp2(-dot(d, d) * 2.885);
-    acc = put(acc, col, glow * 0.55);
-    return put(acc, mix(col, WHITE, 0.55), min(star * 0.9, 1.0));
-}
-
-void main() {
-    // (here) one part in its own layer, over the panel's own background (a flat): the left bracket, the right one, the
-    // bottom line and strip; the whole view in one full-screen layer, as theirs, is what restarted the cluster for M.
-    // (0.38.1) Each bracket in four layers close round what it draws (layout_sport.js) and no early way out: a GPU
-    // that runs both sides of a branch pays for it and the rest besides. ID8 M still restarted the car's cluster.
-    vec2 p = v_uv * u_size + u_off;
-    vec2 pm = vec2(1920.0 - p.x, p.y);
-    vec4 c = vec4(0.0);
-    float hole = 1.0;
-    if (u_hole.z > 0.0) {
-        vec2 hs = u_hole.zw * 0.5;
-        vec2 q = abs(p - (u_hole.xy + hs)) - (hs - vec2(u_holeR));
-        hole = clamp(length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - u_holeR + 0.5, 0.0, 1.0);
-    }
-    if (u_part < 1.5) {
-        c = bracket(p, u_speed, 0.0, 2.0, 2.0, u_ticks.x, BLUE_LINE, BLUE_BAND, BLUE_LIT, BLUE_IN, c);
-        // (here) the flares at the bracket's bend and at its foot, where it meets the bottom line
-        c = flare(p, vec2(u_geo.w - 1.0, u_geo.y), BLUE_LINE, 26.0, c);
-        c = flare(p, vec2(u_pts.y, u_geo.z), BLUE_LINE, 18.0, c);
-        // the map window: the fuel bar off while it is open (it ran across the map, car photos Nov 7 2026)
-        if (u_hole.z <= 0.0) c = bar(p, u_fuelSeg, u_fuel, 0.0, c);
-    } else if (u_part < 2.5) {
-        c = bracket(pm, u_rpm, u_zero, u_redFrom, u_orange, u_ticks.y, RED_LINE, RED_BAND, RED_LIT, RED_IN, c);
-        c = flare(pm, vec2(u_geo.w - 1.0, u_geo.y), RED_LINE, 26.0, c);
-        c = flare(pm, vec2(u_pts.y, u_geo.z), RED_LINE, 18.0, c);
-        if (u_hole.z <= 0.0) c = bar(p, u_oilSeg, u_oil, u_regenR > 11.5 ? 3.0 : u_regenR > 7.5 ? 2.0 : u_regenR > 3.5 ? 0.0 : 1.0, c);
-    } else {
-        // the bottom line between the brackets
-        if (abs(p.y - u_geo.z) < 3.0 && abs(p.x - 960.0) < 960.0 - u_pts.y)
-            c = put(c, mix(BLUE_LINE, RED_LINE, step(960.0, p.x)) * 0.8, cov(abs(p.y - u_geo.z) - 1.2));
-        // bottom strip: slanted ends, blue left of the middle, red right, thin dividers
-        float sy = p.y - u_strip.y;
-        if (sy > -2.0 && sy < u_strip.z + 2.0) {
-            float xl = u_strip.x + (u_strip.z - sy) / u_strip.z * u_strip.w;     // left end leans in at the top
-            float dx = abs(p.x - 960.0), xe = 960.0 - xl;
-            float inside = cov(dx - xe) * cov(-sy) * cov(sy - u_strip.z);
-            float f = dx / xe;
-            float fl0 = mod(u_regenR, 4.0);
-            vec3 sc = p.x < 960.0 ? (fl0 > 1.5 ? mix(vec3(0.38, 0.04, 0.05), vec3(0.95, 0.14, 0.14), f) : mix(vec3(0.06, 0.2, 0.62), vec3(0.15, 0.36, 0.92), f))
-                : mod(fl0, 2.0) > 0.5 ? mix(vec3(0.04, 0.3, 0.16), vec3(0.16, 0.72, 0.4), f) : mix(RED_LINE * 0.42, RED_LINE * 0.9, f);
-            // (here) each half a gauge: lit to its reading, dim beyond
-            float fl = p.x < 960.0 ? (p.x - xl) / xe : (p.x - 960.0) / xe;
-            float lv = p.x < 960.0 ? u_stripFill.x : u_stripFill.y;
-            if (lv >= 0.0) sc *= mix(0.32, 1.0, clamp((lv - fl) * xe + 0.5, 0.0, 1.0));
-            c = put(c, sc, 0.95 * inside);
-            float div = cov(abs(mod(p.x - (u_strip.z - sy) * 0.45, 150.0) - 75.0) - 73.8);
-            c = put(c, vec3(0.02, 0.03, 0.08), 0.5 * inside * div);
-            c = put(c, WHITE, 0.25 * inside * cov(abs(sy) - 1.0));
-        }
-    }
-    gl_FragColor = vec4(c.rgb / max(c.a, 0.0001), c.a * hole);
 }
 `;
 
@@ -2673,4 +2475,4 @@ uniform vec2 u_size;
 varying vec2 v_uv;
 void main() { gl_FragColor = rmPanel(v_uv * u_size + u_origin); }`;
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, RMDIAL_FS, RMBG_FS, JDM_FS_MODES, MROUND_FS_MODES };
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, RMDIAL_FS, RMBG_FS, JDM_FS_MODES, MROUND_FS_MODES };

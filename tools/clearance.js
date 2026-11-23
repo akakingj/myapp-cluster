@@ -17,7 +17,7 @@ function clashesOf(p, o) {
     const C = C0, out = [];
     // (M's and Sport's whole-view backdrops, bimmer-lab's, count as backgrounds: over the car's strip their layer
     // ends at it, and the KOMBI's own boxes show over them)
-    const isBg = /^bg|^boxBezel$/.test(p.key) || (p.kind === 'flat' && /bg/.test(String(p.colour || p.key))) || /^(mdash|sdash)$/.test(p.kind);
+    const isBg = /^bg|^boxBezel$/.test(p.key) || (p.kind === 'flat' && /bg/.test(String(p.colour || p.key))) || /^mdash$/.test(p.kind);
     if (isBg) return out;
     // a band along an arc (u_geo: centre in the layer, radius, thickness): the points of its ink, every 3 degrees
     const g = (p.kind === 'band' || p.kind === 'ring') && p.params && p.params.u_geo, sp = p.params && p.params.u_span;

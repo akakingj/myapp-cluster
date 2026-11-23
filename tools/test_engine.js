@@ -83,7 +83,7 @@ LAYOUTS.forEach((L) => {
         const s = makeScene({ layout: id, options: { centre: 'stock' }, data: { speed: 0 } });
         s.engine._tick();
         // (a whole-view backdrop, M's and Sport's, with that area cut see-through: u_hole)
-        const cutOut = (l) => /^(mdash|sdash)$/.test(l.kind) && l.params.u_hole && l.params.u_hole[0] <= 820 && l.params.u_hole[0] + l.params.u_hole[2] >= 1100;
+        const cutOut = (l) => /^mdash$/.test(l.kind) && l.params.u_hole && l.params.u_hole[0] <= 820 && l.params.u_hole[0] + l.params.u_hole[2] >= 1100;
         // (over the car's strip the stock centre shows in the map's window: the backgrounds round it and the black band
         // under the layout may span the middle above and below the window, nothing in it)
         const W = L.mapWindow || require(path.join(APP, 'layout_common')).MAP_VIEW;
@@ -104,7 +104,7 @@ LAYOUTS.forEach((L) => {
         // chevron's ink: clearance.js): only those may overlap
         const { clashes } = require('./clearance');
         const o = { speedUnit: 'mph', tempUnit: 'f', centre: 'map', redline: 7000, rpmMax: 8000 };
-        const hole = (l) => /^(mdash|sdash)$/.test(l.kind) && l.params.u_hole && l.params.u_hole[2] > 0;   // (cut see-through there)
+        const hole = (l) => /^mdash$/.test(l.kind) && l.params.u_hole && l.params.u_hole[2] > 0;   // (cut see-through there)
         assert(over.every((l) => (l.geo && l.geo[2] > 0) || hole(l) || (l.kind === 'chevron' && clashes(l, o).indexOf('over the map') < 0)), 'over the map: ' + over.map((l) => l.key).join(' '));
         s.stop();
     });

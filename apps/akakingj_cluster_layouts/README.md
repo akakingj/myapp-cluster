@@ -3,13 +3,13 @@
 *Part of [iDrive 7 cluster apps](../../README.md), with Cluster Info and [Cluster Centre](../cluster_centre/README.md).*
 
 Custom layouts for the whole instrument cluster of a BMW with iDrive 7 (MGU), **drawn by the cluster
-itself**. Sixteen layouts, in the page's order: 90's, 20's, Retro M, Old M, ID6 M, ID7 M and ID8 M (the last two after
-bimmer-lab's M and Sport), JDM 1, JDM 2, GM, Track, Pulse, Simple, GT3 (after bimmer-lab's), KO 1 and KO 2, each in comfort,
+itself**. Fifteen layouts, in the page's order: 90's, 20's, Retro M, Old M, ID6 M, ID7 M (after
+bimmer-lab's M), JDM 1, JDM 2, GM, Track, Pulse, Simple, GT3 (after bimmer-lab's), KO 1 and KO 2, each in comfort,
 sport and efficient colours (following the selector's S / M programme, or chosen; Retro M has one set of colours), each
 with three centres: the **readings**, **Waze** or the **stock** centre content.
 
 With the car's own bottom strip (the default) the strip shows the gear, the drive mode, the ranges, the time and the
-outside temperature, so no layout shows them a second time (ID7 M, ID8 M and Old M never show the time, the outside
+outside temperature, so no layout shows them a second time (ID7 M and Old M never show the time, the outside
 temperature or the fuel range at all): the places the time and temperature had show the
 battery's temperature (intake air on a petrol or diesel car) and the gearbox oil's, and where a layout had its gear
 it now has the digital speed or another reading. With **Waze** in the centre, Waze on cluster (0.9.107 or later,
@@ -22,7 +22,7 @@ in the car's map slot under the layout, seen through the window with the cluster
 shaders doesn't have yet.)
 
 ID7 M's map window runs between its blades from under the camera's cowl to the foot of the map area, the speed in its
-left card and the gear in its right one. Apart from ID7 M and ID8 M (their own windows), the layouts leave the middle
+left card and the gear in its right one. Apart from ID7 M (its own window), the layouts leave the middle
 of the car's map area open, x 592-1338 between the cluster's own fins, and beside it on the left the cluster's own
 speed readout: the stock map or centre shows there without the fins and the bits along its bottom edge (the speed
 limit sign, "1/min").
@@ -106,8 +106,7 @@ follows the mode (blue, red in sport, teal in ECO PRO).
   which stays every layout's default (*Common*).
 - **Every other place (0.35.0):** each layout's places that had a fixed reading - 90's gauge between the dials (also an
   analog clock, 0.35.1, on Settings > Time zone), 20's
-  gauge in the tach's foot, ID7 M's four card gauges and two bottom bars, ID8 M's bars in the brackets and the bottom
-  bar's halves, JDM 2's four temperature quarters, Track's six tiles, Pulse's bottom row, GT3's boxes and the
+  gauge in the tach's foot, ID7 M's four card gauges and two bottom bars, JDM 2's four temperature quarters, Track's six tiles, Pulse's bottom row, GT3's boxes and the
   readings under the gear - are cards on the page too, set for that layout alone (a gauge place any small gauge's
   reading, with its scale, red zone and figures; a readout place any readout). *The layout's own* keeps it as
   designed. With more than six the cards go three or four a row.
@@ -225,26 +224,6 @@ in the window between the blades.
 | Map in the centre |
 |---|
 | ![](../../docs/m_map.png) |
-
-### ID8 M
-
-The iDrive 8 M cars' Sport view (km/h to 260: 0-180 in 30s, then 220 and 260), from bimmer-lab's Sport theme (their shader, MIT) brought closer to BMW's own: the
-blue speed bracket and the red rev bracket with flares where they bend and meet the bottom line, segmented fuel and
-oil bars, and the bottom bar's halves as gauges (the charge on blue and the battery's power on red, green while
-regenerating; boost and coolant on a petrol or diesel car). In an electric drive the rev bracket reads **ePower %**
-(the share of the most the battery gives), as BMW's electric M cars do, its bottom quarter regeneration (green, to
-the most it takes). The rev bracket's colour follows the drive mode: red in a sport mode (as BMW's Sport view),
-silver in comfort, teal in ECO PRO and on electricity alone. The cruise control's
-icon is grey, and green with the set speed beside it while the cruise control holds a speed (the driving assistant's
-own services; those send nothing on the G05 tried, so else the head-up display's set speed,
-`DisplayDataServer.functionalLibraryData`). Pressed 5% in height to end at the car's own strip; with the Waze map the map
-goes in the window between the brackets.
-
-![ID8 M](../../docs/sport.png)
-
-| Map in the centre |
-|---|
-| ![](../../docs/sport_map.png) |
 
 ### JDM 2
 
