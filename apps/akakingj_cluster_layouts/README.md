@@ -32,6 +32,17 @@ digits every frame, and the battery's power the moment eDrive Live reads it (it 
 reading at once and this app watches for it, instead of a quarter-second file cycle and a half-second scan). The
 battery's own pace sets the limit: its current answers 10-20 times a second over diagnostics.
 
+### Custom 1, 2 and 3 (0.53.0)
+
+Three layouts the owner draws, in the MGU demo's layout editor (myapp-id7 `demo/`): the speed and rpm dials, any
+gauge as a small dial, readouts (speed, rpm, the gear, the outside temperature and every reading of the page's
+readouts), labels, bars, boxes and lines, each where it is put, in the design's colours (a drive mode may have its
+own). `custom.js` turns a design into pieces of the kinds the other layouts use, no other shader: a design that asks
+for too much is cut to 36 pieces, every piece is kept inside the panel, a colour that isn't one is the layout's own,
+and a slot with no design draws its name. A design comes from `custom_layouts.json` in the app's data folder (the
+demo writes it there; read again within a second of changing) or from `custom_layouts.js`, which ships with the
+app. The car's strip and its gauges are the layout's own, as Simple's.
+
 ### The car's trip computer (0.45.0)
 
 Every readout place (Readout 1 / 2, the main readout, the bottom line, and each layout's own readout places on the page)

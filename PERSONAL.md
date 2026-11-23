@@ -299,6 +299,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   Layouts' logs no longer carry Cluster Centre's log or Cluster Info's, so its codes stay few. Info's: its page's rows,
   the overlay, the raw turn signals, the driving assistant check and its log, the directions' log, its own log.
 - Layouts 0.52.6 (Nov 23 2026): its Logs file is cluster-logs-layout-<time>.txt, like Info's and Centre's.
+- Layouts 0.53.0 (Nov 23 2026): Custom 1, 2 and 3 (custom.js, layout_custom1-3.js), the owner's own designs from the
+  MGU demo's layout editor (custom_layouts.json in the data folder, or custom_layouts.js shipped), drawn with the
+  existing piece kinds only and kept within 36 pieces and the panel; tools/test_custom.js. Based on idv7lol's Studio.
 - Info 1.10.7 (Nov 23 2026): the directions' lanes up to 36 of the board's 240 wide (lane_draw.js CELL_WIDE; 29
   before, still 29 each for 7 or 8 lanes), the arrows as they were: wider lane boards, as the owner asked.
 - Info 1.10.8 (Nov 23 2026): the lane board and its arrows 82 % as high (lane_draw.js LOW, from y 17.4; nav_view's

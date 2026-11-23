@@ -150,6 +150,11 @@ mgu.run({
             onFresh: D.onFresh,
         });
         let cluster = start();
+        // Custom 1-3 (custom.js): the designs in the data folder, read again when they change (the MGU demo's layout
+        // editor writes them while you edit): the layout redrawn if one of them is up
+        const custom = require('./custom');
+        custom.useDataDir(ctx.dataDir);
+        setInterval(() => { if (custom.reload() && layout.custom) { log.info('custom layouts changed: ' + layout.id + ' redrawn'); cluster.rebuild(); } }, 1000);
         const mapWindow = startMapWindow(log);
         let lastVehicle = null, lastModeGear = null, modeWant = null, modeAt = 0;
         // the engine-unit readings the layout shows, read fast while it shows
@@ -281,7 +286,8 @@ mgu.run({
         /* ---------- the layouts: the chosen one large, a row of cards to tap (it shows on the cluster at once), and
          * its readouts, each set for it alone (slotsBy) or following the Settings' value ---------- */
         const previews = menu.loadPreviews(__dirname, log);
-        const ITEMS = LAYOUTS.map((l) => l.id).concat(['stock']);
+        // (Custom 1-3 after the Stock card: their pictures are their designs, drawn on the cluster, none here)
+        const ITEMS = LAYOUTS.filter((l) => !l.custom).map((l) => l.id).concat(['stock'], LAYOUTS.filter((l) => l.custom).map((l) => l.id));
         let cardPage = -1, bigShown = '';
         const cardsUp = {};
         /** The layout setting the drive mode now uses (a Sport / ECO PRO one only where set): what a tap changes. */
@@ -392,6 +398,7 @@ mgu.run({
                 const stockPx = id === 'stock' ? previews.thumb('stock', strip) : null;
                 if (id === 'stock' && !stockPx) { cv.roundRect(ix, iy, menu.TW, menu.TH, 6, '#16191f'); cv.text('Stock', ix + menu.TW / 2, iy + menu.TH / 2 + 8, 24, t.dim, { align: 'center', font: 'bold' }); }
                 else if (id === 'stock') { if (!picture(cv, IMG_CARD + IMG_STOCK, stockPx, menu.TW, menu.TH, ix, iy, !cardsUp.stock)) cv.fillRect(ix, iy, menu.TW, menu.TH, '#000000'); cardsUp.stock = true; }
+                else if (byId(id).custom && !previews.thumb(id, strip)) { cv.roundRect(ix, iy, menu.TW, menu.TH, 6, '#16191f'); cv.text('Custom ' + id.slice(6), ix + menu.TW / 2, iy + menu.TH / 2 + 8, 24, t.dim, { align: 'center', font: 'bold' }); }
                 else {
                     const n = ITEMS.indexOf(id) + (strip ? IMG_STRIP : 0), ck = id + (strip ? ':strip' : '');
                     if (!picture(cv, IMG_CARD + n, previews.thumb(id, strip), menu.TW, menu.TH, ix, iy, !cardsUp[ck])) cv.fillRect(ix, iy, menu.TW, menu.TH, '#000000');

@@ -2797,5 +2797,8 @@
   "Toll gate": "톨게이트",
   "Driving assistant check": "반자율주행 신호 확인",
   "Signals: what comes in": "신호: 들어오는 값",
-  "Catalog: the services this car has": "카탈로그: 이 차의 서비스 목록"
+  "Catalog: the services this car has": "카탈로그: 이 차의 서비스 목록",
+  "Custom 1": "커스텀 1",
+  "Custom 2": "커스텀 2",
+  "Custom 3": "커스텀 3"
 }

@@ -9,6 +9,8 @@ const assert = require('assert');
 const path = require('path');
 const { makeScene, APP } = require('./scene');
 const { LAYOUTS } = require(path.join(APP, 'layouts'));
+// (Custom 1-3 draw what a design asks: their own checks, tools/test_custom.js)
+const DESIGNED = LAYOUTS.filter((L) => !L.custom);
 const font = require(path.join(APP, 'font'));
 
 const RESERVED = ['u_mvp', 'u_mv', 'u_m', 'u_v', 'u_p', 'u_normal'];   // the renderer's matrix names (PROTOCOL.md)
@@ -19,7 +21,7 @@ const effects = (s) => Array.from(s.client.layers.values()).filter((l) => l.kind
 const textsOf = (s) => s.engine._pieces().filter((p) => p.text !== null).map((p) => p.text);
 const hard = (t) => ({ speed: 80 + 80 * Math.sin(t / 4), rpm: 2500 + 2000 * Math.sin(t * 2), stage: 'D', gear: 1 + Math.floor(t / 10) % 8, oil: 100 + t / 6, coolant: 90, mode: t > 30 ? 'S' : null });
 
-LAYOUTS.forEach((L) => {
+DESIGNED.forEach((L) => {
     const id = L.id;
     check(id + ': only shader layers on the panel; the only pixels are the glyph atlas', () => {
         const s = makeScene({ layout: id, data: { speed: 0, rpm: 800, stage: 'P', oil: 40, coolant: 40 } });
@@ -125,7 +127,7 @@ LAYOUTS.forEach((L) => {
 const { clashes } = require('./clearance');
 /* the car's own strip: no background below CUT_Y but the black band, nothing small crossing it */
 const { CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
-LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + centre + ', ' + vehicle + '): the layout ends at y ' + CUT_Y + ', at most 60 pieces, clear of the cowl and corners', () => {
+DESIGNED.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + centre + ', ' + vehicle + '): the layout ends at y ' + CUT_Y + ', at most 60 pieces, clear of the cowl and corners', () => {
     // (the options as an older save might pass them: the layouts hold the car's strip whatever they say)
     const o = { speedUnit: 'mph', tempUnit: 'f', centre, redline: 7000, rpmMax: 8000, vehicle, cluster: 'm', bottomStrip: 'layout' };
     const ps = L.pieces(o);
@@ -145,7 +147,7 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ic
 /* the car's own bottom strip, the readings in the centre: no range numbers (the strip shows both), the fuel
  * gauge bottom left (Retro: its own, in the speedometer) and the charge bottom right on a plug-in hybrid,
  * the dial layouts' dials centred (their centres either side of x 960, the same distance off it) */
-LAYOUTS.forEach((L) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + vehicle + ', stock bottom strip): the strip\'s ranges, gauges above them, centred', () => {
+DESIGNED.forEach((L) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + vehicle + ', stock bottom strip): the strip\'s ranges, gauges above them, centred', () => {
     const o = { speedUnit: 'mph', tempUnit: 'f', centre: 'info', redline: 7000, rpmMax: 8000, vehicle, cluster: 'standard', bottomStrip: 'stock' };
     const ps = L.pieces(o), keys = ps.map((p) => p.key);
     assert(!keys.some((k) => /^(fuel|elec|frange|erange)(Lbl|L)?$/.test(k)), 'range numbers: ' + keys.filter((k) => /fuel|elec|range/.test(k)).join(' '));
