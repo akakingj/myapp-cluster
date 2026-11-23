@@ -27,7 +27,7 @@ const def = {};
 SPEC.settings.forEach((s) => { def[s.key] = s.default; });
 const D = { speed: 88, rpm: 3200, gear: 4, stage: 'D', oil: 96, coolant: 90, outside: 9, iat: 31, gearbox: 78, boostActual: 0.8, boostTarget: 0.9, torque: 300,
     timing: 14, hpfp: 200, lpfp: 5, pedal: 30, throttle: 28, engineOn: true, enginePower: 120, soc: 60, kw: -10, erange: 30, frange: 500, fuelPct: 55, battTemp: 25,
-    driveMode: 'COMFORT', demo: true };
+    driveMode: 'COMFORT', avgCons: 6.4, avgConsUnit: 'l100', tripKm: 123.4, tripMin: 75, odometer: 48215, demo: true };
 const call = (f, ...a) => { try { return f(...a); } catch (e) { return 'E'; } };
 /** What layout id draws with options o, as text (each piece's place, texts, values, uniforms, visibility). */
 function drawn(id, o) {

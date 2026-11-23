@@ -3,10 +3,10 @@
 *Part of [iDrive 7 cluster apps](../../README.md), with Cluster Info and [Cluster Centre](../cluster_centre/README.md).*
 
 Custom layouts for the whole instrument cluster of a BMW with iDrive 7 (MGU), **drawn by the cluster
-itself**. Fourteen layouts, in the page's order: 90's, 20's, Old M, ID6 M, ID7 M and ID8 M (the last two after
-bimmer-lab's M and Sport), JDM 1, JDM 2, GM, Track, Pulse, GT3 (after bimmer-lab's), KO 1 and KO 2, each in comfort, sport and efficient
-colours (following the selector's S / M
-programme, or chosen), each with three centres: the **readings**, **Waze** or the **stock** centre content.
+itself**. Sixteen layouts, in the page's order: 90's, 20's, Retro M, Old M, ID6 M, ID7 M and ID8 M (the last two after
+bimmer-lab's M and Sport), JDM 1, JDM 2, GM, Track, Pulse, Simple, GT3 (after bimmer-lab's), KO 1 and KO 2, each in comfort,
+sport and efficient colours (following the selector's S / M programme, or chosen; Retro M has one set of colours), each
+with three centres: the **readings**, **Waze** or the **stock** centre content.
 
 With the car's own bottom strip (the default) the strip shows the gear, the drive mode, the ranges, the time and the
 outside temperature, so no layout shows them a second time (ID7 M, ID8 M and Old M never show the time, the outside
@@ -157,6 +157,22 @@ same scale (its 0 a quarter along the arc). Every power gauge in every layout wo
 | Sport colours (S on the selector) | Map in the centre |
 |---|---|
 | ![](../../docs/analog_sport_sport.png) | ![](../../docs/analog_sport_map.png) |
+
+### Retro M
+
+The round dials of an M car of the VDO era, drawn anew (an original drawing of the idea: no picture, maker's name or M
+lettering of anyone's): two black dials on a grey plastic panel, white condensed figures (IBM Plex Sans Condensed) and
+bar ticks, orange needles over dark caps. The average fuel economy (the car's trip computer, in Settings > Fuel economy
+unit) hangs in the speedometer's face and the oil temperature in the tach's (red from 125 °C); small dials at either end
+show the fuel (0 red) and the coolant (130 °C red). Between the big dials, a small window with the gear (it stays over
+the car's strip too) and Old M's M stripes under it. A window in the speedometer shows a reading picked on the page
+(Speedometer's window: the odometer as it comes, the trip with one decimal), its figures and unit alone. The tach's
+scale and its red ticks follow Settings > Gauge goes up to and Red light at (the Car profile's). One set of colours:
+the drive mode and the colour settings change nothing. With the map in the centre the two dials stand either side of
+it, without their window, the end dials and the middle. Every dial is one layer with the panel's plastic round it
+(RMDIAL_FS), the panel between them in pieces (RMBG_FS), none larger than a dial (530 x 530).
+
+![Retro M](../../docs/retro_m.png)
 
 ### Old M
 

@@ -104,8 +104,10 @@ function clashesOf(p, o) {
         if (o && o.centre === 'map' && inB(C.MAP)) out.push('over the map');
         return out;
     }
-    const round = p.kind === 'dial' || p.kind === 'e9x' || p.kind === 'aclock' || (p.kind === 'jdm' && p.params && p.params.u_mode[0] > 0) || (p.kind === 'mround' && p.params && p.params.u_mode[0] < 1.5);
-    const cx = p.x + p.w / 2, cy = p.y + p.h / 2, r = Math.min(p.w, p.h) / 2;
+    const round = p.kind === 'dial' || p.kind === 'e9x' || p.kind === 'aclock' || p.kind === 'rmdial' || (p.kind === 'jdm' && p.params && p.params.u_mode[0] > 0) || (p.kind === 'mround' && p.params && p.params.u_mode[0] < 1.5);
+    // (Retro M's dials: round at u_c in their layer, to their outer ring; the panel's plastic round them a background)
+    const rm = p.kind === 'rmdial' && p.params && p.params.u_c && p.params.u_rings;
+    const cx = rm ? p.x + p.params.u_c[0] : p.x + p.w / 2, cy = rm ? p.y + p.params.u_c[1] : p.y + p.h / 2, r = rm ? p.params.u_rings[2] + 6 : Math.min(p.w, p.h) / 2;
     const hit = (b) => (round
         ? (() => { const nx = Math.max(b.x, Math.min(cx, b.x + b.w)), ny = Math.max(b.y, Math.min(cy, b.y + b.h)); return (nx - cx) ** 2 + (ny - cy) ** 2 < (r - 6) ** 2; })()
         : p.x < b.x + b.w && p.x + p.w > b.x && p.y < b.y + b.h && p.y + p.h > b.y);

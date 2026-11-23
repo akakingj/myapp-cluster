@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.52.7",
+  "version": "0.53.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -150,6 +150,10 @@
           "20's"
         ],
         [
+          "retro_m",
+          "Retro M"
+        ],
+        [
           "classic",
           "Old M"
         ],
@@ -246,6 +250,10 @@
           "20's"
         ],
         [
+          "retro_m",
+          "Retro M"
+        ],
+        [
           "classic",
           "Old M"
         ],
@@ -317,6 +325,10 @@
         [
           "analog_sport",
           "20's"
+        ],
+        [
+          "retro_m",
+          "Retro M"
         ],
         [
           "classic",

@@ -312,6 +312,15 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   Nov 22 drive; cluster-info-nav.log will show what a toll plaza sends).
 - Centre 0.14.5 (Nov 23 2026): Shift light: starts at offers 6500 and 7000 too, as the Car profile's lightStart does
   (kit/tools/test_car_profile.js, brought up to Layouts' econUnit / redLight / yellowLight and now in CI, found it).
+- Layouts 0.53.0, Centre 0.14.6, Info 1.10.10 (Nov 23 2026; the owner's Retro M memo): a new layout, Retro M (retro_m,
+  before Old M; 90's as it was): black dials on a grey plastic panel after a VDO-era M car (drawn anew from the memo's
+  numbers: no picture, theme or lettering of VDO Classic M's), white IBM Plex Sans Condensed figures (font_cond.wad,
+  in Cluster Layouts' folder alone: tools/bake_font.py 'cond'), bar ticks, orange needles; the trip computer's average
+  economy hanging in the speedometer, the oil in the tach, fuel and coolant dials at the ends, the gear's window and
+  the M stripes between; the speedometer's window a place (speedWin, the odometer). One set of colours. Each dial one
+  RMDIAL_FS layer with the panel round it, the panel between in RMBG_FS pieces (the largest piece 530 x 530); the dials
+  at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
+  Korean for Retro M's place (kit locales), and Centre's shared font list.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

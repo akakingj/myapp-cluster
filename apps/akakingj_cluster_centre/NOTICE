@@ -27,12 +27,14 @@ The cluster glyph atlases are made from Barlow (font_bold.wad: SemiBold, font_li
 of font_wide.wad and font_orb.wad), Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow);
 Michroma, thickened (font_wide.wad, Sport's face), Copyright 2011 The Michroma Project Authors
 (https://github.com/googlefonts/Michroma-font); and Orbitron (font_orb.wad, M's face), Copyright 2018 The Orbitron
-Project Authors (https://github.com/theleagueof/orbitron), with Reserved Font Name "Orbitron". All are used under
-the SIL Open Font License 1.1, below.
+Project Authors (https://github.com/theleagueof/orbitron), with Reserved Font Name "Orbitron"; and IBM Plex Sans
+Condensed SemiBold (font_cond.wad, Retro M's figures, in Cluster Layouts alone), Copyright 2017 IBM Corp.
+(https://github.com/IBM/plex), with Reserved Font Name "Plex". All are used under the SIL Open Font License 1.1, below.
 
 Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
 Copyright 2011 The Michroma Project Authors (https://github.com/googlefonts/Michroma-font)
 Copyright 2018 The Orbitron Project Authors (https://github.com/theleagueof/orbitron), with Reserved Font Name "Orbitron"
+Copyright 2017 IBM Corp. (https://github.com/IBM/plex), with Reserved Font Name "Plex"
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

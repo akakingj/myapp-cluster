@@ -2550,4 +2550,127 @@ const byMode = (fs, n) => Array.from({ length: n }, (_, m) => fs.replace('unifor
 const JDM_FS_MODES = byMode(JDM_FS, 8);
 const MROUND_FS_MODES = byMode(MROUND_FS, 3);
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, JDM_FS_MODES, MROUND_FS_MODES };
+/*
+ * (Layouts 0.53.0) Retro M's parts, after a VDO-era M car's round dials (an original drawing of the idea): black dials on
+ * a grey plastic panel, white figures and bar ticks, orange needles.
+ *
+ * RM_PANEL: the panel's grey plastic (u_panel, its grain a 6 px checker of 3 px squares a tenth lighter and darker), x 40 - 1880,
+ * y 66 - 640 of the panel with its top corners rounded (radius 100); black outside. P: a point in panel px (u_origin: the
+ * layer's place on the panel), so the pieces' grain runs on from one to the next.
+ *
+ * RMDIAL_FS: a round gauge in one layer - the panel's plastic round it (u_look.x 1; 0: see-through), its rings (u_rings:
+ * the face's radius, the border's, the outer ring's, at u_c, the gauge's centre in the layer), its scale and needle,
+ * and a second scale with its own needle hanging in its face (u_g2.z == u_g2.w: none). A scale (n = 1, 2):
+ *   u_gn   its pivot (px from u_c), the angle of its start and of its end (degrees, 0 up, clockwise +)
+ *   u_vn   its start and end values, a tick every u_vn.z, a figure every u_vn.w (those ticks the major ones)
+ *   u_tn   the ticks' outer radius, a major one's inner radius, a minor one's, a major one's width
+ *   u_xn   a minor tick's width, the figures' radius, their cell's height (0: none), -
+ *   u_reds  ticks from .x up and to .y down in u_red, on the first scale; .z and .w, the second's (the figures stay u_mark)
+ * u_needle: the needle's length, its tail, its width (round ends), the cap's radius (with a u_look.y border, u_ring);
+ * the hanging scale's needle: its length u_x2.w, its width u_look.z. u_value, u_value2: the readings on the scales.
+ */
+const RM_PANEL = `
+uniform vec2 u_origin;
+uniform vec3 u_panel;
+vec4 rmPanel(vec2 P) {
+    vec2 c = vec2(clamp(P.x, 140.0, 1780.0), max(P.y, 166.0));
+    float d = max(length(P - c) - 100.0, max(max(40.0 - P.x, P.x - 1880.0), max(66.0 - P.y, P.y - 640.0)));
+    vec2 m = mod(floor(P / 3.0), 2.0);
+    vec3 g = u_panel * (m.x < 0.5 && m.y < 0.5 ? 1.1 : m.x > 0.5 && m.y > 0.5 ? 0.915 : 1.0);
+    return vec4(mix(g, vec3(0.0), clamp(d + 0.5, 0.0, 1.0)), 1.0);
+}
+`;
+const RMDIAL_FS = `#version 100
+${HIGHP}${COMMON}${GLYPH}${NUMERAL}${RM_PANEL}
+uniform vec2 u_size;
+uniform vec2 u_c;
+uniform vec4 u_rings;
+uniform vec4 u_look;
+uniform vec4 u_g1;
+uniform vec4 u_v1;
+uniform vec4 u_t1;
+uniform vec4 u_x1;
+uniform vec4 u_g2;
+uniform vec4 u_v2;
+uniform vec4 u_t2;
+uniform vec4 u_x2;
+uniform vec4 u_reds;
+uniform vec4 u_needle;
+uniform float u_value;
+uniform float u_value2;
+uniform float u_digit_adv;
+uniform vec3 u_face;
+uniform vec3 u_border;
+uniform vec3 u_ring;
+uniform vec3 u_mark;
+uniform vec3 u_red;
+uniform vec3 u_hand;
+uniform vec3 u_cap;
+varying vec2 v_uv;
+float tOf(vec2 q, vec4 G) {
+    float a = atan(q.x, -q.y) / DEG, m = (G.z + G.w) * 0.5;
+    float da = mod(a - m + 540.0, 360.0) - 180.0;
+    return (da - (G.z - m)) / (G.w - G.z);
+}
+vec2 dirOf(float t, vec4 G) { float a = (G.z + t * (G.w - G.z)) * DEG; return vec2(sin(a), -cos(a)); }
+vec3 scale(vec3 col, vec2 d, vec4 G, vec4 V, vec4 T, vec4 X, vec2 R) {
+    vec2 q = d - G.xy;
+    float r = length(q), t = tOf(q, G), span0 = V.y - V.x;
+    if (t > -0.05 && t < 1.05 && r > min(T.y, T.z) - 2.0 && r < T.x + 2.0) {
+        float v = V.x + t * span0;
+        float vm = clamp(V.x + floor((v - V.x) / V.z + 0.5) * V.z, V.x, V.y);
+        float k = (vm - V.x) / V.w;
+        bool major = abs(k - floor(k + 0.5)) < 0.01;
+        vec2 dir = dirOf((vm - V.x) / span0, G);
+        float along = dot(q, dir), side = abs(dot(q, vec2(-dir.y, dir.x)));
+        float rin = major ? T.y : T.z, w = major ? T.w : X.x;
+        float cov = clamp(w * 0.5 - side + 0.5, 0.0, 1.0) * span(along, min(rin, T.x), max(rin, T.x));
+        col = mix(col, vm >= R.x - 0.001 || vm <= R.y + 0.001 ? u_red : u_mark, cov);
+    }
+    if (X.z > 0.0) {
+        float v = V.x + clamp(t, 0.0, 1.0) * span0;
+        float vk = clamp(V.x + floor((v - V.x) / V.w + 0.5) * V.w, V.x, V.y);
+        vec2 pc = G.xy + dirOf((vk - V.x) / span0, G) * X.y;
+        float h = X.z, adv = u_digit_adv, n = figuresOf(vk);
+        vec2 g = (d - pc) / h;
+        float x = g.x + n * adv * 0.5, i = floor(x / adv);
+        if (i >= 0.0 && i < n) {
+            float s = sdf(digitOf(vk, i, n), vec2(x - (i + 0.5) * adv, g.y + 0.5));
+            col = mix(col, u_mark, smoothstep(0.5 - 1.5 / h, 0.5 + 1.5 / h, s));
+        }
+    }
+    return col;
+}
+float hand(vec2 q, vec2 dir, float len, float tail, float w) {
+    float a = clamp(dot(q, dir), -tail, len);
+    return clamp(w * 0.5 - length(q - dir * a) + 0.5, 0.0, 1.0);
+}
+void main() {
+    vec2 px = v_uv * u_size, d = px - u_c;
+    float r = length(d);
+    vec4 bg = u_look.x > 0.5 ? rmPanel(px + u_origin) : vec4(0.0);
+    if (r > u_rings.z + 1.0) { gl_FragColor = bg; return; }
+    vec3 col = r > u_rings.y ? u_ring : r > u_rings.x ? u_border : u_face;
+    if (u_g2.z != u_g2.w) col = scale(col, d, u_g2, u_v2, u_t2, u_x2, u_reds.zw);
+    col = scale(col, d, u_g1, u_v1, u_t1, u_x1, u_reds.xy);
+    if (u_g2.z != u_g2.w) {
+        float t2 = clamp((u_value2 - u_v2.x) / (u_v2.y - u_v2.x), 0.0, 1.0);
+        col = mix(col, u_hand, hand(d - u_g2.xy, dirOf(t2, u_g2), u_x2.w, 0.0, u_look.z));
+    }
+    float t1 = clamp((u_value - u_v1.x) / (u_v1.y - u_v1.x), -0.02, 1.02);
+    col = mix(col, u_hand, hand(d - u_g1.xy, dirOf(t1, u_g1), u_needle.x, u_needle.y, u_needle.z));
+    float rc = length(d - u_g1.xy);
+    col = mix(col, u_ring * 1.4, clamp(u_needle.w - rc + 0.5, 0.0, 1.0));
+    col = mix(col, u_cap, clamp(u_needle.w - u_look.y - rc + 0.5, 0.0, 1.0));
+    float a = clamp(u_rings.z - r + 0.5, 0.0, 1.0);
+    gl_FragColor = u_look.x > 0.5 ? vec4(mix(bg.rgb, col, a), 1.0) : vec4(col, a);
+}`;
+
+/** Retro M's panel between its gauges: the grey plastic (RM_PANEL), black outside it. */
+const RMBG_FS = `#version 100
+${HIGHP}${COMMON}${RM_PANEL}
+uniform vec2 u_size;
+varying vec2 v_uv;
+void main() { gl_FragColor = rmPanel(v_uv * u_size + u_origin); }`;
+
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, CHEVRON_FS, MDASH_FS, MTACH_FS, SDASH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, RMDIAL_FS, RMBG_FS, JDM_FS_MODES, MROUND_FS_MODES };
