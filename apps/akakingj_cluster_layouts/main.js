@@ -267,7 +267,7 @@ mgu.run({
         ui.onClick('BTN_LOGS', () => {
             page = 0; cupOpen = false;
             if (!logView) {
-                const saved = logs.save(logBundle(true), ctx.dataDir);
+                const saved = logs.save(logBundle(true), ctx.dataDir, 'cluster-logs-layout-' + new Date().toISOString().replace(/[:.]/g, '-') + '.txt');
                 saved.forEach((r) => log.info('logs: ' + (r.file ? 'saved ' + r.file : r.dir + ': ' + r.error)));
                 const c = logs.codes(logBundle(false));
                 logView = { codes: c.codes, page: 0, saved, bytes: c.bytes };

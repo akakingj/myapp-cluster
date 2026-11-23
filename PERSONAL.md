@@ -298,6 +298,7 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   codes three a page, the full file cluster-logs-<info|centre>-<time>.txt on USB sticks and in its data folder); Cluster
   Layouts' logs no longer carry Cluster Centre's log or Cluster Info's, so its codes stay few. Info's: its page's rows,
   the overlay, the raw turn signals, the driving assistant check and its log, the directions' log, its own log.
+- Layouts 0.52.6 (Nov 23 2026): its Logs file is cluster-logs-layout-<time>.txt, like Info's and Centre's.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

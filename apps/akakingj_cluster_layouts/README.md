@@ -346,7 +346,7 @@ the renderer's and this app's logs, and how often the
 car's speed signal comes with the catalog's speed fields) as QR codes, three to a page: photograph each page
 (press Logs for the next) and send the photos; `python3 tools/decode_logs.py photo*.jpg -o logs.txt` puts the
 text back together. The full logs go to a file on any USB stick plugged into the car
-(`cluster-logs/cluster-logs-<time>.txt`) and to the app's data folder. Cluster Info and Cluster Centre have
+(`cluster-logs/cluster-logs-layout-<time>.txt`) and to the app's data folder. Cluster Info and Cluster Centre have
 **Logs** of their own, the same way (`cluster-logs-info-<time>.txt`, `cluster-logs-centre-<time>.txt`).
 
 **The car's own bottom strip, always** (since 0.34.0): the layout ends at y 646, so the KOMBI's own strip along the
