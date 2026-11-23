@@ -11,7 +11,6 @@ from Nov 18, Barlow Semi Condensed before), with upper and lower case. Families:
   wide   Michroma (SIL OFL 1.1, shared/NOTICE), thickened, with Barlow Medium for the small print: Sport's face
   orb    Orbitron Black (SIL OFL 1.1), with Barlow Medium for the small print: M's face
          (both as bimmer-lab's Cluster Themes bakes them; wider cells, 60 x 40, for the wide faces)
-  cond   IBM Plex Sans Condensed SemiBold (SIL OFL 1.1): Retro M's narrow figures, in Cluster Layouts' folder alone
 
 Each cell: the glyph drawn at 4x, centred, its baseline at BASE of the cell's height (room below it for the
 descenders of g j p q y, which 0.86 cut off), as a signed distance field
@@ -52,9 +51,6 @@ FAMILIES = {
     'wide': {'ttf': 'Michroma-Regular.ttf', 'lower': 'Barlow-Medium.ttf', 'cellW': 60, 'cellH': 40, 'cols': 16, 'scale': 0.93, 'grow': 1.375},
     # M's: Orbitron Black (its zero slashed: the O drawn for it, plain as the M8's), Barlow Medium for the small print
     'orb': {'ttf': 'Orbitron[wght].ttf', 'weight': 'Black', 'subs': {'0': 'O'}, 'lower': 'Barlow-Medium.ttf', 'cellW': 60, 'cellH': 40, 'cols': 16, 'scale': 1.0, 'grow': 0.42},
-    # Retro M's: IBM Plex Sans Condensed SemiBold (SIL OFL 1.1), its narrow figures; its atlas in Cluster Layouts alone
-    # (app: not in shared/, so Cluster Centre does not carry it)
-    'cond': {'ttf': 'IBMPlexSansCondensed-SemiBold.ttf', 'cellW': 48, 'app': 'akakingj_cluster_layouts'},
 }
 
 
@@ -97,8 +93,7 @@ def bake(src, fam, spec):
         drawn = subs.get(ch, ch) if f is font else ch
         atlas[oy:oy + ch_, ox:ox + cw] = cell(f, drawn, cw, g, ch_)
         adv.append(round((f.getlength(drawn) + 2 * g * UP) / (ch_ * UP), 4))
-    where = os.path.join(HERE, '..', 'apps', spec['app']) if spec.get('app') else SHARED
-    with open(os.path.join(where, 'font_' + fam + '.wad'), 'wb') as f:
+    with open(os.path.join(SHARED, 'font_' + fam + '.wad'), 'wb') as f:
         f.write(atlas.tobytes())
     print(fam, ttf, atlas.shape[1], 'x', atlas.shape[0], len(chars), 'glyphs')
     return {'font': ttf + (' + ' + spec['lower'] if spec.get('lower') else ''), 'chars': chars, 'cellW': cw, 'cellH': ch_, 'cols': cols, 'rows': rows, 'spread': SPREAD, 'adv': adv,
@@ -119,6 +114,6 @@ if __name__ == '__main__':
             meta[fam] = bake(src, fam, spec)
     meta = {k: meta[k] for k in FAMILIES if k in meta}
     with open(out, 'w') as f:
-        f.write("'use strict';\n/* The baked glyph atlases' metrics (tools/bake_font.py; Barlow, Michroma, Orbitron, IBM Plex Sans Condensed, SIL OFL 1.1: NOTICE). */\n"
+        f.write("'use strict';\n/* The baked glyph atlases' metrics (tools/bake_font.py; Barlow, Michroma, Orbitron, SIL OFL 1.1: NOTICE). */\n"
                 'module.exports = ' + json.dumps(meta, ensure_ascii=False) + ';\n')
     # (shared/NOTICE carries the fonts' copyright and the OFL: edited by hand, it has the layouts' notices too)

@@ -161,13 +161,16 @@ same scale (its 0 a quarter along the arc). Every power gauge in every layout wo
 ### Retro M
 
 The round dials of an M car of the VDO era, drawn anew (an original drawing of the idea: no picture, maker's name or M
-lettering of anyone's): two black dials on a grey plastic panel, white condensed figures (IBM Plex Sans Condensed) and
-bar ticks, orange needles over dark caps. The average fuel economy (the car's trip computer, in Settings > Fuel economy
-unit) hangs in the speedometer's face and the oil temperature in the tach's (red from 125 °C); small dials at either end
-show the fuel (0 red) and the coolant (130 °C red). Between the big dials, a small window with the gear (it stays over
-the car's strip too) and Old M's M stripes under it. A window in the speedometer shows a reading picked on the page
-(Speedometer's window: the odometer as it comes, the trip with one decimal), its figures and unit alone. The tach's
-scale and its red ticks follow Settings > Gauge goes up to and Red light at (the Car profile's). One set of colours:
+lettering of anyone's): two black dials on a grey plastic panel, white figures (Barlow, as the other layouts) and bar
+ticks, orange needles over dark caps. A small gauge hangs in each big dial's face: the average fuel economy (the car's
+trip computer, in Settings > Fuel economy unit) in the speedometer's and the engine oil in the tach's, or the readings
+Settings > Small gauge in the speedometer / in the tach pick; small dials at either end show the fuel (0 red) and the
+coolant. The oil and the coolant read C - H or on a scale (Settings > Temperature gauges), red from Settings > Too hot.
+Between the big dials, a small window with the gear (it stays over the car's strip too) and Old M's M stripes under it.
+A window in the speedometer shows a reading picked on the page (Speedometer's window: the odometer as it comes, the trip
+with one decimal), its figures and unit alone. The needles and the tach go as the other analog layouts': the tach's
+scale and red zone from Settings > Gauge goes up to and Red light at (the Car profile's), the red lower while the oil is
+cold, Power % in a plug-in hybrid's electric modes. One set of colours:
 the drive mode and the colour settings change nothing. With the map in the centre the two dials stand either side of
 it, without their window, the end dials and the middle. Every dial is one layer with the panel's plastic round it
 (RMDIAL_FS), the panel between them in pieces (RMBG_FS), none larger than a dial (530 x 530).

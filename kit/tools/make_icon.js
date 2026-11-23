@@ -23,18 +23,44 @@ if (glyph === 'gauge') {
     c.line(70, 76, nx, ny, 6, W);
     c.circle(70, 76, 9, W);
     c.fillRect(44, 112, 52, 6, W);
-} else if (/^krgauge-/.test(glyph)) {
-    // the personal build's (akakingj): the gauge with an M-coloured accent and the app's letter under it
-    const letter = glyph.slice(8);
-    c.arc(70, 66, 44, 52, -135, 135, W, { round: true });
-    c.arc(70, 66, 44, 52, 60, 85, '#7ec8ff', { round: true });
-    c.arc(70, 66, 44, 52, 88, 110, B, { round: true });
-    c.arc(70, 66, 44, 52, 113, 135, A, { round: true });
-    for (let a = -135; a <= 135; a += 45) { const [x0, y0] = pt(70, 66, 32, a), [x1, y1] = pt(70, 66, 38, a); c.line(x0, y0, x1, y1, 4, W); }
-    const [nx, ny] = pt(70, 66, 38, 40);
-    c.line(70, 66, nx, ny, 6, W);
-    c.circle(70, 66, 8, W);
-    c.text(letter, 70, 132, 34, W, { font: 'bold', align: 'center' });
+} else if (glyph === 'kr-cluster') {
+    // the personal build's Cluster Layouts: an instrument cluster - a hood over a big dial between two small ones, the
+    // big one's end in the M colours
+    const M = ['#7ec8ff', B, A];
+    c.arc(70, 160, 114, 120, -36, 36, W);
+    c.line(3, 62, 3, 116, 6, W); c.line(137, 62, 137, 116, 6, W); c.line(3, 116, 137, 116, 6, W);
+    c.arc(70, 82, 23, 29, -135, 135, W, { round: true });
+    [[60, 85], [88, 110], [113, 135]].forEach(([a0, a1], i) => c.arc(70, 82, 23, 29, a0, a1, M[i], { round: true }));
+    const [nx, ny] = pt(70, 82, 20, 50);
+    c.line(70, 82, nx, ny, 5, W); c.circle(70, 82, 5, W);
+    for (const x of [24, 116]) {
+        c.arc(x, 92, 11, 16, -135, 135, W, { round: true });
+        const [sx, sy] = pt(x, 92, 10, x < 70 ? -40 : 30);
+        c.line(x, 92, sx, sy, 4, W); c.circle(x, 92, 3, W);
+    }
+} else if (glyph === 'kr-hud') {
+    // the personal build's Cluster Info: a windscreen from inside, its mirror, and over the bonnet what the head-up
+    // display shows: a speed and a turn arrow (M blue)
+    const top = 22, bot = 112;
+    c.polyline([[10, bot], [20, top + 10], [40, top + 2], [70, top], [100, top + 2], [120, top + 10], [130, bot]], 6, W);
+    c.arc(70, bot + 150, 154, 160, -27, 27, W);
+    c.roundRect(58, top + 4, 24, 10, 4, W);
+    c.line(70, top, 70, top + 6, 4, W);
+    c.text('80', 54, 84, 38, W, { font: 'bold', align: 'center' });
+    c.line(96, 92, 96, 70, 6, B); c.line(96, 70, 108, 70, 6, B);
+    c.convex([[106, 60], [120, 70], [106, 80]], B);
+    c.fillRect(34, 92, 40, 4, A);
+} else if (glyph === 'kr-trip') {
+    // the personal build's Cluster Centre: the trip - a speedometer's top half over its odometer's window, the arc's end
+    // in the M colours
+    const M = ['#7ec8ff', B, A];
+    c.arc(70, 70, 46, 53, -90, 90, W, { round: true });
+    [[42, 58], [61, 74], [77, 90]].forEach(([a0, a1], i) => c.arc(70, 70, 46, 53, a0, a1, M[i], { round: true }));
+    for (let a = -90; a <= 90; a += 30) { const [x0, y0] = pt(70, 70, 34, a), [x1, y1] = pt(70, 70, 40, a); c.line(x0, y0, x1, y1, 4, W); }
+    const [nx, ny] = pt(70, 70, 38, 35);
+    c.line(70, 70, nx, ny, 6, W); c.circle(70, 70, 7, W);
+    c.strokeRoundRect(22, 88, 96, 34, 6, 5, W);
+    c.text('0428', 70, 115, 24, W, { font: 'bold', align: 'center' });
 } else if (glyph === 'home') {
     // a house with a car's signal arcs in it
     c.line(18, 66, 70, 22, 7, W); c.line(70, 22, 122, 66, 7, W);

@@ -159,8 +159,8 @@ const DIALS = { gaugeSpeed: ALWAYS, gaugeRpm: ALWAYS }, STRIP2 = { infoA: ENGINE
 const SLOTS = {
     analog_sport: Object.assign({ infoMain: ENGINE, centreView: (o) => !MAPFORM(o) }, DIALS, STRIP2),
     retro: Object.assign({}, DIALS, STRIP2),
-    // (0.53.0: its own window in the speedometer, set on the page; no readouts of the Settings')
-    retro_m: {},
+    // (its own window in the speedometer, set on the page; the small gauges in its big dials, as the other dials')
+    retro_m: Object.assign({}, DIALS),
     track: Object.assign({}, STRIP2),
     pulse: { infoMain: ENGINE },
     // (Pulse's pieces with the map or the stock centre: its main readout there)

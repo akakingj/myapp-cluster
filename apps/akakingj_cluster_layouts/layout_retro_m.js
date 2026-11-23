@@ -2,13 +2,13 @@
 /**
  * layout_retro_m.js - "Retro M": the round dials of an M car of the VDO era, drawn anew (an original drawing of the
  * idea: no picture, maker's name or M lettering of anyone's): two black dials on a grey plastic panel, white
- * condensed figures and bar ticks, orange needles over dark caps; the average fuel economy hanging in the
- * speedometer's face and the oil temperature in the tach's; the fuel and the coolant in small dials at either end;
+ * Barlow figures and bar ticks, orange needles over dark caps; a small gauge hanging in each big dial's face (the average
+ * fuel economy, the oil, or the reading Settings picks) and the fuel and the coolant in small dials at either end;
  * between the big dials a small window with the gear and the M stripes under it (Old M's). A window in the
  * speedometer shows a reading picked on the page (the odometer as it comes), its figures and unit alone.
  *
- * One set of colours: the drive mode and the colour settings change nothing (palette). The tach's scale and red ticks
- * follow the Car profile (Gauge goes up to, Red light at). Every piece a shader on the cluster's own GPU: the dials
+ * One set of colours: the drive mode and the colour settings change nothing (palette). The needles, the tach's scale and
+ * red zone, the temperature gauges and the small gauges' choices go as the other analog layouts'. Every piece a shader on the cluster's own GPU: the dials
  * (shaders.js RMDIAL_FS) each in one layer with the panel's plastic round them, the panel between them in pieces
  * (RMBG_FS), none larger than a dial (528 x 528).
  */
@@ -31,62 +31,96 @@ function textAt(key, cx, y, w, size, txt, colors, extra) {
     return C.text(key, Math.round(cx - w / 2), Math.round(y - 0.79 * h), w, h, txt, colors, extra);
 }
 
-/** A big dial at (cx, cy), the speedometer or the tach, k its scale (1: radius 250 and its 264 px outer ring). */
+/** The small gauge hanging in a big dial's face (Settings > Small gauge in the speedometer / in the tach, else the
+ * layout's own: the trip computer's average economy, the oil), as the other analog layouts': a temperature C - H
+ * (Settings > Temperature gauges) or on its scale, red from its too-hot temperature; any other reading along its scale,
+ * its name above the pivot and its figures under the scale. { V, red, figs, value(d), label, sub(d), ch } */
+function hanging(o, which) {
+    const speed = which === 'speed', g = C.gaugeOf(o, which), f = o.tempUnit !== 'c';
+    const key = g ? g.key : speed ? 'econ' : 'oil', ch = C.chOf(o, key);
+    if (ch) return { V: [0, 1, 0.25, 0.5], red: [C.chRed(o, ch), -NONE], figs: false, ch: true, label: g ? g.label : 'OIL',
+        value: (d) => C.chFrac(ch, d[ch]) };
+    if (!g && speed) {
+        // (its scale in the unit the trip computer's figures come in: mpg to 60, else to 20)
+        const scaleOf = (d) => (C.econUnitOf(o, d) === 'mpg' ? [0, 60, 7.5, 15] : [0, 20, 2.5, 5]);
+        return { V: scaleOf({}), scaleOf, red: [NONE, -NONE], figs: true,
+            label: (d) => 'AVG ' + C.ECON_UNITS[C.econUnitOf(o, d)], dimLabel: (d) => !C.econ(o, d),
+            value: (d) => { const e = C.econ(o, d); return e ? Math.min(scaleOf(d)[1], e.v) : 0; } };
+    }
+    if (!g) {
+        const hot = C.hotAt(o, 'oil');
+        return { V: f ? [120, 300, 45, 45] : [50, 150, 25, 25], red: [C.isNum(hot) ? C.tempIn(o, hot) : NONE, -NONE], figs: true,
+            label: 'OIL °' + (f ? 'F' : 'C'), value: (d) => (C.isNum(d.oil) ? C.tempIn(o, d.oil) : (f ? 120 : 50)) };
+    }
+    return { V: [0, 1, 0.125, 0.5], red: [g.redFrac, C.isNum(g.low) ? (g.low - g.min) / (g.max - g.min) : -NONE], figs: false, label: g.label,
+        value: (d) => g.frac(d), sub: g.txt, hot: g.hot };
+}
+
+/** A big dial at (cx, cy), the speedometer or the tach, k its scale (1: radius 250 and its 264 px outer ring). The tach
+ * as the other analog layouts' (layout_common tachValue): its red zone lower while the oil is cold (shiftPoint), and in
+ * a plug-in hybrid's electric modes Power % (0 - 100). */
 function bigDial(o, which, cx, cy, k, fill) {
     const speed = which === 'speed', kmh = o.speedUnit === 'kmh', rs = C.rpmScale(o);
     const R = 264 * k, size = Math.ceil(2 * R + 2), x0 = Math.round(cx - size / 2), y0 = Math.round(cy - size / 2);
     const sk = (v) => Math.round(v * k * 100) / 100;
     const V1 = speed ? [0, kmh ? 260 : 160, 10, 20] : [0, rs.max, 0.5, 1];
-    // the small gauge hanging in the face: the trip computer's average economy (speedometer), the oil (tach)
-    const temp = (c) => C.tempIn(o, c), f = o.tempUnit !== 'c';
-    const econU = C.econUnitOf(o, {});
-    const V2 = speed ? (econU === 'mpg' ? [0, 60, 7.5, 15] : [0, 20, 2.5, 5]) : f ? [120, 300, 45, 45] : [50, 150, 25, 25];
-    const red2 = speed ? [NONE, -NONE] : [f ? 255 : 125, -NONE];
-    const value2 = speed ? (d) => { const e = C.econ(o, d); return e ? Math.min(V2[1], e.v) : 0; } : (d) => (C.isNum(d.oil) ? temp(d.oil) : V2[0]);
+    const PCT = [0, C.PCT.max, C.PCT.minor, C.PCT.major];
+    const elec = (d) => !speed && C.electric(o, d);
+    const h = hanging(o, which), mid = [cx, cy + 75 * k];
+    // (the small needle in steps of a 400th of its scale, sent when it moves one)
+    const step2 = (v, V) => { const sp = V[1] - V[0]; return Math.round(v / sp * 400) / 400 * sp; };
+    const reds = (d) => (speed ? [NONE, -NONE] : elec(d) ? [NONE, -NONE] : [Math.min(rs.red, C.shiftPoint(o, d).red / 1000), -NONE]).concat(h.red);
     const piece = {
         key: which, kind: 'rmdial', x: x0, y: y0, w: size, h: size,
         params: {
             u_c: [cx - x0, cy - y0], u_origin: [x0, y0], u_look: [fill ? 1 : 0, sk(3), sk(5), 0],
             u_rings: [sk(250), sk(254), sk(264), k],
-            u_g1: [0, 0, -132, 132], u_v1: V1, u_t1: [sk(244), sk(214), sk(230), sk(9)], u_x1: [sk(5), sk(184), sk((speed ? 30 : 38) / 0.92), 0],
-            u_g2: [0, sk(75), 236, 124], u_v2: V2, u_t2: [sk(102), sk(86), sk(86), sk(speed ? 5 : 7)], u_x2: [sk(5), sk(124), sk(22 / 0.92), sk(96)],
-            u_reds: [speed ? NONE : rs.red, -NONE, red2[0], red2[1]],
+            u_g1: [0, 0, -132, 132], u_v1: V1, u_t1: [sk(244), sk(214), sk(230), sk(9)], u_x1: [sk(5), sk(184), sk((speed ? (kmh ? 27 : 30) : 38) / 0.92), 0],
+            u_g2: [0, sk(75), 236, 124], u_v2: h.V, u_t2: [sk(102), sk(86), sk(86), sk(speed ? 5 : 7)], u_x2: [sk(5), sk(124), h.figs ? sk(22 / 0.92) : 0, sk(96)],
+            u_reds: reds({}),
             u_needle: [sk(232), sk(40), sk(8), sk(30)],
         },
         colors: dialColours, max: V1[1], sweep: true,
-        value: speed ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : (d) => (C.isNum(d.rpm) ? d.rpm / 1000 : 0),
-        dyn: (d) => ({ u_value2: [Math.round(value2(d) * 10) / 10] }),
+        value: speed ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : (d) => (elec(d) ? Math.max(0, C.powerPct(d)) : C.isNum(d.rpm) ? d.rpm / 1000 : 0),
+        range: speed ? undefined : (d) => [0, elec(d) ? C.PCT.max : V1[1]],
+        dyn: (d) => { const V2 = h.scaleOf ? h.scaleOf(d) : h.V; return Object.assign({ u_value2: [step2(h.value(d), V2)], u_reds: reds(d) }, h.scaleOf ? { u_v2: V2 } : {}, speed ? {} : { u_v1: elec(d) ? PCT : V1 }); },
     };
     const unitW = Math.round(220 * k), sub = { tracking: 0.02 };
     const out = [piece];
-    if (speed) {
-        out.push(textAt('speedUnit', cx, cy - 92 * k, unitW, 24 * k, C.speedUnit(o), unitC, sub));
-        out.push(textAt('speedSubUnit', cx, cy + 75 * k - 16 * k, Math.round(150 * k), 18 * k, (d) => 'AVG ' + C.ECON_UNITS[C.econUnitOf(o, d)],
-            (t, d) => (C.econ(o, d) ? labelC(t) : { color: [t.label, 0.45], glow: [t.glow, 0] }), sub));
-    } else {
-        out.push(textAt('rpmUnit', cx, cy - 92 * k, unitW, 24 * k, '1/min', unitC, sub), textAt('rpmUnit2', cx, cy - 56 * k, unitW, 22 * k, 'x1000', unitC, sub));
-        out.push(textAt('rpmSubUnit', cx, cy + 75 * k - 16 * k, Math.round(150 * k), 18 * k, 'OIL °' + (f ? 'F' : 'C'), labelC, sub));
-    }
+    if (speed) out.push(textAt('speedUnit', cx, cy - 92 * k, unitW, 24 * k, C.speedUnit(o), unitC, sub));
+    else out.push(textAt('rpmUnit', cx, cy - 92 * k, unitW, 24 * k, (d) => (elec(d) ? C.POWER_UNIT : '1/min'), unitC, sub),
+        textAt('rpmUnit2', cx, cy - 56 * k, unitW, 22 * k, (d) => (elec(d) ? '' : 'x1000'), unitC, sub));
+    out.push(textAt(which + 'SubUnit', cx, mid[1] - 16 * k, Math.round(150 * k), 18 * k, h.label,
+        (t, d) => (h.dimLabel && h.dimLabel(d) ? { color: [t.label, 0.45], glow: [t.glow, 0] } : labelC(t)), sub));
+    if (h.ch) out.push(...C.chMarks(which + 'Sub', mid[0], mid[1], sk(118), 236, 124, Math.round(22 * k), labelC));
+    if (h.sub) out.push(textAt(which + 'SubVal', cx, mid[1] + 124 * k + 8 * k, Math.round(150 * k), 22 * k, h.sub,
+        (t, d) => (h.hot(d) ? { color: [t.red, 1], glow: [t.glow, 0] } : white(t)), sub));
     return out;
 }
 
-/** A small dial at one end (fuel, coolant) at (cx, cy): its scale an arc over a pivot below its centre. */
+/** A small dial at one end (fuel, coolant) at (cx, cy): its scale an arc over a pivot below its centre. The coolant
+ * as the other analog layouts' temperature gauges: C - H (Settings > Temperature gauges) or its scale, red from its
+ * too-hot temperature. */
 function sideDial(o, which, cx, cy, box) {
     const fuel = which === 'fuel', f = o.tempUnit !== 'c', piv = Math.round(120 * 0.42 * 10) / 10;
-    const V = fuel ? [0, 100, 12.5, 25] : f ? [80, 280, 50, 50] : [30, 130, 25, 25];
-    const red = fuel ? [NONE, 0] : [f ? C.tempIn(o, 130) : 130, -NONE];
-    return [{
+    const ch = !fuel && C.chOf(o, 'coolant'), hot = C.hotAt(o, 'coolant');
+    const V = fuel ? [0, 100, 12.5, 50] : ch ? [0, 1, 0.25, 0.5] : f ? [80, 280, 50, 100] : [30, 130, 25, 50];
+    const red = fuel ? [NONE, 0] : ch ? [C.chRed(o, 'coolant'), -NONE] : [C.isNum(hot) ? C.tempIn(o, hot) : NONE, -NONE];
+    const out = [{
         key: fuel ? 'rmFuel' : 'rmCoolant', kind: 'rmdial', x: box.x, y: box.y, w: box.w, h: box.h,
         params: {
             u_c: [cx - box.x, cy - box.y], u_origin: [box.x, box.y], u_look: [1, 2, 0, 0],
             u_rings: [120, 120, 130, 1],
-            u_g1: [0, piv, -48, 48], u_v1: V, u_t1: [112, 94, 94, 6], u_x1: [fuel ? 4 : 6, 76, Math.round(20 / 0.92 * 100) / 100, 0],
+            u_g1: [0, piv, -48, 48], u_v1: V, u_t1: [112, 94, 94, 6], u_x1: [fuel ? 4 : 6, 76, ch ? 0 : Math.round(20 / 0.92 * 100) / 100, 0],
             u_g2: [0, 0, 0, 0], u_v2: [0, 1, 1, 1], u_t2: [0, 0, 0, 0], u_x2: [0, 0, 0, 0], u_reds: [red[0], red[1], NONE, -NONE],
             u_needle: [108, 0, 5, 14],
         },
         colors: dialColours, max: V[1], sweep: true,
-        value: fuel ? (d) => (C.isNum(d.fuelPct) ? Math.max(0, Math.min(100, d.fuelPct)) : 0) : (d) => (C.isNum(d.coolant) ? C.tempIn(o, d.coolant) : V[0]),
-    }, textAt(fuel ? 'rmFuelLbl' : 'rmCoolantLbl', cx, cy + piv + 40, 100, 18, fuel ? 'FUEL' : '°' + (f ? 'F' : 'C'), labelC, { tracking: 0.04 })];
+        value: fuel ? (d) => (C.isNum(d.fuelPct) ? Math.max(0, Math.min(100, d.fuelPct)) : 0)
+            : ch ? (d) => C.chFrac('coolant', d.coolant) : (d) => (C.isNum(d.coolant) ? C.tempIn(o, d.coolant) : V[0]),
+    }, textAt(fuel ? 'rmFuelLbl' : 'rmCoolantLbl', cx, cy + piv + 40, 100, 18, fuel ? 'FUEL' : ch ? 'COOLANT' : '°' + (f ? 'F' : 'C'), labelC, { tracking: 0.04 })];
+    if (ch) out.push(...C.chMarks('rmCoolant', cx, cy + piv, 76, -48, 48, 20, labelC));
+    return out;
 }
 
 /** The reading in the speedometer's window: its figures and unit alone (the odometer as it comes; the trip one decimal). */
@@ -109,7 +143,6 @@ const panelPiece = (r, i) => ({ key: 'bg' + i, kind: 'rmbg', x: r[0], y: r[1], w
 module.exports = {
     id: 'retro_m',
     title: 'Retro M',
-    font: 'cond',
     palette: () => Object.assign({}, PAL),
     gearText: C.gearText,
     stripFuel: false,         // (its own fuel gauge)

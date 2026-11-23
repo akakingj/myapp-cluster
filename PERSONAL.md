@@ -12,7 +12,9 @@ noncommercial use only), with PR #8 (lb-ft and a pressure unit setting).
 
 The `akakingj_` prefix is used by no other app in the Store's known sources (cauliflowermossgrape/idrive7-apps,
 robertnisipeanu/idrive-apps, eroobeeroo/idrive7-apps, IterioDev/car-apps; checked 11 Nov 2026).
-Icons: a gauge with an M-coloured accent and L / C / I (`icon.png` in each app's folder; `kit/tools/make_icon.js krgauge-L`).
+Icons, white line art with an M-coloured accent (`icon.png` in each app's folder; `kit/tools/make_icon.js kr-cluster`): Layouts
+an instrument cluster (`kr-cluster`), Centre the trip, a speedometer over its odometer (`kr-trip`), Info a windscreen
+with a head-up display (`kr-hud`).
 
 MGU Store: Settings > Add source > `akakingj/myapp-cluster` > branch `main` (moved Nov 19 2026 from the fork akakingj/idrive7-cluster-info, branch personal-kr; its history kept).
 Remove the original Cluster Layouts / Centre / Info (or turn their Show off): both would draw on the cluster.
@@ -322,6 +324,13 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
   Korean for Retro M's place (kit locales), and Centre's shared font list. Every layout's name in English in Korean
   too (Simple, Track: they were 간단, 트랙), as the owner asked.
+- Layouts 0.53.1, Centre 0.14.7, Info 1.10.11 (Nov 23 2026, the owner's review of Retro M): Retro M in Barlow, as the
+  other layouts (font_cond.wad and bake_font.py's 'cond' removed), and going as the other analog layouts: the tach's
+  red zone lower while the oil is cold (shiftPoint) and Power % in a plug-in hybrid's electric modes; the oil and the
+  coolant C - H or on a scale (Settings > Temperature gauges), red from Too hot; Settings > Small gauge in the
+  speedometer / in the tach for its hanging gauges (layouts.js SLOTS). New icons (make_icon.js kr-cluster, kr-trip,
+  kr-hud): Layouts an instrument cluster, Centre the trip (a speedometer over its odometer), Info a windscreen with a
+  head-up display - drawn anew from the owner's ideas.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

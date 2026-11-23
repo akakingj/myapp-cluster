@@ -2,11 +2,11 @@
   "id": "akakingj_cluster_centre",
   "title": "AK Cluster Centre",
   "description": "Pages of engine, gearbox and eDrive data, warm-up, turbo cool-down, a shift light and a 0-60 timer in the centre of the factory cluster, drawn by the cluster itself",
-  "version": "0.14.6",
+  "version": "0.14.7",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCC",
-  "iconGlyph": "krgauge-C",
+  "iconGlyph": "kr-trip",
   "signals": {
     "de.bmw.infrastructure.VehicleCondition": {
       "VehicleCondition": "s"
