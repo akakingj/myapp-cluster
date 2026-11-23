@@ -13,6 +13,10 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const { encode } = require('./qr');
+/* the screen's two lines in the app's language (the Store builds the apps in Korean); English without the kit */
+let lang = 'en';
+try { lang = require('./kit/i18n').getLanguage(); } catch (e) { /* tools and tests: English */ }
+const KO = /^ko/.test(lang);
 
 const RENDER_LOG = '/var/opt/cluster-render/log/cluster-render.log';
 /* where the unit mounts USB sticks (udisks: /media/<label>); nothing else is written to */
@@ -128,8 +132,11 @@ function pager(bundleOf, dataDir, log, tag) {
         draw(cv, t) {
             const n = view.codes.length, pages = Math.ceil(n / PER), first = view.page * PER;
             const usb = view.saved.filter((r) => r.file && !/exports/.test(r.file));
-            cv.text('Logs: photograph each code (page ' + (view.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + Math.min(n, first + PER) + ' of ' + n + '), then press Logs for the next', 40, 34, 20, t.text, { font: 'bold', literal: true });
-            cv.text(usb.length ? 'The full logs are also on the USB stick: ' + usb[0].file : 'Plug in a USB stick and press Logs again from the start for the full logs as a file', 40, 62, 16, t.dim, { font: 'label', literal: true });
+            const last = Math.min(n, first + PER);
+            cv.text(KO ? '로그: 코드를 하나씩 사진으로 찍으세요 (' + pages + '쪽 중 ' + (view.page + 1) + '쪽, 코드 ' + (first + 1) + '-' + last + ' / ' + n + '). 다음 쪽은 로그 버튼'
+                : 'Logs: photograph each code (page ' + (view.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + last + ' of ' + n + '), then press Logs for the next', 40, 34, 20, t.text, { font: 'bold', literal: true });
+            cv.text(usb.length ? (KO ? '전체 로그는 USB에도 저장했습니다: ' : 'The full logs are also on the USB stick: ') + usb[0].file
+                : KO ? 'USB를 꽂고 처음부터 로그 버튼을 다시 누르면 전체 로그를 파일로 저장합니다' : 'Plug in a USB stick and press Logs again from the start for the full logs as a file', 40, 62, 16, t.dim, { font: 'label', literal: true });
             view.codes.slice(first, first + PER).forEach((q, i) => {
                 const px = Math.max(3, Math.floor(420 / (q.size + 8)));
                 draw(cv, q, 40 + i * 520, 84, px);
