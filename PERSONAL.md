@@ -320,7 +320,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   the M stripes between; the speedometer's window a place (speedWin, the odometer). One set of colours. Each dial one
   RMDIAL_FS layer with the panel round it, the panel between in RMBG_FS pieces (the largest piece 530 x 530); the dials
   at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
-  Korean for Retro M's place (kit locales), and Centre's shared font list.
+  Korean for Retro M's place (kit locales), and Centre's shared font list. Every layout's name in English in Korean
+  too (Simple, Track: they were 간단, 트랙), as the owner asked.
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide
