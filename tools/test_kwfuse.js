@@ -74,12 +74,16 @@ check('the cluster\'s own power meter (relative %): fitted, chosen over the whee
     assert(errF / n < 1.5, 'within 1.5 kW: ' + errF / n);
 });
 
-check('a car signal gone quiet (no notification for 2.5 s): not used', () => {
+check('the eDRIVE needle is change-notified: a steady needle keeps driving the gauge, and is dropped only after its hold', () => {
     const f = createFuse();
     for (let i = 0; i < 30; i++) { f.sample(i * 100, { speed: 50, gLong: 0, engineOn: false }); f.signal(i * 100, 'rel', { drive: 10, recup: 0 }); f.measure(i * 100, 9); }
     assert.strictEqual(f.now(3000).model, 'rel');
+    // steady power -> no new needle for seconds; it is held (not dropped), so the fast value stays on it, not the 2 s reading
     f.sample(6000, { speed: 50, gLong: 0, engineOn: false }); f.measure(6000, 9);
-    assert.strictEqual(f.now(6000).model, 'wheel');
+    assert.strictEqual(f.now(6000).model, 'rel');
+    // past the hold window (a genuinely gone needle): fall back to the wheels
+    f.sample(40000, { speed: 50, gLong: 0, engineOn: false }); f.measure(40000, 9);
+    assert.strictEqual(f.now(40000).model, 'wheel');
 });
 
 console.log(ok + ' passed');
