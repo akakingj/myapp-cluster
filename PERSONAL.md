@@ -303,6 +303,13 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   before, still 29 each for 7 or 8 lanes), the arrows as they were: wider lane boards, as the owner asked.
 - Info 1.10.8 (Nov 23 2026): the lane board and its arrows 82 % as high (lane_draw.js LOW, from y 17.4; nav_view's
   lanes part 47 high from 15): the directions 173 x 132 (149 x 114 over a Waze map), as the owner asked.
+- Info 1.10.9, Layouts 0.52.7, Centre 0.14.4 (Nov 23 2026; the owner asked for a toll gate picture): nav.js keeps the
+  tollgate event (kind 'toll'; it was skipped), nav_view shows TOLL for it, for straight on to a road named
+  톨게이트 / 요금소 / ...TG, or for lanes with TOLL_* info; nav_draw's tollGate (original, after
+  the owner's sketch: one gate, a beam on two short legs across the road narrowing away) with 'Toll gate'
+  (ko 톨게이트) over the distance; lane_draw tints TOLL_ETC lanes blue (half for
+  TOLL_ETC_CASH). None of the three seen from TMAP over CarPlay yet (INCLUDE_TOLLGATES was rejected by the car on the
+  Nov 22 drive; cluster-info-nav.log will show what a toll plaza sends).
 - Layouts 0.52.0, Centre 0.14.0 (Nov 22 2026, the owner's choice): the 'bold' and 'light' atlases baked from Barlow
   (SemiBold, Regular; google/fonts ofl/barlow) in place of IBM Plex Sans Condensed: every layout without its own face
   (all but ID7 M, ID8 M, JDM 1: Orbitron, Michroma) and Centre's two looks. Barlow's figures 0.52 of their height wide

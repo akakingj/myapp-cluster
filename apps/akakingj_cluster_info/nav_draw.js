@@ -66,9 +66,29 @@ function roadDiagram(cv,state,color){
  if(/^LANE_/.test(m)){const s=m==='LANE_RIGHT'?1:-1;b.path([[52,110],[52,2]],RW*2.1,ROAD);for(let y=8;y<108;y+=18)b.line(52,y,52,y+9,2,'#80909d');
   route(b,[[52-s*13,108],[52-s*13,80],[52+s*13,46],[52+s*13,14]],color);}
 }
+// A toll gate ahead (Cluster Info's own, not Redline's): the road running away from the driver, narrowing to the
+// horizon, its centre line dashed, and one gate across it, a beam on two short legs over the road's edges;
+// 'Toll gate' over the distance as the highway diagrams have their label.
+function tollGate(cv,color){
+ const EDGE='#6b7988',Q=(p,c)=>cv.quad(p,c);
+ Q([[40,24],[64,24],[94,106],[10,106]],ROAD);
+ cv.line(40,24,10,106,4,EDGE);cv.line(64,24,94,106,4,EDGE);
+ for(let y=30;y<104;y+=14)cv.line(52,y,52,Math.min(104,y+7),3,WHITE);
+ Q([[4,40],[100,40],[100,52],[4,52]],color);
+ Q([[10,52],[22,52],[22,62],[10,62]],color);Q([[82,52],[94,52],[94,62],[82,62]],color);
+ cv.line(4,40,100,40,2,WHITE);
+}
 function draw(state,target) {
     const cv=target||new Canvas(W,H);if(!target)cv.clear([0,0,0,0]);
     if(!state||!state.visible)return cv;
+    if(state.maneuver==='TOLL'){
+        const color=state.color==='gray'?'#929aa3':state.color==='white'?WHITE:ARROW,text=state.distanceText||'';let size=40,ls=22;
+        tollGate(cv,color);
+        while(size>20&&cv.textWidth(text,size,{font:'num',literal:true})>130)size--;
+        while(ls>14&&cv.textWidth('Toll gate',ls,{font:'bold'})>130)ls--;
+        cv.text('Toll gate',108,32,ls,WHITE,{font:'bold'});cv.text(text,108,84,size,WHITE,{font:'num',literal:true});
+        return cv;
+    }
     const kind=diagramKind(state),color0=state.color==='gray'?'#929aa3':state.color==='white'?WHITE:ARROW;
     if(kind){
         roadDiagram(cv,state,color0);const info=highwayInfo(state),text=state.distanceText||'';let size=40;

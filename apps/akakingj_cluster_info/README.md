@@ -36,7 +36,9 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   shown when there is none at all), in jaimeen77's Cluster Redline design (`nav_draw.js`, `lane_draw.js`, `nav_text.js`, from its 1.3.9,
   MIT; `nav_view.js` stacks them): the instruction or street on top (Korean in the Korean build), the blue turn
   arrow, or a junction diagram for forks, highway exits and entries, roundabouts and lane changes, with the
-  distance, and the lane board under it. The turn is read as Redline's (idrive7-apps, `nav.js`, `navlog.js`, MIT):
+  distance, and the lane board under it. A toll gate ahead (the car's toll gate event, or straight on to a place
+  named ...톨게이트 / ...요금소, or lanes the car marks as toll lanes) shows a toll gate of this app's own with
+  "Toll gate" over its distance; hi-pass (ETC) lanes on the board are tinted blue. The turn is read as Redline's (idrive7-apps, `nav.js`, `navlog.js`, MIT):
   BMW's guidance service, read only, the same way for CarPlay, Android Auto and BMW's navigation, for apps that hand
   the car their turns (Apple Maps, TMAP; Waze over CarPlay doesn't). With the panel off the HUD BMW's own turn card shows them; while Redline
   holds the HUD, its own. A turn older than 3 s isn't shown. `cluster-info-nav.log` in the app's data folder (at most

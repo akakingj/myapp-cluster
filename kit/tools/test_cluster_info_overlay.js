@@ -489,3 +489,21 @@ function blend(dst, src, ox, oy) {
         for (let k = 0; k < 3; k++) dst.d[j + k] = src.d[i + k] * a + dst.d[j + k] * (1 - a);
     }
 }
+
+check('toll gates: the tollgate event, a straight on named a toll plaza, or toll lanes: the toll gate picture; hi-pass lanes tinted', () => {
+    const NAV = require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'nav.js'));
+    const NV = require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'nav_view.js'));
+    const ev = NAV.decodeEvent({ tollgate: { formattedDistance: { distance: '1.2', unit: 1 } } });
+    assert.deepStrictEqual([ev.kind, ev.dist, ev.unit], ['toll', '1.2', 'km']);
+    const st = (m) => { const s = NV.stateOf(m); return s && s.maneuver; };
+    assert.strictEqual(st(ev), 'TOLL');
+    assert.strictEqual(st({ kind: 'turn', dir: 'STRAIGHT_ON', dist: '800', unit: 'm', road: '서울요금소' }), 'TOLL');
+    assert.strictEqual(st({ kind: 'turn', dir: 'STRAIGHT_ON', dist: '800', unit: 'm', road: '판교톨게이트' }), 'TOLL');
+    assert.strictEqual(st({ kind: 'turn', dir: 'STRAIGHT_ON', dist: '800', unit: 'm', road: '테헤란로', lanes: { lanes: [{ follow: 'STRAIGHT_ON', info: 'TOLL_ETC' }] } }), 'TOLL');
+    assert.strictEqual(st({ kind: 'turn', dir: 'LEFT', dist: '800', unit: 'm', road: '서울요금소' }), 'LEFT', 'a turn stays a turn');
+    assert.strictEqual(st({ kind: 'turn', dir: 'STRAIGHT_ON', dist: '800', unit: 'm', road: '테헤란로' }), 'STRAIGHT_ON');
+    const cv = new NV.Canvas(NV.W, NV.H);
+    assert(NV.draw(cv, { kind: 'toll', dist: '1.2', unit: 'km', road: '', lanes: { lanes: [{ follow: 'STRAIGHT_ON', info: 'TOLL_ETC', hi: true }, { follow: 'STRAIGHT_ON', info: 'TOLL_CASH' }] } }));
+    let lit = 0; for (let i = 3; i < cv.d.length; i += 4) if (cv.d[i]) lit++;
+    assert(lit > 500, 'drawn: ' + lit);
+});

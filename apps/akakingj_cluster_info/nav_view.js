@@ -38,6 +38,8 @@ function drawable(t) {
     return true;
 }
 
+const TOLL_NAME = /톨게이트|요금소|TG$/;
+
 /** nav.js's turn as Cluster Redline's navigation state, or null when its design has no picture for it. */
 function stateOf(m) {
     if (!m) return null;
@@ -51,13 +53,21 @@ function stateOf(m) {
     else if (m.kind === 'keep' && /^(LEFT|RIGHT)$/.test(d)) maneuver = 'KEEP_' + d;
     else if (m.kind === 'lanechange' && /^(LEFT|RIGHT)$/.test(d)) maneuver = 'LANE_' + d;
     else if (m.kind === 'destination') maneuver = 'ARRIVAL_' + (/^(LEFT|RIGHT)$/.test(d) ? d : 'CENTER');
+    else if (m.kind === 'toll') maneuver = 'TOLL';
+    // a toll gate the car gives as straight on: by its name (Korean toll plazas: ...톨게이트, ...요금소) or its lanes'
+    // toll marks
+    const ahead = maneuver === 'STRAIGHT_ON' || (m.kind === 'keep' && d === 'STRAIGHT') || m.kind === 'follow';
+    const tollLanes = m.lanes && Array.isArray(m.lanes.lanes) && m.lanes.lanes.some((l) => /^TOLL_/.test(l.info || ''));
+    if (ahead && (TOLL_NAME.test(String(m.road || '')) || tollLanes)) maneuver = 'TOLL';
+    if (maneuver === 'TOLL') branchType = null;
     if (!maneuver || !m.dist) return null;
     const description = typeof m.road === 'string' && m.road && drawable(m.road) ? m.road : '';
     let lanes = null;
     if (m.lanes && Array.isArray(m.lanes.lanes) && m.lanes.lanes.length) {
         lanes = { visible: true, lanes: m.lanes.lanes.map((l) => {
             const dirs = (l.follows || [l.follow]).filter((x) => x && x !== 'NONE');
-            return { directions: dirs, other: (l.others || []).filter((x) => x && x !== 'NONE'), highlighted: !!l.hi && l.info !== 'BLOCKED', blocked: l.info === 'BLOCKED' };
+            return { directions: dirs, other: (l.others || []).filter((x) => x && x !== 'NONE'), highlighted: !!l.hi && l.info !== 'BLOCKED', blocked: l.info === 'BLOCKED',
+                toll: /^TOLL_/.test(l.info || '') ? l.info : null };
         }) };
     }
     return { visible: true, maneuver, branchType, exitNumber, kind: m.kind, distanceText: m.dist + ' ' + (m.unit || ''), description, lanes };

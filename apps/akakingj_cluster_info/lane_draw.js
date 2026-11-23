@@ -66,6 +66,9 @@ function drawSized(state,w,h){
  for(let i=1;i<n;i++)for(let y=TOP_LOW+1;y<BOTTOM;y+=10)vline(left+cell*i,y,Math.min(BOTTOM,y+5),1.6);
  lanes.forEach((lane,i)=>{
   const cx=left+cell*(i+0.5),on=lane.highlighted;
+  // a hi-pass lane (ETC) tinted blue under its arrows as the road paints it, one for either (ETC or cash) half as much
+  if(lane.toll==='TOLL_ETC'||lane.toll==='TOLL_ETC_CASH'){const x0=(left+cell*i+1.5)*s,x1=(left+cell*(i+1)-1.5)*s;
+   cv.quad([[x0,TOP_LOW*s],[x1,TOP_LOW*s],[x1,BOTTOM*s],[x0,BOTTOM*s]],lane.toll==='TOLL_ETC'?'#1d4f96':'#16345e');}
   const list=lane.other.map(d=>({d,color:OTHER})).concat(lane.directions.map(d=>({d,color:on?selected:DIM})));
   const all=lane.directions.concat(lane.other),side=d=>(d.match(/LEFT|RIGHT/)||[''])[0],paired=d=>(d==='LEFT'||d==='RIGHT'||/^UTURN_/.test(d))&&all.includes(side(d))&&all.includes('UTURN_'+side(d));
   const shapes=list.map(e=>Object.assign(e,{parts:glyph(e.d,paired(e.d))})).filter(e=>e.parts);

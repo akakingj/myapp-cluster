@@ -29,9 +29,10 @@
  *         'keep' (dir LEFT / RIGHT: along the main road), 'lanechange' (dir LEFT / RIGHT),
  *         'destination' (dir: LEFT / CENTER / RIGHT / NOT_DIGITIZED; flag false: a stopover, stop its number),
  *         'transport' (dir FERRY / CAR_TRAIN: onto a ferry or a car train),
+ *         'toll' (a toll gate ahead: the tollgate member, with its distance),
  *         'follow' (a kind not in the car's catalog: "follow the route")
  *   Not turns, skipped, so they never stand in for the next turn: points of interest, lane rows, traffic, route
- *   segments, tunnels, borders, toll gates, passive manoeuvres (straight through), speed cameras and limits,
+ *   segments, tunnels, borders, passive manoeuvres (straight through), speed cameras and limits,
  *   dangerous curves, school zones, placeholders (GAP / LOADING_INDICATOR).
  *   dist, unit: as the car formats them ('1' 'km', '450' 'm'); null when it gives none
  *   lanes: { lanes: [{ follow, others: [], hi, info }], rec, markers } or null
@@ -133,7 +134,7 @@ function metres(m) {
  * for (eventQuery's includedTypes), but if one comes it mustn't hide the turn after it.
  */
 const SKIP = { pointOfInterest: 1, laneGuiding: 1, trafficEvent: 1, trafficFlowItem: 1, routeSegmentItem: 1, placeholderElement: 1,
-    tunnel: 1, border: 1, tollgate: 1, passiveManeuver: 1, speedLimitAssist: 1, speedLimit: 1, speedCamera: 1, speedSectionCamera: 1,
+    tunnel: 1, border: 1, passiveManeuver: 1, speedLimitAssist: 1, speedLimit: 1, speedCamera: 1, speedSectionCamera: 1,
     dangerousCurve: 1, schoolZone: 1 };
 /** detailedGeometry when it says something (not UNDEFINED / NONE / missing). */
 function geomOf(b) { return enumOf('ManeuverGeometry', b.detailedGeometry); }
@@ -181,6 +182,9 @@ function decodeEvent(e) {
         // a stopover on the way: isCheckeredFlag false (the drive's destination: true)
         m.flag = b.isCheckeredFlag !== false;
         m.stop = isFinite(Number(b.stopOverNumber)) && Number(b.stopOverNumber) > 0 ? Math.round(Number(b.stopOverNumber)) : null;
+        break;
+    case 'tollgate':
+        m.kind = 'toll';
         break;
     case 'vehicleTransportation':
         m.kind = 'transport'; m.dir = enumOf('VehicleTransportationType', b.type) || 'FERRY';
