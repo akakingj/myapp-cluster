@@ -330,6 +330,13 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   frozen, fuel, korean, kwfuse, presence, readouts, strip_fuel, tight) run in tests.yml with the others.
 - Layouts 0.56.3 (Nov 24 2026): KO 2's trip computer three lines, as KO 1's (Trip computer: line 1-3; the
   distance, the driving time and the average economy as they come), as the owner asked.
+- Layouts 0.56.4 (Nov 24 2026): a plug-in hybrid's Power % as the other rev counters' in Retro M and JDM 1, as the
+  owner asked. Retro M: RMDIAL_FS u_mz (0 a quarter round, the regeneration below it to -100 in green ticks over a
+  band, no figures there), eDRIVE / eBOOST / CHARGE round it (layouts.js withPowerWords); it stopped at 0 before.
+  JDM 1: RTACH_FS u_zero (lit from the 0 either way, below it green), the 0 on the thousand nearest a quarter, 0 /
+  50 / 100 on the thousands' figures (the rpm figures blank, no new layers: 56 of 60), POWER % with eDRIVE, CHARGE
+  or eBOOST under it; the rpm figures stayed and 0 - 100 drew from the start before. GT3, Pulse, Simple and Track
+  (figures only) left as they are. Centre 0.14.17: the same shared shaders.js.
 - Layouts 0.56.1, Centre 0.14.15 (Nov 24 2026): JDM 1's water more like water (CUP_FS): in the clear cup deeper and
   denser towards the bottom, the light bent along the walls and gathered on the bottom, a few bubbles; its surface the
   sky's reflection to the far side and the water through it to the near, a highlight, ripples while it sloshes, the

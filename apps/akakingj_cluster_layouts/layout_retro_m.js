@@ -22,7 +22,7 @@ const PAL = {
 const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0] });
 const unitC = (t) => ({ color: [t.dim, 1], glow: [t.glow, 0] });
 const labelC = (t) => ({ color: [t.label, 1], glow: [t.glow, 0] });
-const dialColours = (t) => ({ face: t.face, border: t.border, ring: t.ring, mark: t.mark, red: t.red, hand: t.hand, cap: t.cap, panel: t.panel });
+const dialColours = (t) => ({ face: t.face, border: t.border, ring: t.ring, mark: t.mark, red: t.red, hand: t.hand, cap: t.cap, panel: t.panel, regen: t.regen || '#3ddc84' });
 const NONE = 1e9;
 
 /** A text whose baseline is at y, `size` px (the font's size: the glyph cell 1 / 0.92 of it, its baseline 0.79 down). */
@@ -66,7 +66,7 @@ const step2 = (v, V) => { const sp = V[1] - V[0]; return Math.round(v / sp * 400
 
 /** A big dial at (cx, cy), the speedometer or the tach, k its scale (1: radius 250 and its 264 px outer ring). The tach
  * as the other analog layouts' (layout_common tachValue): its red zone lower while the oil is cold (shiftPoint), and in
- * a plug-in hybrid's electric modes Power % (0 - 100). */
+ * a plug-in hybrid's electric modes Power % (0 a quarter round, to 100; below it the regeneration, CHARGE, to -100). */
 function bigDial(o, which, cx, cy, k, fill) {
     const speed = which === 'speed', kmh = o.speedUnit === 'kmh', rs = C.rpmScale(o);
     const R = 264 * k, size = Math.ceil(2 * R + 2), x0 = Math.round(cx - size / 2), y0 = Math.round(cy - size / 2);
@@ -84,12 +84,12 @@ function bigDial(o, which, cx, cy, k, fill) {
             u_g1: [0, 0, -132, 132], u_v1: V1, u_t1: [sk(244), sk(214), sk(230), sk(9)], u_x1: [sk(5), sk(184), sk((speed ? (kmh ? 27 : 30) : 38) / 0.92), 0],
             u_g2: [0, sk(75), 236, 124], u_v2: h.V, u_t2: [sk(102), sk(86), sk(86), sk(speed ? 5 : 7)], u_x2: [sk(5), sk(124), h.figs ? sk(22 / 0.92) : 0, sk(96)],
             u_reds: reds({}),
-            u_needle: [sk(232), sk(40), sk(8), sk(30)],
+            u_needle: [sk(232), sk(40), sk(8), sk(30)], u_mz: [0, 0],
         },
         colors: dialColours, max: V1[1], sweep: true,
-        value: speed ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : (d) => (elec(d) ? Math.max(0, C.powerPct(d)) : C.isNum(d.rpm) ? d.rpm / 1000 : 0),
-        range: speed ? undefined : (d) => [0, elec(d) ? C.PCT.max : V1[1]],
-        dyn: (d) => { const V2 = h.scaleOf ? h.scaleOf(d) : h.V; return Object.assign({ u_value2: [step2(h.value(d), V2)], u_reds: reds(d) }, h.scaleOf ? { u_v2: V2 } : {}, speed ? {} : { u_v1: elec(d) ? PCT : V1 }); },
+        value: speed ? (d) => (C.isNum(d.speed) ? C.speedIn(o, d.speed) : 0) : (d) => (elec(d) ? C.powerPct(d) : C.isNum(d.rpm) ? d.rpm / 1000 : 0),
+        range: speed ? undefined : (d) => (elec(d) ? [-C.PCT.max, C.PCT.max] : [0, V1[1]]),
+        dyn: (d) => { const V2 = h.scaleOf ? h.scaleOf(d) : h.V; return Object.assign({ u_value2: [step2(h.value(d), V2)], u_reds: reds(d) }, h.scaleOf ? { u_v2: V2 } : {}, speed ? {} : { u_v1: elec(d) ? PCT : V1, u_mz: elec(d) ? [-C.PCT.max, C.KW_ZERO] : [0, 0] }); },
     };
     const unitW = Math.round(220 * k), sub = { tracking: 0.02 };
     const out = [piece];
@@ -120,7 +120,7 @@ function sideDial(o, place, cx, cy, box) {
             u_rings: [120, 120, 130, 1],
             u_g1: [0, piv, -48, 48], u_v1: h.V, u_t1: [112, 94, 94, 6], u_x1: [5, 76, h.figs ? Math.round(20 / 0.92 * 100) / 100 : 0, 0],
             u_g2: [0, 0, 0, 0], u_v2: [0, 1, 1, 1], u_t2: [0, 0, 0, 0], u_x2: [0, 0, 0, 0], u_reds: h.red.concat([NONE, -NONE]),
-            u_needle: [108, 0, 5, 14],
+            u_needle: [108, 0, 5, 14], u_mz: [0, 0],
         },
         colors: dialColours, max: h.V[1], min: h.V[0], sweep: true, value: h.value,
         dyn: h.scaleOf ? (d) => ({ u_v1: h.scaleOf(d) }) : undefined,

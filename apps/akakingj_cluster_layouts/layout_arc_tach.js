@@ -30,6 +30,32 @@ const LCD = { comfort: {}, sport: { lcd: '#ff3a2e', lcdOff: '#2c0c0a', hot: '#ff
 const ink = (t) => ({ color: [t.ink, 1], glow: [t.ink, 0.12] });
 const inkHot = (t) => ({ color: [t.lamp, 1], glow: [t.lamp, 0.45] });
 const grn = (t) => ({ color: [t.lcd, 1], glow: [t.lcd, 0.25] });
+/*
+ * A plug-in hybrid's Power % on the bar (layout_common.electric): its 0 on the thousand nearest a quarter along, 100 at
+ * the end, 50 between where a thousand is (on the same figures' places), the regeneration below the 0 down to the start;
+ * under its name eDRIVE, CHARGE while regenerating, eBOOST at the top.
+ */
+const REGEN = '#3ddc84', EV = '#4ab4ff';
+const pzOf = (s) => Math.max(1, Math.round(s.max / 4));
+/** The bar's uniforms now: the Power % scale in an electric mode, else the engine speed's (its red zone, the shift). */
+function barDyn(o, s, elec) {
+    return (d) => (elec(d) ? { u_red: [2], u_orange: [2], u_shift: [0], u_zero: [pzOf(s) / s.max] }
+        : Object.assign(((m) => ({ u_red: [m[0]], u_orange: [m[1]], u_shift: [B.shiftNow(o, d) ? 1 : 0] }))(B.redMarks(o, s.max * 1000, d)), { u_zero: [0] }));
+}
+/** Its figures: the thousands, or (electric) 0, 50 and 100 at theirs. at(u): the place; w, h a figure's cell (the
+ * last one and the middle one wider, for 100 and 50). */
+function barFigures(o, s, elec, at, w0, h) {
+    const z = pzOf(s), mid = (z + s.max) / 2, out = [];
+    const pct = (i) => (i === z ? '0' : i === s.max ? '100' : i === mid ? '50' : '');
+    for (let i = 0; i <= s.max; i++) {
+        const [x, y] = at(i / s.max), w = i === s.max ? Math.round(w0 * 2) : i === mid ? Math.round(w0 * 1.4) : w0;
+        out.push(C.text('n' + i, Math.round(x - w / 2), Math.round(y - h / 2), w, h, (d) => (elec(d) ? pct(i) : String(i)), (t, d) => (!elec(d) && i * 1000 >= C.shiftPoint(o, d).red ? inkHot(t) : ink(t))));   // (red in the red zone)
+    }
+    return out;
+}
+/** The word under POWER %: CHARGE while the battery takes the regeneration, eBOOST at the top, else eDRIVE. */
+const pctWord = (d) => (C.powerPct(d) < 0 ? 'CHARGE' : C.powerPct(d) >= C.EBOOST_AT ? 'eBOOST' : 'eDRIVE');
+const pctWordC = (d) => { const c = C.powerPct(d) < 0 ? REGEN : EV; return { color: [c, 1], glow: [c, 0.2] }; };
 const gearHot = (t) => ({ color: [t.hot, 1], glow: [t.hot, 0.45] });
 /* the rev bar's curve (panel px): a quarter circle from the bottom left up to the top at x CX, then straight on to XE */
 const CURVE = { cx: 1152, R: 750, top: 232, a0: -54.9, xe: 1372, T: 30, base: 600, lineTop: 136 };
@@ -96,25 +122,22 @@ function dash(o) {
     const elec = (d) => C.electric(o, d);
     list.push({
         key: 'rtach', kind: 'rtach', x: X, y: Y, w: W, h: H, z: -10,
-        params: { u_off: [X, Y], u_geo: [CURVE.cx, CURVE.cy, CURVE.R, CURVE.a0], u_geo2: [CURVE.xe, CURVE.T, CURVE.base, CURVE.lineTop], u_ticks: [s.max, 10], u_ld1: lead(1, s.max), u_ld2: lead(2, s.max) },
-        colors: (t) => ({ ink: t.ink, dim: t.slat, line: t.line }),
-        value: (d) => (elec(d) ? C.powerFrac(d) : C.isNum(d.rpm) ? Math.max(0, Math.min(1, d.rpm / (s.max * 1000))) : 0), max: 1, sweep: true,
-        dyn: (d) => (elec(d) ? { u_red: [2], u_orange: [2], u_shift: [0] }
-            : ((m) => ({ u_red: [m[0]], u_orange: [m[1]], u_shift: [B.shiftNow(o, d) ? 1 : 0] }))(B.redMarks(o, s.max * 1000, d))),
+        params: { u_off: [X, Y], u_geo: [CURVE.cx, CURVE.cy, CURVE.R, CURVE.a0], u_geo2: [CURVE.xe, CURVE.T, CURVE.base, CURVE.lineTop], u_ticks: [s.max, 10], u_ld1: lead(1, s.max), u_ld2: lead(2, s.max), u_zero: [0] },
+        colors: (t) => ({ ink: t.ink, dim: t.slat, line: t.line, regen: REGEN }),
+        value: (d) => (elec(d) ? C.powerFrac(d, pzOf(s) / s.max) : C.isNum(d.rpm) ? Math.max(0, Math.min(1, d.rpm / (s.max * 1000))) : 0),
+        max: 1, sweep: true,
+        dyn: barDyn(o, s, elec),
     });
     // the lines over the bar on up to the panel's top (0.40.4), as on the dash they're after, under the camera cowl
     // too (the camera hides them there): one more layer of the same drawing above the main one; only these lines
     // reach up there (hairlines, tools/clearance.js)
     list.push({ key: 'rtachTop', kind: 'rtach', x: X, y: 18, w: W, h: CURVE.lineTop - 18, z: -10, hairline: true,
         params: Object.assign({}, list[list.length - 1].params, { u_off: [X, 18], u_geo2: [CURVE.xe, CURVE.T, CURVE.base, 18] }),
-        colors: (t) => ({ ink: t.ink, dim: t.slat, line: t.line }) });
-    for (let i = 0; i <= s.max; i++) {
-        const [x, y] = tachAt(i / s.max, 50), w = 60, h = 44;
-        list.push(C.text('n' + i, Math.round(x - w / 2), Math.round(y - h / 2), w, h, String(i), (t, d) => (i * 1000 >= C.shiftPoint(o, d).red ? inkHot(t) : ink(t))));   // (red in the red zone)
-    }
+        colors: (t) => ({ ink: t.ink, dim: t.slat, line: t.line, regen: REGEN }) });
+    list.push(...barFigures(o, s, elec, (u) => tachAt(u, 50), 60, 44));
     // (the lines under the bar from the third thousand on: none cross the words or the gear, 0.40.2)
-    list.push(C.text('tachLbl', 690, 470, 170, 28, (d) => (elec(d) ? 'POWER' : 'TACH'), ink, { align: 0, tracking: 0.06 }),
-        C.text('tachUnit', 690, 502, 190, 22, (d) => (elec(d) ? C.POWER_UNIT : 'x1000 r/min'), ink, { align: 0 }));
+    list.push(C.text('tachLbl', 690, 470, 170, 28, (d) => (elec(d) ? C.POWER_UNIT : 'TACH'), ink, { align: 0, tracking: 0.06 }),
+        C.text('tachUnit', 690, 502, 190, 22, (d) => (elec(d) ? pctWord(d) : 'x1000 r/min'), (t, d) => (elec(d) ? pctWordC(d) : ink(t)), { align: 0 }));
     // the gear, as a race logger shows it, at the bottom left
     list.push(C.text('gearLbl', 600, 556, 86, 24, 'GEAR', ink, { align: 0 }),
         C.text('dashGear', 692, 522, 170, 76, C.gearText, (t, d) => (B.shiftNow(o, d) ? gearHot(t) : grn(t)), { align: 0 }));
@@ -166,19 +189,16 @@ function mapDash(o) {
     const X = 40, Y = 100, W = 412 - X, H = MCURVE.base + 2 - Y;
     list.push({
         key: 'rtach', kind: 'rtach', x: X, y: Y, w: W, h: H, z: -10,
-        params: { u_off: [X, Y], u_geo: [MCURVE.cx, MCURVE.cy, MCURVE.R, MCURVE.a0], u_geo2: [MCURVE.xe, MCURVE.T, 0, 9999], u_ticks: [s.max, 4], u_ld1: [0, 0, 0], u_ld2: [0, 0, 0], u_k: [1] },
-        colors: (t) => ({ ink: t.ink, dim: t.slat, line: t.line }),
-        value: (d) => (elec(d) ? C.powerFrac(d) : C.isNum(d.rpm) ? Math.max(0, Math.min(1, d.rpm / (s.max * 1000))) : 0), max: 1, sweep: true,
-        dyn: (d) => (elec(d) ? { u_red: [2], u_orange: [2], u_shift: [0] }
-            : ((m) => ({ u_red: [m[0]], u_orange: [m[1]], u_shift: [B.shiftNow(o, d) ? 1 : 0] }))(B.redMarks(o, s.max * 1000, d))),
+        params: { u_off: [X, Y], u_geo: [MCURVE.cx, MCURVE.cy, MCURVE.R, MCURVE.a0], u_geo2: [MCURVE.xe, MCURVE.T, 0, 9999], u_ticks: [s.max, 4], u_ld1: [0, 0, 0], u_ld2: [0, 0, 0], u_k: [1], u_zero: [0] },
+        colors: (t) => ({ ink: t.ink, dim: t.slat, line: t.line, regen: REGEN }),
+        value: (d) => (elec(d) ? C.powerFrac(d, pzOf(s) / s.max) : C.isNum(d.rpm) ? Math.max(0, Math.min(1, d.rpm / (s.max * 1000))) : 0),
+        max: 1, sweep: true,
+        dyn: barDyn(o, s, elec),
     });
-    for (let i = 0; i <= s.max; i++) {
-        const [x, y] = mcurveAt(i / s.max, 54), w = 44, h = 32;
-        list.push(C.text('n' + i, Math.round(x - w / 2), Math.round(y - h / 2), w, h, String(i), (t, d) => (i * 1000 >= C.shiftPoint(o, d).red ? inkHot(t) : ink(t))));
-    }
+    list.push(...barFigures(o, s, elec, (u) => mcurveAt(u, 54), 44, 32));
     // inside the curve: TACH, then the gear as a race logger shows it
-    list.push(C.text('tachLbl', 236, 392, 150, 26, (d) => (elec(d) ? 'POWER' : 'TACH'), ink, { align: 0, tracking: 0.06 }),
-        C.text('tachUnit', 236, 422, 170, 20, (d) => (elec(d) ? C.POWER_UNIT : 'x1000 r/min'), ink, { align: 0 }),
+    list.push(C.text('tachLbl', 236, 392, 150, 26, (d) => (elec(d) ? C.POWER_UNIT : 'TACH'), ink, { align: 0, tracking: 0.06 }),
+        C.text('tachUnit', 236, 422, 170, 20, (d) => (elec(d) ? pctWord(d) : 'x1000 r/min'), (t, d) => (elec(d) ? pctWordC(d) : ink(t)), { align: 0 }),
         C.text('gearLbl', 150, 552, 76, 22, 'GEAR', ink, { align: 0 }),
         C.text('dashGear', 232, 512, 172, 76, C.gearText, (t, d) => (B.shiftNow(o, d) ? gearHot(t) : grn(t)), { align: 0 }));
     // right: the speed's frame, the LCD, its lamp and name, the main readout under it

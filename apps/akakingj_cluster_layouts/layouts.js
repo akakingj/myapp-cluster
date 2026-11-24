@@ -246,8 +246,12 @@ const ROUND_TACH = { dial: 1, e9x: 1, mround: 1, jdm: 1 };
 function withPowerWords(o, list) {
     if (!o || o.vehicle === 'ice' || C0.engineFocus(o)) return list;
     const t = list.find((p) => p.key === 'rpm' && ROUND_TACH[p.kind] && p.params && p.params.u_arc && p.w === p.h);
-    if (!t) return list;
-    return list.concat(C0.powerLabels(o, 'pw', t.x + t.w / 2, t.y + t.h / 2, t.w / 2, t.params.u_arc[0], t.params.u_arc[1]));
+    if (t) return list.concat(C0.powerLabels(o, 'pw', t.x + t.w / 2, t.y + t.h / 2, t.w / 2, t.params.u_arc[0], t.params.u_arc[1]));
+    // (Retro M's: its scale's sweep in u_g1, about its pivot; the words out towards the ticks, clear of the hanging scale)
+    const m = list.find((p) => p.key === 'rpm' && p.kind === 'rmdial' && p.params && p.params.u_g1);
+    if (!m) return list;
+    const P = m.params, R = P.u_rings[0];
+    return list.concat(C0.powerLabels(o, 'pw', m.x + P.u_c[0] + P.u_g1[0], m.y + P.u_c[1] + P.u_g1[1], R, P.u_g1[2], P.u_g1[3], 0.66));
 }
 function layoutFor(get, d) {
     const m = (d && d.driveMode) || '';

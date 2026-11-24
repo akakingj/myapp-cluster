@@ -77,7 +77,9 @@ ID8 M's bottom bar and rev bracket bar; the battery gauge's figures). 0.36.1: th
 torque, coolant; plug-in hybrid: each layout's eDrive reading), and any reading can be set on either car, the battery's
 charge, temperature, power and electric range among them (the small gauges and the places too); ID8 M's rev bracket bar
 is a plug-in hybrid's charge. 0.35.9: a plug-in hybrid's tach is a Power % meter in HYBRID and ELECTRIC
-(the pedal's demand, eBOOST at the top, CHARGE below 0: the regeneration), the rev counter in SPORT and XTRABOOST;
+(the pedal's demand, eBOOST at the top, CHARGE below 0: the regeneration; every layout with a rev counter, Retro M's
+and JDM 1's bar too since 0.56.4; GT3, Pulse, Simple and Track show the battery's power as figures), the rev counter
+in SPORT and XTRABOOST;
 HYBRID is comfort's colours, ELECTRIC ECO PRO's, XTRABOOST sport's. 0.35.7: Settings > Vehicle is Plug-in hybrid,
 Petrol or Diesel (or Auto); on a diesel the intake air takes the ignition timing's place (none read). 0.35.4: JDM 1 keeps one look in
 every drive mode; JDM 2's tach is red in every mode with the red line marked on its rim, and only the gear's disc
@@ -173,7 +175,8 @@ in words under its name. Between the big dials, a small window with the gear (it
 M's M stripes under it. A window in the speedometer shows a reading picked on the page (Speedometer's window: the
 odometer as it comes, the trip with one decimal), its figures and unit alone. The needles and the tach go as the other
 analog layouts': the tach's scale and red zone from Settings > Gauge goes up to and Red light at (the Car profile's), the
-red lower while the oil is cold, Power % in a plug-in hybrid's electric modes. One set of colours:
+red lower while the oil is cold, Power % in a plug-in hybrid's electric modes (0 a quarter round, CHARGE below it to
+-100, eDRIVE and eBOOST, as the other round tachs). One set of colours:
 the drive mode and the colour settings change nothing. With the map in the centre the two dials stand either side of
 it, without their window, the end dials and the middle. Every dial is one layer with the panel's plastic round it
 (RMDIAL_FS), the plastic under them one layer (RMBG_FS: a 6 px checker, nothing more).

@@ -283,7 +283,8 @@ void main() {
  * left of its top round to the top), then straight on to x u_geo2.x - lit in segments from 0 to u_value (0..1), the
  * amber run-up from u_orange and the red zone from u_red brighter, ticks outside it every segment (the thousands
  * longer), and the dash's lines: radial under the bar down to y u_geo2.z, over it (from the third thousand) up to
- * y u_geo2.w. u_off: the layer's place on the panel (the geometry is in panel px).
+ * y u_geo2.w. u_off: the layer's place on the panel (the geometry is in panel px). u_zero above 0 (a plug-in hybrid's
+ * Power %): lit from there to u_value either way, the part below it (the regeneration) in u_regen.
  */
 const RTACH_FS = `#version 100
 ${HIGHP}${COMMON}
@@ -297,8 +298,10 @@ uniform float u_value;
 uniform float u_red;
 uniform float u_orange;
 uniform float u_shift;
+uniform float u_zero;
 uniform vec3 u_ink;
 uniform vec3 u_dim;
+uniform vec3 u_regen;
 uniform vec3 u_line;      // the dash's lines and the small ticks
 uniform vec3 u_ld1;       // two leader lines (panel px): from x, at y, along to x; then down at 45 degrees for 18 px
 uniform vec3 u_ld2;
@@ -330,8 +333,9 @@ void main() {
     float along = clamp(s + 0.5, 0.0, 1.0) * clamp(L - s + 0.5, 0.0, 1.0);
     float sg = fract(s / segL) * segL;
     float bar = cov(abs(dist) - T * 0.5) * along * clamp(min(sg, segL - sg) * k - segL * 0.21, 0.0, 1.0);
-    float lit = step(t, u_value);
-    vec3 col = mix(u_dim, u_shift > 0.5 ? vec3(1.0, 0.28, 0.2) : u_ink, lit);
+    float lit = u_zero > 0.0 ? step(min(u_zero, u_value), t) * step(t, max(u_zero, u_value)) : step(t, u_value);
+    bool regen = t < u_zero;
+    vec3 col = mix(regen ? mix(u_dim, u_regen, 0.3) : u_dim, regen ? u_regen : u_shift > 0.5 ? vec3(1.0, 0.28, 0.2) : u_ink, lit);
     if (t >= u_orange && t < u_red) col = mix(mix(u_dim, vec3(0.55, 0.33, 0.06), 0.6), u_shift > 0.5 ? vec3(1.0, 0.28, 0.2) : vec3(1.0, 0.68, 0.16), lit);
     if (t >= u_red) col = mix(mix(u_dim, vec3(0.62, 0.1, 0.08), 0.7), vec3(1.0, 0.2, 0.16), lit);
     c = put(c, col, bar);
@@ -2284,6 +2288,8 @@ const MROUND_FS_MODES = byMode(MROUND_FS, 3);
  * u_needle: the needle's length, its tail, its width (round ends), the cap's radius (with a u_look.y border, u_ring);
  * the hanging scale's needle: its length u_x2.w, its width u_look.z. u_value, u_value2: the readings on the scales.
  * u_look.w 1: the needle alone (its colour, see-through round it), for a layer over what lies on the face (Retro M's window).
+ * u_mz: the first scale's start below 0 and where its 0 sits along the sweep (a power gauge, as DIAL_FS u_min / u_zero:
+ * the regeneration from the 0 down to the start, its ticks and a band in u_regen, no figures there); .x 0: none.
  */
 const RM_PANEL = `
 uniform vec2 u_origin;
@@ -2309,9 +2315,11 @@ uniform vec4 u_t2;
 uniform vec4 u_x2;
 uniform vec4 u_reds;
 uniform vec4 u_needle;
+uniform vec2 u_mz;
 uniform float u_value;
 uniform float u_value2;
 uniform float u_digit_adv;
+uniform vec3 u_regen;
 uniform vec3 u_face;
 uniform vec3 u_border;
 uniform vec3 u_ring;
@@ -2326,24 +2334,33 @@ float tOf(vec2 q, vec4 G) {
     return (da - (G.z - m)) / (G.w - G.z);
 }
 vec2 dirOf(float t, vec4 G) { float a = (G.z + t * (G.w - G.z)) * DEG; return vec2(sin(a), -cos(a)); }
-vec3 scale(vec3 col, vec2 d, vec4 G, vec4 V, vec4 T, vec4 X, vec2 R) {
+/* the place along the sweep (0..1) of value v: with M.x below 0, 0 at M.y and M.x at the start, else V's own */
+float fracOf(float v, vec4 V, vec2 M) {
+    if (M.x >= 0.0) return (v - V.x) / (V.y - V.x);
+    return v >= 0.0 ? M.y + (1.0 - M.y) * v / V.y : M.y * (1.0 - v / M.x);
+}
+vec3 scale(vec3 col, vec2 d, vec4 G, vec4 V, vec4 T, vec4 X, vec2 R, vec2 M) {
     vec2 q = d - G.xy;
     float r = length(q), t = tOf(q, G), span0 = V.y - V.x;
+    bool neg = M.x < 0.0 && t < M.y;
     if (t > -0.05 && t < 1.05 && r > min(T.y, T.z) - 2.0 && r < T.x + 2.0) {
-        float v = V.x + t * span0;
-        float vm = clamp(V.x + floor((v - V.x) / V.z + 0.5) * V.z, V.x, V.y);
-        float k = (vm - V.x) / V.w;
+        /* (the regeneration's part: ticks at its quarters, the half ones major, over a band) */
+        float v = neg ? M.x * (1.0 - t / M.y) : M.x < 0.0 ? (t - M.y) / (1.0 - M.y) * V.y : V.x + t * span0;
+        float st = neg ? -M.x / 4.0 : V.z, stM = neg ? -M.x / 2.0 : V.w;
+        float vm = neg ? clamp(floor(v / st + 0.5) * st, M.x, 0.0) : clamp(V.x + floor((v - V.x) / V.z + 0.5) * V.z, V.x, V.y);
+        float k = (vm - (neg ? 0.0 : V.x)) / stM;
         bool major = abs(k - floor(k + 0.5)) < 0.01;
-        vec2 dir = dirOf((vm - V.x) / span0, G);
+        vec2 dir = dirOf(fracOf(vm, V, M), G);
         float along = dot(q, dir), side = abs(dot(q, vec2(-dir.y, dir.x)));
         float rin = major ? T.y : T.z, w = major ? T.w : X.x;
         float cov = clamp(w * 0.5 - side + 0.5, 0.0, 1.0) * span(along, min(rin, T.x), max(rin, T.x));
-        col = mix(col, vm >= R.x - 0.001 || vm <= R.y + 0.001 ? u_red : u_mark, cov);
+        if (neg && t > 0.0) col = mix(col, u_regen * 0.55, span(r, T.z, T.x) * 0.8);
+        col = mix(col, neg || vm < 0.0 ? u_regen : vm >= R.x - 0.001 || vm <= R.y + 0.001 ? u_red : u_mark, cov);
     }
     if (X.z > 0.0) {
-        float v = V.x + clamp(t, 0.0, 1.0) * span0;
+        float v = M.x < 0.0 ? (clamp(t, M.y, 1.0) - M.y) / (1.0 - M.y) * V.y : V.x + clamp(t, 0.0, 1.0) * span0;
         float vk = clamp(V.x + floor((v - V.x) / V.w + 0.5) * V.w, V.x, V.y);
-        vec2 pc = G.xy + dirOf((vk - V.x) / span0, G) * X.y;
+        vec2 pc = G.xy + dirOf(fracOf(vk, V, M), G) * X.y;
         float h = X.z, adv = u_digit_adv, n = figuresOf(vk);
         vec2 g = (d - pc) / h;
         float x = g.x + n * adv * 0.5, i = floor(x / adv);
@@ -2360,14 +2377,14 @@ float hand(vec2 q, vec2 dir, float len, float tail, float w) {
 }
 void main() {
     vec2 px = v_uv * u_size, d = px - u_c;
-    float t1 = clamp((u_value - u_v1.x) / (u_v1.y - u_v1.x), -0.02, 1.02);
+    float t1 = clamp(fracOf(u_value, u_v1, u_mz), -0.02, 1.02);
     if (u_look.w > 0.5) { gl_FragColor = vec4(u_hand, hand(d - u_g1.xy, dirOf(t1, u_g1), u_needle.x, u_needle.y, u_needle.z)); return; }
     float r = length(d);
     vec4 bg = u_look.x > 0.5 ? rmPanel(px + u_origin) : vec4(0.0);
     if (r > u_rings.z + 1.0) { gl_FragColor = bg; return; }
     vec3 col = r > u_rings.y ? u_ring : r > u_rings.x ? u_border : u_face;
-    if (u_g2.z != u_g2.w) col = scale(col, d, u_g2, u_v2, u_t2, u_x2, u_reds.zw);
-    col = scale(col, d, u_g1, u_v1, u_t1, u_x1, u_reds.xy);
+    if (u_g2.z != u_g2.w) col = scale(col, d, u_g2, u_v2, u_t2, u_x2, u_reds.zw, vec2(0.0));
+    col = scale(col, d, u_g1, u_v1, u_t1, u_x1, u_reds.xy, u_mz);
     if (u_g2.z != u_g2.w) {
         float t2 = clamp((u_value2 - u_v2.x) / (u_v2.y - u_v2.x), 0.0, 1.0);
         col = mix(col, u_hand, hand(d - u_g2.xy, dirOf(t2, u_g2), u_x2.w, 0.0, u_look.z));
