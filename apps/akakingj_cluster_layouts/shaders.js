@@ -2243,6 +2243,7 @@ const MROUND_FS_MODES = byMode(MROUND_FS, 3);
  *   u_reds  ticks from .x up and to .y down in u_red, on the first scale; .z and .w, the second's (the figures stay u_mark)
  * u_needle: the needle's length, its tail, its width (round ends), the cap's radius (with a u_look.y border, u_ring);
  * the hanging scale's needle: its length u_x2.w, its width u_look.z. u_value, u_value2: the readings on the scales.
+ * u_look.w 1: the needle alone (its colour, see-through round it), for a layer over what lies on the face (Retro M's window).
  */
 const RM_PANEL = `
 uniform vec2 u_origin;
@@ -2319,6 +2320,8 @@ float hand(vec2 q, vec2 dir, float len, float tail, float w) {
 }
 void main() {
     vec2 px = v_uv * u_size, d = px - u_c;
+    float t1 = clamp((u_value - u_v1.x) / (u_v1.y - u_v1.x), -0.02, 1.02);
+    if (u_look.w > 0.5) { gl_FragColor = vec4(u_hand, hand(d - u_g1.xy, dirOf(t1, u_g1), u_needle.x, u_needle.y, u_needle.z)); return; }
     float r = length(d);
     vec4 bg = u_look.x > 0.5 ? rmPanel(px + u_origin) : vec4(0.0);
     if (r > u_rings.z + 1.0) { gl_FragColor = bg; return; }
@@ -2329,7 +2332,6 @@ void main() {
         float t2 = clamp((u_value2 - u_v2.x) / (u_v2.y - u_v2.x), 0.0, 1.0);
         col = mix(col, u_hand, hand(d - u_g2.xy, dirOf(t2, u_g2), u_x2.w, 0.0, u_look.z));
     }
-    float t1 = clamp((u_value - u_v1.x) / (u_v1.y - u_v1.x), -0.02, 1.02);
     col = mix(col, u_hand, hand(d - u_g1.xy, dirOf(t1, u_g1), u_needle.x, u_needle.y, u_needle.z));
     float rc = length(d - u_g1.xy);
     col = mix(col, u_ring * 1.4, clamp(u_needle.w - rc + 0.5, 0.0, 1.0));

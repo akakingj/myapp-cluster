@@ -42,6 +42,9 @@ let record = null;
 try { record = require('./kit/record'); } catch (e) { /* an older kit: no pixel images */ }
 const PREVIEW_ID = 0x43430001;
 let lastSig = '';
+/* The preview is drawn on the CPU (a whole cluster picture, some milliseconds on the head unit each time) while the page
+   loop runs at up to 60 fps on the GPU renderer: drawn again 4 times a second, once a second under a sheet (Settings). */
+const PREVIEW_MS = 250, PREVIEW_UNDER_MS = 1000;
 /** The picture at half size (each 2x2 block averaged). */
 function half(d, w, h) {
     const W2 = w >> 1, H2 = h >> 1, out = new Uint8Array(W2 * H2 * 4);
@@ -223,6 +226,7 @@ mgu.run({
         const logPages = logs.pager(logBundle, dataDir, log, 'centre');
         ui.onClick('BTN_LOGS', () => { sigPage = 0; logPages.press(); return safeRender(); });
 
+        let shot = null;   // the preview as last drawn: { page, at, sc }
         function render() {
             const t = ctx.theme();
             const cv = ctx.canvas(W, H).clear(t.bg);
@@ -238,8 +242,12 @@ mgu.run({
                 return ui.image('MAIN_GFX', cv);
             }
             // the page as the cluster shows it, then what feeds it
-            const o = options(), d = all(), list = enabled();
-            const sc = drawPieces(pieces(Object.assign({}, o, { pages: page ? [page] : [] })), palette(settings.get('accent'), settings.get('look')), d, SW, SH, page);
+            const o = options(), d = all(), list = enabled(), now = Date.now();
+            const every = ctx.display && ctx.display.sheet ? PREVIEW_UNDER_MS : PREVIEW_MS;
+            if (!shot || shot.page !== page || now - shot.at >= every || now < shot.at) {
+                shot = { page, at: now, sc: drawPieces(pieces(Object.assign({}, o, { pages: page ? [page] : [] })), palette(settings.get('accent'), settings.get('look')), d, SW, SH, page) };
+            }
+            const sc = shot.sc;
             const k = 0.82, pw = Math.round(SW * k), ph = Math.round(SH * k);
             // on the car the screen is a recorder for the GPU draw engine: the preview goes as a pixel image
             // (record.js setImage, uploaded when it changed); a plain canvas (the tests) draws it in place

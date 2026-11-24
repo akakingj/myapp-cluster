@@ -324,6 +324,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
   Korean for Retro M's place (kit locales), and Centre's shared font list. Every layout's name in English in Korean
   too (Simple, Track: they were 간단, 트랙), as the owner asked.
+- Layouts 0.55.4, Centre 0.14.13 (Nov 24 2026): Retro M's speedometer needle passes over its window and
+  the unit above it (the needle again in a layer of its own there, RMDIAL_FS u_look.w); Centre's preview, drawn on the
+  CPU, again 4 times a second (once a second under Settings) instead of every frame of the page (up to 60 a second on
+  the GPU renderer: the head unit slowed down).
 - Layouts 0.55.3, Centre 0.14.12 (Nov 24 2026): eroobeeroo's f9ca76c merged: the eDRIVE needle (change-notified)
   held 30 s (NEEDLE_HOLD_MS), so a PHEV's steady cruise stays on the fast needle, not the 2 s battery reading.
 - Layouts 0.55.2, Centre 0.14.11, Info 1.10.14 (Nov 23 2026, a check of the files): the chevron gauge Sport alone

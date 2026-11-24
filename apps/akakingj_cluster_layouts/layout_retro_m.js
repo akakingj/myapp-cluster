@@ -93,6 +93,12 @@ function bigDial(o, which, cx, cy, k, fill) {
     };
     const unitW = Math.round(220 * k), sub = { tracking: 0.02 };
     const out = [piece];
+    if (speed && fill) {
+        // the needle again over the window and the unit above it (they lie on the face): it passes over them
+        const hx = cx - 130, hy = cy - 112, hw = 260, hh = 72;
+        out.push(Object.assign({}, piece, { key: 'speedHand', x: hx, y: hy, w: hw, h: hh, z: 30,
+            params: Object.assign({}, piece.params, { u_c: [cx - hx, cy - hy], u_origin: [hx, hy], u_look: [0, sk(3), sk(5), 1] }) }));
+    }
     if (speed) out.push(textAt('speedUnit', cx, cy - 92 * k, unitW, 24 * k, C.speedUnit(o), unitC, sub));
     else out.push(textAt('rpmUnit', cx, cy - 92 * k, unitW, 24 * k, (d) => (elec(d) ? C.POWER_UNIT : '1/min'), unitC, sub),
         textAt('rpmUnit2', cx, cy - 56 * k, unitW, 22 * k, (d) => (elec(d) ? '' : 'x1000'), unitC, sub));
