@@ -151,7 +151,7 @@ function dial(o, which, cx, cy, R) {
  * The display between the dials (as 20's): readouts 1 and 2 at its top, then the car's own trip computer (0.45.0, as
  * the screens KO is drawn after: the distance, the driving time and the average fuel economy, with a bar of it, in the
  * unit Settings > Fuel economy unit sets) and the main readout under it. KO 2's: the speed in figures first, then the
- * distance and the average economy.
+ * same three lines, without the bar.
  */
 const barOf = (k) => { const r = C.READOUTS[k]; return r ? (d) => Math.max(0, Math.min(1, r.frac(d) || 0)) : () => 0; };
 function centre(o, X, Y, W, H, look) {
@@ -178,13 +178,13 @@ function centre(o, X, Y, W, H, look) {
     if (look === 'ko2') {
         // (KO 2's dials are analog: the speed in figures here, as 20's)
         return head.concat([
-            C.text('speedDigits', X, at(84), W, hh(96), (d) => C.speedText(o, d), white),
-            C.text('speedDigitsUnit', X, at(184), W, 20, C.speedUnit(o), lbl, { tracking: 0.12 }),
-            C.flat('rule2', X + 22, at(218), W - 44, 2, 'lcdEdge'),
-        ], line('koTrip', 'tripRow1', 'trip', 230, 34), line('koAvg', 'tripRow2', 'avgFuel', 270, 34), [
-            C.flat('rule3', X + 22, at(316), W - 44, 2, 'lcdEdge'),
-            C.text('kwNowLbl', X, at(330), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
-            C.text('kwNow', X, at(388) + 18 - hh(50), W, hh(50), C.focus.power(o), kw),
+            C.text('speedDigits', X, at(80), W, hh(88), (d) => C.speedText(o, d), white),
+            C.text('speedDigitsUnit', X, at(170), W, 20, C.speedUnit(o), lbl, { tracking: 0.12 }),
+            C.flat('rule2', X + 22, at(202), W - 44, 2, 'lcdEdge'),
+        ], line('koTrip', 'tripRow1', 'trip', 212, 34), line('koTime', 'tripRow2', 'tripTime', 248, 34), line('koAvg', 'tripRow3', 'avgFuel', 284, 34), [
+            C.flat('rule3', X + 22, at(328), W - 44, 2, 'lcdEdge'),
+            C.text('kwNowLbl', X, at(340), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
+            C.text('kwNow', X, at(398) + 18 - hh(50), W, hh(50), C.focus.power(o), kw),
         ]);
     }
     const P = 's';

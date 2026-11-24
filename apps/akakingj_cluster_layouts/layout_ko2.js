@@ -5,8 +5,8 @@
  * and lit from the scale's start to the needle along its edge (comfort: the speedometer blue, the tach amber; ECO PRO
  * teal; sport red under a bright bezel), and KO 1's thin arc across each dial's open foot (the fuel, 0 to 1, with the
  * range; the coolant, C to H, or a plug-in hybrid's charge; Settings > Speedometer gauge / Tach gauge, or the page).
- * Between them the display as 20's: readouts 1 and 2, the speed in figures, the main readout. Shaders: DIAL_FS (the
- * dials, as 20's), BAND_FS (the foot's arcs), texts.
+ * Between them the display as 20's: readouts 1 and 2, the speed in figures, the trip computer's three lines (KO 1's), the
+ * main readout. Shaders: DIAL_FS (the dials, as 20's), BAND_FS (the foot's arcs), texts.
  */
 const C = require('./layout_common');
 const K = require('./layout_ko1').parts;
@@ -48,7 +48,7 @@ module.exports = {
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
     ownStripGauges: true,   // (its own fuel arc, and a plug-in hybrid's charge; no bars over the car's strip)
-    // its own places, set on the page (layouts.js placesFor): the trip computer's two lines
-    places: C.tripPlaces(2, (o) => o.centre !== 'map' && o.centre !== 'stock'),
+    // its own places, set on the page (layouts.js placesFor): the trip computer's three lines, as KO 1's
+    places: C.tripPlaces(3, (o) => o.centre !== 'map' && o.centre !== 'stock'),
     pieces(o) { return K.build(o, dial, 'ko2'); },
 };

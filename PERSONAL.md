@@ -328,6 +328,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
 - Layouts 0.56.2 (Nov 24 2026): the page's layout pictures (previews.wad, tools/make_previews.py) drawn again
   after 0.55.4 - 0.56.1 (Retro M's needle over its window, JDM 1's water). The tests no workflow ran (awake, dap,
   frozen, fuel, korean, kwfuse, presence, readouts, strip_fuel, tight) run in tests.yml with the others.
+- Layouts 0.56.3 (Nov 24 2026): KO 2's trip computer three lines, as KO 1's (Trip computer: line 1-3; the
+  distance, the driving time and the average economy as they come), as the owner asked.
 - Layouts 0.56.1, Centre 0.14.15 (Nov 24 2026): JDM 1's water more like water (CUP_FS): in the clear cup deeper and
   denser towards the bottom, the light bent along the walls and gathered on the bottom, a few bubbles; its surface the
   sky's reflection to the far side and the water through it to the near, a highlight, ripples while it sloshes, the

@@ -40,8 +40,8 @@ the **Fuel range** and the **Clock** (the time of day) - read-only,
 from the cluster's KombiIF (`statusBordcomputerAverage`: trip 1's average economy and the unit the car shows it in;
 `statusBordcomputerTravelData`: the distance and the driving time; as Live Data reads them), every 15 s and on each
 change. **Settings > Fuel economy unit**: as the car's trip computer (the default; km/L with km/h, mpg with mph while
-the car hasn't said), km/L, L/100km or mpg (US). KO 1's display shows all three (and the economy as a bar, 0 to 30
-km/L), KO 2's the distance and the economy. A car that doesn't send them shows `--`. Each line of KO 1's and KO 2's
+the car hasn't said), km/L, L/100km or mpg (US). KO 1's display and KO 2's show all three (KO 1's the economy as a
+bar too, 0 to 30 km/L). A car that doesn't send them shows `--`. Each line of KO 1's and KO 2's
 trip computer is a place on the page (0.45.1: *Trip computer: line 1-3*): any readout there, or nothing; KO 1's bar
 follows its third line.
 
