@@ -115,6 +115,9 @@ follows the mode (blue, red in sport, teal in ECO PRO).
  <  [card] [card] [card] [card] [card] [card]  >          (14 layouts and Stock)
 ```
 
+- **On / off (0.57.0)**, under the cards, as AK Cluster ID8's under its picture: the status's dot (green on the
+  cluster, amber waiting for the car, grey off) and what a press does; the same words and colours as ID8's page
+  (*On the cluster*, *Off - BMW original cluster*). The HMI's *Show on the cluster* button does the same.
 - **The cards:** every layout's picture (made beforehand with demo readings for a petrol car, km/h, °C:
   `previews.wad`, from `python3 tools/make_previews.py`, which draws each with `tools/preview.js`), as it looks over
   the car's own strip (the layout above it and a grey stand-in for the strip the car draws), six a row, the

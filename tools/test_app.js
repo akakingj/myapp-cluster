@@ -123,6 +123,11 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     await tgt('cards_next').run();
     await tgt('card_stock').run();
     check('Stock: the layout off, the stock cluster back', () => assert.strictEqual(S.show, 'off'));
+    // (the page's own on / off, as AK Cluster ID8's: a press shows the layout, another takes it off)
+    await tgt('show').run();
+    check('the page\'s on / off: on', () => assert.strictEqual(S.show, 'on'));
+    await tgt('show').run();
+    check('the page\'s on / off: off again', () => assert.strictEqual(S.show, 'off'));
     await clicks.BTN_SHOW();
     await sleep(120);
     S.layout = 'analog_sport'; changes.forEach((f) => f('layout', 'analog_sport'));

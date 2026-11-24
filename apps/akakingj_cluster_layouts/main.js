@@ -49,6 +49,8 @@ const logs = require('./logs');
 const path = require('path');
 
 const W = 1600, H = 520;
+/* the status colours of AK Cluster ID8's page */
+const ON_GREEN = '#3ddc84', WAIT_AMBER = '#ffb020';
 /* the page's pictures (record.js setImage): the large one, and each layout's card (+ its index; + 0x40 with the car's
  * own bottom strip) */
 const IMG_BIG = 0x434c0100, IMG_CARD = 0x434c0200, IMG_STRIP = 0x40, IMG_STOCK = 0x3f;   // (the Stock card: under the layouts' with the strip)
@@ -342,12 +344,13 @@ mgu.run({
             cv.roundRect(BX - 4, BY - 4, menu.PW + 8, menu.PH + 8, 10, on ? acc : '#2a2f38');
             if (!picture(cv, IMG_BIG, previews.big(shownId, strip), menu.PW, menu.PH, BX, BY, bigShown !== bigKey)) cv.fillRect(BX, BY, menu.PW, menu.PH, '#000000');
             bigShown = bigKey;
-            if (!on) { cv.fillRect(BX, BY, menu.PW, menu.PH, withAlpha('#000000', 0.55)); cv.text('The stock cluster shows', BX + menu.PW / 2, BY + menu.PH / 2 + 10, 28, t.text, { align: 'center', font: 'bold' }); }
+            if (!on) { cv.fillRect(BX, BY, menu.PW, menu.PH, withAlpha('#000000', 0.55)); cv.text('BMW\'s own cluster shows', BX + menu.PW / 2, BY + menu.PH / 2 + 10, 28, t.text, { align: 'center', font: 'bold' }); }
             // the right: the layout, its state, its readouts
             const RX = 652, RW = W - 24 - RX;
             cv.text(byId(shownId).title, RX, 50, 34, t.text, { font: 'bold' });
-            const state = !on ? 'Off - the stock cluster shows' : st.shown ? 'Showing on the cluster' : 'Waiting for live car data';
-            cv.text(state, RX + RW, 50, 20, !on ? t.dim : st.shown ? '#3ccf6e' : '#f0a63c', { align: 'right', font: 'bold' });
+            // (the words and colours of AK Cluster ID8's page: green on the cluster, amber waiting, dim off)
+            const state = !on ? 'Off - BMW original cluster' : st.shown ? 'On the cluster' : 'Waiting for live car data';
+            cv.text(state, RX + RW, 50, 20, !on ? t.dim : st.shown ? ON_GREEN : WAIT_AMBER, { align: 'right', font: 'bold' });
             const modeName = modeKey() === 'layoutSport' ? 'Layout in Sport' : modeKey() === 'layoutEco' ? 'Layout in ECO PRO' : 'Layout';
             cv.text(modeName, RX, 80, 17, t.dim, { font: 'bold' });
             cv.text((d.demo ? 'demo' : live() ? 'live' : 'not live') + '  ·  ' + (isNum(d.speed) ? Math.round(o.speedUnit === 'kmh' ? d.speed : d.speed / 1.609344) : '--') + ' ' + (o.speedUnit === 'kmh' ? 'km/h' : 'mph')
@@ -400,7 +403,16 @@ mgu.run({
             };
             arrow(20, -1); arrow(W - 64, 1);
             for (let i = 0; i < pages; i++) cv.circle(W / 2 - (pages - 1) * 10 + i * 20, CY + CHT + 16, 4, i === cardPage ? t.text : '#3a3f48');
-            cv.text('Tap a layout: it shows on the cluster at once. Tap a readout to choose it for this layout.', 48, 444, 17, t.dim);
+            // on / off under the cards, as AK Cluster ID8's under its picture: the status's dot, what a press does
+            {
+                const PX = 20, PY = 418, PWD = menu.PW + 8, PHT = 46, sk7 = settings.get('skin') === 'idrive7', r = sk7 ? 3 : PHT / 2;
+                cv.roundRect(PX, PY, PWD, PHT, r, on ? (sk7 ? '#361303' : '#12301f') : '#05090f');
+                cv.strokeRoundRect(PX, PY, PWD, PHT, r, 2, on ? (sk7 ? '#ff570c' : ON_GREEN) : '#2a3846');
+                cv.circle(PX + 26, PY + PHT / 2, 9, !on ? t.dim : st.shown ? ON_GREEN : WAIT_AMBER);
+                cv.text(on ? 'On the cluster  -  press for BMW\'s own' : 'Off  -  press to show it on the cluster', PX + 48, PY + PHT / 2 + 8, 21, t.text, { font: 'bold' });
+                tap(cv, PX, PY, PWD, PHT, () => { settings.set('show', on ? 'off' : 'on'); return render(); }, 'show');
+            }
+            cv.text('Tap a layout: it shows on the cluster at once. Tap a readout to choose it for this layout.', 48, 496, 17, t.dim);
             // JDM 1: its cup of water on this page, large (cup_view.js; 0.43.0)
             if (shownId === 'arc_tach') {
                 const PX = W - 24 - 300, PY = 418, PW = 300, PH = 44;
@@ -484,7 +496,7 @@ mgu.run({
             const spd = isNum(d.speed) ? Math.round(o.speedUnit === 'kmh' ? d.speed : d.speed / 1.609344) + ' ' + (o.speedUnit === 'kmh' ? 'km/h' : 'mph') : '--';
             const tmp = (c) => (isNum(c) ? Math.round(o.tempUnit === 'c' ? c : c * 9 / 5 + 32) + '°' : '--');
             const lines = [
-                ['On the cluster', !showing() ? 'Off - the stock cluster shows (press Show on the cluster)'
+                ['On the cluster', !showing() ? 'Off - BMW original cluster (press Show on the cluster)'
                     : st.shown ? 'Showing: ' + layout.title + ', ' + look() + ' colours' : 'Waiting for live car data'],
                 ['Cluster renderer', st.renderer + '   ·   panel: ' + st.target + '   ·   ' + st.layers + ' layers' + (st.refused ? '   ·   refused: ' + st.refused : '')],
                 ['Car data', (d.demo ? 'demo   ·   ' : live() ? 'live   ·   ' : 'not live   ·   ') + spd + '   ·   ' + (isNum(d.rpm) ? Math.round(d.rpm) + ' rpm' : '-- rpm')
