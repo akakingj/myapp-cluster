@@ -347,6 +347,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   readouts, small gauges, Centre display, JDM 1's cup and JDM 2's left dial are set on the page alone (hidden from
   Settings: the owner sets them there); the page's sheet lists the values without "Same as in Settings".
   tools/test_oilpress.js. Centre: the same shared data.js.
+  The page's free / open-source lines along its foot (the repo, official build, key) taken off, as the owner asked
+  (main page and Signals); the licence and its Required Notice ship in the package's NOTICE (shared/NOTICE).
 - Layouts 0.56.1, Centre 0.14.15 (Nov 24 2026): JDM 1's water more like water (CUP_FS): in the clear cup deeper and
   denser towards the bottom, the light bent along the walls and gathered on the bottom, a few bubbles; its surface the
   sky's reflection to the far side and the water through it to the near, a highlight, ripples while it sloshes, the

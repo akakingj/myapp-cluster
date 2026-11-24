@@ -134,9 +134,8 @@ function startCluster(opts) {
     cr.on('status', (text) => { statusText = String(text || ''); });
     cr.on('error', (e) => { state.renderer = 'not reachable'; warnOnce(String((e && e.message) || e)); });
 
-    /* The free/open-source credit is shown on each app's own screen (the head unit menu), not drawn on the
-     * cluster glass, so no mark is woven into the layouts or the centre pages here. Any stray _credit a layout
-     * might carry is dropped so nothing lands on the cluster. */
+    /* No credit mark is woven into the layouts or the centre pages on the cluster glass: any stray _credit a
+     * layout might carry is dropped so nothing lands on the cluster. */
     const withCredit = (list) => (list || []).filter((x) => x.key !== '_credit');
 
     const fam = () => (opts.font ? opts.font() : 'bold');

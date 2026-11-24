@@ -1,3 +1,10 @@
+Cluster Layouts, Cluster Centre and Cluster Info are licensed under the PolyForm Noncommercial License 1.0.0
+(https://polyformproject.org/licenses/noncommercial/1.0.0), apart from the parts named below.
+
+Required Notice: Copyright (C) 2026 eroobeeroo (https://github.com/eroobeeroo)
+
+-----------------------------------------------------------
+
 The GT3 and M layouts (layout_gt3.js, layout_m.js), the M shaders and line icons
 (MDASH_FS, MTACH_FS and LICON_FS in shaders.js, taken from its shared/shaders.js and shared/icons.js), the
 places and font sizes of their texts (bimmer.js) and the tyre readings (shared/data.js) come from or follow

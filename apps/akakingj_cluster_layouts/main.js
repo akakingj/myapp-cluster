@@ -46,7 +46,6 @@ const { DEMO: DAP_DEMO } = require('./dap');
 const { startMapWindow } = require('./map_window');
 const { findSignals } = require('./signal_finder');
 const logs = require('./logs');
-const attribution = require('./attribution');
 const path = require('path');
 
 const W = 1600, H = 520;
@@ -56,17 +55,6 @@ const IMG_BIG = 0x434c0100, IMG_CARD = 0x434c0200, IMG_STRIP = 0x40, IMG_STOCK =
 const CARDS = 6;   // cards a row
 const isNum = (v) => typeof v === 'number' && isFinite(v);
 const SIGNALS_PER_PAGE = 7;
-
-/* The free / open-source notice on the app's own screen (attribution.js): the repo and the refund line, dim when
- * the build is the author's, a warning in red when it was altered. Drawn on every app that carries the cluster
- * mark, so the notice is visible in the menu as well as on the glass. */
-function creditFooter(cv, t) {
-    const v = attribution.verify();
-    const red = '#ff5a5a';
-    const head = v.ok ? attribution.INFO.notice : 'MODIFIED BUILD (' + v.reason + ') - this is free: ' + attribution.INFO.notice;
-    cv.text(head, 48, 486, 17, v.ok ? t.dim : red, { font: 'bold', literal: true });
-    cv.text(attribution.INFO.url + (v.ok ? '   ·   official build, key ' + (v.fingerprint || '?') : ''), 48, 506, 15, v.ok ? t.dim : red, { font: 'label', literal: true });
-}
 
 mgu.run({
     async start(ctx) {
@@ -420,7 +408,6 @@ mgu.run({
                 cv.text('Water cup view', PX + PW / 2, PY + 29, 20, '#ffffff', { align: 'center', font: 'bold' });
                 tap(cv, PX, PY, PW, PH, () => openCup(true), 'cup_open');
             }
-            creditFooter(cv, t);
             return ui.image('MAIN_GFX', cv);
         }
 
@@ -513,12 +500,10 @@ mgu.run({
             ];
             cv.text(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''), 48, 80, 44, t.text, { font: 'bold', literal: true });
             lines.forEach(([k, v], i) => {
-                // (rows 56 apart: the sixth ran into the notice along the bottom)
                 // (the row names and the first row's state in the build's language; the readings as they are)
                 cv.text(k, 48, 150 + i * 56, 22, t.dim, { font: 'bold' });
                 cv.text(String(v).slice(0, 120), 330, 150 + i * 56, k.indexOf('(car)') >= 0 ? 17 : 22, t.text, { font: 'label', literal: i > 0 });
             });
-            creditFooter(cv, t);
             return ui.image('MAIN_GFX', cv);
         }
         ctx.loop('MAIN', 2, render);

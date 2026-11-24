@@ -541,8 +541,9 @@ python3 kit/tools/build.py cluster_layouts     # needs an oap-sdk/ folder (a stu
 
 ## Free and open source — the credit mark
 
-These apps are free. If you paid for one, ask for a refund. Each app shows this on its own screen on the head
-unit (the app menu), with a link to this repo. The notice is not drawn on the cluster glass — only in the app.
+These apps are free. If you paid for one, ask for a refund. Cluster Centre shows this on its own screen on the
+head unit (the app menu), with a link to this repo; Cluster Layouts' page leaves it out (0.57.0) and carries the
+licence and its required notice in its package's `NOTICE`. The notice is not drawn on the cluster glass.
 
 The credit is **signed** (`shared/attribution.js`, `shared/attribution_sig.js`):
 
@@ -550,7 +551,7 @@ The credit is **signed** (`shared/attribution.js`, `shared/attribution_sig.js`):
   fingerprint. It is committed.
 - The matching **private** key lives only in `secret/attribution_key.pem`, which is git-ignored and never
   pushed. Keep a backup of it somewhere safe.
-- At start-up each app verifies the signature. An official build shows the dim credit and its key fingerprint. A
+- At start-up Cluster Centre verifies the signature. An official build shows the dim credit and its key fingerprint. A
   build whose credit text was changed can't be re-signed without the private key, so it fails the check and shows
   a red **MODIFIED BUILD** notice on the app screen instead.
 
