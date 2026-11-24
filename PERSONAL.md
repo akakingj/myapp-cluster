@@ -324,6 +324,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
   Korean for Retro M's place (kit locales), and Centre's shared font list. Every layout's name in English in Korean
   too (Simple, Track: they were 간단, 트랙), as the owner asked.
+- Layouts 0.55.3, Centre 0.14.12 (Nov 24 2026): eroobeeroo's f9ca76c merged: the eDRIVE needle (change-notified)
+  held 30 s (NEEDLE_HOLD_MS), so a PHEV's steady cruise stays on the fast needle, not the 2 s battery reading.
 - Layouts 0.55.2, Centre 0.14.11, Info 1.10.14 (Nov 23 2026, a check of the files): the chevron gauge Sport alone
   drew (CHEVRON_FS, its engine kind and its clearance check) out of the shared files; the notices, comments and the
   Korean locale without Sport and ID8 M (two rows no setting uses); the READMEs' links to the apps' folders, the
