@@ -127,15 +127,16 @@ A tribute to the round-dial clusters of the 1980s and 90s: matte black faces wit
 and ticks lit orange the way those clusters glowed at night, long slim red-orange needles over black hub caps.
 A fuel gauge is set into the speedometer (the reserve in red), an economy gauge into the tach (the battery's
 power on a plug-in hybrid, 0 a quarter round, recuperation below it in green; boost with Vehicle: ICE), a small coolant gauge sits
-between the dials over an amber LCD with the speed. With the engine off the tach's legend reads the battery's power. Comfort colours
-are the classic orange, Sport a deeper red-orange, Efficient white daytime markings. An original design: no
-maker's marks or names.
+between the dials over an amber LCD with the speed. With the engine off the tach's legend reads the battery's power. With
+Colours on Auto it is lit by the car's light sensor, not by the drive mode: by day white markings and words (Efficient),
+by night the classic orange (Comfort); a colour set in Settings stays as set (Sport: a deeper red-orange). An original
+design: no maker's marks or names.
 
 ![90's](../../docs/retro.png)
 
-| Sport colours | Efficient colours |
+| By day | Sport colours (set) |
 |---|---|
-| ![](../../docs/retro_sport.png) | ![](../../docs/retro_efficient.png) |
+| ![](../../docs/retro_efficient.png) | ![](../../docs/retro_sport.png) |
 | **Map in the centre** | |
 | ![](../../docs/retro_map.png) | |
 
@@ -143,7 +144,7 @@ maker's marks or names.
 
 A classic sports-saloon pair of round dials, after the look of the 2010s' analog clusters (an original drawing, no
 maker's marks): black faces with crisp white markings and numerals, bright chrome rings, slim white needles over dark
-hubs and a short red zone on the tach (km/h to 260, numbered every 20). A small coolant gauge is set into the tach's
+hubs (blue in Efficient colours) and a short red zone on the tach (km/h to 260, numbered every 20). A small coolant gauge is set into the tach's
 foot, and two small satellite gauges are tucked against the dials' outer edges: the fuel by the speedometer, the oil by
 the tach (Settings > Speedometer gauge / Tach gauge, or the page, put another reading in either; with another
 reading by the speedometer the strip's fuel bar comes back). A slim display between the dials shows the time and
@@ -195,7 +196,7 @@ regeneration. An original drawing.
 
 Round dials after the M cars' analog clusters of the mid 2010s, an original drawing (the M tricolour, no lettering):
 two big dials, each with a thin white ring round its top, open at the bottom, a dark band with white marks and large
-numerals, a darker disc in the middle and a long red-orange needle; the tach's shift lights along the outside of its
+numerals, a darker disc in the middle and a long red-orange needle (blue in Efficient colours); the tach's shift lights along the outside of its
 top end, amber from Settings > Yellow light at (Auto: 700 rpm under the red) and red from the red zone (Red
 light at; lower while the oil is cold); the gear under the tach in a white arc; the speed in figures with its unit at the bottom of the middle, between the dials; no
 readouts beside the dials (the car's strip shows the time, temperature and ranges); a small fuel gauge (0, 1/2, 1) left of the

@@ -14,7 +14,7 @@ const C = require('./layout_common');
 const PALETTES = {
     comfort: { bg: '#000000', face: '#1d1e21', ring: '#f2f3f4', tick: '#ffffff', needle: '#ff4a1c', amber: '#ffb01a', red: '#ff2a1a', text: '#ffffff', dim: '#9ca0a6', glow: '#ffffff', accent: '#ff4a1c', track: '#1a1b1d', ev: '#4ab4ff', num: '#ffffff', lcdTop: '#17181b', lcdBottom: '#0a0a0c', lcdEdge: '#4b4e54' },
     sport: { bg: '#000000', face: '#1f1d1e', ring: '#f4f2f2', tick: '#ffffff', needle: '#ff2a14', amber: '#ffa014', red: '#ff1a10', text: '#ffffff', dim: '#a49c9c', glow: '#ff6a4a', accent: '#ff2a14', track: '#1d1819', ev: '#4ab4ff', num: '#ffffff', lcdTop: '#17181b', lcdBottom: '#0a0a0c', lcdEdge: '#4b4e54' },
-    efficient: { bg: '#000000', face: '#1b1e21', ring: '#e8f0f6', tick: '#f2f8ff', needle: '#ff6a1c', amber: '#ffb01a', red: '#ff2a1a', text: '#f2f8ff', dim: '#98a4ae', glow: '#6ab8ff', accent: '#3aa0ff', track: '#151a1e', ev: '#4ab4ff', num: '#ffffff', lcdTop: '#17181b', lcdBottom: '#0a0a0c', lcdEdge: '#4b4e54' },
+    efficient: { bg: '#000000', face: '#1b1e21', ring: '#e8f0f6', tick: '#f2f8ff', needle: '#3aa0ff', amber: '#ffb01a', red: '#ff2a1a', text: '#f2f8ff', dim: '#98a4ae', glow: '#6ab8ff', accent: '#3aa0ff', track: '#151a1e', ev: '#4ab4ff', num: '#ffffff', lcdTop: '#17181b', lcdBottom: '#0a0a0c', lcdEdge: '#4b4e54' },
 };
 const roundColours = (t) => ({ face: t.face, ring: t.ring, tick: t.tick, needle: t.needle, amber: t.amber, red: t.red });
 const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.12] });

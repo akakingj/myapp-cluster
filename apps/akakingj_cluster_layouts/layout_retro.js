@@ -24,11 +24,11 @@ const PALETTES = {
         lcdTop: '#130805', lcdBottom: '#070302', lcdEdge: '#432015', text: '#ff6e3c', dim: '#c77a62', track: '#200e0a', ev: '#ff8d6a',
         mode: 'SPORT',
     },
-    // the daytime look: white markings, the orange needles kept
+    // the daytime look: white markings and words, the orange needles kept
     efficient: {
         bg: '#000000', face0: '#101010', face1: '#040404', bezel: '#3a3a3a', bezel2: '#0b0b0b', tick: '#f4f4f0', minor: '#9a9a96',
         num: '#f4f4f0', glow: '#ffffff', red: '#ff2a14', needle: '#ff4a12', hub: '#0b0b0b', accent: '#ff6a10',
-        lcdTop: '#120a05', lcdBottom: '#070402', lcdEdge: '#3a3a3a', text: '#ff9a3c', dim: '#b8b8b2', track: '#1a1a1a', ev: '#f4f4f0',
+        lcdTop: '#0e0e0e', lcdBottom: '#050505', lcdEdge: '#3a3a3a', text: '#f4f4f0', dim: '#b8b8b2', track: '#1a1a1a', ev: '#f4f4f0',
         mode: 'EFFICIENT',
     },
 };
@@ -108,6 +108,8 @@ module.exports = {
     id: 'retro',
     title: "90's",
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
+    // lit by day and by night, not by the drive mode (main.js look, Auto colours): day white (efficient), night orange (comfort)
+    dayNight: true,
     gearText: C.gearText,
     stripFuel: false,   // (its speedometer has a fuel gauge)
     // its own places, set on the page (layouts.js placesFor)

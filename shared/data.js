@@ -394,13 +394,21 @@ function startData(ctx, opts) {
         statusTyreTemperature: tyreRead('tyreT', tyreC, 'Temperature'),
     }, 'tyres', { pollMs: 10000 });
     // the car's pressure unit: the tyre pressures and the sport display's boost come in it (every app: the boost)
-    watch('de.bmw.infotainment.vehicle.Vehicle', {
+    watch('de.bmw.infotainment.vehicle.Vehicle', Object.assign({
         statusNewCurrentUnitsStatusExt: (v) => {
             const u = one(v, 'unitOfMeasurementAirPressure'), n = u && typeof u === 'object' ? (u.name || u.value) : u;
             const p = PRESS_UNITS[n] || (/BAR|KPA|PSI/.test(String(n)) ? String(n).match(/BAR|KPA|PSI/)[0] : null);
             if (p && p !== carPress) { carPress = p; log.info('car pressure unit: ' + p); }
         },
-    }, 'units', { pollMs: 60000 });
+    }, opts && opts.dayNight ? {
+        // day or night (the car's light sensor: 1 day, 2 night, 0 unchanged, 3 invalid; by name or number), for an app
+        // that asks (opts.dayNight: Cluster Layouts, 90's colours)
+        statusDayNightChangeOver: (v) => {
+            const c = one(v, 'dayNightChangeOver'), n = c && typeof c === 'object' ? (c.name || c.value) : c;
+            const k = typeof n === 'string' ? ({ TAG: 1, NACHT: 2 })[n] : n;
+            if (k === 1 || k === 2) x.night = k === 2;
+        },
+    } : {}), 'units' + (opts && opts.dayNight ? ', day / night' : ''), { pollMs: 60000 });
     watch('de.bmw.infotainment.KombiIF', {
         statusRangeTankStatus: (v) => { fes('statusRangeTankStatus')(v); pickRanges(v); odometer(v); },
         // the trip computer (0.45.0): trip 1's average fuel economy, tenths, in the unit the car's trip computer
@@ -640,7 +648,7 @@ function startData(ctx, opts) {
                 if (isNum(p.kw) && isNum(p.kwAt) && p.kwAt !== lastKwAt) { lastKwAt = p.kwAt; fuse.measure(p.kwAt - 100, p.kw); }
             }
             const fz = !d.demo && fastKw() ? fuse.now(tNow) : null;
-            const o = Object.assign({}, d, { mode: x.mode, soc: isNum(p.soc) ? p.soc : !d.demo && fresh('socSme', 60000) ? x.socSme : undefined,
+            const o = Object.assign({}, d, { mode: x.mode, night: x.night, soc: isNum(p.soc) ? p.soc : !d.demo && fresh('socSme', 60000) ? x.socSme : undefined,
                 kw: fz ? fz.kw : isNum(p.kw) ? p.kw : undefined, kwRead: isNum(p.kw) ? p.kw : undefined, kwFused: !!(fz && fz.fused), kwModel: fz && fz.model ? fz.model : undefined, kwOut: endsOf(p).out || undefined, kwIn: kwEnds.in || undefined, driveMode: x.driveMode,
                 erange: isNum(p.erange) && rangeOk(p.erange, true) ? p.erange : fresh('carErange', 120000) ? x.carErange : undefined,
                 frange: isNum(p.frange) && rangeOk(p.frange) ? p.frange : fresh('carFrange', 120000) ? x.carFrange : undefined,

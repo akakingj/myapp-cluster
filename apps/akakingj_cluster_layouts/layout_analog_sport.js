@@ -25,7 +25,7 @@ const PALETTES = {
     },
     efficient: {
         bg: '#000000', face0: '#0f1316', face1: '#030405', bezel: '#e8eef2', bezel2: '#454d53', tick: '#f2f9ff', minor: '#8fa0ab',
-        num: '#eef7ff', glow: '#6ab8ff', red: '#f0301c', needle: '#f2f8ff', hub: '#191c1f', accent: '#3aa0ff',
+        num: '#eef7ff', glow: '#6ab8ff', red: '#f0301c', needle: '#3aa0ff', hub: '#191c1f', accent: '#3aa0ff',
         lcdTop: '#090c0e', lcdBottom: '#030405', lcdEdge: '#33404a', text: '#e6f3ff', dim: '#97a6b0', track: '#111a20', ev: '#4ab4ff',
     },
 };

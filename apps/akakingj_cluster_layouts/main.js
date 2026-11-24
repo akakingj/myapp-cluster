@@ -84,7 +84,7 @@ mgu.run({
         const showing = () => settings.get('show') === 'on';
         // every reading (data.js, shared with Cluster Centre): the car's signals, the engine unit over UDS for
         // what a layout needs (layout.needs), eDrive Live's charge and power while shown
-        const D = startData(ctx, { shown: showing, tyres: true });
+        const D = startData(ctx, { shown: showing, tyres: true, dayNight: true });
         const car = D.car;
         // the driving assistant (dap.js): none of its services is subscribed (0.36.7); the cruise
         // control's set speed comes from the head-up display (data.js cruise); dap.js stays for the previews' sample (DAP_DEMO) and later use
@@ -133,7 +133,9 @@ mgu.run({
         /* the colours now: the layout's palette for the look, as designed (Settings > Background: Pure black, which hid
          * the KOMBI's dark box in the full-screen form, went with it in 0.34.0: over the car's strip there is no box) */
         const themeNow = () => layout.palette(look());
-        const look = () => lookNow(settings.get('look'), data());
+        // (a layout lit by day and by night, 90's: with Auto colours its look follows the car's light sensor, not the
+        // drive mode - day its white one, night its orange; a set colour stays as set)
+        const look = () => (layout.dayNight && settings.get('look') === 'auto' ? (data().night ? 'comfort' : 'efficient') : lookNow(settings.get('look'), data()));
         /* the renderer target: the panel (slot 0x203), where the HMI's own cluster screen goes down and the
          * KOMBI shows its fallback gear box */
         const start = () => startCluster({
