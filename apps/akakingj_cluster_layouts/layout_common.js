@@ -439,7 +439,66 @@ const READOUTS = {
     frange: { short: 'RANGE', long: 'RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
     // (no name: '7:37 PM' says what it is)
     clock: { short: '', long: '', num: () => clock(), frac: () => 0 },
+    rpm: { short: 'RPM', long: 'ENGINE SPEED', num: (o, d) => { const v = rpmShown(d); return v === null ? '--' : String(v); }, unit: () => 'rpm', frac: (d) => (isNum(d.rpm) ? d.rpm / 8000 : 0) },
+    // the speed in the other unit (km/h under mph, mph under km/h), its unit for its name
+    speed2: { short: (o) => (o.speedUnit === 'kmh' ? 'MPH' : 'KM/H'), long: (o) => (o.speedUnit === 'kmh' ? 'MPH' : 'KM/H'),
+        num: (o, d) => (isNum(d.speed) ? String(Math.round(Math.max(0, o.speedUnit === 'kmh' ? d.speed / KMH_PER_MPH : d.speed))) : '--'), frac: (d) => (isNum(d.speed) ? d.speed / 250 : 0) },
+    outside: { short: 'OUT', long: 'OUTSIDE', num: tempOf('outside'), frac: (d) => (isNum(d.outside) ? (d.outside + 20) / 60 : 0) },
+    fuel: { short: 'FUEL', long: 'FUEL', num: (o, d) => (isNum(d.fuelPct) ? Math.round(d.fuelPct) + '%' : '--'), frac: (d) => (isNum(d.fuelPct) ? d.fuelPct / 100 : 0) },
+    oilPress: { short: 'OILP', long: 'OIL PRESSURE', num: (o, d) => pressNum(o, d.oilPress), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.oilPress) ? d.oilPress / 10 : 0), needs: ['oilPress'] },
+    volts: { short: 'VOLT', long: 'BATTERY VOLTS', num: (o, d) => (isNum(d.volts) ? d.volts.toFixed(1) : '--'), unit: () => 'V', frac: (d) => (isNum(d.volts) ? (d.volts - 10) / 6 : 0), needs: ['volts'] },
+    hpfp: { short: 'HPFP', long: 'HIGH FUEL PRESS', num: (o, d) => pressNum(o, d.hpfp), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.hpfp) ? d.hpfp / 350 : 0), needs: ['hpfp'] },
+    lpfp: { short: 'LPFP', long: 'LOW FUEL PRESS', num: (o, d) => pressNum(o, d.lpfp), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.lpfp) ? d.lpfp / 8 : 0), needs: ['lpfp'] },
+    boostTarget: { short: 'TGT', long: 'BOOST TARGET', num: numOrOff((o, d) => pressNum(o, d.boostTarget)), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.boostTarget) ? d.boostTarget / 1.6 : 0), needs: ['boostActual', 'boostTarget'] },
+    // this drive's figures (driveSample)
+    boostPeak: { short: 'PKBST', long: 'PEAK BOOST', num: (o, d) => pressNum(o, d.boostPeak), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.boostPeak) ? d.boostPeak / 1.6 : 0), needs: ['boostActual', 'boostTarget'] },
+    powerPeak: { short: (o) => 'PK ' + powerUnitText(o).toUpperCase(), long: 'PEAK POWER', num: (o, d) => powerNum(o, d.powerPeak), unit: (o) => powerUnitText(o), frac: (d) => (isNum(d.powerPeak) ? d.powerPeak / 200 : 0) },
+    zero100: { short: (o) => (o.speedUnit === 'kmh' ? '0-100' : '0-60'), long: (o) => (o.speedUnit === 'kmh' ? '0-100 KM/H' : '0-60 MPH'),
+        num: (o, d) => (isNum(d.zero100) ? d.zero100.toFixed(1) : '--'), unit: () => 's', frac: () => 0 },
+    lastShift: { short: 'SHIFT', long: 'LAST SHIFT', num: (o, d) => (d.lastShift ? String(d.lastShift.rpm) : '--'), unit: () => 'rpm', frac: (d) => (d.lastShift ? d.lastShift.rpm / 8000 : 0) },
 };
+/*
+ * This drive's figures (main.js data(): each reading as it comes), kept while the app runs: the highest boost (the
+ * engine running), engine power and battery power (kW out of it); the 0-100 km/h (0-60 mph) time, started on leaving
+ * a stop and stopped at that speed (given up after 30 s), and the best of them; the last upshift (one gear up) at the
+ * highest rpm in the 0.6 s before it (under 2500 rpm: not counted), with the oil's temperature then. Written into the
+ * data: boostPeak (bar), powerPeak, kwPeak (kW), zero100 (s: running while zero100Live), zero100Best,
+ * lastShift { from, to, rpm, oil, at }. The demo data: the peaks only.
+ */
+const drive = { at: 0, boostPeak: null, powerPeak: null, kwPeak: null, armed: false, t0: 0, last: null, best: null, recent: [], gear: null, shift: null };
+function driveSample(d, speedUnit) {
+    if (!d) return d;
+    const s = drive, now = Date.now();
+    if (now - s.at >= 10) {
+        s.at = now;
+        if (isNum(d.kw) && d.kw > 0 && (s.kwPeak === null || d.kw > s.kwPeak)) s.kwPeak = d.kw;
+        if (d.engineOn !== false && isNum(d.boostActual) && (s.boostPeak === null || d.boostActual > s.boostPeak)) s.boostPeak = d.boostActual;
+        if (isNum(d.enginePower) && (s.powerPeak === null || d.enginePower > s.powerPeak)) s.powerPeak = d.enginePower;
+        if (!d.demo) driveRun(s, d, now, speedUnit);
+    }
+    const run = s.t0 ? (now - s.t0) / 1000 : null;
+    return Object.assign(d, { boostPeak: nn(s.boostPeak), powerPeak: nn(s.powerPeak), kwPeak: nn(s.kwPeak), zero100: run !== null ? run : nn(s.last), zero100Live: run !== null,
+        zero100Best: nn(s.best), lastShift: s.shift || undefined });
+}
+const nn = (v) => (v === null ? undefined : v);
+function driveRun(s, d, now, speedUnit) {
+    if (isNum(d.rpm)) { s.recent.push([now, d.rpm]); while (s.recent.length && now - s.recent[0][0] > 1200) s.recent.shift(); }
+    const g = d.gear;
+    if (isNum(g) && g > 0 && isNum(s.gear) && s.gear > 0 && g === s.gear + 1) {
+        const win = s.recent.filter((x) => now - x[0] < 600), rpm = win.length ? Math.max.apply(null, win.map((x) => x[1])) : 0;
+        if (rpm > 2500) s.shift = { from: s.gear, to: g, rpm: Math.round(rpm), oil: d.oil, at: now };
+    }
+    if (isNum(g)) s.gear = g;
+    if (!isNum(d.speed)) return;
+    if (d.speed < 1) { s.armed = true; s.t0 = 0; return; }
+    if (s.armed && !s.t0) s.t0 = now;
+    if (!s.t0) return;
+    if (d.speed >= (speedUnit === 'kmh' ? 100 : 96.56)) {
+        s.last = (now - s.t0) / 1000;
+        if (s.best === null || s.last < s.best) s.best = s.last;
+        s.t0 = 0; s.armed = false;
+    } else if (now - s.t0 > 30000) { s.t0 = 0; s.armed = false; }
+}
 const readoutOf = (k) => READOUTS[k] || null;
 /*
  * Temperatures in colour (Settings > Temperature colours): blue while cold, the oil amber while warming, red when too
@@ -515,8 +574,10 @@ function fitText(p, fam, room) {
 /** The readings at their widest figures (three-figure temperatures, the most negative timing and boost ...): what a
  * readout's box is sized to hold (layouts.js), and what tools/check_fit.js measures every text with. */
 const READOUT_SAMPLES = [
-    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 999999, tripMin: 599999, odometer: 999999, frange: 1999 },
-    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P', avgCons: 99.9, avgConsUnit: 'kml', tripKm: 0, tripMin: 0, odometer: 0, frange: 0 },
+    { soc: 100, battTemp: 59, kw: -125, kwIn: 50, erange: 188, oil: 150, coolant: 130, iat: 79, gearbox: 140, boostActual: 1.6, enginePower: 199, torque: 449, pedal: 100, throttle: 100, timing: -10, fuelPct: 100, rpm: 7000, speed: 250, engineOn: true, outside: -20, stage: 'D', mode: 'M', gear: 8, avgCons: 25.5, avgConsUnit: 'l100', tripKm: 999999, tripMin: 599999, odometer: 999999, frange: 1999,
+        oilPress: 6.5, volts: 15.9, hpfp: 350, lpfp: 7.9, boostTarget: 1.6, boostPeak: 1.6, powerPeak: 299, zero100: 29.9, lastShift: { from: 7, to: 8, rpm: 7250, oil: 150, at: 1 } },
+    { soc: 5, battTemp: -9, kw: 125, kwOut: 130, erange: 0, oil: 8, coolant: 8, iat: -9, gearbox: 8, boostActual: -0.65, enginePower: 0, torque: 0, pedal: 0, throttle: 0, timing: 8.5, fuelPct: 5, rpm: 800, speed: 0, engineOn: true, outside: 9, stage: 'P', avgCons: 99.9, avgConsUnit: 'kml', tripKm: 0, tripMin: 0, odometer: 0, frange: 0,
+        oilPress: 0.8, volts: 11.2, hpfp: 5, lpfp: 0.5, boostTarget: 0, boostPeak: 0, powerPeak: 0, zero100: 3.1, lastShift: { from: 1, to: 2, rpm: 2600, oil: 8, at: 2 } },
 ];
 const nameOf = (r, o, long) => { const n = long ? r.long : r.short; return typeof n === 'function' ? n(o) : n; };
 /** A readout on one line, its name first: 'IAT 31°', 'BST 14.5' ('INTAKE AIR 31°', 'BOOST 14.5 psi' where it
@@ -550,6 +611,10 @@ const GAUGES = {
     soc: { label: 'BATTERY', min: 0, max: 100, red: null, low: LOW_SOC, v: (d) => d.soc, text: (o, d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--') },
     battTemp: { label: 'BATT', min: 0, max: 60, red: 45, v: (d) => d.battTemp, text: tempOf('battTemp') },
     fuel: { label: 'FUEL', min: 0, max: 100, red: null, v: (d) => d.fuelPct, text: (o, d) => (isNum(d.fuelPct) ? Math.round(d.fuelPct) + '%' : '--') },
+    oilPress: { label: 'OIL P', min: 0, max: 10, red: null, v: (d) => d.oilPress, text: (o, d) => (isNum(d.oilPress) ? pressNum(o, d.oilPress) + ' ' + pressLabel(o) : '--'), needs: ['oilPress'] },
+    volts: { label: 'VOLTS', min: 10, max: 16, red: null, low: 11.8, v: (d) => d.volts, text: (o, d) => (isNum(d.volts) ? d.volts.toFixed(1) + ' V' : '--'), needs: ['volts'] },
+    hpfp: { label: 'HPFP', min: 0, max: 350, red: null, v: (d) => d.hpfp, text: (o, d) => (isNum(d.hpfp) ? pressNum(o, d.hpfp) + ' ' + pressLabel(o) : '--'), needs: ['hpfp'] },
+    lpfp: { label: 'LPFP', min: 0, max: 8, red: null, v: (d) => d.lpfp, text: (o, d) => (isNum(d.lpfp) ? pressNum(o, d.lpfp) + ' ' + pressLabel(o) : '--'), needs: ['lpfp'] },
 };
 /** The gauge picked for the speedometer ('speed') or the tach ('rpm'), or null for the layout's own. */
 const gaugeOf = (o, which) => {
@@ -585,10 +650,13 @@ const GAUGE_NUM = {
     temp: (o, v) => String(Math.round(tempIn(o, v))),
     boost: (o, v) => pressNum(o, v), power: (o, v) => powerNum(o, v), torque: (o, v) => torqueNum(o, v),
     pct: (o, v) => String(Math.round(v)), timing: (o, v) => String(Math.round(v)),
+    volts: (o, v) => (Math.round(v) === v ? String(v) : v.toFixed(1)),
 };
-const GAUGE_KIND = { coolant: 'temp', oil: 'temp', iat: 'temp', gearbox: 'temp', boost: 'boost', power: 'power', torque: 'torque', throttle: 'pct', pedal: 'pct', timing: 'timing', fuel: 'pct', soc: 'pct', battTemp: 'temp' };
+const GAUGE_KIND = { coolant: 'temp', oil: 'temp', iat: 'temp', gearbox: 'temp', boost: 'boost', power: 'power', torque: 'torque', throttle: 'pct', pedal: 'pct', timing: 'timing', fuel: 'pct', soc: 'pct', battTemp: 'temp',
+    oilPress: 'boost', hpfp: 'boost', lpfp: 'boost', volts: 'volts' };
 /** each gauge's icon: the cluster's own icons (ICON_FS) and bimmer-lab's (bimmer.js ICON) */
-const GAUGE_ICON = { coolant: [0, 'therm'], oil: [1, 'oilcan'], iat: [3, 'therm'], gearbox: [2, 'cog'], boost: [5, 'turbo'], power: [7, 'bolt'], torque: [13, 'torque'], throttle: [13, 'gauge'], pedal: [13, 'gauge'], timing: [9, 'gauge'], fuel: [4, 'fuel'], soc: [6, 'battery'], battTemp: [6, 'battery'] };
+const GAUGE_ICON = { coolant: [0, 'therm'], oil: [1, 'oilcan'], iat: [3, 'therm'], gearbox: [2, 'cog'], boost: [5, 'turbo'], power: [7, 'bolt'], torque: [13, 'torque'], throttle: [13, 'gauge'], pedal: [13, 'gauge'], timing: [9, 'gauge'], fuel: [4, 'fuel'], soc: [6, 'battery'], battTemp: [6, 'battery'],
+    oilPress: [1, 'oilcan'], volts: [6, 'battery'], hpfp: [4, 'fuel'], lpfp: [4, 'fuel'] };
 function placeGauge(o, key0) {
     // a value this build doesn't know (a stale saved setting) draws the coolant gauge rather than failing the layout
     const known = (k) => !!(GAUGE_KIND[k] && GAUGE_ICON[k] && gaugeOf(Object.assign({}, o, { gaugeSpeed: k }), 'speed'));
@@ -597,7 +665,7 @@ function placeGauge(o, key0) {
     if (!g) return null;
     const kind = GAUGE_KIND[key], f = GAUGE_NUM[kind];
     const unit = kind === 'temp' ? '°' + (o.tempUnit === 'c' ? 'C' : 'F') : kind === 'boost' ? pressLabel(o) : kind === 'power' ? powerUnitText(o)
-        : kind === 'torque' ? torqueUnit(o) : kind === 'pct' ? '%' : '°';
+        : kind === 'torque' ? torqueUnit(o) : kind === 'pct' ? '%' : kind === 'volts' ? 'V' : '°';
     const num = (d) => { const v = g.v(d); return key === 'boost' && d.engineOn === false ? 'OFF' : isNum(v) ? f(o, v) : '--'; };
     return Object.assign({}, g, { unit, num, icon: GAUGE_ICON[key][0], bIcon: GAUGE_ICON[key][1],
         // (the fuel's as the car's own gauge: 0, 1/2, 1)
@@ -685,5 +753,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

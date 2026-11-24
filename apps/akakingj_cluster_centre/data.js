@@ -12,7 +12,8 @@
  *   KombiIF.statusBordcomputerAverage / statusBordcomputerTravelData: the car's own trip computer (trip 1's average
  *     fuel economy in the unit the car shows it, the distance and the driving time; as Live Data reads them), read-only
  *   the engine unit over UDS (config.dme, as M Vitals reads it): intake air, fuel pressures (high, low), boost
- *     target and actual, ignition timing; the gearbox unit: its oil temperature
+ *     target and actual, ignition timing, oil pressure (over the engine unit's ambient pressure), the battery's
+ *     voltage; the gearbox unit: its oil temperature
  * (No xDrive split: neither the car's split signal nor the transfer case's front torque gave usable readings on the
  * car, Nov 9 2026: removed.)
  *   eDrive Live, through the shared folder: battery charge and power
@@ -34,7 +35,7 @@ const Awake = require('./kit/awake');
 
 const isNum = (v) => typeof v === 'number' && isFinite(v);
 const PROGRAMS = { S_MINUS_PROGRAMM: 'S', M_MINUS_PROGRAMM: 'M', 1: 'S', 2: 'M' };
-const DME_KEYS = ['iat', 'hpfp', 'lpfp', 'timing', 'boostCtl', 'egs', 'pedal', 'throttle', 'tank'];
+const DME_KEYS = ['iat', 'hpfp', 'lpfp', 'timing', 'boostCtl', 'oilPress', 'volts', 'egs', 'pedal', 'throttle', 'tank'];
 /* (read twice a round while shown: they move with the right foot) */
 const FAST_KEYS = ['pedal', 'throttle'];
 /*
@@ -466,7 +467,11 @@ function startData(ctx, opts) {
     link.init();
     const rd = new DidReader(link, { ecu: dme.ecu });
     const fail = {}, tried = {};
-    let baro = 101.3, baroT = 0, wanted = [], wantedT = 0, timer = null;
+    let baro = 101.3, baroT = 0, ambient = null, ambientT = 0, wanted = [], wantedT = 0, timer = null;
+    /* a diesel's engine unit (DDE) is asked only the standard forms (F4xx, OBD PIDs): BMW's own identifiers belong to
+     * the petrol DME. Oil pressure has no standard form: a diesel is not asked it. */
+    const STANDARD_ONLY = { oilPress: 1, volts: 1, ambient: 1 };
+    const listOf = (k) => (dme[k] || []).filter((c) => !(STANDARD_ONLY[k] && ice() && fuelNow() === 'diesel') || c.obd || /^F4/i.test(String(c.did)));
     /* the battery unit's charge (HV): while shown and no app has shared a charge for HV_ALONE_MS, not on a petrol or
      * diesel car, every HV_EVERY_MS; five misses in a row (no battery unit, or another app holding it): 5 minutes */
     const hv = Object.assign({}, HV, cfg.battery || {});
@@ -495,6 +500,16 @@ function startData(ctx, opts) {
             if (ac !== null) put('boostActual', Math.max(0, (ac - baro) / 100));
             return tg;
         }
+        // oil pressure: absolute (hPa) less the engine unit's ambient pressure (hPa, read once a minute once the oil's
+        // answers), in bar
+        if (k === 'oilPress') {
+            const abs = await rd.value('oilPress', listOf('oilPress'));
+            if (abs === null) return null;
+            if (Date.now() - ambientT > 60000) { ambientT = Date.now(); const b = await rd.value('ambient', listOf('ambient')); if (b !== null) ambient = b; }
+            if (ambient !== null) put('oilPress', Math.max(0, (abs - ambient) / 1000));
+            return abs;
+        }
+        if (k === 'volts') { const v = await rd.value('volts', listOf('volts')); if (v !== null) put('volts', v); return v; }
         // (the high-voltage battery is eDrive Live's alone: its charge and power come from its shared file, below.
         // Two apps asking the battery unit in turn left both without answers, eDrive Live showing 'NO REPLY'.)
         const v = await rd.value(k, dme[k]);
@@ -547,7 +562,7 @@ function startData(ctx, opts) {
         const on = active();
         const now = Date.now(), wantedNow = on && now - wantedT < 3000;
         const usable = (k) => (k === 'boostCtl' ? (dme.boostTarget || []).length
-            : (dme[k] || []).length);
+            : listOf(k).length && (k !== 'oilPress' || listOf('ambient').length));
         const ready = (k) => !((fail[k] || 0) >= 3 && Date.now() - (tried[k] || 0) < 30000);
         if (!queue.length && on) {
             /* With the engine off (on electricity) the engine unit's readings don't move: only the every-10 s round.
@@ -656,7 +671,7 @@ function startData(ctx, opts) {
             // the tyres: { p: { FL.. } bar, t: { FL.. } C }, each fresh for a minute (read every 10 s)
             o.tyres = { p: {}, t: {} };
             ['FL', 'FR', 'RL', 'RR'].forEach((k) => { if (fresh('tyreP' + k, 60000)) o.tyres.p[k] = x['tyreP' + k]; if (fresh('tyreT' + k, 60000)) o.tyres.t[k] = x['tyreT' + k]; });
-            ['steer', 'yaw', 'outside', 'gearbox', 'battTemp', 'battMin', 'battMax', 'pdDrive', 'pdClimate', 'pdSeats', 'iat', 'hpfp', 'lpfp', 'timing', 'boostTarget', 'boostActual']
+            ['steer', 'yaw', 'outside', 'gearbox', 'battTemp', 'battMin', 'battMax', 'pdDrive', 'pdClimate', 'pdSeats', 'iat', 'hpfp', 'lpfp', 'timing', 'boostTarget', 'boostActual', 'oilPress', 'volts']
                 .forEach((k) => { if (!d.demo && fresh(k, 60000)) o[k] = x[k]; });
             // the trip computer (read every 15 s and on its notices: kept 2 minutes)
             ['avgCons', 'tripKm', 'tripMin'].forEach((k) => { if (!d.demo && fresh(k, 120000)) o[k] = x[k]; });
@@ -701,7 +716,7 @@ function startData(ctx, opts) {
         want(keys) { wanted = keys.map((k) => (k === 'boostTarget' || k === 'boostActual' ? 'boostCtl' : k === 'gearbox' ? 'egs' : k)); wantedT = Date.now(); },
         status: () => Object.assign({ car: awake.why() + (awake.on() ? '' : ' - nothing asked of the car'), diag: link.available ? 'up' : 'down', providers: providers.list().join(', ') || 'none', raw, kwFit: fuse.fit(),
             // which candidate answered for each engine-unit reading ('5814', 'OBD 49' ...), for the app's page
-            dme: Object.keys(rd.pick).reduce((m, k) => { const c = (dme[k === 'boostActual' || k === 'boostTarget' ? k : k] || [])[rd.pick[k]]; if (c) m[k] = c.obd ? 'OBD ' + String(c.obd).toUpperCase() : c.did; return m; }, {}) }, status),
+            dme: Object.keys(rd.pick).reduce((m, k) => { const c = (STANDARD_ONLY[k] ? listOf(k) : dme[k] || [])[rd.pick[k]]; if (c) m[k] = c.obd ? 'OBD ' + String(c.obd).toUpperCase() : c.did; return m; }, {}) }, status),
         /** The vehicle in use: { vehicle 'phev' | 'ice', fuel 'petrol' | 'diesel' (ice), how: 'set' | 'found' | 'assumed', why }. */
         vehicle: () => ({ vehicle: vehicleNow(), fuel: vehicleNow() === 'ice' ? fuelNow() : null, how: setVehicle() ? 'set' : detected.vehicle ? 'found' : 'assumed', why: detected.why }),
         /** fn() on each new reading (the car's speed and rpm samples, every changed reading). */
@@ -719,6 +734,7 @@ function demo(d) {
     const t = Date.now() / 1000, rpm = d.rpm || 1500;
     return {
         outside: 9, gearbox: 72 + 4 * Math.sin(t / 50), iat: 34 + 6 * Math.sin(t / 20), hpfp: 50 + rpm / 40, lpfp: 5.2 + 0.2 * Math.sin(t),
+        oilPress: Math.min(5, 1.2 + rpm / 1500), volts: 14.1 + 0.1 * Math.sin(t / 9),
         timing: 18 - rpm / 800, pedal: Math.max(0, Math.min(100, (isNum(d.torque) ? d.torque : 40) / 4.2)), throttle: Math.max(0, Math.min(100, (isNum(d.torque) ? d.torque : 40) / 4.6 + 3)), boostTarget: Math.max(0, (rpm - 1500) / 4000), boostActual: Math.max(0, (rpm - 1600) / 4100),
         battTemp: 27, battMin: 25, battMax: 29, soc: 64, kw: -12 + 25 * Math.sin(t / 7), pdDrive: 60, pdClimate: 25, pdSeats: 15,
         avgCons: 11.7, avgConsUnit: 'kml', tripKm: 126, tripMin: 150, odometer: 48210,

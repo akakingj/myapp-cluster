@@ -66,8 +66,10 @@ async function run(name, before) {
             assert.strictEqual(Math.round(D.data().throttle), 20);
         });
         await check('then both in one request, 2 to 4 a second (2 while the 10 s round of the rest runs between them)', async () => {
+            // (over 6 s: a pair every 0.5 s counts 11 or 12 there by where the window falls; over 4 s 7 or 8 - 1.75 a second -
+            // with the engine unit's other readings, Nov 25 2026)
             const n = pairs().length, t0 = Date.now();
-            await wait(4000);
+            await wait(6000);
             const per = (pairs().length - n) / ((Date.now() - t0) / 1000);
             assert(per >= 1.8 && per <= 4.5, per.toFixed(1) + ' a second');
             assert.strictEqual(Math.round(D.data().pedal), 40);

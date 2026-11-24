@@ -32,6 +32,27 @@ digits every frame, and the battery's power the moment eDrive Live reads it (it 
 reading at once and this app watches for it, instead of a quarter-second file cycle and a half-second scan). The
 battery's own pace sets the limit: its current answers 10-20 times a second over diagnostics.
 
+### Every reading the car gives, in every place (0.57.0)
+
+A readout place (Readout 1 / 2, the main readout, the bottom line, each layout's own readout places on the page) can
+show any of: the engine's speed (rpm), the speed in the other unit, the gear, boost, its target and this drive's peak,
+engine power and this drive's peak, torque, the engine oil's temperature and pressure, coolant, gearbox oil, intake
+air, pedal, throttle, ignition timing, the fuel pressures (high: the injection rail; low: the supply), the 12 V
+battery's voltage, the outside temperature, the fuel level, a plug-in hybrid's battery charge, temperature, power and
+electric range, the trip computer's average economy, distance and driving time, the odometer, the fuel range, the
+clock, the 0-100 km/h (0-60 mph) time and the last upshift's rpm. A gauge place (the small gauges and the layouts'
+own) any with a scale: boost, power, torque, oil temperature and pressure, coolant, gearbox oil, intake air, pedal,
+throttle, timing, both fuel pressures, the voltage, the fuel, the battery's charge and temperature. AK Cluster ID8
+offers the same readings in its footers and gauges.
+
+The oil pressure and the voltage come from the engine unit over UDS (`config.dme`: oil pressure `DID 4436`, `586F`
+less the ambient pressure `DID 4201`, `F433`, `OBD 33`; voltage `DID 5853`, `F442`, `OBD 42`; a diesel's DDE is
+asked only the standard forms, so no oil pressure; as ZEKAI-Design's ID7-Cluster-Themes, cauliflowermossgrape's Live
+Data and Redline read them), read like the other engine readings while a place shows them.
+This drive's figures (`layout_common.driveSample`, kept while the app runs): the peaks, the 0-100 time (from a stop;
+Track's tile too) and the last upshift (one gear up, the highest rpm in the 0.6 s before it, from 2500 rpm; GT3's
+shift box grades the same one).
+
 ### The car's trip computer (0.45.0)
 
 Every readout place (Readout 1 / 2, the main readout, the bottom line, and each layout's own readout places on the page)
@@ -103,9 +124,10 @@ follows the mode (blue, red in sport, teal in ECO PRO).
 - **The readouts:** the places the layout has for Settings' readouts (main readout, readouts 1 and 2 in the time's
   and outside temperature's places with the car's own strip, Old M's and GM's bottom line, the small gauges
   in the speedometer and the tach), only those that show on this car with these settings (`layouts.js` SLOTS, which
-  `tools/test_slots.js` checks against what each layout draws). A tap lists the values: one set there is that
-  layout's alone (Settings > slotsBy, a bar on its left), *Same as in Settings* follows the Settings' value again,
-  which stays every layout's default (*Common*).
+  `tools/test_slots.js` checks against what each layout draws). A tap lists the values: the one picked is that
+  layout's alone (Settings > slotsBy, a bar on its left); unpicked, a readout is Auto (the gauges the layout's own).
+  The readouts, the small gauges, Centre display, JDM 1's cup and JDM 2's left dial are set here only, not on the
+  Settings tab.
 - **Every other place (0.35.0):** each layout's places that had a fixed reading - 90's gauge between the dials (also an
   analog clock, 0.35.1, on Settings > Time zone), 20's
   gauge in the tach's foot, ID7 M's four card gauges and two bottom bars, JDM 2's four temperature quarters, Track's six tiles, Pulse's bottom row, GT3's boxes and the

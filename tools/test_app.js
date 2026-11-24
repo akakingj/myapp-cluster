@@ -85,14 +85,14 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     await tgt('card_arc_tach').run();
     await sleep(150);
     check('a card tapped: that layout on the cluster at once', () => assert.strictEqual(S.layout, 'arc_tach'));
-    check('its readouts on the page, each following the Settings\' value', () => ['slot_infoMain', 'slot_gaugeSpeed', 'slot_gaugeRpm'].forEach(tgt));
+    check('its readouts on the page', () => ['slot_infoMain', 'slot_gaugeSpeed', 'slot_gaugeRpm'].forEach(tgt));
     // (no sheet: a tap goes to the next value)
     await tgt('slot_infoMain').run();
-    check('a readout tapped (no sheet here): the next value, for this layout only', () => assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'auto' } }));
+    check('a readout tapped (no sheet here): the next value, for this layout only', () => assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'off' } }));
     sheets = [];
     await tgt('slot_infoMain').run();
     check('with sheets: the values listed, the one set marked', () => assert(sheets.length === 1 && sheets[0].focus === 1, 'focus ' + (sheets[0] && sheets[0].focus)));
-    sheets[0].focus = 7; sheets[0].press();     // (Boost: 'Same as in Settings' first, then the setting's own: Auto, Nothing, ...)
+    sheets[0].focus = 5; sheets[0].press();     // (Boost: the setting's own values, Auto, Nothing, Engine speed, ...)
     await sleep(150);
     check('picked: this layout\'s, the cluster rebuilt with it', () => {
         assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'boost' } });
@@ -101,7 +101,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     sheets.length = 0;
     await tgt('slot_infoMain').run();
     sheets[0].focus = 0; sheets[0].press();
-    check('"Same as in Settings": the Settings\' value again (nothing kept for the layout)', () => assert.deepStrictEqual(S.slotsBy, {}));
+    check('Auto picked: this layout\'s readout Auto again', () => assert.deepStrictEqual(S.slotsBy, { arc_tach: { infoMain: 'auto' } }));
     sheets = null;
     // (0.43.0) JDM 1's page: its cup of water large on the page (cup_view.js), Back to the layouts
     await tgt('cup_open').run();

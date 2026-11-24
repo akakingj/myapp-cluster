@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.56.4",
+  "version": "0.57.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -445,32 +445,60 @@
           "Nothing"
         ],
         [
-          "iat",
-          "Intake air temperature"
+          "rpm",
+          "Engine speed (rpm)"
         ],
         [
-          "gearbox",
-          "Gearbox oil temperature"
+          "speed2",
+          "Speed in the other unit (km/h with mph, mph with km/h)"
         ],
         [
-          "oil",
-          "Engine oil temperature"
-        ],
-        [
-          "coolant",
-          "Coolant temperature"
+          "gear",
+          "Gear (D / S / M and its number)"
         ],
         [
           "boost",
           "Boost"
         ],
         [
+          "boostTarget",
+          "Boost target"
+        ],
+        [
+          "boostPeak",
+          "Peak boost (this drive)"
+        ],
+        [
           "power",
           "Engine power (from its torque and speed)"
         ],
         [
+          "powerPeak",
+          "Peak engine power (this drive)"
+        ],
+        [
           "torque",
           "Engine torque"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "oilPress",
+          "Oil pressure"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
         ],
         [
           "pedal",
@@ -483,6 +511,26 @@
         [
           "timing",
           "Ignition timing"
+        ],
+        [
+          "hpfp",
+          "Fuel pressure: high (injection rail)"
+        ],
+        [
+          "lpfp",
+          "Fuel pressure: low (supply)"
+        ],
+        [
+          "volts",
+          "Battery voltage (12 V)"
+        ],
+        [
+          "outside",
+          "Outside temperature"
+        ],
+        [
+          "fuel",
+          "Fuel level"
         ],
         [
           "soc",
@@ -499,10 +547,6 @@
         [
           "erange",
           "Electric range (plug-in hybrid)"
-        ],
-        [
-          "gear",
-          "Gear (D / S / M and its number)"
         ],
         [
           "avgFuel",
@@ -527,9 +571,18 @@
         [
           "clock",
           "Clock (the time of day)"
+        ],
+        [
+          "zero100",
+          "0-100 km/h (0-60 mph) time"
+        ],
+        [
+          "lastShift",
+          "Last upshift (rpm)"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "infoB",
@@ -546,32 +599,60 @@
           "Nothing"
         ],
         [
-          "iat",
-          "Intake air temperature"
+          "rpm",
+          "Engine speed (rpm)"
         ],
         [
-          "gearbox",
-          "Gearbox oil temperature"
+          "speed2",
+          "Speed in the other unit (km/h with mph, mph with km/h)"
         ],
         [
-          "oil",
-          "Engine oil temperature"
-        ],
-        [
-          "coolant",
-          "Coolant temperature"
+          "gear",
+          "Gear (D / S / M and its number)"
         ],
         [
           "boost",
           "Boost"
         ],
         [
+          "boostTarget",
+          "Boost target"
+        ],
+        [
+          "boostPeak",
+          "Peak boost (this drive)"
+        ],
+        [
           "power",
           "Engine power (from its torque and speed)"
         ],
         [
+          "powerPeak",
+          "Peak engine power (this drive)"
+        ],
+        [
           "torque",
           "Engine torque"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "oilPress",
+          "Oil pressure"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
         ],
         [
           "pedal",
@@ -584,6 +665,26 @@
         [
           "timing",
           "Ignition timing"
+        ],
+        [
+          "hpfp",
+          "Fuel pressure: high (injection rail)"
+        ],
+        [
+          "lpfp",
+          "Fuel pressure: low (supply)"
+        ],
+        [
+          "volts",
+          "Battery voltage (12 V)"
+        ],
+        [
+          "outside",
+          "Outside temperature"
+        ],
+        [
+          "fuel",
+          "Fuel level"
         ],
         [
           "soc",
@@ -600,10 +701,6 @@
         [
           "erange",
           "Electric range (plug-in hybrid)"
-        ],
-        [
-          "gear",
-          "Gear (D / S / M and its number)"
         ],
         [
           "avgFuel",
@@ -628,9 +725,18 @@
         [
           "clock",
           "Clock (the time of day)"
+        ],
+        [
+          "zero100",
+          "0-100 km/h (0-60 mph) time"
+        ],
+        [
+          "lastShift",
+          "Last upshift (rpm)"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "infoMain",
@@ -647,32 +753,60 @@
           "Nothing"
         ],
         [
-          "iat",
-          "Intake air temperature"
+          "rpm",
+          "Engine speed (rpm)"
         ],
         [
-          "gearbox",
-          "Gearbox oil temperature"
+          "speed2",
+          "Speed in the other unit (km/h with mph, mph with km/h)"
         ],
         [
-          "oil",
-          "Engine oil temperature"
-        ],
-        [
-          "coolant",
-          "Coolant temperature"
+          "gear",
+          "Gear (D / S / M and its number)"
         ],
         [
           "boost",
           "Boost"
         ],
         [
+          "boostTarget",
+          "Boost target"
+        ],
+        [
+          "boostPeak",
+          "Peak boost (this drive)"
+        ],
+        [
           "power",
           "Engine power (from its torque and speed)"
         ],
         [
+          "powerPeak",
+          "Peak engine power (this drive)"
+        ],
+        [
           "torque",
           "Engine torque"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "oilPress",
+          "Oil pressure"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
         ],
         [
           "pedal",
@@ -685,6 +819,26 @@
         [
           "timing",
           "Ignition timing"
+        ],
+        [
+          "hpfp",
+          "Fuel pressure: high (injection rail)"
+        ],
+        [
+          "lpfp",
+          "Fuel pressure: low (supply)"
+        ],
+        [
+          "volts",
+          "Battery voltage (12 V)"
+        ],
+        [
+          "outside",
+          "Outside temperature"
+        ],
+        [
+          "fuel",
+          "Fuel level"
         ],
         [
           "soc",
@@ -701,10 +855,6 @@
         [
           "erange",
           "Electric range (plug-in hybrid)"
-        ],
-        [
-          "gear",
-          "Gear (D / S / M and its number)"
         ],
         [
           "avgFuel",
@@ -729,9 +879,18 @@
         [
           "clock",
           "Clock (the time of day)"
+        ],
+        [
+          "zero100",
+          "0-100 km/h (0-60 mph) time"
+        ],
+        [
+          "lastShift",
+          "Last upshift (rpm)"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "infoLow",
@@ -748,32 +907,60 @@
           "Nothing"
         ],
         [
-          "iat",
-          "Intake air temperature"
+          "rpm",
+          "Engine speed (rpm)"
         ],
         [
-          "gearbox",
-          "Gearbox oil temperature"
+          "speed2",
+          "Speed in the other unit (km/h with mph, mph with km/h)"
         ],
         [
-          "oil",
-          "Engine oil temperature"
-        ],
-        [
-          "coolant",
-          "Coolant temperature"
+          "gear",
+          "Gear (D / S / M and its number)"
         ],
         [
           "boost",
           "Boost"
         ],
         [
+          "boostTarget",
+          "Boost target"
+        ],
+        [
+          "boostPeak",
+          "Peak boost (this drive)"
+        ],
+        [
           "power",
           "Engine power (from its torque and speed)"
         ],
         [
+          "powerPeak",
+          "Peak engine power (this drive)"
+        ],
+        [
           "torque",
           "Engine torque"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "oilPress",
+          "Oil pressure"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
         ],
         [
           "pedal",
@@ -786,6 +973,26 @@
         [
           "timing",
           "Ignition timing"
+        ],
+        [
+          "hpfp",
+          "Fuel pressure: high (injection rail)"
+        ],
+        [
+          "lpfp",
+          "Fuel pressure: low (supply)"
+        ],
+        [
+          "volts",
+          "Battery voltage (12 V)"
+        ],
+        [
+          "outside",
+          "Outside temperature"
+        ],
+        [
+          "fuel",
+          "Fuel level"
         ],
         [
           "soc",
@@ -802,10 +1009,6 @@
         [
           "erange",
           "Electric range (plug-in hybrid)"
-        ],
-        [
-          "gear",
-          "Gear (D / S / M and its number)"
         ],
         [
           "avgFuel",
@@ -830,9 +1033,18 @@
         [
           "clock",
           "Clock (the time of day)"
+        ],
+        [
+          "zero100",
+          "0-100 km/h (0-60 mph) time"
+        ],
+        [
+          "lastShift",
+          "Last upshift (rpm)"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "centreView",
@@ -849,7 +1061,8 @@
           "Trip computer"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "leftDial",
@@ -874,7 +1087,8 @@
           "Temperatures: oil, coolant, gearbox, intake"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "stripBars",
@@ -912,7 +1126,8 @@
           "Off"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "gScale",
@@ -957,22 +1172,6 @@
           "The layout's own"
         ],
         [
-          "coolant",
-          "Coolant temperature"
-        ],
-        [
-          "oil",
-          "Engine oil temperature"
-        ],
-        [
-          "iat",
-          "Intake air temperature"
-        ],
-        [
-          "gearbox",
-          "Gearbox oil temperature"
-        ],
-        [
           "boost",
           "Boost"
         ],
@@ -983,6 +1182,26 @@
         [
           "torque",
           "Engine torque"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "oilPress",
+          "Oil pressure"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
         ],
         [
           "pedal",
@@ -997,6 +1216,18 @@
           "Ignition timing"
         ],
         [
+          "hpfp",
+          "Fuel pressure: high (injection rail)"
+        ],
+        [
+          "lpfp",
+          "Fuel pressure: low (supply)"
+        ],
+        [
+          "volts",
+          "Battery voltage (12 V)"
+        ],
+        [
           "fuel",
           "Fuel level"
         ],
@@ -1009,7 +1240,8 @@
           "Battery temperature (plug-in hybrid)"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "gaugeRpm",
@@ -1022,22 +1254,6 @@
           "The layout's own"
         ],
         [
-          "coolant",
-          "Coolant temperature"
-        ],
-        [
-          "oil",
-          "Engine oil temperature"
-        ],
-        [
-          "iat",
-          "Intake air temperature"
-        ],
-        [
-          "gearbox",
-          "Gearbox oil temperature"
-        ],
-        [
           "boost",
           "Boost"
         ],
@@ -1048,6 +1264,26 @@
         [
           "torque",
           "Engine torque"
+        ],
+        [
+          "oil",
+          "Engine oil temperature"
+        ],
+        [
+          "oilPress",
+          "Oil pressure"
+        ],
+        [
+          "coolant",
+          "Coolant temperature"
+        ],
+        [
+          "gearbox",
+          "Gearbox oil temperature"
+        ],
+        [
+          "iat",
+          "Intake air temperature"
         ],
         [
           "pedal",
@@ -1062,6 +1298,18 @@
           "Ignition timing"
         ],
         [
+          "hpfp",
+          "Fuel pressure: high (injection rail)"
+        ],
+        [
+          "lpfp",
+          "Fuel pressure: low (supply)"
+        ],
+        [
+          "volts",
+          "Battery voltage (12 V)"
+        ],
+        [
           "fuel",
           "Fuel level"
         ],
@@ -1074,7 +1322,8 @@
           "Battery temperature (plug-in hybrid)"
         ]
       ],
-      "section": "Readouts and gauges"
+      "section": "Readouts and gauges",
+      "hidden": true
     },
     {
       "key": "slotsBy",
@@ -1834,7 +2083,7 @@
       }
     },
     "dme": {
-      "comment": "Intake / fuel values from the engine unit (DME, ecu 18 = 0x12) with UDS 0x22. F4xx = the standard OBD PIDs (F40F = PID 0x0F); a candidate with \"obd\" instead of \"did\" asks for the same PID with OBD service 01 (some engine units refuse the F4xx identifiers with NRC 31). Candidates are tried in order; the first plausible one wins. value = raw * factor + offset (bar / deg C). If a tile says 'not available from this DME', add your engine's BMW-specific DID here. boost: tried in order when the sport display sends no boost (setting 'Boost from'); absolute pressure in kPa, the outside air pressure (baro) is subtracted. boostTarget / boostActual: boost pressure setpoint and actual (absolute kPa, baro subtracted), BMW DIDs first, then OBD PID 0x70; the tile only shows when the target answers. loadTarget / loadActual: requested and actual relative air charge in %. timing: OBD PID 0x0E, degrees before top dead centre. misfire: OBD service 06 monitor results (MID A2 = cylinder 1, A3 = cylinder 2 ...), tid 0C = misfires this driving cycle (0B = average of the last 10 cycles); engine units that only speak UDS are asked 0x22 F6A2... egs: gearbox temperature from the gearbox unit (EGS); give each candidate its \"ecu\". pedal: the normalised accelerator pedal angle in % (DIDs 5814 / 480B, then OBD PID 0x49). throttle: the throttle valve's opening in % from its lower stop (DIDs 4600 / 5858, then OBD PID 0x11). tank: the fuel tank's fill in % (OBD PID 0x2F), shown in place of the litres over the tank's size (setting 'Fuel % from').",
+      "comment": "Intake / fuel values from the engine unit (DME, ecu 18 = 0x12) with UDS 0x22. F4xx = the standard OBD PIDs (F40F = PID 0x0F); a candidate with \"obd\" instead of \"did\" asks for the same PID with OBD service 01 (some engine units refuse the F4xx identifiers with NRC 31). Candidates are tried in order; the first plausible one wins. value = raw * factor + offset (bar / deg C). If a tile says 'not available from this DME', add your engine's BMW-specific DID here. boost: tried in order when the sport display sends no boost (setting 'Boost from'); absolute pressure in kPa, the outside air pressure (baro) is subtracted. boostTarget / boostActual: boost pressure setpoint and actual (absolute kPa, baro subtracted), BMW DIDs first, then OBD PID 0x70; the tile only shows when the target answers. oilPress: the engine oil pressure (absolute, hPa; BMW DIDs, none on a diesel), less the engine unit's ambient pressure (ambient, hPa, read once a minute), in bar. volts: the 12 V battery's voltage (the battery sensor's 5853, then the engine unit's own supply, F442 / OBD PID 0x42; a diesel only the last two). loadTarget / loadActual: requested and actual relative air charge in %. timing: OBD PID 0x0E, degrees before top dead centre. misfire: OBD service 06 monitor results (MID A2 = cylinder 1, A3 = cylinder 2 ...), tid 0C = misfires this driving cycle (0B = average of the last 10 cycles); engine units that only speak UDS are asked 0x22 F6A2... egs: gearbox temperature from the gearbox unit (EGS); give each candidate its \"ecu\". pedal: the normalised accelerator pedal angle in % (DIDs 5814 / 480B, then OBD PID 0x49). throttle: the throttle valve's opening in % from its lower stop (DIDs 4600 / 5858, then OBD PID 0x11). tank: the fuel tank's fill in % (OBD PID 0x2F), shown in place of the litres over the tank's size (setting 'Fuel % from').",
       "ecu": 18,
       "iat": [
         {
@@ -2088,6 +2337,93 @@
           "min": 20,
           "max": 600,
           "note": "OBD service 01 PID 0x70 (same as F470)"
+        }
+      ],
+      "oilPress": [
+        {
+          "did": "4436",
+          "bytes": 2,
+          "at": 0,
+          "factor": 1,
+          "offset": 0,
+          "min": 300,
+          "max": 20000,
+          "note": "engine oil pressure (absolute), hPa; the engine unit's ambient pressure (ambient) is subtracted"
+        },
+        {
+          "did": "586F",
+          "bytes": 2,
+          "at": 0,
+          "factor": 1,
+          "offset": 0,
+          "signed": true,
+          "min": 300,
+          "max": 20000,
+          "note": "engine oil pressure (absolute), hPa"
+        }
+      ],
+      "ambient": [
+        {
+          "did": "4201",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.0390625,
+          "offset": 0,
+          "min": 500,
+          "max": 1100,
+          "note": "the engine unit's ambient pressure, hPa: what the oil pressure is taken over"
+        },
+        {
+          "did": "F433",
+          "bytes": 1,
+          "at": 0,
+          "factor": 10,
+          "offset": 0,
+          "min": 500,
+          "max": 1100,
+          "note": "OBD PID 0x33 barometric pressure, kPa x 10 = hPa"
+        },
+        {
+          "obd": "33",
+          "bytes": 1,
+          "at": 0,
+          "factor": 10,
+          "offset": 0,
+          "min": 500,
+          "max": 1100,
+          "note": "OBD service 01 PID 0x33 (same as F433)"
+        }
+      ],
+      "volts": [
+        {
+          "did": "5853",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.001,
+          "offset": 0,
+          "min": 5,
+          "max": 18,
+          "note": "the battery sensor's voltage, V"
+        },
+        {
+          "did": "F442",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.001,
+          "offset": 0,
+          "min": 5,
+          "max": 18,
+          "note": "OBD PID 0x42 control module voltage, V"
+        },
+        {
+          "obd": "42",
+          "bytes": 2,
+          "at": 0,
+          "factor": 0.001,
+          "offset": 0,
+          "min": 5,
+          "max": 18,
+          "note": "OBD service 01 PID 0x42 (same as F442)"
         }
       ],
       "loadTarget": [

@@ -39,27 +39,14 @@ const isNum = C.isNum;
 // (the shift point: layout_common.shiftPoint, with Settings > Shift point before redline, Cold-engine rev guard,
 // Cold rev limit and Oil warm at; 300, on, 4500 and 80 °C by default, as before)
 const shiftPoint = (o, oil) => C.shiftPoint(o, { oil });
-const score = { recent: [], lastGear: null, last: null, at: 0 };
-function sample(o, d) {
-    const now = Date.now();
-    if (now - score.at < 10 || !isNum(d.rpm) || d.demo) return;
-    score.at = now;
-    const r = score.recent;
-    r.push([now, d.rpm]);
-    while (r.length && now - r[0][0] > 1200) r.shift();
-    const g = d.gear;
-    if (isNum(g) && g > 0 && isNum(score.lastGear) && score.lastGear > 0 && g === score.lastGear + 1) {
-        const win = r.filter((x) => now - x[0] < 600), rpm = win.length ? Math.max.apply(null, win.map((x) => x[1])) : 0;
-        if (rpm > 2500) {
-            const sp = shiftPoint(o, d.oil), red = C.rpmScale(o).red * 1000;
-            score.last = { from: score.lastGear, to: g, rpm: Math.round(rpm),
-                verdict: rpm >= red - 60 ? 'LIMITER' : rpm < sp.rpm - 250 ? 'EARLY' : rpm > sp.rpm + 200 ? (sp.cold ? 'COLD REV' : 'LATE') : 'SPOT ON' };
-        }
-    }
-    if (isNum(g)) score.lastGear = g;
-}
-const verdictC = (t) => {
-    const v = score.last && score.last.verdict;
+// (the upshift itself: layout_common.driveSample's lastShift, d.lastShift)
+const verdictOf = (o, s) => {
+    if (!s) return '';
+    const sp = shiftPoint(o, s.oil), red = C.rpmScale(o).red * 1000, rpm = s.rpm;
+    return rpm >= red - 60 ? 'LIMITER' : rpm < sp.rpm - 250 ? 'EARLY' : rpm > sp.rpm + 200 ? (sp.cold ? 'COLD REV' : 'LATE') : 'SPOT ON';
+};
+const verdictC = (o) => (t, d) => {
+    const v = verdictOf(o, d && d.lastShift);
     const c = v === 'SPOT ON' ? t.green : v === 'EARLY' ? t.cold : v === 'LATE' || v === 'COLD REV' ? t.yellow : v === 'LIMITER' ? t.red : t.dim;
     return { color: [c, 1], glow: [c, 0.3] };
 };
@@ -196,12 +183,12 @@ module.exports = {
             list.push(...box('lastB', R.x, y3, R.w, h3, Rd('box3').label), toneOf('box3', C.fitText(C.text('lastVal', R.x + 14, y3 + 36, R.w - 28, h3 - 46, Rd('box3').value, white, { align: 1 }))));
         } else {
             list.push(...box('lastB', R.x, y3, R.w, h3, 'LAST SHIFT'),
-                C.text('lastGears', R.x + R.w - 120, y3 + 6, 106, 18, () => (score.last ? score.last.from + '-' + score.last.to : ''), lbl, { align: 1 }),
-                C.text('lastRpm', R.x + 14, y3 + 36, R.w * 0.45, h3 - 46, (d) => { sample(o, d); return score.last ? String(score.last.rpm) : '--'; }, verdictC, { align: 0 }),
-                C.text('verdict', R.x + R.w * 0.45, y3 + 44, R.w * 0.55 - 14, (h3 - 46) * 0.6, () => (score.last ? score.last.verdict : ''), verdictC, { align: 1, tracking: 0.06 }));
+                C.text('lastGears', R.x + R.w - 120, y3 + 6, 106, 18, (d) => (d.lastShift ? d.lastShift.from + '-' + d.lastShift.to : ''), lbl, { align: 1 }),
+                C.fitText(C.text('lastRpm', R.x + 14, y3 + 36, R.w * 0.45, h3 - 46, (d) => (d.lastShift ? String(d.lastShift.rpm) : '--'), verdictC(o), { align: 0 })),
+                C.text('verdict', R.x + R.w * 0.45, y3 + 44, R.w * 0.55 - 14, (h3 - 46) * 0.6, (d) => verdictOf(o, d.lastShift), verdictC(o), { align: 1, tracking: 0.06 }));
         }
         return list;
     },
     /** (for the tests) */
-    _shift: { shiftPoint, sample, score },
+    _shift: { shiftPoint, verdictOf },
 };

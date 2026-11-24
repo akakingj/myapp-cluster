@@ -88,8 +88,9 @@ mgu.run({
         const car = D.car;
         // the driving assistant (dap.js): none of its services is subscribed (0.36.7); the cruise
         // control's set speed comes from the head-up display (data.js cruise); dap.js stays for the previews' sample (DAP_DEMO) and later use
+        // (with this drive's figures: the peaks, the 0-100 time, the last upshift - layout_common.driveSample)
         const data = () => {
-            const d = D.data();
+            const d = require('./layout_common').driveSample(D.data(), settings.get('speedUnit'));
             d.dap = d.demo ? DAP_DEMO : null;
             return d;
         };
@@ -314,17 +315,18 @@ mgu.run({
         const slotLabel = (id, k) => layoutSlotLabel(id, k, Object.assign({}, options(), { places: placesOf(id) })) || ((itemFor(id, k) || {}).label || k);
         const optLabel = (k, v, id) => { const it = itemFor(id, k), o = it && (it.options || []).find((x) => x[0] === v); return o ? o[1] : String(v); };
         const openSlot = (id, k) => {
-            const it = itemFor(id, k), cur = ownSlot(id, k), place = !!placeItem(id, k, ctx.spec);
-            // (a place: its own values, the first back to as designed; a readout: the Settings' value first)
-            const opts = place ? it.options.map((x) => (x[0] === 'auto' ? ['', x[1]] : x)) : [['', 'Same as in Settings']].concat(it.options);
-            const sheet = Sheet && menu.pickSheet(Sheet, byId(id).title, slotLabel(id, k), opts, cur === undefined ? '' : cur, (v) => setSlot(id, k, v));
+            const it = itemFor(id, k), own = ownSlot(id, k), place = !!placeItem(id, k, ctx.spec);
+            // (a place: its own values, the first back to as designed; a readout: its values, the one it shows now picked)
+            const opts = place ? it.options.map((x) => (x[0] === 'auto' ? ['', x[1]] : x)) : it.options;
+            const cur = place ? (own === undefined ? '' : own) : slot(k, id);
+            const sheet = Sheet && menu.pickSheet(Sheet, byId(id).title, slotLabel(id, k), opts, cur, (v) => setSlot(id, k, v));
             // (the kit's sheet is ctx.sheet - mgu.js; 0.29.0-0.37.0 asked ui.sheet, which the kit has not, so on the car a
             // tap only stepped to the next value: 0.37.1 opens the list. ui.sheet stays for the tests' stand-in)
             const showSheet = typeof ctx.sheet === 'function' ? ctx.sheet : ui.sheet;
             if (sheet && showSheet && showSheet(sheet) !== false) return null;
-            // (no sheet here: the next value, then back to the Settings')
-            const vals = it.options.map((x) => x[0]).filter((v) => !place || v !== 'auto'), i = cur === undefined ? -1 : vals.indexOf(cur);
-            return setSlot(id, k, i + 1 < vals.length ? vals[i + 1] : '');
+            // (no sheet here: the next value; a place's last back to as designed)
+            const vals = opts.map((x) => x[0]), i = vals.indexOf(cur);
+            return setSlot(id, k, vals[(i + 1) % vals.length]);
         };
         /** A picture at x, y (w x h): a pixel image on the car's renderer, drawn in place on a plain canvas (the tests). */
         const picture = (cv, id, px, w, h, x, y, upload) => {
@@ -373,11 +375,10 @@ mgu.run({
                 const own = ownSlot(shownId, k), v = place ? (own === undefined ? 'auto' : own) : slot(k, shownId), lbl = String(tr(slotLabel(shownId, k))).replace(/\s*\((petrol, diesel|가솔린, 디젤|Classic M|Old M|ID6 M)\)$/, '');
                 cv.roundRect(x, y, CW, CH, 10, withAlpha('#ffffff', 0.07));
                 if (own !== undefined) cv.roundRect(x, y, 5, CH, 2, acc);
-                const common = own === undefined && !place && COLS === 2, vs = COLS > 2 ? 16 : 18;
+                const vs = COLS > 2 ? 16 : 18;
                 // (0.36.9: each text cut to its cell with "…": the Korean "auto" labels ran into the next cell)
                 cv.text(fitText(cv, lbl, 14, 'bold', CW - 28), x + 16, y + 19, 14, t.dim, { font: 'bold', literal: true });
-                cv.text(fitText(cv, String(tr(optLabel(k, v, shownId))), vs, 'bold', CW - 30 - (common ? 64 : 0)), x + 16, y + 40, vs, t.text, { font: 'bold', literal: true });
-                if (common) cv.text('Common', x + CW - 14, y + 40, 14, t.dim, { align: 'right' });
+                cv.text(fitText(cv, String(tr(optLabel(k, v, shownId))), vs, 'bold', CW - 30), x + 16, y + 40, vs, t.text, { font: 'bold', literal: true });
                 tap(cv, x, y, CW, CH, () => openSlot(shownId, k), 'slot_' + k);
             });
             // the cards: CARDS a row, the arrows for more; the one showing framed

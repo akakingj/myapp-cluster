@@ -232,10 +232,13 @@ check('settings in sections: the top lists Show, Layout, Colours and the section
     assert.deepStrictEqual(top, ['show', 'layout', 'look', '[Display]', '[Readouts and gauges]', '[Red zone and shift]', '[Units and clock]', '[Car]']);
     sh.focus = 4; sh.choose();
     assert.strictEqual(sh.sec, 'Readouts and gauges');
-    assert.strictEqual(sh.entries()[0].key, 'infoA');
-    sh.focus = 0; sh.choose(); assert.strictEqual(sh.open.key, 'infoA');
-    sh.sub = sh.open.options.findIndex((x) => x[0] === 'boost'); sh.choose();
-    assert.strictEqual(vals.infoA, 'boost'); assert.strictEqual(sh.sec, 'Readouts and gauges');
+    // (the readouts and the small gauges are set on the page alone: not in the section)
+    const keys = sh.entries().map((e) => e.key);
+    ['infoA', 'infoB', 'infoMain', 'infoLow', 'centreView', 'leftDial', 'jdmCup', 'gaugeSpeed', 'gaugeRpm'].forEach((k) => assert(keys.indexOf(k) < 0, k));
+    assert.strictEqual(keys[0], 'stripBars');
+    sh.focus = 0; sh.choose(); assert.strictEqual(sh.open.key, 'stripBars');
+    sh.sub = sh.open.options.findIndex((x) => x[0] !== vals.stripBars); const want = sh.open.options[sh.sub][0]; sh.choose();
+    assert.strictEqual(vals.stripBars, want); assert.strictEqual(sh.sec, 'Readouts and gauges');
     assert.strictEqual(sh.back(), null); assert.strictEqual(sh.sec, null); assert.strictEqual(sh.focus, 4);
     assert.strictEqual(sh.back(), 'close');
 });
@@ -267,7 +270,6 @@ check('the speed and rpm figures hold until the reading is past them, as the clu
     assert.strictEqual(rp(undefined), null);
 });
 
-console.log(n + ' passed');
 
 /* Settings > Vehicle: Diesel (0.35.7): no ignition timing read or shown; the intake air in its place */
 (() => {
@@ -331,3 +333,56 @@ check('JDM 2\'s G trail: a place every 200 ms, 16 kept, packed one number each; 
     for (let i = 0; i < 10; i++) { const s = JSON.stringify(tr([0, 0], t + 11000 + i * 37)); assert(!last || s === last, 'still: ' + s); last = s; }
     assert.strictEqual(JSON.parse(last).u_trail_np[1], 0);
 });
+check('every readout and gauge value of the page has its reading (READOUTS, GAUGES with its kind and icon)', () => {
+    const opts = (k) => SPEC.settings.find((x) => x.key === k).options.map((x) => x[0]).filter((v) => v !== 'auto' && v !== 'off');
+    ['infoA', 'infoB', 'infoMain', 'infoLow'].forEach((k) => assert.deepStrictEqual(opts(k).filter((v) => !C.READOUTS[v]), [], k));
+    ['gaugeSpeed', 'gaugeRpm'].forEach((k) => opts(k).forEach((v) => { const g = C.placeGauge(o(), v); assert(g && g.key === v, k + ' ' + v); }));
+    assert.deepStrictEqual(opts('infoA').sort(), Object.keys(C.READOUTS).sort(), 'every readout offered');
+    assert.deepStrictEqual(opts('gaugeSpeed').sort(), Object.keys(C.GAUGES).sort(), 'every gauge offered');
+});
+check('the new readings: rpm, the other unit\'s speed, oil pressure, voltage, the fuel pressures, the boost target', () => {
+    const ro = (k, x, oo) => C.readout(oo || o(), k, { w: 700, h: 34 })(x);
+    assert.strictEqual(ro('rpm', { rpm: 3204 }), 'ENGINE SPEED 3200 rpm');
+    assert.strictEqual(ro('speed2', { speed: 100 }), 'MPH 62');
+    assert.strictEqual(ro('speed2', { speed: 100 }, o({ speedUnit: 'mph' })), 'KM/H 100');
+    assert.strictEqual(ro('oilPress', { oilPress: 3.5 }), 'OIL PRESSURE 50.8 psi');
+    assert.strictEqual(ro('volts', { volts: 14.18 }), 'BATTERY VOLTS 14.2 V');
+    assert.strictEqual(ro('hpfp', { hpfp: 200 }, o({ pressUnit: 'bar' })), 'HIGH FUEL PRESS 200 bar');
+    assert.strictEqual(ro('lpfp', { lpfp: 5.2 }, o({ pressUnit: 'bar' })), 'LOW FUEL PRESS 5.20 bar');
+    assert.strictEqual(ro('boostTarget', { boostTarget: 1, engineOn: true }), 'BOOST TARGET 14.5 psi');
+    assert.strictEqual(C.placeGauge(o({ pressUnit: 'bar' }), 'oilPress').num({ oilPress: 3.5 }), '3.50');
+    assert.strictEqual(C.placeGauge(o(), 'volts').unit, 'V');
+});
+check('this drive\'s figures (driveSample): the peaks, the 0-100 time and its best, the last upshift', () => {
+    const real = Date.now;
+    let t = 1e6;
+    Date.now = () => t;
+    try {
+        const at = (x, ms) => { t += ms || 20; return C.driveSample(Object.assign({ engineOn: true }, x), 'kmh'); };
+        at({ speed: 0, gear: 1, rpm: 900 });
+        at({ speed: 5, gear: 1, rpm: 3000, boostActual: 0.6, enginePower: 80 }, 100);
+        at({ speed: 40, gear: 1, rpm: 6400, boostActual: 1.3, enginePower: 210 }, 1500);
+        let d = at({ speed: 45, gear: 2, rpm: 4600, boostActual: 1.1, enginePower: 190 }, 200);
+        assert.deepStrictEqual([d.lastShift.from, d.lastShift.to, d.lastShift.rpm], [1, 2, 6400]);
+        assert(d.zero100Live && Math.abs(d.zero100 - 1.7) < 0.01, String(d.zero100));
+        d = at({ speed: 101, gear: 3, rpm: 3000, boostActual: 0.9 }, 3000);
+        assert(!d.zero100Live && Math.abs(d.zero100 - 4.7) < 0.01, String(d.zero100));
+        assert.strictEqual(d.zero100Best, d.zero100);
+        assert.strictEqual(d.boostPeak, 1.3); assert.strictEqual(d.powerPeak, 210);
+        assert.strictEqual(d.lastShift.to, 3, 'one up again: 2-3');
+        assert.strictEqual(C.readout(o(), 'lastShift', wide)(d), 'LAST SHIFT ' + d.lastShift.rpm + ' rpm');
+        assert.strictEqual(C.readout(o(), 'zero100', narrow)(d), '0-100 4.7');
+        // (a gear down, or the same gear: no upshift)
+        const before = d.lastShift;
+        at({ speed: 60, gear: 2, rpm: 5000 }, 400);
+        assert.strictEqual(at({ speed: 60, gear: 2, rpm: 5000 }).lastShift, before);
+    } finally { Date.now = real; }
+});
+check('GT3 grades the last upshift from the data (no state of its own)', () => {
+    const G = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'layout_gt3.js'));
+    const v = (rpm, oil) => G._shift.verdictOf(o({ redline: 7000 }), { from: 2, to: 3, rpm, oil });
+    assert.strictEqual(v(6700, 95), 'SPOT ON');
+    assert.strictEqual(v(5000, 95), 'EARLY');
+    assert.strictEqual(G._shift.verdictOf(o(), undefined), '');
+});
+console.log(n + ' passed');

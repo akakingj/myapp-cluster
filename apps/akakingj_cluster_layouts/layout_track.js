@@ -23,34 +23,14 @@ const white = (t) => ({ color: [t.text, 1], glow: [t.glow, 0.12] });
 const lbl = (t) => ({ color: [t.dim, 1], glow: [t.glow, 0] });
 const acc = (t) => ({ color: [t.accent, 1], glow: [t.glow, 0.35] });
 
-/* ---------- the drive's numbers: the 0-60 timer and the peaks ---------- */
-const run = { armed: false, t0: 0, last: null, best: null, peakKw: null, peakBoost: null, at: 0 };
-/** Fed by the texts that show it (each update): starts on leaving a stop, stops at 60 mph (100 km/h). */
-function track(o, d) {
-    const now = Date.now();
-    if (now - run.at < 10) return;
-    run.at = now;
-    if (C.isNum(d.kw) && d.kw > 0 && (run.peakKw === null || d.kw > run.peakKw)) run.peakKw = d.kw;
-    if (d.engineOn !== false && C.isNum(d.boostActual) && (run.peakBoost === null || d.boostActual > run.peakBoost)) run.peakBoost = d.boostActual;
-    if (!C.isNum(d.speed) || d.demo) return;
-    const target = o.speedUnit === 'kmh' ? 100 : 96.56;
-    if (d.speed < 1) { run.armed = true; run.t0 = 0; return; }
-    if (run.armed && !run.t0) run.t0 = now;
-    if (!run.t0) return;
-    if (d.speed >= target) {
-        const s = (now - run.t0) / 1000;
-        run.last = s;
-        if (run.best === null || s < run.best) run.best = s;
-        run.t0 = 0; run.armed = false;
-    } else if (now - run.t0 > 30000) { run.t0 = 0; run.armed = false; }
-}
-const zeroText = (o) => (d) => { track(o, d); return run.t0 ? ((Date.now() - run.t0) / 1000).toFixed(1) + ' s' : run.last !== null ? run.last.toFixed(1) + ' s' : '--'; };
-const bestText = (o) => (d) => { track(o, d); return run.best !== null ? 'BEST ' + run.best.toFixed(1) + ' s' : 'FROM A STOP'; };
+/* ---------- the drive's numbers: the 0-60 timer and the peaks (layout_common.driveSample) ---------- */
+// (from 10 s the unit without its space: '29.9s' fits the tile)
+const zeroText = () => (d) => (C.isNum(d.zero100) ? d.zero100.toFixed(1) + (d.zero100 >= 10 ? 's' : ' s') : '--');
+const bestText = () => (d) => (C.isNum(d.zero100Best) ? 'BEST ' + d.zero100Best.toFixed(1) + ' s' : 'FROM A STOP');
 const zeroLabel = (o) => (o.speedUnit === 'kmh' ? '0-100 KM/H' : '0-60 MPH');
 const peakText = (o) => (d) => {
-    track(o, d);
-    if (C.engineFocus(o)) return run.peakBoost === null ? '--' : C.pressNum(o, run.peakBoost);   // (its unit in the label, like the other tiles)
-    return run.peakKw === null ? '--' : Math.round(run.peakKw) + ' kW';
+    if (C.engineFocus(o)) return C.isNum(d.boostPeak) ? C.pressNum(o, d.boostPeak) : '--';   // (its unit in the label, like the other tiles)
+    return C.isNum(d.kwPeak) ? Math.round(d.kwPeak) + ' kW' : '--';
 };
 
 /* ---------- pieces ---------- */

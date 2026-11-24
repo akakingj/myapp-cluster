@@ -2671,9 +2671,7 @@ Showing on the cluster	계기판에 표시 중
 This layout has no readouts to choose	이 레이아웃은 고를 수 있는 표시값이 없습니다
 Stock	순정
 Stock cluster	순정 계기판
-Same as in Settings	설정과 같게 (모든 레이아웃 공통)
 Tap a layout: it shows on the cluster at once. Tap a readout to choose it for this layout.	레이아웃을 누르면 바로 계기판에 표시됩니다. 표시값을 누르면 이 레이아웃만의 값을 고를 수 있습니다.
-Common	공통
 Readouts per layout	레이아웃별 표시값
 20's	20's
 90's	90's
@@ -2817,3 +2815,12 @@ Toll gate	톨게이트
 Driving assistant check	반자율주행 신호 확인
 Signals: what comes in	신호: 들어오는 값
 Catalog: the services this car has	카탈로그: 이 차의 서비스 목록
+0-100 km/h (0-60 mph) time	0-100 km/h (0-60 mph) 기록
+Battery voltage (12 V)	배터리 전압 (12 V)
+Boost target	목표 부스트
+Fuel pressure: high (injection rail)	연료 압력: 고압 (인젝션 레일)
+Fuel pressure: low (supply)	연료 압력: 저압 (공급)
+Last upshift (rpm)	마지막 업시프트 (rpm)
+Peak boost (this drive)	최고 부스트 (이번 주행)
+Peak engine power (this drive)	최고 엔진 출력 (이번 주행)
+Speed in the other unit (km/h with mph, mph with km/h)	다른 단위 속도 (mph면 km/h, km/h면 mph)
