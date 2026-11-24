@@ -324,6 +324,7 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   at y 360 so their rings clear the cowl's corners (tools/clearance.js: rmdial round at u_c). Centre and Info: the
   Korean for Retro M's place (kit locales), and Centre's shared font list. Every layout's name in English in Korean
   too (Simple, Track: they were 간단, 트랙), as the owner asked.
+- Centre 0.14.16 (Nov 24 2026): its icon's odometer reads 320 (make_icon.js kr-trip), as the owner asked.
 - Layouts 0.56.2 (Nov 24 2026): the page's layout pictures (previews.wad, tools/make_previews.py) drawn again
   after 0.55.4 - 0.56.1 (Retro M's needle over its window, JDM 1's water). The tests no workflow ran (awake, dap,
   frozen, fuel, korean, kwfuse, presence, readouts, strip_fuel, tight) run in tests.yml with the others.

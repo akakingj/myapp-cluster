@@ -60,7 +60,7 @@ if (glyph === 'gauge') {
     const [nx, ny] = pt(70, 70, 38, 35);
     c.line(70, 70, nx, ny, 6, W); c.circle(70, 70, 7, W);
     c.strokeRoundRect(22, 88, 96, 34, 6, 5, W);
-    c.text('0428', 70, 115, 24, W, { font: 'bold', align: 'center' });
+    c.text('320', 70, 115, 24, W, { font: 'bold', align: 'center' });
 } else if (glyph === 'home') {
     // a house with a car's signal arcs in it
     c.line(18, 66, 70, 22, 7, W); c.line(70, 22, 122, 66, 7, W);
