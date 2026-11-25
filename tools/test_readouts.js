@@ -397,13 +397,19 @@ check('the speedometers\' and boost gauges\' ends: Settings > Speedometer up to 
     C.setScales(o());
     assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 1 / 1.6) < 1e-9);
     assert.ok(Math.abs(C.READOUTS.speed2.frac({ speed: 130 }) - 0.5) < 1e-9);
-    C.setScales(o({ boostMax: 2.5, speedMax: '330' }));
+    C.setScales(o({ boostMax: 2.5, speedMax: '330', pressUnit: 'bar' }));
     assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 1 / 2.5) < 1e-9);
     assert.ok(Math.abs(C.READOUTS.boostTarget.frac({ boostTarget: 1.25 }) - 0.5) < 1e-9);
     assert.ok(Math.abs(C.READOUTS.speed2.frac({ speed: 165 }) - 0.5) < 1e-9);
+    // in psi the pair's end, as the car's own gauge: 2.0 bar is a 30 psi gauge, 2.5 bar a 35 psi one
+    C.setScales(o({ boostMax: 2, pressUnit: 'psi' }));
+    assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 14.5038 / 30) < 1e-9);
+    assert.deepStrictEqual(C.BOOST_PSI, { 1: 15, 1.5: 20, 2: 30, 2.5: 35, 3: 40, 3.5: 50 });
+    assert.deepStrictEqual(SPEC.settings.find((x) => x.key === 'boostMax').steps, [0, 1, 1.5, 2, 2.5, 3, 3.5]);
     C.setScales(o());
     // Centre: boost on its 2 bar, or Boost gauge up to
     assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'bar' }).frac - 0.5) < 1e-9);
-    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'psi', boostMax: 2.5 }).frac - 0.4) < 1e-6);
+    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'bar', boostMax: 2.5 }).frac - 0.4) < 1e-6);
+    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'psi', boostMax: 2.5 }).frac - 14.5038 / 35) < 1e-3);
 });
 console.log(n + ' passed');

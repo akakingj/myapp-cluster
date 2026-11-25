@@ -78,14 +78,20 @@ function gauges(o, engine) {
         // (Settings > Pressure and Torque unit; the boost gauge's span Settings > Boost gauge up to, else 0-3 bar,
         // 0-40 psi; torque 0-500 Nm)
         const pu = C.pressUnitOf(o), tu = C.torqueUnit(o), top = C.scales.boost;
-        const ends = (v) => [[0, pu === 'bar' ? '0.0' : '0'], [0.5, v(0.5)], [1, v(1)]];
-        const boostLabels = top ? ends((f) => (pu === 'psi' ? String(Math.round(top * f * 14.5038)) : pu === 'kpa' ? String(Math.round(top * f * 100)) : (top * f).toFixed(1)))
+        // (set: its end in the unit - in psi its pair's, as the car's own gauge - and between them one of the car's
+        // own figures where it falls, at or below the middle: a multiple of 5 psi to 20 psi, of 10 past it; of 0.5 bar;
+        // of 50 kPa. The bar
+        // draws three numbers.)
+        const end = !top ? 0 : pu === 'psi' ? C.BOOST_PSI[top] || Math.round(top * 14.5038) : pu === 'kpa' ? top * 100 : top;
+        const step = pu === 'psi' ? (end > 20 ? 10 : 5) : pu === 'kpa' ? 50 : 0.5;
+        const mid = Math.max(step, Math.floor(end / 2 / step + 1e-9) * step), fig = (v) => (pu === 'bar' ? v.toFixed(1) : String(Math.round(v)));
+        const boostLabels = top ? [[0, fig(0)], [mid / end, fig(mid)], [1, fig(end)]]
             : pu === 'psi' ? [[0, '0'], [0.5, '20'], [1, '40']] : pu === 'kpa' ? [[0, '0'], [0.5, '150'], [1, '300']] : [[0, '0.0'], [0.5, '1.5'], [1, '3.0']];
         const torqueLabels = tu === 'kgm' ? [[0, '0'], [0.5, '25'], [1, '50']] : tu === 'lb-ft' ? [[0, '0'], [0.5, '185'], [1, '370']] : [[0, '0'], [0.5, '250'], [1, '500']];
         return {
             left,
             right: [{ icon: 'turbo', unit: C.pressLabel(o), labels: boostLabels,
-                value: (d) => (d.engineOn === false || !isNum(d.boostActual) ? 0 : top ? f01(d.boostActual, 0, top) : pu === 'psi' ? f01(d.boostActual * 14.5038, 0, 40) : f01(d.boostActual, 0, 3)), zero: 0, lo: -1, hi: 2 },
+                value: (d) => (d.engineOn === false || !isNum(d.boostActual) ? 0 : top ? clamp01(C.boostShare(d.boostActual, top)) : pu === 'psi' ? f01(d.boostActual * 14.5038, 0, 40) : f01(d.boostActual, 0, 3)), zero: 0, lo: -1, hi: 2 },
             { icon: 'torque', unit: tu, labels: torqueLabels, value: (d) => f01(d.torque, 0, 500), zero: 0, lo: -1, hi: 2 }],
             bottom: [fuel, ice ? oil : charge],
         };

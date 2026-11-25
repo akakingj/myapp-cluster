@@ -340,9 +340,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
 - Layouts 0.58.0, Centre 0.14.19, Info 1.10.16 (Nov 25 2026), with Car profile 1.8.0: Settings > Fuel % from follows
   the Car profile's *Fuel % from*, as Fuel tank size does. New: Settings > **Speedometer up to** (260 km/h, 330 km/h
   for an M car: 0-330 by 30s, 200 mph) for every speedometer (layout_common.speedScale; Twin cowl's own scale went
-  to it) and the speed-in-the-other-unit bar, and **Boost gauge up to** (1.0 - 3.5 bar; 0: each layout's own, 1.6
-  bar, the M layout's 0-3 bar / 0-40 psi) for every boost gauge and bar (layout_common.boostTop; the M layout's
-  figures from it in the pressure unit), each following the Car profile's. main.js setScales holds them for the
+  to it) and the speed-in-the-other-unit bar, and **Boost gauge up to** (pairs as the car's own gauge reads them: 1.0 bar / 15
+  psi, 1.5 / 20, 2.0 / 30, 2.5 / 35, 3.0 / 40, 3.5 / 50 - layout_common.BOOST_PSI; 0: each layout's own, 1.6 bar,
+  the M layout's 0-3 bar / 0-40 psi) for every boost gauge and bar (boostShare: in psi on the pair's psi end; the M
+  layout's three numbers its end and, at or below the middle, a multiple of 5 psi to 20 psi, of 10 past it, of 0.5
+  bar, of 50 kPa, each at its place), each following the Car profile's. main.js setScales holds them for the
   readings' bars. Centre: Boost gauge up to (2 bar as it was) for its boost readings. Vehicle takes the Car
   profile's new Engine "Petrol, M car" as petrol. Info: the Korean words only.
 - Layouts 0.57.0, Centre 0.14.18 (Nov 25 2026): every reading the car gives in every place, the same as AK Cluster
