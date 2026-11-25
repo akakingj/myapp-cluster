@@ -110,7 +110,8 @@ mgu.run({
         const blockedByLayout = () => presence.active('layouts');
         const options = () => ({
             look: settings.get('look'), fit: settings.get('fit'), pages: enabled(), style: settings.get('style'), accent: settings.get('accent'), size: settings.get('size'),
-            units: { temp: settings.get('tempUnit'), press: settings.get('pressUnit'), speed: settings.get('speedUnit'), torque: settings.get('torqueUnit'), power: settings.get('powerUnit') },
+            units: { temp: settings.get('tempUnit'), press: settings.get('pressUnit'), speed: settings.get('speedUnit'), torque: settings.get('torqueUnit'), power: settings.get('powerUnit'),
+                boostMax: Number(settings.get('boostMax')) || 2 },
             warn: { oilWarm: num('warmTarget', 80), oilHigh: num('oilHigh'), coolantHigh: num('coolantHigh'), iatHigh: num('iatHigh'), gearboxHigh: num('gearboxHigh'), battTempHigh: num('battTempHigh'), lpfpLow: num('lpfpLow') },
             // (flashes at: the set rpm, or 0 = Auto, the shift point now: features.js shiftPoint, as Cluster Layouts and Redline)
             shift: { on: settings.get('shift') !== 'off', from: num('shiftFrom', 4000), at: num('shiftAt', 0),

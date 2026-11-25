@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_centre",
   "title": "AK Cluster Centre",
   "description": "Pages of engine, gearbox and eDrive data, warm-up, turbo cool-down, a shift light and a 0-60 timer in the centre of the factory cluster, drawn by the cluster itself",
-  "version": "0.14.18",
+  "version": "0.14.19",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCC",
@@ -2186,6 +2186,43 @@
       "section": "Units and clock"
     },
     {
+      "key": "boostMax",
+      "profile": "boostMax",
+      "label": "Boost gauge up to",
+      "type": "number",
+      "unit": "bar",
+      "default": 2,
+      "labels": {
+        "1": "1.0 bar / 15 psi",
+        "1.2": "1.2 bar / 17 psi",
+        "1.4": "1.4 bar / 20 psi",
+        "1.5": "1.5 bar / 22 psi",
+        "1.6": "1.6 bar / 23 psi",
+        "1.8": "1.8 bar / 26 psi",
+        "2": "2.0 bar / 29 psi",
+        "2.2": "2.2 bar / 32 psi",
+        "2.5": "2.5 bar / 36 psi",
+        "2.8": "2.8 bar / 41 psi",
+        "3": "3.0 bar / 44 psi",
+        "3.5": "3.5 bar / 51 psi"
+      },
+      "steps": [
+        1.0,
+        1.2,
+        1.4,
+        1.5,
+        1.6,
+        1.8,
+        2.0,
+        2.2,
+        2.5,
+        2.8,
+        3.0,
+        3.5
+      ],
+      "section": "Units and clock"
+    },
+    {
       "key": "speedUnit",
       "profile": "speedUnit",
       "label": "Speed and distance unit",
@@ -2349,7 +2386,10 @@
         ]
       ],
       "section": "Car",
-      "profile": "engine"
+      "profile": "engine",
+      "profileMap": {
+        "m": "petrol"
+      }
     },
     {
       "key": "tankLitres", "profile": "tankLitres",

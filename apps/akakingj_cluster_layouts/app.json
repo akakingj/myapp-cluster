@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.57.1",
+  "version": "0.58.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -1162,6 +1162,63 @@
       "section": "Readouts and gauges"
     },
     {
+      "key": "speedMax",
+      "profile": "speedMax",
+      "label": "Speedometer up to",
+      "type": "choice",
+      "default": "260",
+      "options": [
+        [
+          "260",
+          "260 km/h (160 mph)"
+        ],
+        [
+          "330",
+          "330 km/h (200 mph)"
+        ]
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
+      "key": "boostMax",
+      "profile": "boostMax",
+      "label": "Boost gauge up to",
+      "type": "number",
+      "unit": "bar",
+      "default": 0,
+      "labels": {
+        "0": "Each layout's own",
+        "1": "1.0 bar / 15 psi",
+        "1.2": "1.2 bar / 17 psi",
+        "1.4": "1.4 bar / 20 psi",
+        "1.5": "1.5 bar / 22 psi",
+        "1.6": "1.6 bar / 23 psi",
+        "1.8": "1.8 bar / 26 psi",
+        "2": "2.0 bar / 29 psi",
+        "2.2": "2.2 bar / 32 psi",
+        "2.5": "2.5 bar / 36 psi",
+        "2.8": "2.8 bar / 41 psi",
+        "3": "3.0 bar / 44 psi",
+        "3.5": "3.5 bar / 51 psi"
+      },
+      "steps": [
+        0,
+        1.0,
+        1.2,
+        1.4,
+        1.5,
+        1.6,
+        1.8,
+        2.0,
+        2.2,
+        2.5,
+        2.8,
+        3.0,
+        3.5
+      ],
+      "section": "Readouts and gauges"
+    },
+    {
       "key": "gaugeSpeed",
       "label": "Small gauge in the speedometer",
       "type": "choice",
@@ -1871,7 +1928,10 @@
         ]
       ],
       "section": "Car",
-      "profile": "engine"
+      "profile": "engine",
+      "profileMap": {
+        "m": "petrol"
+      }
     },
     {
       "key": "tankLitres",

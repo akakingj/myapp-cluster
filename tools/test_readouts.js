@@ -385,4 +385,25 @@ check('GT3 grades the last upshift from the data (no state of its own)', () => {
     assert.strictEqual(v(5000, 95), 'EARLY');
     assert.strictEqual(G._shift.verdictOf(o(), undefined), '');
 });
+check('the speedometers\' and boost gauges\' ends: Settings > Speedometer up to and Boost gauge up to (the Car profile\'s)', () => {
+    const item = (k) => SPEC.settings.find((x) => x.key === k);
+    assert.strictEqual(item('speedMax').profile, 'speedMax');
+    assert.strictEqual(item('boostMax').profile, 'boostMax');
+    assert.deepStrictEqual(C.speedScale(o()), { max: 260, major: 20, minor: 10 });
+    assert.deepStrictEqual(C.speedScale(o({ speedMax: '330' })), { max: 330, major: 30, minor: 10 });
+    assert.deepStrictEqual(C.speedScale(o({ speedMax: '330', speedUnit: 'mph' })), { max: 200, major: 20, minor: 5 });
+    assert.deepStrictEqual(C.speedScale(o({ speedUnit: 'mph' })), { max: 160, major: 20, minor: 5 });
+    // the bars: boost 1.0 bar on the layouts' own 1.6, then on 2.5; the speed in the other unit to 260 or 330 km/h
+    C.setScales(o());
+    assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 1 / 1.6) < 1e-9);
+    assert.ok(Math.abs(C.READOUTS.speed2.frac({ speed: 130 }) - 0.5) < 1e-9);
+    C.setScales(o({ boostMax: 2.5, speedMax: '330' }));
+    assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 1 / 2.5) < 1e-9);
+    assert.ok(Math.abs(C.READOUTS.boostTarget.frac({ boostTarget: 1.25 }) - 0.5) < 1e-9);
+    assert.ok(Math.abs(C.READOUTS.speed2.frac({ speed: 165 }) - 0.5) < 1e-9);
+    C.setScales(o());
+    // Centre: boost on its 2 bar, or Boost gauge up to
+    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'bar' }).frac - 0.5) < 1e-9);
+    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'psi', boostMax: 2.5 }).frac - 0.4) < 1e-6);
+});
 console.log(n + ' passed');

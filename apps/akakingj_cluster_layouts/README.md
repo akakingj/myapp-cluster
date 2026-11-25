@@ -32,6 +32,13 @@ digits every frame, and the battery's power the moment eDrive Live reads it (it 
 reading at once and this app watches for it, instead of a quarter-second file cycle and a half-second scan). The
 battery's own pace sets the limit: its current answers 10-20 times a second over diagnostics.
 
+### Where the speedometer and the boost gauges end (0.58.0)
+
+**Settings > Speedometer up to**: 260 km/h (160 mph), or 330 km/h (200 mph) for an M car, numbered by 30s - every
+layout's speedometer. **Settings > Boost gauge up to**: 1.0 - 3.5 bar, every boost gauge and bar shown in the
+pressure unit set (*Each layout's own*: 1.6 bar, the M layout's 3 bar). The Car profile app sets both for every app
+that has them, with the fuel gauge's *Fuel % from* and the tank's size.
+
 ### Every reading the car gives, in every place (0.57.0)
 
 A readout place (Readout 1 / 2, the main readout, the bottom line, each layout's own readout places on the page) can

@@ -73,7 +73,9 @@ function view(key, d, u, warn) {
     const warmAt = key === 'oil' && warn && isNum(warn.oilWarm) ? warn.oilWarm : null;
     const level = !isNum(raw) ? 'none' : isNum(hi) && raw >= hi ? 'warn' : isNum(lo) && raw <= lo ? 'warn' : isNum(r.cold) && raw < r.cold ? 'cold' : isNum(warmAt) && raw < warmAt ? 'warm' : 'ok';
     const text = isNum(v) ? (r.kind === 'kw' && v > 0.05 ? '+' : '') + v.toFixed(decimals(r.kind, v, u)) : '--';
-    const lo2 = convert(r.kind, r.min, u), hi2 = convert(r.kind, r.max, u);
+    // (boost to Settings > Boost gauge up to, bar: the Car profile's where it sets it)
+    const top = /^boost/.test(key) && u && isNum(u.boostMax) && u.boostMax > 0 ? u.boostMax : r.max;
+    const lo2 = convert(r.kind, r.min, u), hi2 = convert(r.kind, top, u);
     const warnAt = isNum(hi) ? Math.max(0, Math.min(2, (convert(r.kind, hi, u) - lo2) / (hi2 - lo2))) : 2;
     return { key, title: r.title, short: r.short, icon: r.icon || 0, value: isNum(v) ? v : null, text, unit: unitText(r.kind, u), frac: isNum(v) ? Math.max(0, Math.min(1, (v - lo2) / (hi2 - lo2))) : 0, warnAt, level };
 }

@@ -43,7 +43,7 @@ const A0 = -132, A1 = 132;      // the dials' sweep: 0 at about eight o'clock, t
 function dial(o, which, cx, cy, size) {
     const R = size / 2, k = size / 600, kmh = o.speedUnit === 'kmh', rs = C.rpmScale(o);
     const speed = which === 'speed';
-    const sc = speed ? (kmh ? [260, 20, 10, 5] : [160, 20, 10, 5]) : [rs.max, 1, 1, 0.5];
+    const ss = C.speedScale(o), sc = speed ? [ss.max, ss.major, 10, 5] : [rs.max, 1, 1, 0.5];
     const red = speed ? sc[0] + 1 : rs.red;
     // the tach in an electric drive: the battery's power, regeneration below its 0 (as Classic M's)
     const elec = (d) => !speed && C.electric(o, d);

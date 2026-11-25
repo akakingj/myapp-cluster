@@ -337,9 +337,14 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   50 / 100 on the thousands' figures (the rpm figures blank, no new layers: 56 of 60), POWER % with eDRIVE, CHARGE
   or eBOOST under it; the rpm figures stayed and 0 - 100 drew from the start before. GT3, Pulse, Simple and Track
   (figures only) left as they are. Centre 0.14.17: the same shared shaders.js.
-- Layouts 0.57.1 (Nov 25 2026): Settings > Fuel % from follows the Car profile app's *Fuel % from* (Car profile
-  1.7.4), as Fuel tank size does: the engine unit's tank level or the litres over the tank's size, set once for
-  Layouts and AK Cluster ID8.
+- Layouts 0.58.0, Centre 0.14.19, Info 1.10.16 (Nov 25 2026), with Car profile 1.8.0: Settings > Fuel % from follows
+  the Car profile's *Fuel % from*, as Fuel tank size does. New: Settings > **Speedometer up to** (260 km/h, 330 km/h
+  for an M car: 0-330 by 30s, 200 mph) for every speedometer (layout_common.speedScale; Twin cowl's own scale went
+  to it) and the speed-in-the-other-unit bar, and **Boost gauge up to** (1.0 - 3.5 bar; 0: each layout's own, 1.6
+  bar, the M layout's 0-3 bar / 0-40 psi) for every boost gauge and bar (layout_common.boostTop; the M layout's
+  figures from it in the pressure unit), each following the Car profile's. main.js setScales holds them for the
+  readings' bars. Centre: Boost gauge up to (2 bar as it was) for its boost readings. Vehicle takes the Car
+  profile's new Engine "Petrol, M car" as petrol. Info: the Korean words only.
 - Layouts 0.57.0, Centre 0.14.18 (Nov 25 2026): every reading the car gives in every place, the same as AK Cluster
   ID8's, as the owner asked. Readout places add the rpm, the speed in the other unit, the outside temperature, the
   fuel level, oil pressure, the 12 V voltage, both fuel pressures, the boost target, this drive's peak boost and peak

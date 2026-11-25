@@ -94,7 +94,9 @@ mgu.run({
             placesFor(id).forEach((p) => { if (typeof own[p.key] === 'string') out[p.key] = own[p.key]; });
             return out;
         };
-        const options = () => ({
+        // (the speedometers' and boost gauges' ends, for the readings' bars too: layout_common.setScales)
+        const scaled = (o) => { require('./layout_common').setScales(o); return o; };
+        const options = () => scaled({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
             powerUnit: settings.get('powerUnit'), econUnit: settings.get('econUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), jdmCup: slot('jdmCup'), centreView: slot('centreView'), stripBars: settings.get('stripBars'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'), places: placesOf(layout.id),
             yellowFrom: Number(settings.get('yellowLight')) || 0, shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
@@ -106,6 +108,8 @@ mgu.run({
             cluster: 'standard', bottomStrip: 'stock', boxBezel: false,
             vehicle: D.vehicle().vehicle,      // set, or found from the car (Auto)
             fuel: D.vehicle().fuel,            // (Settings > Vehicle: Diesel, else petrol: no ignition timing on a diesel)
+            // where the speedometers and the boost gauges end (Settings, or the Car profile's)
+            speedMax: settings.get('speedMax'), boostMax: settings.get('boostMax'),
         });
         /** Live: demo data on, or the car's signals answer (a parked car sends nothing new for minutes, so a
          * provider that is there counts), or a value came in the last STALE_MS. */

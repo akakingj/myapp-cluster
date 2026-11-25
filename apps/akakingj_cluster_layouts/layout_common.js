@@ -30,8 +30,24 @@ const rpmShown = (d) => {
     return heldRpm;
 };
 
-/** The speed scale for the unit: { max, major, minor }. */
-const speedScale = (o) => (o.speedUnit === 'kmh' ? { max: 260, major: 20, minor: 10 } : { max: 160, major: 20, minor: 5 });
+/*
+ * Where the speedometers and the boost gauges end: Settings > Speedometer up to (260 or 330 km/h) and Boost gauge up
+ * to (bar; 0: each layout's own), the Car profile's where it sets them. Held here for the readings' bars, which are
+ * given the car's data alone (main.js setScales, as the options change).
+ */
+const scales = { speedKmh: 260, boost: 0 };
+function setScales(o) {
+    scales.speedKmh = o && Number(o.speedMax) === 330 ? 330 : 260;
+    scales.boost = o && Number(o.boostMax) > 0 ? Number(o.boostMax) : 0;
+}
+/** A boost gauge's top, bar: Settings' Boost gauge up to, else the layout's own (own). */
+const boostTop = (own) => scales.boost || own;
+/** The speed scale for the unit: { max, major, minor }. 330 km/h (an M car's): 0 to 330 by 30s; 200 mph. */
+const speedScale = (o) => {
+    const m = (o && Number(o.speedMax) === 330) || (!o && scales.speedKmh === 330);
+    return o && o.speedUnit !== 'kmh' ? (m ? { max: 200, major: 20, minor: 5 } : { max: 160, major: 20, minor: 5 })
+        : m ? { max: 330, major: 30, minor: 10 } : { max: 260, major: 20, minor: 10 };
+};
 /** Engine speed in thousands: the scale's end (5-10) and the red zone's start. */
 function rpmScale(o) {
     const max = Math.max(5, Math.min(10, Math.round((o.rpmMax || 8000) / 1000)));
@@ -340,7 +356,7 @@ const torqueText = (o) => (d) => (isNum(d.torque) ? torqueNum(o, d.torque) + ' '
 /** Ignition timing: a tenth under 10 degrees, whole from 10 ('24°': '24.0°' ran over Track's tile). */
 const timingText = (d) => (isNum(d.timing) ? (Math.abs(d.timing) < 10 ? d.timing.toFixed(1) : String(Math.round(d.timing))) + '°' : '--');
 /** Boost (bar over atmosphere) 0..1.6 as 0..1. */
-const boostFrac = (d) => (d.engineOn === false || !isNum(d.boostActual) ? 0 : Math.max(0, Math.min(1, d.boostActual / 1.6)));
+const boostFrac = (d) => (d.engineOn === false || !isNum(d.boostActual) ? 0 : Math.max(0, Math.min(1, d.boostActual / boostTop(1.6))));
 /** The engine's power (kW, data.js: its torque x its speed) in Settings > Power unit: hp (the default), PS or kW. */
 const powerOf = (o) => (o && (o.powerUnit === 'ps' || o.powerUnit === 'kw') ? o.powerUnit : 'hp');
 const powerNum = (o, kw) => (!isNum(kw) ? '--' : String(Math.round(powerOf(o) === 'kw' ? kw : kw * (powerOf(o) === 'ps' ? 1.35962 : 1.34102))));
@@ -442,16 +458,16 @@ const READOUTS = {
     rpm: { short: 'RPM', long: 'ENGINE SPEED', num: (o, d) => { const v = rpmShown(d); return v === null ? '--' : String(v); }, unit: () => 'rpm', frac: (d) => (isNum(d.rpm) ? d.rpm / 8000 : 0) },
     // the speed in the other unit (km/h under mph, mph under km/h), its unit for its name
     speed2: { short: (o) => (o.speedUnit === 'kmh' ? 'MPH' : 'KM/H'), long: (o) => (o.speedUnit === 'kmh' ? 'MPH' : 'KM/H'),
-        num: (o, d) => (isNum(d.speed) ? String(Math.round(Math.max(0, o.speedUnit === 'kmh' ? d.speed / KMH_PER_MPH : d.speed))) : '--'), frac: (d) => (isNum(d.speed) ? d.speed / 250 : 0) },
+        num: (o, d) => (isNum(d.speed) ? String(Math.round(Math.max(0, o.speedUnit === 'kmh' ? d.speed / KMH_PER_MPH : d.speed))) : '--'), frac: (d) => (isNum(d.speed) ? d.speed / scales.speedKmh : 0) },
     outside: { short: 'OUT', long: 'OUTSIDE', num: tempOf('outside'), frac: (d) => (isNum(d.outside) ? (d.outside + 20) / 60 : 0) },
     fuel: { short: 'FUEL', long: 'FUEL', num: (o, d) => (isNum(d.fuelPct) ? Math.round(d.fuelPct) + '%' : '--'), frac: (d) => (isNum(d.fuelPct) ? d.fuelPct / 100 : 0) },
     oilPress: { short: 'OILP', long: 'OIL PRESSURE', num: (o, d) => pressNum(o, d.oilPress), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.oilPress) ? d.oilPress / 10 : 0), needs: ['oilPress'] },
     volts: { short: 'VOLT', long: 'BATTERY VOLTS', num: (o, d) => (isNum(d.volts) ? d.volts.toFixed(1) : '--'), unit: () => 'V', frac: (d) => (isNum(d.volts) ? (d.volts - 10) / 6 : 0), needs: ['volts'] },
     hpfp: { short: 'HPFP', long: 'HIGH FUEL PRESS', num: (o, d) => pressNum(o, d.hpfp), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.hpfp) ? d.hpfp / 350 : 0), needs: ['hpfp'] },
     lpfp: { short: 'LPFP', long: 'LOW FUEL PRESS', num: (o, d) => pressNum(o, d.lpfp), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.lpfp) ? d.lpfp / 8 : 0), needs: ['lpfp'] },
-    boostTarget: { short: 'TGT', long: 'BOOST TARGET', num: numOrOff((o, d) => pressNum(o, d.boostTarget)), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.boostTarget) ? d.boostTarget / 1.6 : 0), needs: ['boostActual', 'boostTarget'] },
+    boostTarget: { short: 'TGT', long: 'BOOST TARGET', num: numOrOff((o, d) => pressNum(o, d.boostTarget)), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.boostTarget) ? d.boostTarget / boostTop(1.6) : 0), needs: ['boostActual', 'boostTarget'] },
     // this drive's figures (driveSample)
-    boostPeak: { short: 'PKBST', long: 'PEAK BOOST', num: (o, d) => pressNum(o, d.boostPeak), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.boostPeak) ? d.boostPeak / 1.6 : 0), needs: ['boostActual', 'boostTarget'] },
+    boostPeak: { short: 'PKBST', long: 'PEAK BOOST', num: (o, d) => pressNum(o, d.boostPeak), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.boostPeak) ? d.boostPeak / boostTop(1.6) : 0), needs: ['boostActual', 'boostTarget'] },
     powerPeak: { short: (o) => 'PK ' + powerUnitText(o).toUpperCase(), long: 'PEAK POWER', num: (o, d) => powerNum(o, d.powerPeak), unit: (o) => powerUnitText(o), frac: (d) => (isNum(d.powerPeak) ? d.powerPeak / 200 : 0) },
     zero100: { short: (o) => (o.speedUnit === 'kmh' ? '0-100' : '0-60'), long: (o) => (o.speedUnit === 'kmh' ? '0-100 KM/H' : '0-60 MPH'),
         num: (o, d) => (isNum(d.zero100) ? d.zero100.toFixed(1) : '--'), unit: () => 's', frac: () => 0 },
@@ -752,6 +768,6 @@ const text = (key, x, y, w, h, txt, colors, extra) => Object.assign({ key, kind:
 const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colors: (t, d) => ({ color: [typeof colour === 'function' ? colour(t, d) : t[colour], 1] }) });
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

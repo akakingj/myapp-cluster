@@ -49,6 +49,7 @@ function makeScene(opts) {
     const client = new FakeClient();
     let data = opts.data || {};
     const o = Object.assign({ speedUnit: 'mph', tempUnit: 'f', centre: 'info', redline: 7000, rpmMax: 8000 }, opts.options);
+    require(path.join(APP, 'layout_common')).setScales(o);     // (as main.js: the speedometers' and boost gauges' ends)
     const engine = startCluster({
         client, log: opts.log || nullLog,
         layout: () => byId(opts.layout || 'analog_sport'),
