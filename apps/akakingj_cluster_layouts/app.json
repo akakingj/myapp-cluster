@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.58.1",
+  "version": "0.59.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -391,6 +391,39 @@
         [
           "stock",
           "Stock (the stock centre content)"
+        ]
+      ],
+      "section": "Display"
+    },
+    {
+      "key": "bottomExtra",
+      "label": "BMW's bottom strip",
+      "type": "choice",
+      "default": "18",
+      "options": [
+        [
+          "0",
+          "Show all of it"
+        ],
+        [
+          "6",
+          "Trim its top edge: 6 px"
+        ],
+        [
+          "12",
+          "Trim its top edge: 12 px"
+        ],
+        [
+          "18",
+          "Trim its top edge: 18 px"
+        ],
+        [
+          "hideWide",
+          "Hide it, a wider gap left beside the gear"
+        ],
+        [
+          "hide",
+          "Hide it (BMW's own gear letter stays)"
         ]
       ],
       "section": "Display"

@@ -2815,5 +2815,12 @@
   "260 km/h (160 mph)": "260 km/h (160 mph)",
   "330 km/h (200 mph)": "330 km/h (200 mph)",
   "Boost gauge up to": "부스트 게이지 최고값",
-  "From the car's Sport Display": "차량 스포츠 디스플레이 값"
+  "From the car's Sport Display": "차량 스포츠 디스플레이 값",
+  "BMW's bottom strip": "BMW 하단바",
+  "Show all of it": "모두 보이기",
+  "Trim its top edge: 6 px": "위쪽 가장자리 6 px 가리기",
+  "Trim its top edge: 12 px": "위쪽 가장자리 12 px 가리기",
+  "Trim its top edge: 18 px": "위쪽 가장자리 18 px 가리기",
+  "Hide it, a wider gap left beside the gear": "숨기기, 기어 옆은 더 넓게 비움",
+  "Hide it (BMW's own gear letter stays)": "숨기기 (BMW 기어 글자는 남음)"
 }

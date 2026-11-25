@@ -349,6 +349,13 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.59.0, Centre 0.14.20, Info 1.10.17 (Nov 25 2026): Settings > **BMW's bottom strip** (bottomExtra, Display),
+  the owner's ask so both AK Cluster ID8 and Layouts can be tried on the car: 0 (nothing below the layout), 6 / 12 / 18
+  (layouts.js blackBand: a black band that far below 646, over the drive mode and gear x 1196-1424 only to 658; 18 as it
+  comes, to the row above the gear's window), hide and hideWide (the band at 18, then two covers to the screen's foot
+  either side of GEAR_KEEP x 1384-1500 / GEAR_KEEP_WIDE x 1340-1500), at most 3 pieces, none in the gear's window
+  (tools/test_engine.js). The band was to 662 before (658 over the drive mode). Centre and Info +0.0.1 for the
+  translations.
 - Layouts 0.58.0, Centre 0.14.19, Info 1.10.16 (Nov 25 2026), with Car profile 1.8.0: Settings > Fuel % from follows
   the Car profile's *Fuel % from*, as Fuel tank size does. New: Settings > **Speedometer up to** (260 km/h, 330 km/h
   for an M car: 0-330 by 30s, 200 mph) for every speedometer (layout_common.speedScale; Twin cowl's own scale went

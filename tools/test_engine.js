@@ -122,7 +122,7 @@ LAYOUTS.forEach((L) => {
  */
 const { clashes } = require('./clearance');
 /* the car's own strip: no background below CUT_Y but the black band, nothing small crossing it */
-const { CUT_Y, BG_Y, BG_NOTCH, BG_NOTCH_Y } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
+const { CUT_Y, BG_NOTCH, BG_NOTCH_Y, GEAR_WINDOW, GEAR_KEEP, GEAR_KEEP_WIDE, STRIP_TRIM_MAX, STRIP_COVERS, blackBand, overGear } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
 LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + centre + ', ' + vehicle + '): the layout ends at y ' + CUT_Y + ', at most 60 pieces, clear of the cowl and corners', () => {
     // (the options as an older save might pass them: the layouts hold the car's strip whatever they say)
     const o = { speedUnit: 'mph', tempUnit: 'f', centre, redline: 7000, rpmMax: 8000, vehicle, cluster: 'm', bottomStrip: 'layout' };
@@ -131,14 +131,50 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ic
     assert(ps.length <= 60, ps.length + ' pieces: the renderer draws 64 layers an app');
     const low = ps.filter((p) => p.y + p.h > CUT_Y && !/^bgBand/.test(p.key) && (/^bg/.test(p.key) || p.kind === 'flat' || p.kind === 'panel' || p.kind === 'flag' || p.h <= 80));
     assert(!low.length, low.map((p) => p.key + ' ' + p.y + '+' + p.h).join(', '));
-    // the black band below, to BG_Y, over the stock dials' edges, but not over the strip's drive mode and gear
+    // as it comes (BMW's bottom strip: 18 px), the black band below to the row above the gear's window, over the
+    // stock dials' edges, but over the strip's drive mode and gear only to BG_NOTCH_Y (short of their tops at 660)
     const band = ps.filter((p) => /^bgBand/.test(p.key));
-    // the band to BG_Y, but over the drive mode and gear only to BG_NOTCH_Y (short of their tops at 660)
-    assert(band.length === 3 && band.every((p) => p.y === CUT_Y && (p.x + p.w <= BG_NOTCH[0] || p.x >= BG_NOTCH[1] ? p.y + p.h === BG_Y : p.y + p.h === BG_NOTCH_Y && BG_NOTCH_Y < 660)), JSON.stringify(band.map((p) => [p.x, p.w, p.h])));
+    assert(band.length === 3 && band.every((p) => p.y === CUT_Y && (p.x + p.w <= BG_NOTCH[0] || p.x >= BG_NOTCH[1] ? p.y + p.h === CUT_Y + STRIP_TRIM_MAX : p.y + p.h === BG_NOTCH_Y && BG_NOTCH_Y < 660)), JSON.stringify(band.map((p) => [p.x, p.w, p.h])));
     assert(ps.some((p) => /^bg/.test(p.key)), 'a background still');
     const bad = ps.map((p) => [p.key, clashes(p, o)]).filter(([, c]) => c.length).map(([k, c]) => k + ' ' + c.join(', '));
     assert(!bad.length, bad.join('; '));
 }))));
+
+/* BMW's bottom strip (bottomExtra, as AK Cluster ID8's): each choice's black pieces, none of them ever in the gear's
+ * window (the KOMBI's fallback gear box), at most 3, in every layout */
+check('BMW\'s bottom strip: show all, the three trims, hide and hide with the wider gap - never over the gear', () => {
+    assert.strictEqual(STRIP_TRIM_MAX, 18);
+    assert.strictEqual(GEAR_WINDOW.y, CUT_Y + STRIP_TRIM_MAX + 1, 'the largest trim ends on the row above the gear\'s window');
+    const foot = (b) => Math.max(...b.map((p) => p.y + p.h));
+    STRIP_COVERS.forEach((v) => {
+        const b = blackBand({ bottomExtra: v });
+        assert(b.length <= 3, v + ': ' + b.length + ' pieces');
+        b.forEach((p) => assert(!overGear(p), v + ': ' + p.key + ' over the gear\'s window ' + JSON.stringify([p.x, p.y, p.w, p.h])));
+        b.forEach((p) => assert(p.y >= CUT_Y && p.x >= 0 && p.x + p.w <= 1920 && p.y + p.h <= 720, v + ': ' + p.key + ' off the strip'));
+    });
+    assert.deepStrictEqual(blackBand({ bottomExtra: '0' }), [], 'show all of it: nothing below the layout');
+    assert.strictEqual(foot(blackBand({ bottomExtra: '6' })), CUT_Y + 6);
+    assert.strictEqual(foot(blackBand({ bottomExtra: '12' })), CUT_Y + 12);
+    assert.strictEqual(foot(blackBand({ bottomExtra: '18' })), CUT_Y + 18);
+    // an unknown value (or none) is the default, 18
+    assert.deepStrictEqual(blackBand({}).map((p) => [p.x, p.y, p.w, p.h]), blackBand({ bottomExtra: '18' }).map((p) => [p.x, p.y, p.w, p.h]));
+    // hidden: to the screen's foot either side of the gear's columns, the left cover a column short of its window
+    [['hide', GEAR_KEEP], ['hideWide', GEAR_KEEP_WIDE]].forEach(([v, k]) => {
+        const b = blackBand({ bottomExtra: v });
+        assert.strictEqual(foot(b), 720, v);
+        const l = b.find((p) => p.x === 0 && p.y + p.h === 720), r = b.find((p) => p.x > GEAR_WINDOW.x && p.y + p.h === 720);
+        assert(l && r && l.w === k.x && r.x === k.x + k.w && r.x + r.w === 1920, v + ' ' + JSON.stringify(b.map((p) => [p.x, p.y, p.w, p.h])));
+        assert(l.x + l.w < GEAR_WINDOW.x && r.x >= GEAR_WINDOW.x + GEAR_WINDOW.w, v + ': the gear\'s window left open');
+    });
+    assert.strictEqual(GEAR_KEEP.x, GEAR_WINDOW.x - 1);
+    // every layout, every choice: the band with the backgrounds, the layout's own pieces unchanged, at most 60 in all
+    LAYOUTS.forEach((L) => STRIP_COVERS.forEach((v) => {
+        const ps = L.pieces({ centre: 'info', vehicle: 'ice', bottomExtra: v });
+        assert(ps.length <= 60, L.id + ' ' + v + ': ' + ps.length + ' pieces');
+        assert(!ps.some((p) => !/^bgBand/.test(p.key) && overGear(p) && !/^bg/.test(p.key) && p.kind === 'flat'), L.id + ' ' + v);
+        assert.strictEqual(ps.filter((p) => /^bgBand/.test(p.key)).length, blackBand({ bottomExtra: v }).length, L.id + ' ' + v);
+    }));
+});
 
 /* the car's own bottom strip, the readings in the centre: no range numbers (the strip shows both), the fuel
  * gauge bottom left (Retro: its own, in the speedometer) and the charge bottom right on a plug-in hybrid,
