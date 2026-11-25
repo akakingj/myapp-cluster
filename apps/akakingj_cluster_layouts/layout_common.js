@@ -45,6 +45,20 @@ function setScales(o) {
 }
 /** A boost gauge's top, bar: Settings' Boost gauge up to, else the layout's own (own). */
 const boostTop = (own) => scales.boost || own;
+/**
+ * A boost scale's numbers, evenly apart: the end divided in 3 (four numbers) where the step is a whole figure (psi
+ * and kPa whole, bar to a tenth), else in 4, 2 or 5 - each number at least a quarter of the scale from the next (bar's
+ * and kPa's wider figures three tenths) - else in 2 with a decimal more: 0 5 10 15, 0 5 10 15 20, 0 10 20 30,
+ * 0 10 20 30 40, 0 25 50; 0.0 1.0 2.0 3.0; 0 17.5 35. end in the unit. [[at 0..1, text]]
+ */
+function boostTicks(end, unit) {
+    const dec = unit === 'bar' ? 1 : 0, room = unit === 'psi' ? 0.25 : 0.3;
+    const whole = (v) => Math.abs(v * Math.pow(10, dec) - Math.round(v * Math.pow(10, dec))) < 1e-6;
+    const k = [3, 4, 2, 5].find((n) => whole(end / n) && 1 / n >= room - 1e-9) || 2;
+    // (each with the decimals it needs: 0 17.5 35, 0.0 1.25 2.5)
+    const text = (v) => v.toFixed(whole(v) ? dec : dec + 1);
+    return Array.from({ length: k + 1 }, (_, i) => [i / k, text(i * end / k)]);
+}
 /** A boost reading (bar) as a share of its gauge: in psi on the pair's psi end where Boost gauge up to is set. */
 const boostShare = (v, own) => (scales.boost && scales.psi && BOOST_PSI[scales.boost] ? v * 14.5038 / BOOST_PSI[scales.boost] : v / boostTop(own));
 /** The speed scale for the unit: { max, major, minor }. 330 km/h (an M car's): 0 to 330 by 30s; 200 mph. */
@@ -773,6 +787,6 @@ const text = (key, x, y, w, h, txt, colors, extra) => Object.assign({ key, kind:
 const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colors: (t, d) => ({ color: [typeof colour === 'function' ? colour(t, d) : t[colour], 1] }) });
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, boostShare, BOOST_PSI, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, boostShare, boostTicks, BOOST_PSI, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

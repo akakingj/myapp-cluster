@@ -1702,6 +1702,8 @@ uniform vec3 u_track;
 uniform vec3 u_redc;
 uniform vec4 u_lab;       /* the scale's three numbers (at u_marks.x, .y, .z: the first left-aligned at the start, the
                            * last right-aligned at the end, the middle one centred), w: decimals */
+uniform vec4 u_lab4;      /* a fourth and a fifth number: each one's place (-1: none) and the number - a boost scale
+                           * numbered evenly, 0 5 10 15 20 */
 uniform vec4 u_glyph;     /* their glyphs: the figure 0's code, '-', '.', a figure's advance (glyph heights) */
 uniform vec2 u_glyph2;    /* '-' and '.' advances; */
 uniform float u_labH;     /* the numbers' glyph height px (0: none), their cells' top 34 px below the layer's top */
@@ -1755,7 +1757,9 @@ void main() {
     /* dark notches at the labels (written out: no loop) */
     float nd = min(min(u_marks.x > 0.001 && u_marks.x < 0.999 ? abs(xs - (x0 + u_marks.x * L)) : 99.0,
                        u_marks.y > 0.001 && u_marks.y < 0.999 ? abs(xs - (x0 + u_marks.y * L)) : 99.0),
-                   u_marks.z > 0.001 && u_marks.z < 0.999 ? abs(xs - (x0 + u_marks.z * L)) : 99.0);
+                   min(u_marks.z > 0.001 && u_marks.z < 0.999 ? abs(xs - (x0 + u_marks.z * L)) : 99.0,
+                       u_lab4.x > 0.001 && u_lab4.x < 0.999 ? abs(xs - (x0 + u_lab4.x * L)) : 99.0));
+    nd = min(nd, u_lab4.z > 0.001 && u_lab4.z < 0.999 ? abs(xs - (x0 + u_lab4.z * L)) : 99.0);
     acc = over(acc, vec3(0.0), clamp(1.4 - nd + 0.5, 0.0, 1.0) * thick * 0.85);
     /* the start tick: short, red, slanted the other way */
     float tx = p.x - x0 + (p.y - yc) * 0.75;
@@ -1766,6 +1770,8 @@ void main() {
         n = max(n, label(p, u_lab.x, u_lab.w, x0 + u_marks.x * L, u_marks.x <= 0.0 ? 0.0 : 0.5, ly));
         if (u_marks.y >= 0.0) n = max(n, label(p, u_lab.y, u_lab.w, x0 + u_marks.y * L, u_marks.y >= 1.0 ? 1.0 : 0.5, ly));
         if (u_marks.z >= 0.0) n = max(n, label(p, u_lab.z, u_lab.w, x0 + u_marks.z * L, u_marks.z >= 1.0 ? 1.0 : 0.5, ly));
+        if (u_lab4.x >= 0.0) n = max(n, label(p, u_lab4.y, u_lab.w, x0 + u_lab4.x * L, u_lab4.x >= 1.0 ? 1.0 : 0.5, ly));
+        if (u_lab4.z >= 0.0) n = max(n, label(p, u_lab4.w, u_lab.w, x0 + u_lab4.z * L, u_lab4.z >= 1.0 ? 1.0 : 0.5, ly));
         acc = over(acc, u_fill, n);
     }
     gl_FragColor = acc;

@@ -78,14 +78,9 @@ function gauges(o, engine) {
         // (Settings > Pressure and Torque unit; the boost gauge's span Settings > Boost gauge up to, else 0-3 bar,
         // 0-40 psi; torque 0-500 Nm)
         const pu = C.pressUnitOf(o), tu = C.torqueUnit(o), top = C.scales.boost;
-        // (set: its end in the unit - in psi its pair's, as the car's own gauge - and between them one of the car's
-        // own figures where it falls, at or below the middle: a multiple of 5 psi to 20 psi, of 10 past it; of 0.5 bar;
-        // of 50 kPa. The bar
-        // draws three numbers.)
+        // (set: its end in the unit - in psi its pair's - numbered evenly: 0 10 20 30, 0 5 10 15 20)
         const end = !top ? 0 : pu === 'psi' ? C.BOOST_PSI[top] || Math.round(top * 14.5038) : pu === 'kpa' ? top * 100 : top;
-        const step = pu === 'psi' ? (end > 20 ? 10 : 5) : pu === 'kpa' ? 50 : 0.5;
-        const mid = Math.max(step, Math.floor(end / 2 / step + 1e-9) * step), fig = (v) => (pu === 'bar' ? v.toFixed(1) : String(Math.round(v)));
-        const boostLabels = top ? [[0, fig(0)], [mid / end, fig(mid)], [1, fig(end)]]
+        const boostLabels = top ? C.boostTicks(end, pu)
             : pu === 'psi' ? [[0, '0'], [0.5, '20'], [1, '40']] : pu === 'kpa' ? [[0, '0'], [0.5, '150'], [1, '300']] : [[0, '0.0'], [0.5, '1.5'], [1, '3.0']];
         const torqueLabels = tu === 'kgm' ? [[0, '0'], [0.5, '25'], [1, '50']] : tu === 'lb-ft' ? [[0, '0'], [0.5, '185'], [1, '370']] : [[0, '0'], [0.5, '250'], [1, '500']];
         return {
@@ -119,15 +114,19 @@ function placed(o, key) {
  * layer, not three text pieces). */
 function gauge(T, key, x, y, w, g) {
     const fg = B.role('fg'), sg = B.smallGlyphs('orb', 'm_scale');
-    const nums = g.labels.map((l) => Number(l[1])), dec = g.labels.some((l) => /\./.test(l[1])) ? 1 : 0;
+    // (the decimals the most precise number needs, for all: 0.00 1.25 2.50)
+    const nums = g.labels.map((l) => Number(l[1])), dec = Math.max(0, ...g.labels.map((l) => (/\.(\d+)/.exec(l[1]) || ['', ''])[1].length));
     const readC = (t, d) => ({ color: [(g.hi < 1 && g.value(d) >= g.hi) || (g.lo > 0 && g.value(d) <= g.lo) ? t.red : t.fg, 1], glow: [t.fg, 0] });
     return [B.icon(key + 'Icon', x - 4, y - 6, 38, 36, g.icon, 'fg')].concat(g.read ? [T(key + 'Read', [x + 46, y - 4, 170, 32], 'm_unit', g.read, readC, 'left')] : [],
         g.unit ? [T(key + 'Unit', [x + w - 90, y - 4, 90, 32], 'm_unit', g.unit, fg, 'right')] : [], [
         { key, kind: 'mbar', x: x - 6, y: y + 30, w: w + 10, h: 34 + sg.h + 2,
-            params: { u_zero: [g.zero], u_zones: [g.lo, g.hi, 0, 0], u_marks: g.labels.map((l) => l[0]).concat([-1]).slice(0, 4),
-                u_lab: nums.concat([dec]), u_glyph: sg.glyph, u_glyph2: sg.glyph2, u_labH: [sg.h] },
+            params: { u_zero: [g.zero], u_zones: [g.lo, g.hi, 0, 0], u_marks: g.labels.slice(0, 3).map((l) => l[0]).concat([-1]).slice(0, 4),
+                u_lab: nums.slice(0, 3).concat([dec]),
+                // (a fourth and a fifth: a boost scale numbered evenly, 0 5 10 15 20)
+                u_lab4: [g.labels[3] ? g.labels[3][0] : -1, g.labels[3] ? nums[3] : 0, g.labels[4] ? g.labels[4][0] : -1, g.labels[4] ? nums[4] : 0],
+                u_glyph: sg.glyph, u_glyph2: sg.glyph2, u_labH: [sg.h] },
             colors: (t) => ({ fill: t.fill, neg: t[g.neg || 'ev'], track: t.track, redc: t.red }),
-            dyn: g.nums ? (d) => ({ u_lab: g.nums(d).concat([dec]) }) : undefined,
+            dyn: g.nums ? (d) => ({ u_lab: g.nums(d).slice(0, 3).concat([dec]) }) : undefined,
             value: g.value, max: 1, sweep: true }]);
 }
 
