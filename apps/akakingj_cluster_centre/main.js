@@ -102,12 +102,12 @@ mgu.run({
             if (d.startWhy) eng.why = d.startWhy;
         }, 200);
         const all = () => Object.assign(data.data(), extra());
-        /* Boost gauge up to, From the car's Sport Display: its gauge's end as one of the pairs, once the car has sent it */
+        /* Boost gauge up to, From the car's Sport Display: its gauge's end as one of the gauges, once the car has sent it */
         const boostFromCar = () => require('./readings').snapBoost(data.data().boostMaxCar);
         let lastBoostTop = null;
         setInterval(() => {
             const b = boostFromCar();
-            if (b !== lastBoostTop) { if (lastBoostTop !== null && !Number(settings.get('boostMax'))) { log.info('boost to ' + b + ' bar (the car\'s sport display)'); rebuild(); } lastBoostTop = b; }
+            if (b !== lastBoostTop) { if (lastBoostTop !== null && !require('./readings').BOOST_GAUGES[settings.get('boostMax')]) { log.info('boost to ' + b + ' psi (the car\'s sport display)'); rebuild(); } lastBoostTop = b; }
         }, 2000);
 
         /* ---------- options for the pages ---------- */
@@ -118,8 +118,8 @@ mgu.run({
         const options = () => ({
             look: settings.get('look'), fit: settings.get('fit'), pages: enabled(), style: settings.get('style'), accent: settings.get('accent'), size: settings.get('size'),
             units: { temp: settings.get('tempUnit'), press: settings.get('pressUnit'), speed: settings.get('speedUnit'), torque: settings.get('torqueUnit'), power: settings.get('powerUnit'),
-                // (Boost gauge up to: From the car's Sport Display, 0 - its gauge's end once sent, else 2 bar)
-                boostMax: Number(settings.get('boostMax')) || boostFromCar() || 2 },
+                // (Boost gauge up to: From the car's Sport Display, 0 - its gauge's end once sent, else 30 psi / 2.0 bar)
+                boostMax: (require('./readings').BOOST_GAUGES[settings.get('boostMax')] ? Number(settings.get('boostMax')) : 0) || boostFromCar() || 30 },
             warn: { oilWarm: num('warmTarget', 80), oilHigh: num('oilHigh'), coolantHigh: num('coolantHigh'), iatHigh: num('iatHigh'), gearboxHigh: num('gearboxHigh'), battTempHigh: num('battTempHigh'), lpfpLow: num('lpfpLow') },
             // (flashes at: the set rpm, or 0 = Auto, the shift point now: features.js shiftPoint, as Cluster Layouts and Redline)
             shift: { on: settings.get('shift') !== 'off', from: num('shiftFrom', 4000), at: num('shiftAt', 0),

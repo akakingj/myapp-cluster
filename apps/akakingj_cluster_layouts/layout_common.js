@@ -36,23 +36,25 @@ const rpmShown = (d) => {
  * given the car's data alone (main.js setScales, as the options change).
  */
 const scales = { speedKmh: 260, boost: 0, psi: false };
-/* Boost gauge up to: each end a pair, as the car's own gauge reads it in psi (0 5 10 15, or 0 10 20 30) */
-const BOOST_PSI = { 1: 15, 1.5: 20, 2: 30, 2.5: 35, 3: 40, 3.5: 50 };
+/* Boost gauge up to: the car's own boost gauges, each by its end in psi - in bar 2.0 up to 30 psi, 3.0 at 45 (kPa a
+   hundredfold) */
+const BOOST_GAUGES = { 15: { psi: 15, bar: 2 }, 20: { psi: 20, bar: 2 }, 30: { psi: 30, bar: 2 }, 45: { psi: 45, bar: 3 } };
 function setScales(o) {
     scales.speedKmh = o && Number(o.speedMax) === 330 ? 330 : 260;
-    scales.boost = o && Number(o.boostMax) > 0 ? Number(o.boostMax) : 0;
+    scales.boost = o && BOOST_GAUGES[Number(o.boostMax)] ? Number(o.boostMax) : 0;
     scales.psi = !!o && pressUnitOf(o) === 'psi';
 }
-/** The car's sport display's boost gauge end (bar) as one of Boost gauge up to's pairs: the least at or over it, within
- * 5 % (a car set to psi ends at 15 psi, 1.034 bar: the 1.0 bar / 15 psi pair). */
-const snapBoost = (bar) => (isNum(bar) && bar > 0 ? Object.keys(BOOST_PSI).map(Number).sort((a, b) => a - b).find((v) => v * 1.05 >= bar) || 3.5 : 0);
-/** A boost gauge's top, bar: Settings' Boost gauge up to, else the layout's own (own). */
-const boostTop = (own) => scales.boost || own;
-const BOOST_TICKS = { 10: [0, 5, 10], 15: [0, 5, 10, 15], 20: [0, 10, 20], 25: [0, 15, 25], 30: [0, 10, 20, 30], 35: [0, 15, 25, 35], 40: [0, 20, 40], 50: [0, 25, 50] };
+/** The car's sport display's boost gauge end (bar) as one of Boost gauge up to's gauges (psi): the least at or over it,
+ * within 5 % (200 kPa, 29 psi: 30 psi / 2.0 bar). */
+const snapBoost = (bar) => (isNum(bar) && bar > 0 ? [15, 20, 30, 45].find((p) => p * 1.05 >= bar * 14.5038) || 45 : 0);
+/** A boost gauge's top, bar: Settings' Boost gauge up to's, else the layout's own (own). */
+const boostTop = (own) => (scales.boost ? BOOST_GAUGES[scales.boost].bar : own);
+const BOOST_TICKS = { 15: [0, 5, 10, 15], 20: [0, 10, 20], 30: [0, 10, 20, 30], 45: [0, 15, 30, 45] };
 /**
- * A boost scale's numbers by its end's figure (psi as it is, bar x 10, kPa / 10): 15 0 5 10 15, 20 0 10 20, 30 0 10 20 30,
- * 35 0 15 25 35, 40 0 20 40, 50 0 25 50; 10 0 5 10, 25 0 15 25 - in bar 0.0 1.5 2.5 3.5, in kPa 0 150 250 350. Any
- * other end: 0, its middle and it. end in the unit. [[at 0..1, text]] (M Vitals' and AK Cluster ID8's the same)
+ * A boost scale's numbers as the car's own gauges number them, by the end's figure (psi as it is, bar x 10, kPa / 10):
+ * 0 5 10 15, 0 10 20, 0 10 20 30, 0 15 30 45 psi; 0.0 1.0 2.0, 0.0 1.0 2.0 3.0 bar; 0 100 200,
+ * 0 100 200 300 kPa. Any other end: 0, its middle and it. end in the unit. [[at 0..1, text]] (M Vitals' and AK Cluster
+ * ID8's the same)
  */
 function boostTicks(end, unit) {
     const per = unit === 'bar' ? 10 : unit === 'kpa' ? 0.1 : 1, f = Math.round(end * per);
@@ -60,8 +62,8 @@ function boostTicks(end, unit) {
     const dec = unit === 'bar' ? 1 : 0, whole = (v) => Math.abs(v * Math.pow(10, dec) - Math.round(v * Math.pow(10, dec))) < 1e-6;
     return at.map((v) => [v / end, v.toFixed(whole(v) ? dec : dec + 1)]);
 }
-/** A boost reading (bar) as a share of its gauge: in psi on the pair's psi end where Boost gauge up to is set. */
-const boostShare = (v, own) => (scales.boost && scales.psi && BOOST_PSI[scales.boost] ? v * 14.5038 / BOOST_PSI[scales.boost] : v / boostTop(own));
+/** A boost reading (bar) as a share of its gauge: in psi on its psi end where Boost gauge up to is set. */
+const boostShare = (v, own) => (scales.boost && scales.psi ? v * 14.5038 / BOOST_GAUGES[scales.boost].psi : v / boostTop(own));
 /** The speed scale for the unit: { max, major, minor }. 330 km/h (an M car's): 0 to 330 by 30s; 200 mph. */
 const speedScale = (o) => {
     const m = (o && Number(o.speedMax) === 330) || (!o && scales.speedKmh === 330);
@@ -788,6 +790,6 @@ const text = (key, x, y, w, h, txt, colors, extra) => Object.assign({ key, kind:
 const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colors: (t, d) => ({ color: [typeof colour === 'function' ? colour(t, d) : t[colour], 1] }) });
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, boostShare, boostTicks, snapBoost, BOOST_PSI, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

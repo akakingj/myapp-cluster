@@ -1184,25 +1184,21 @@
       "profile": "boostMax",
       "label": "Boost gauge up to",
       "type": "number",
-      "unit": "bar",
+      "unit": "psi",
       "default": 0,
       "labels": {
         "0": "From the car's Sport Display",
-        "1": "1.0 bar / 15 psi",
-        "1.5": "1.5 bar / 20 psi",
-        "2": "2.0 bar / 30 psi",
-        "2.5": "2.5 bar / 35 psi",
-        "3": "3.0 bar / 40 psi",
-        "3.5": "3.5 bar / 50 psi"
+        "15": "15 psi / 2.0 bar",
+        "20": "20 psi / 2.0 bar",
+        "30": "30 psi / 2.0 bar",
+        "45": "45 psi / 3.0 bar"
       },
       "steps": [
         0,
-        1.0,
-        1.5,
-        2.0,
-        2.5,
-        3.0,
-        3.5
+        15,
+        20,
+        30,
+        45
       ],
       "section": "Readouts and gauges",
       "hidden": true

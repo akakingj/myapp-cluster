@@ -393,39 +393,39 @@ check('the speedometers\' and boost gauges\' ends: Settings > Speedometer up to 
     assert.deepStrictEqual(C.speedScale(o({ speedMax: '330' })), { max: 330, major: 30, minor: 10 });
     assert.deepStrictEqual(C.speedScale(o({ speedMax: '330', speedUnit: 'mph' })), { max: 200, major: 20, minor: 5 });
     assert.deepStrictEqual(C.speedScale(o({ speedUnit: 'mph' })), { max: 160, major: 20, minor: 5 });
-    // the bars: boost 1.0 bar on the layouts' own 1.6, then on 2.5; the speed in the other unit to 260 or 330 km/h
+    // the bars: boost 1.0 bar on the layouts' own 1.6, then on the gauge set; the speed in the other unit to 260 or 330 km/h
     C.setScales(o());
     assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 1 / 1.6) < 1e-9);
     assert.ok(Math.abs(C.READOUTS.speed2.frac({ speed: 130 }) - 0.5) < 1e-9);
-    C.setScales(o({ boostMax: 2.5, speedMax: '330', pressUnit: 'bar' }));
-    assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 1 / 2.5) < 1e-9);
-    assert.ok(Math.abs(C.READOUTS.boostTarget.frac({ boostTarget: 1.25 }) - 0.5) < 1e-9);
+    C.setScales(o({ boostMax: 45, speedMax: '330', pressUnit: 'bar' }));
+    assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 1 / 3) < 1e-9, '45 psi: a 3.0 bar gauge');
+    assert.ok(Math.abs(C.READOUTS.boostTarget.frac({ boostTarget: 1.5 }) - 0.5) < 1e-9);
     assert.ok(Math.abs(C.READOUTS.speed2.frac({ speed: 165 }) - 0.5) < 1e-9);
-    // in psi the pair's end, as the car's own gauge: 2.0 bar is a 30 psi gauge, 2.5 bar a 35 psi one
-    C.setScales(o({ boostMax: 2, pressUnit: 'psi' }));
+    C.setScales(o({ boostMax: 15, pressUnit: 'kpa' }));
+    assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 1 / 2) < 1e-9, '15 psi: in bar and kPa a 2.0 bar gauge');
+    // in psi its own end
+    C.setScales(o({ boostMax: 30, pressUnit: 'psi' }));
     assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 14.5038 / 30) < 1e-9);
-    assert.deepStrictEqual(C.BOOST_PSI, { 1: 15, 1.5: 20, 2: 30, 2.5: 35, 3: 40, 3.5: 50 });
-    // the numbers by the end's figure, the same in each unit
+    assert.deepStrictEqual(C.BOOST_GAUGES, { 15: { psi: 15, bar: 2 }, 20: { psi: 20, bar: 2 }, 30: { psi: 30, bar: 2 }, 45: { psi: 45, bar: 3 } });
+    // the numbers as the car's own gauges
     const ticks = (e, u) => C.boostTicks(e, u).map((t) => t[1]).join(' ');
-    assert.deepStrictEqual([15, 20, 30, 35, 40, 50].map((e) => ticks(e, 'psi')),
-        ['0 5 10 15', '0 10 20', '0 10 20 30', '0 15 25 35', '0 20 40', '0 25 50']);
-    assert.deepStrictEqual([1, 1.5, 2, 2.5, 3, 3.5].map((e) => ticks(e, 'bar')),
-        ['0.0 0.5 1.0', '0.0 0.5 1.0 1.5', '0.0 1.0 2.0', '0.0 1.5 2.5', '0.0 1.0 2.0 3.0', '0.0 1.5 2.5 3.5']);
-    assert.deepStrictEqual([100, 150, 200, 250, 300, 350].map((e) => ticks(e, 'kpa')),
-        ['0 50 100', '0 50 100 150', '0 100 200', '0 150 250', '0 100 200 300', '0 150 250 350']);
-    assert.deepStrictEqual(C.boostTicks(35, 'psi').map((t) => +t[0].toFixed(3)), [0, 0.429, 0.714, 1], 'each at its place');
-    assert.deepStrictEqual(SPEC.settings.find((x) => x.key === 'boostMax').steps, [0, 1, 1.5, 2, 2.5, 3, 3.5]);
-    // From the car's Sport Display (0): its gauge's end as the least pair at or over it; set in the Car profile alone
+    assert.deepStrictEqual([15, 20, 30, 45].map((e) => ticks(e, 'psi')), ['0 5 10 15', '0 10 20', '0 10 20 30', '0 15 30 45']);
+    assert.deepStrictEqual([2, 3].map((e) => ticks(e, 'bar')), ['0.0 1.0 2.0', '0.0 1.0 2.0 3.0']);
+    assert.deepStrictEqual([200, 300].map((e) => ticks(e, 'kpa')), ['0 100 200', '0 100 200 300']);
+    assert.deepStrictEqual(C.boostTicks(45, 'psi').map((t) => +t[0].toFixed(3)), [0, 0.333, 0.667, 1], 'evenly apart');
     const bm = SPEC.settings.find((x) => x.key === 'boostMax');
+    assert.deepStrictEqual(bm.steps, [0, 15, 20, 30, 45]);
+    // From the car's Sport Display (0): its gauge's end as the least at or over it, within 5 %; set in the Car profile alone
     assert.deepStrictEqual([bm.default, bm.hidden, bm.labels['0']], [0, true, 'From the car\'s Sport Display']);
-    assert.deepStrictEqual([C.snapBoost(1.16), C.snapBoost(1.5), C.snapBoost(3.9), C.snapBoost(undefined)], [1.5, 1.5, 3.5, 0]);
-    // a car's own gauge ends in its unit land on their pairs: 200 kPa, 15 / 20 / 30 / 35 / 40 / 50 psi
-    assert.deepStrictEqual([2, ...[15, 20, 30, 35, 40, 50].map((p) => p / 14.5038)].map(C.snapBoost), [2, 1, 1.5, 2, 2.5, 3, 3.5]);
-    assert.strictEqual(R.snapBoost(1.16), 1.5);
+    assert.deepStrictEqual([1.16, 2.5, 3.9, undefined].map(C.snapBoost), [20, 45, 45, 0]);
+    // a car's own gauge ends in its unit: 200 kPa, 2.0 / 3.0 bar; 15 / 20 / 30 / 45 psi
+    assert.deepStrictEqual([2, 3, ...[15, 20, 30, 45].map((p) => p / 14.5038)].map(C.snapBoost), [30, 45, 15, 20, 30, 45]);
+    assert.strictEqual(R.snapBoost(2), 30);
     C.setScales(o());
     // Centre: boost on its 2 bar, or Boost gauge up to
     assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'bar' }).frac - 0.5) < 1e-9);
-    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'bar', boostMax: 2.5 }).frac - 0.4) < 1e-6);
-    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'psi', boostMax: 2.5 }).frac - 14.5038 / 35) < 1e-3);
+    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'bar', boostMax: 45 }).frac - 1 / 3) < 1e-6);
+    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'kpa', boostMax: 20 }).frac - 0.5) < 1e-6);
+    assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'psi', boostMax: 20 }).frac - 14.5038 / 20) < 1e-3);
 });
 console.log(n + ' passed');

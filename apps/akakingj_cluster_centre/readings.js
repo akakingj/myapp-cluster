@@ -5,11 +5,11 @@
  * pick from this list; the built-in pages use it too, so units and warnings are the same everywhere.
  */
 const isNum = (v) => typeof v === 'number' && isFinite(v);
-/* Boost gauge up to: each end a pair, as the car's own gauge reads it in psi */
-const BOOST_PSI = { 1: 15, 1.5: 20, 2: 30, 2.5: 35, 3: 40, 3.5: 50 };
-/* the car's sport display's boost gauge end (bar) as one of those: the least at or over it, within 5 % (Cluster Layouts'
-   the same) */
-const snapBoost = (bar) => (isNum(bar) && bar > 0 ? Object.keys(BOOST_PSI).map(Number).sort((a, b) => a - b).find((v) => v * 1.05 >= bar) || 3.5 : 0);
+/* Boost gauge up to: the car's own boost gauges, each by its end in psi - in bar 2.0 up to 30 psi, 3.0 at 45 */
+const BOOST_GAUGES = { 15: { psi: 15, bar: 2 }, 20: { psi: 20, bar: 2 }, 30: { psi: 30, bar: 2 }, 45: { psi: 45, bar: 3 } };
+/* the car's sport display's boost gauge end (bar) as one of those (psi): the least at or over it, within 5 % (Cluster
+   Layouts' the same) */
+const snapBoost = (bar) => (isNum(bar) && bar > 0 ? [15, 20, 30, 45].find((p) => p * 1.05 >= bar * 14.5038) || 45 : 0);
 
 /* kinds: temp (°C), press (bar), speed (km/h), rpm, pct, kw, nm, enginePower (kW: hp, PS or kW), deg, km, none; icon: shaders.js ICON_FS */
 const READINGS = {
@@ -78,13 +78,12 @@ function view(key, d, u, warn) {
     const warmAt = key === 'oil' && warn && isNum(warn.oilWarm) ? warn.oilWarm : null;
     const level = !isNum(raw) ? 'none' : isNum(hi) && raw >= hi ? 'warn' : isNum(lo) && raw <= lo ? 'warn' : isNum(r.cold) && raw < r.cold ? 'cold' : isNum(warmAt) && raw < warmAt ? 'warm' : 'ok';
     const text = isNum(v) ? (r.kind === 'kw' && v > 0.05 ? '+' : '') + v.toFixed(decimals(r.kind, v, u)) : '--';
-    // (boost to Settings > Boost gauge up to, bar: the Car profile's where it sets it; in psi its pair's end, as the
-    // car's own gauge reads it)
-    const boost = /^boost/.test(key) && u && isNum(u.boostMax) && u.boostMax > 0;
-    const top = boost ? u.boostMax : r.max;
-    const lo2 = convert(r.kind, r.min, u), hi2 = boost && u.press === 'psi' && BOOST_PSI[top] ? BOOST_PSI[top] : convert(r.kind, top, u);
+    // (boost to Settings > Boost gauge up to, the Car profile's where it sets it: its end in psi, or in bar)
+    const g = /^boost/.test(key) && u ? BOOST_GAUGES[u.boostMax] : null;
+    const top = g ? g.bar : r.max;
+    const lo2 = convert(r.kind, r.min, u), hi2 = g && u.press === 'psi' ? g.psi : convert(r.kind, top, u);
     const warnAt = isNum(hi) ? Math.max(0, Math.min(2, (convert(r.kind, hi, u) - lo2) / (hi2 - lo2))) : 2;
     return { key, title: r.title, short: r.short, icon: r.icon || 0, value: isNum(v) ? v : null, text, unit: unitText(r.kind, u), frac: isNum(v) ? Math.max(0, Math.min(1, (v - lo2) / (hi2 - lo2))) : 0, warnAt, level };
 }
 
-module.exports = { READINGS, view, convert, unitText, snapBoost };
+module.exports = { READINGS, view, convert, unitText, snapBoost, BOOST_GAUGES };

@@ -35,11 +35,11 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 ### Where the speedometer and the boost gauges end (0.58.0)
 
 **Settings > Speedometer up to**: 260 km/h (160 mph), or 330 km/h (200 mph) for an M car, numbered by 30s - every
-layout's speedometer. **Boost gauge up to**, set in the Car profile app alone: every boost gauge and bar, in pairs -
-1.0 bar or 15 psi, 1.5 or 20, 2.0 or 30, 2.5 or 35, 3.0 or 40, 3.5 or 50 - in the pressure unit set, numbered by the end:
-0 5 10 15, 0 10 20, 0 10 20 30, 0 15 25 35, 0 20 40, 0 25 50 psi; 0.0 0.5 1.0, 0.0 0.5 1.0 1.5, 0.0 1.0 2.0, 0.0 1.5 2.5,
-0.0 1.0 2.0 3.0, 0.0 1.5 2.5 3.5 bar (kPa a hundredfold). *Auto* is the car's own Sport Display's gauge
-end, as the least pair at or over it (within 5 %) (until the car sends it, each layout's own: 1.6 bar, the M layout's 3 bar). The
+layout's speedometer. **Boost gauge up to**, set in the Car profile app alone: every boost gauge and bar, as the car's own
+gauges - 15, 20 or 30 psi (2.0 bar, 200 kPa), or 45 psi (3.0 bar, 300 kPa) - in the pressure unit set, numbered as
+they are: 0 5 10 15, 0 10 20, 0 10 20 30, 0 15 30 45 psi; 0.0 1.0 2.0, 0.0 1.0 2.0 3.0 bar; 0 100
+200, 0 100 200 300 kPa. *Auto* is the car's own Sport Display's gauge end, as the least of those at or over it
+(within 5 %) (until the car sends it, each layout's own: 1.6 bar, the M layout's 3 bar). The
 Car profile app sets the speedometer's too, with the fuel gauge's *Fuel % from* and the tank's size.
 
 ### Every reading the car gives, in every place (0.57.0)

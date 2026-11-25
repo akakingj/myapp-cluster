@@ -340,13 +340,13 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
 - Layouts 0.58.0, Centre 0.14.19, Info 1.10.16 (Nov 25 2026), with Car profile 1.8.0: Settings > Fuel % from follows
   the Car profile's *Fuel % from*, as Fuel tank size does. New: Settings > **Speedometer up to** (260 km/h, 330 km/h
   for an M car: 0-330 by 30s, 200 mph) for every speedometer (layout_common.speedScale; Twin cowl's own scale went
-  to it) and the speed-in-the-other-unit bar, and **Boost gauge up to** (pairs as the car's own gauge reads them: 1.0 bar / 15
-  psi, 1.5 / 20, 2.0 / 30, 2.5 / 35, 3.0 / 40, 3.5 / 50 - layout_common.BOOST_PSI; 0: each layout's own, 1.6 bar,
-  the M layout's 0-3 bar / 0-40 psi) for every boost gauge and bar (boostShare: in psi on the pair's psi end; the M
-  layout's numbers by the end's figure - layout_common.boostTicks: 0 5 10 15, 0 10 20, 0 10 20 30, 0 15 25 35, 0 20 40,
-  0 25 50 psi; bar x 10 and kPa / 10 the same figures, 10 0 5 10, 25 0 15 25 - its bar (MBAR_FS) taking a fourth and a fifth number, u_lab4). Boost gauge up to is set in
+  to it) and the speed-in-the-other-unit bar, and **Boost gauge up to** (the car's own gauges by their end in psi: 15, 20, 30
+  psi - in bar and kPa 2.0 bar - and 45 psi, 3.0 bar - layout_common.BOOST_GAUGES; 0: each layout's own, 1.6 bar,
+  the M layout's 0-3 bar / 0-40 psi) for every boost gauge and bar (boostShare: in psi on its psi end; the M
+  layout's numbers as the car's own gauges - layout_common.boostTicks: 0 5 10 15, 0 10 20, 0 10 20 30, 0 15 30 45
+  psi; bar x 10 and kPa / 10 the same figures, 0.0 1.0 2.0, 0.0 1.0 2.0 3.0 bar - its bar (MBAR_FS) taking a fourth and a fifth number, u_lab4). Boost gauge up to is set in
   the Car profile alone (hidden here): 0 is From the car's Sport Display - data.js boostMaxCar (FES
-  displayMaximumValueBoostPressure, in the car's pressure unit, 0.5 - 4 bar taken), snapBoost to the least pair (within 5 %) at
+  displayMaximumValueBoostPressure, in the car's pressure unit, 0.5 - 4 bar taken), snapBoost to the least gauge (within 5 %) at
   or over it, redrawn once it comes; each layout's own (Centre 2 bar) until then. Speedometer up to and Boost gauge
   up to redraw the layout when changed (main.js's list of settings that do), each following the Car profile's. main.js setScales holds them for the
   readings' bars. Centre: Boost gauge up to (2 bar as it was) for its boost readings. Vehicle takes the Car

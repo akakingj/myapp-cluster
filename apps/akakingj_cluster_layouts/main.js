@@ -95,6 +95,8 @@ mgu.run({
             return out;
         };
         // (the speedometers' and boost gauges' ends, for the readings' bars too: layout_common.setScales)
+        /** Boost gauge up to set: one of the gauges' ends (psi), else 0 */
+        const boostSet = () => (require('./layout_common').BOOST_GAUGES[settings.get('boostMax')] ? Number(settings.get('boostMax')) : 0);
         const scaled = (o) => { require('./layout_common').setScales(o); return o; };
         const options = () => scaled({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
@@ -109,9 +111,9 @@ mgu.run({
             vehicle: D.vehicle().vehicle,      // set, or found from the car (Auto)
             fuel: D.vehicle().fuel,            // (Settings > Vehicle: Diesel, else petrol: no ignition timing on a diesel)
             // where the speedometers and the boost gauges end (Settings, or the Car profile's)
-            // (Boost gauge up to: From the car's Sport Display, 0 - its gauge's end as one of the pairs once the car has
-            // sent it, else each layout's own)
-            speedMax: settings.get('speedMax'), boostMax: Number(settings.get('boostMax')) > 0 ? settings.get('boostMax') : require('./layout_common').snapBoost(D.data().boostMaxCar),
+            // (Boost gauge up to: From the car's Sport Display, 0 or no gauge's end - its gauge's end as one of the gauges
+            // once the car has sent it, else each layout's own)
+            speedMax: settings.get('speedMax'), boostMax: boostSet() || require('./layout_common').snapBoost(D.data().boostMaxCar),
         });
         /** Live: demo data on, or the car's signals answer (a parked car sends nothing new for minutes, so a
          * provider that is there counts), or a value came in the last STALE_MS. */
@@ -165,7 +167,7 @@ mgu.run({
             // the sport display's boost gauge's end (Boost gauge up to: From the car's Sport Display): redrawn for it once
             // the car has sent it
             const bc = options().boostMax;
-            if (bc !== lastBoostTop) { if (lastBoostTop !== null) { log.info('boost gauges to ' + bc + ' bar (the car\'s sport display: ' + D.data().boostMaxCar + ')'); cluster.rebuild(); } lastBoostTop = bc; }
+            if (bc !== lastBoostTop) { if (lastBoostTop !== null) { log.info('boost gauges to ' + bc + ' psi (the car\'s sport display: ' + D.data().boostMaxCar + ')'); cluster.rebuild(); } lastBoostTop = bc; }
             // drive mode and gear changes in the log (timestamped), beside the cluster's target changes: what the
             // KOMBI does to the layout on a mode change (the stock cluster back for a few seconds) shows in one log
             const dn = data(), mg = (dn.driveMode || '-') + ' / ' + (dn.gear == null ? '-' : dn.gear);

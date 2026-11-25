@@ -45,7 +45,7 @@ const PROFILE_VALUES = {
     pressUnit: ['bar', 'psi', 'kpa'], fuelUnit: ['l100', 'kml', 'mpguk', 'mpgus'], torqueUnit: ['nm', 'lbft', 'kgm'],
     powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'], theme: ['m_red', 'ice'], layout: ['full', 'standard'], renderer: ['auto', 'software'],
     demo: ['auto', 'on', 'off'], clock: ['12', '24'], timeZone: ['utc+9', 'eastern'], tankLitres: [40, 59, 90], fuelFrom: ['engine', 'litres'], eFull: [20, 31, 50],
-    speedMax: ['260', '330'], boostMax: [0, 1, 1.5, 3.5],
+    speedMax: ['260', '330'], boostMax: [0, 15, 20, 45],
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
@@ -54,7 +54,7 @@ const FOLLOWS = {
     info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin', theme: 'theme', layout: 'layout', renderer: 'renderer', demo: 'demo' },
 };
 const MINE = { vehicle: 'petrol', skin: 'idrive7', theme: 'm_tricolour', layout: 'standard', renderer: 'software', demo: 'on', clock: '24', timeZone: 'utc', tankLitres: 60, eFull: 30, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftAt: 6500, _reset_shiftAt: 1, gScale: '1', coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
-    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, fuelFrom: 'litres', speedMax: '330', boostMax: 2.2 };
+    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, fuelFrom: 'litres', speedMax: '330', boostMax: 30 };
 
 const cases = {
     'Car profile > Engine: Plug-in hybrid, Petrol, Diesel and Auto over the clusters\' Vehicle; Each app leaves it (0.35.7)'() {
@@ -84,7 +84,7 @@ const cases = {
             warmOil: [60, 70, 75, 80, 85, 90, 100], warmCoolant: [60, 70, 75, 80, 85, 90],
             hotOil: [110, 115, 120, 125, 130, 135, 140], hotCoolant: [110, 115, 120, 125, 130, 135, 140], hotGearbox: [80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130],
             tankLitres: [40, 42, 46, 50, 52, 55, 57, 59, 60, 63, 65, 66, 68, 69, 70, 74, 80, 83, 85, 90], eFull: [20, 22, 24, 26, 28, 30, 31, 32, 34, 36, 38, 40, 45, 50],
-            boostMax: [0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5] };
+            boostMax: [0, 15, 20, 30, 45] };
         Object.keys(FOLLOWS).forEach((app) => schemaOf(app).filter((s) => s.profile && s.type === 'number').forEach((s) => {
             const lost = STEPS[s.profile].filter((v) => v > 0 || (v === 0 && (s.steps || []).indexOf(0) >= 0)).filter((v) => s.steps.indexOf(v) < 0);
             assert.deepStrictEqual(lost, [], app + ' ' + s.key + ': ' + lost.join(', '));

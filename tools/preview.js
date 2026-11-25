@@ -7,7 +7,7 @@
  *   node tools/preview.js [--layout analog_sport] [--look comfort|sport|efficient] [--centre info|stock] [--kmh]
  *                         [--black] [--speed 62] [--rpm 3200] [--gear 4] [--stage D] [--mode S] [--oil 96] [--coolant 90]
  *                         [--celsius] [--mcar] [--strip] [--dap] [--hotOil 125] [--hotCoolant 112] [--hotGearbox 120] [--tempGauge scale]
- *                         [--gtrail 1] [--speedMax 330] [--boostMax 2.5] [--pressUnit bar] [--out preview.png]
+ *                         [--gtrail 1] [--speedMax 330] [--boostMax 30] [--pressUnit bar] [--out preview.png]
  * --gtrail: the G over the last 3.2 s through a bend (JDM 2's trail)
  * --mcar: the M KOMBI's two dark boxes drawn over the layout (as it left them over the full-screen form, gone in 0.34.0:
  *         the layouts always keep the car's strip now, so --strip changes nothing either)
@@ -122,7 +122,7 @@ if (require.main === module) {
     const s = makeScene({ layout: a.layout, look: a.look, black: !!a.black, options: { centre: a.centre, speedUnit: a.kmh ? 'kmh' : 'mph', tempUnit: a.celsius ? 'c' : undefined, vehicle: a.engine || a.diesel ? 'ice' : 'phev', fuel: a.diesel ? 'diesel' : 'petrol', cluster: a.mcar ? 'm' : 'standard', bottomStrip: a.strip ? 'stock' : 'layout',
         // (Settings > Too hot, as the Car profile sets them: --hotOil 125 --hotCoolant 112 --hotGearbox 120; --tempGauge scale)
         hotOil: a.hotOil, hotCoolant: a.hotCoolant, hotGearbox: a.hotGearbox, tempGauge: a.tempGauge || 'ch',
-        // (Settings > Speedometer up to and Boost gauge up to: --speedMax 330 --boostMax 2.5)
+        // (Settings > Speedometer up to and Boost gauge up to: --speedMax 330 --boostMax 30, psi)
         speedMax: a.speedMax, boostMax: a.boostMax, pressUnit: a.pressUnit, leftDial: a.leftDial, places: a.places ? JSON.parse(a.places) : undefined,
         // (the readouts: --infoA, --infoB, --infoMain, --infoLow: a readout's name, gear or off; --arcGear off)
         infoA: a.infoA, infoB: a.infoB, infoMain: a.infoMain, infoLow: a.infoLow, arcGear: a.arcGear, gaugeSpeed: a.gaugeSpeed, gaugeRpm: a.gaugeRpm,
