@@ -416,7 +416,9 @@ check('the speedometers\' and boost gauges\' ends: Settings > Speedometer up to 
     // From the car's Sport Display (0): its gauge's end as the least pair at or over it; set in the Car profile alone
     const bm = SPEC.settings.find((x) => x.key === 'boostMax');
     assert.deepStrictEqual([bm.default, bm.hidden, bm.labels['0']], [0, true, 'From the car\'s Sport Display']);
-    assert.deepStrictEqual([C.snapBoost(1.16), C.snapBoost(1.5), C.snapBoost(2.07), C.snapBoost(3.9), C.snapBoost(undefined)], [1.5, 1.5, 2.5, 3.5, 0]);
+    assert.deepStrictEqual([C.snapBoost(1.16), C.snapBoost(1.5), C.snapBoost(3.9), C.snapBoost(undefined)], [1.5, 1.5, 3.5, 0]);
+    // a car's own gauge ends in its unit land on their pairs: 200 kPa, 15 / 20 / 30 / 35 / 40 / 50 psi
+    assert.deepStrictEqual([2, ...[15, 20, 30, 35, 40, 50].map((p) => p / 14.5038)].map(C.snapBoost), [2, 1, 1.5, 2, 2.5, 3, 3.5]);
     assert.strictEqual(R.snapBoost(1.16), 1.5);
     C.setScales(o());
     // Centre: boost on its 2 bar, or Boost gauge up to

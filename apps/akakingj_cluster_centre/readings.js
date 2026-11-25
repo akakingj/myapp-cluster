@@ -7,8 +7,9 @@
 const isNum = (v) => typeof v === 'number' && isFinite(v);
 /* Boost gauge up to: each end a pair, as the car's own gauge reads it in psi */
 const BOOST_PSI = { 1: 15, 1.5: 20, 2: 30, 2.5: 35, 3: 40, 3.5: 50 };
-/* the car's sport display's boost gauge end (bar) as one of those: the least at or over it (Cluster Layouts' the same) */
-const snapBoost = (bar) => (isNum(bar) && bar > 0 ? Object.keys(BOOST_PSI).map(Number).sort((a, b) => a - b).find((v) => v >= bar - 0.02) || 3.5 : 0);
+/* the car's sport display's boost gauge end (bar) as one of those: the least at or over it, within 5 % (Cluster Layouts'
+   the same) */
+const snapBoost = (bar) => (isNum(bar) && bar > 0 ? Object.keys(BOOST_PSI).map(Number).sort((a, b) => a - b).find((v) => v * 1.05 >= bar) || 3.5 : 0);
 
 /* kinds: temp (°C), press (bar), speed (km/h), rpm, pct, kw, nm, enginePower (kW: hp, PS or kW), deg, km, none; icon: shaders.js ICON_FS */
 const READINGS = {

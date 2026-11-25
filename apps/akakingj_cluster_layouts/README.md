@@ -38,7 +38,7 @@ battery's own pace sets the limit: its current answers 10-20 times a second over
 layout's speedometer. **Boost gauge up to**, set in the Car profile app alone: every boost gauge and bar, in pairs -
 1.0 bar or 15 psi, 1.5 or 20, 2.0 or 30, 2.5 or 35, 3.0 or 40, 3.5 or 50 - in the pressure unit set, the numbers
 evenly apart, four where the step is whole: 0 10 20 30, 0 5 10 15 20. *Auto* is the car's own Sport Display's gauge
-end, as the least pair at or over it (until the car sends it, each layout's own: 1.6 bar, the M layout's 3 bar). The
+end, as the least pair at or over it (within 5 %) (until the car sends it, each layout's own: 1.6 bar, the M layout's 3 bar). The
 Car profile app sets the speedometer's too, with the fuel gauge's *Fuel % from* and the tank's size.
 
 ### Every reading the car gives, in every place (0.57.0)

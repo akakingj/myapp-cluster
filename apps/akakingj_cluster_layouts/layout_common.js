@@ -43,8 +43,9 @@ function setScales(o) {
     scales.boost = o && Number(o.boostMax) > 0 ? Number(o.boostMax) : 0;
     scales.psi = !!o && pressUnitOf(o) === 'psi';
 }
-/** The car's sport display's boost gauge end (bar) as one of Boost gauge up to's pairs: the least at or over it. */
-const snapBoost = (bar) => (isNum(bar) && bar > 0 ? Object.keys(BOOST_PSI).map(Number).sort((a, b) => a - b).find((v) => v >= bar - 0.02) || 3.5 : 0);
+/** The car's sport display's boost gauge end (bar) as one of Boost gauge up to's pairs: the least at or over it, within
+ * 5 % (a car set to psi ends at 15 psi, 1.034 bar: the 1.0 bar / 15 psi pair). */
+const snapBoost = (bar) => (isNum(bar) && bar > 0 ? Object.keys(BOOST_PSI).map(Number).sort((a, b) => a - b).find((v) => v * 1.05 >= bar) || 3.5 : 0);
 /** A boost gauge's top, bar: Settings' Boost gauge up to, else the layout's own (own). */
 const boostTop = (own) => scales.boost || own;
 /**
