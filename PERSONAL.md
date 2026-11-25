@@ -344,7 +344,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   psi, 1.5 / 20, 2.0 / 30, 2.5 / 35, 3.0 / 40, 3.5 / 50 - layout_common.BOOST_PSI; 0: each layout's own, 1.6 bar,
   the M layout's 0-3 bar / 0-40 psi) for every boost gauge and bar (boostShare: in psi on the pair's psi end; the M
   layout's numbers evenly apart, four where the step is whole - layout_common.boostTicks: 0 10 20 30, 0 5 10 15 20,
-  0 25 50, 0 17.5 35 - its bar (MBAR_FS) taking a fourth and a fifth number, u_lab4), each following the Car profile's. main.js setScales holds them for the
+  0 25 50, 0 17.5 35 - its bar (MBAR_FS) taking a fourth and a fifth number, u_lab4). Boost gauge up to is set in
+  the Car profile alone (hidden here): 0 is From the car's Sport Display - data.js boostMaxCar (FES
+  displayMaximumValueBoostPressure, in the car's pressure unit, 0.5 - 4 bar taken), snapBoost to the least pair at
+  or over it, redrawn once it comes; each layout's own (Centre 2 bar) until then. Speedometer up to and Boost gauge
+  up to redraw the layout when changed (main.js's list of settings that do), each following the Car profile's. main.js setScales holds them for the
   readings' bars. Centre: Boost gauge up to (2 bar as it was) for its boost readings. Vehicle takes the Car
   profile's new Engine "Petrol, M car" as petrol. Info: the Korean words only.
 - Layouts 0.57.0, Centre 0.14.18 (Nov 25 2026): every reading the car gives in every place, the same as AK Cluster

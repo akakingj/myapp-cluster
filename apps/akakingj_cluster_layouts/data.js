@@ -272,6 +272,13 @@ function startData(ctx, opts) {
                 if (!isNum(x.boostCarFirst)) x.boostCarFirst = bar; else if (Math.abs(bar - x.boostCarFirst) >= 0.03) x.boostCarMoved = true;
                 put('boostCar', bar);
             }
+            // the sport display's own boost gauge's end, in the same unit (Boost gauge up to: From the car's Sport
+            // Display); a figure no boost gauge ends at (under 0.5 bar, past 4) is not taken
+            const mx = v && typeof v === 'object' ? v.displayMaximumValueBoostPressure : undefined;
+            if (isNum(mx) && mx > 0 && mx < Math.min(254, invalid)) {
+                const top = carPress === 'PSI' ? mx * 0.1 / 14.5038 : mx * factor + (bs.offset || 0);
+                if (top >= 0.5 && top <= 4) put('boostMaxCar', top);
+            }
         },
         // the sport display's powertrain power (+ driving, - recuperating; its unit fitted in kwfuse.js)
         displaySportPowertrain: (v) => {
@@ -680,6 +687,8 @@ function startData(ctx, opts) {
             // boost: the car's sport display's, as BMW's sport display shows it (once it has moved), else the engine unit's
             // (fast, while a layout wants it; its target is the engine unit's alone)
             if (!d.demo && fresh('boostCar', 5000) && (x.boostCarMoved || !isNum(o.boostActual))) o.boostActual = x.boostCar;
+            // (the sport display's boost gauge's end, bar: Boost gauge up to, From the car's Sport Display)
+            if (!d.demo && isNum(x.boostMaxCar)) o.boostMaxCar = x.boostMaxCar;
             // (the engine unit's only: the car's pedal signal's scaling is unconfirmed - Redline saw 60-96 % at a light
             // touch with it - so its value goes to the log alone, never on the cluster)
             // (kept 8 s: a round of the engine unit's readings can take 3 s or more while driving, its replies slower)

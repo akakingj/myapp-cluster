@@ -41,6 +41,14 @@ for (const shown of [{ shown: () => true }, { shown: () => true, tyres: true }])
         handlers.statusNewCurrentUnitsStatusExt({ unitOfMeasurementAirPressure: 1 });
         assert.strictEqual(+boost(90).toFixed(3), 0.9);
     });
+    check(app + ': the sport display\'s boost gauge end in the same unit (Boost gauge up to: From the car), a figure no gauge ends at not taken', () => {
+        const top = (raw) => { handlers.statusSwitchDriveDynamicSport2({ displayBoostPressure: 50, displayMaximumValueBoostPressure: raw }); return D.data().boostMaxCar; };
+        assert.strictEqual(+top(200).toFixed(3), 2);
+        handlers.statusNewCurrentUnitsStatusExt({ unitOfMeasurementAirPressure: 3 });
+        assert.strictEqual(+(top(200) * 14.5038).toFixed(1), 20, 'psi: tenths');
+        assert.strictEqual(+(top(20) * 14.5038).toFixed(1), 20, '2 psi is no gauge end: the last one kept');
+        handlers.statusNewCurrentUnitsStatusExt({ unitOfMeasurementAirPressure: 1 });
+    });
     D.stop();
 }
 // Info: its own reading (main.js), the same rule

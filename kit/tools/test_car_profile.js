@@ -45,7 +45,7 @@ const PROFILE_VALUES = {
     pressUnit: ['bar', 'psi', 'kpa'], fuelUnit: ['l100', 'kml', 'mpguk', 'mpgus'], torqueUnit: ['nm', 'lbft', 'kgm'],
     powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'], theme: ['m_red', 'ice'], layout: ['full', 'standard'], renderer: ['auto', 'software'],
     demo: ['auto', 'on', 'off'], clock: ['12', '24'], timeZone: ['utc+9', 'eastern'], tankLitres: [40, 59, 90], fuelFrom: ['engine', 'litres'], eFull: [20, 31, 50],
-    speedMax: ['260', '330'], boostMax: [1, 1.5, 3.5],
+    speedMax: ['260', '330'], boostMax: [0, 1, 1.5, 3.5],
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
@@ -84,7 +84,7 @@ const cases = {
             warmOil: [60, 70, 75, 80, 85, 90, 100], warmCoolant: [60, 70, 75, 80, 85, 90],
             hotOil: [110, 115, 120, 125, 130, 135, 140], hotCoolant: [110, 115, 120, 125, 130, 135, 140], hotGearbox: [80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130],
             tankLitres: [40, 42, 46, 50, 52, 55, 57, 59, 60, 63, 65, 66, 68, 69, 70, 74, 80, 83, 85, 90], eFull: [20, 22, 24, 26, 28, 30, 31, 32, 34, 36, 38, 40, 45, 50],
-            boostMax: [1.0, 1.5, 2.0, 2.5, 3.0, 3.5] };
+            boostMax: [0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5] };
         Object.keys(FOLLOWS).forEach((app) => schemaOf(app).filter((s) => s.profile && s.type === 'number').forEach((s) => {
             const lost = STEPS[s.profile].filter((v) => v > 0 || (v === 0 && (s.steps || []).indexOf(0) >= 0)).filter((v) => s.steps.indexOf(v) < 0);
             assert.deepStrictEqual(lost, [], app + ' ' + s.key + ': ' + lost.join(', '));

@@ -109,7 +109,9 @@ mgu.run({
             vehicle: D.vehicle().vehicle,      // set, or found from the car (Auto)
             fuel: D.vehicle().fuel,            // (Settings > Vehicle: Diesel, else petrol: no ignition timing on a diesel)
             // where the speedometers and the boost gauges end (Settings, or the Car profile's)
-            speedMax: settings.get('speedMax'), boostMax: settings.get('boostMax'),
+            // (Boost gauge up to: From the car's Sport Display, 0 - its gauge's end as one of the pairs once the car has
+            // sent it, else each layout's own)
+            speedMax: settings.get('speedMax'), boostMax: Number(settings.get('boostMax')) > 0 ? settings.get('boostMax') : require('./layout_common').snapBoost(D.data().boostMaxCar),
         });
         /** Live: demo data on, or the car's signals answer (a parked car sends nothing new for minutes, so a
          * provider that is there counts), or a value came in the last STALE_MS. */
@@ -148,7 +150,7 @@ mgu.run({
         });
         let cluster = start();
         const mapWindow = startMapWindow(log);
-        let lastVehicle = null, lastModeGear = null, modeWant = null, modeAt = 0;
+        let lastVehicle = null, lastModeGear = null, modeWant = null, modeAt = 0, lastBoostTop = null;
         // the engine-unit readings the layout shows, read fast while it shows
         setInterval(() => {
             if (showing()) D.want((typeof layout.needs === 'function' ? layout.needs(options()) : layout.needs || []).concat(require('./layout_common').focus.needs(options())));
@@ -160,6 +162,10 @@ mgu.run({
             // the vehicle found (Settings > Vehicle: Auto): the layout redrawn for it once known
             const v = D.vehicle().vehicle;
             if (v !== lastVehicle) { if (lastVehicle) cluster.rebuild(); lastVehicle = v; }
+            // the sport display's boost gauge's end (Boost gauge up to: From the car's Sport Display): redrawn for it once
+            // the car has sent it
+            const bc = options().boostMax;
+            if (bc !== lastBoostTop) { if (lastBoostTop !== null) { log.info('boost gauges to ' + bc + ' bar (the car\'s sport display: ' + D.data().boostMaxCar + ')'); cluster.rebuild(); } lastBoostTop = bc; }
             // drive mode and gear changes in the log (timestamped), beside the cluster's target changes: what the
             // KOMBI does to the layout on a mode change (the stock cluster back for a few seconds) shows in one log
             const dn = data(), mg = (dn.driveMode || '-') + ' / ' + (dn.gear == null ? '-' : dn.gear);
@@ -177,7 +183,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'yellowLight', 'redLight', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'yellowLight', 'redLight', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy', 'speedMax', 'boostMax'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */

@@ -413,6 +413,11 @@ check('the speedometers\' and boost gauges\' ends: Settings > Speedometer up to 
         ['0.0 0.5 1.0', '0.0 0.5 1.0 1.5', '0.0 1.0 2.0', '0.0 1.25 2.5', '0.0 1.0 2.0 3.0', '0.0 1.75 3.5']);
     assert.deepStrictEqual(C.boostTicks(30, 'psi').map((t) => +t[0].toFixed(3)), [0, 0.333, 0.667, 1]);
     assert.deepStrictEqual(SPEC.settings.find((x) => x.key === 'boostMax').steps, [0, 1, 1.5, 2, 2.5, 3, 3.5]);
+    // From the car's Sport Display (0): its gauge's end as the least pair at or over it; set in the Car profile alone
+    const bm = SPEC.settings.find((x) => x.key === 'boostMax');
+    assert.deepStrictEqual([bm.default, bm.hidden, bm.labels['0']], [0, true, 'From the car\'s Sport Display']);
+    assert.deepStrictEqual([C.snapBoost(1.16), C.snapBoost(1.5), C.snapBoost(2.07), C.snapBoost(3.9), C.snapBoost(undefined)], [1.5, 1.5, 2.5, 3.5, 0]);
+    assert.strictEqual(R.snapBoost(1.16), 1.5);
     C.setScales(o());
     // Centre: boost on its 2 bar, or Boost gauge up to
     assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'bar' }).frac - 0.5) < 1e-9);
