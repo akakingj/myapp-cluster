@@ -339,7 +339,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   (figures only) left as they are. Centre 0.14.17: the same shared shaders.js.
 - Layouts 0.58.1 (Nov 25 2026): the KOMBI's own lights placed from BMW's guide to the G-series cluster (TE18-0859,
   its warning lights' numbers) and a photo of the owner's G20 (Auto Hold and the parking brake): layout_common
-  TURN_ARROWS (the turn signal arrows, AK Cluster ID8's measured places) and SIDE_LIGHTS (lane departure, brakes,
+  TURN_ARROWS (the turn signal arrows, AK Cluster ID8's measured places) and SIDE_LIGHTS, each as its shape in a few
+  rectangles (an arrow's head and shaft, a round symbol, Auto Hold's words), not a box round it (lane departure, brakes,
   tyres, ABS, DSC on the glass's left; Auto Hold, parking brake, steering on its right; the lights, fog lights,
   engine and DSC off are lamps outside the glass). node tools/clearance.js --lights names what lies under them (not
   yet held by the test). Moved clear of them: JDM 1 at its own size (K 1, its side boxes in from the edges), GT3's

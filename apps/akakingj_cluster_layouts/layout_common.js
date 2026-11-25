@@ -325,15 +325,25 @@ function powerMeter(cx, size, cy, lbl, o) {
 /* the stock warning lights and the fallback gear letter along the bottom middle */
 const TELLTALES = { x: 560, y: 652, w: 960, h: 68 };
 /*
- * The warning lights the KOMBI draws over us on the glass's sides and its turn signal arrows (BMW's own guide to the
- * G-series cluster, TE18-0859, laid on AK Cluster ID8's measured arrows, tyre and parking brake lights: each about
- * 96 px round its place; Auto Hold and the parking brake as a photo of a G20's cluster shows them, 2026-11-25). Left:
- * lane departure, brakes, tyres, ABS, DSC; right: Auto Hold, parking brake, steering.
- * Those outside the glass (the lights, fog lights, engine, DSC off, the turn signals' own lamps) are no matter.
+ * The KOMBI's own lights over us, each as its shape (a few rectangles, 4 px to spare), not a box round it: its turn
+ * signal arrows (AK Cluster ID8's measured places, x 685-749 and 1146-1212: a head pointing out and a shaft half its
+ * height) and its warning lights along the glass's sides (BMW's guide to the G-series cluster, TE18-0859, laid on
+ * those arrows and ID8's tyre and parking brake lights; Auto Hold and the parking brake as a photo of a G20's cluster
+ * shows them, 2026-11-25). Left: lane departure, brakes, tyres, ABS, DSC (round symbols about 46 px); right: Auto
+ * Hold (its words), parking brake, steering. Those outside the glass (the lights, fog lights, engine, DSC off, the
+ * turn signals' own lamps) are no matter.
  */
-const TURN_ARROWS = [{ x: 675, y: 88, w: 84, h: 80 }, { x: 1136, y: 84, w: 86, h: 75 }];
-const SIDE_LIGHTS = [[163, 207], [94, 248], [88, 308], [80, 366], [73, 424], [1834, 247], [1880, 293], [1888, 349]]
-    .map(([x, y]) => ({ x: Math.max(0, x - 48), y: y - 48, w: 96 - Math.max(0, 48 - x) - Math.max(0, x + 48 - 1920), h: 96 }));
+const arrowShape = (tip, out, cy, h) => {
+    const at = (a, b) => (out < 0 ? { x: tip + a, w: b - a } : { x: tip - b, w: b - a });
+    return [[0, 10, 0.18], [10, 20, 0.5], [20, 33, 0.96], [33, 64, 0.4]].map(([a, b, f]) => {
+        const r = at(a, b), hh = Math.round(h * f) + 8;
+        return { x: r.x - 4, y: Math.round(cy - hh / 2), w: r.w + 8, h: hh };
+    });
+};
+const TURN_ARROWS = arrowShape(685, -1, 128, 60).concat(arrowShape(1212, 1, 122, 55));
+const roundSymbol = ([x, y]) => [{ x: x - 27, y: y - 15, w: 54, h: 30 }, { x: x - 15, y: y - 27, w: 30, h: 54 }];
+const SIDE_LIGHTS = [].concat(...[[163, 207], [94, 248], [88, 308], [80, 366], [73, 424], [1880, 293], [1888, 349]].map(roundSymbol),
+    [{ x: 1784, y: 228, w: 100, h: 38 }]);
 /** Rectangles covering r but not hole: r itself when they don't meet, else up to four around the hole (the
  * background drawn around the KOMBI's dark box, so nothing of ours sits under it). */
 function cut(r, hole) {
