@@ -161,8 +161,8 @@ module.exports = {
                     C.text('rpm', GX, 478, GW, 40, rpmText, acc),
                     C.text('rpmLbl', GX, 522, GW, 18, 'RPM', lbl, { tracking: 0.2 }),
                     // (the speed clear of the KOMBI's warning lights on the glass's left: C.SIDE_LIGHTS)
-                    C.text('speedDigits', 150, 216, 400, 190, (d) => C.speedText(o, d), white),
-                    C.text('speedUnit', 150, 410, 400, 28, C.speedUnit(o), lbl, { tracking: 0.12 }),
+                    C.text('speedDigits', 200, 216, 350, 190, (d) => C.speedText(o, d), white),
+                    C.text('speedUnit', 200, 410, 350, 28, C.speedUnit(o), lbl, { tracking: 0.12 }),
                     C.text('clock', 90, 486, 200, 36, C.clock, white, { align: 0 }),
                     C.text('outside', 290, 486, 200, 36, (d) => C.outsideText(o, d.outside), lbl, { align: 1 }),
                 ],

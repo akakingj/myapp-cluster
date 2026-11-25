@@ -132,7 +132,7 @@ module.exports = {
         }
         // the car's own bottom strip: the dials centred either side of the middle column, ending above the
         // strip (the speedometer keeps its fuel gauge; the ranges are the strip's)
-        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dialSet(o, 'speed', 452, 600, 328), dialSet(o, 'rpm', 1468, 600, 328), middle(o, 830, 260, gearC, 164, 590, true));   // (its top clear of the camera's cowl: a photo of the car)
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dialSet(o, 'speed', 452, 576, 328), dialSet(o, 'rpm', 1468, 576, 328), middle(o, 830, 260, gearC, 164, 590, true));   // (its top clear of the camera's cowl: a photo of the car; the rims clear of the KOMBI's lane departure light: layout_common SIDE_LIGHTS)
     },
 };
 

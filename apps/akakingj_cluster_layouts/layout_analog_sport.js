@@ -147,7 +147,9 @@ module.exports = {
         // the car's own bottom strip (layout_common.STRIP_Y): no boxes to keep clear of, so the dials stand
         // centred either side of the display, sized to end above the strip, the satellites at their outer
         // feet (above the strip's fuel and charge bars: layouts.js); the ranges are the strip's
-        const SS = 600, scy = 328, X = 830, W = 260, Y = 164, H = 440;   // (its top clear of the camera's cowl: a photo of the car)
+        // (its top clear of the camera's cowl: a photo of the car; its rim clear of the KOMBI's lane departure light and
+        // turn arrows: layout_common SIDE_LIGHTS, TURN_ARROWS)
+        const SS = 576, scy = 328, X = 830, W = 260, Y = 164, H = 440;
         return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(bigDial(o, 'speed', 452, SS, scy), bigDial(o, 'rpm', 1468, SS, scy),
             satellite(o, 'speed', 160, 510, 160), satellite(o, 'rpm', 1776, 510, 160), centreDisplay(o, X, Y, W, H, gearC, elecTxt, true));
     },

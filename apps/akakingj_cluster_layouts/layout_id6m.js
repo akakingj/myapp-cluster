@@ -138,8 +138,9 @@ module.exports = {
         }
         // the car's own strip: the two dials either side of the camera's cowl, as big as Old M's (0.39.5; radius 250
         // before, close in under the cowl), the small gauges in the outer bottom corners, clear of the dials' open
-        // feet and over the strip; no readouts beside them (the strip shows the time, temperature and ranges)
-        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 470, 330, 300), tach(o, 1450, 330, 300, true),
+        // feet and over the strip; no readouts beside them (the strip shows the time, temperature and ranges); radius 288,
+        // the rims clear of the KOMBI's turn arrows (layout_common TURN_ARROWS)
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 470, 330, 288), tach(o, 1450, 330, 288, true),
             small(o, 'speed', 140, 562, 80), small(o, 'rpm', 1780, 562, 80), [
             ], centreDisplay(o, 812, 168, 296, 446));
     },

@@ -145,8 +145,10 @@ const ECON = ['econ', "Average fuel economy (the car's trip computer)"];
 // (with the map or the stock centre - over the car's strip, the stock centre is the map's form too - the two dials alone)
 const noMap = (o) => (o.centre || 'info') === 'info';
 
-/* the big dials' centres' height: their outer rings clear of the camera's cowl (its corners at x 730 and 1190, y 128) */
-const CY = 360;
+/* the big dials: their centres (x, height) and scale - their outer rings clear of the camera's cowl (its corners at x
+   730 and 1190, y 128) and of the KOMBI's turn signal arrows (layout_common TURN_ARROWS), the small dials either side
+   clear of them */
+const SX = 590, RX = 1330, CY = 380, BK = 0.92;
 /** The background, the grey plastic over the whole screen as JDM 2's carbon, its grain continuous across pieces (key bg...:
  * under everything, cut at the car's strip). */
 const back = (key, x, y, w, h) => ({ key, kind: 'rmbg', x, y, w, h, params: { u_origin: [x, y] }, colors: (t) => ({ panel: t.panel }) });
@@ -175,12 +177,12 @@ module.exports = {
                 bigDial(o, 'speed', 208, 360, 202 / 264, false), bigDial(o, 'rpm', 1712, 360, 202 / 264, false));
         }
         const out = [back('bg', 0, 0, 1920, 720)].concat(
-            bigDial(o, 'speed', 600, CY, 1, true), bigDial(o, 'rpm', 1320, CY, 1, true),
-            sideDial(o, 'rmLeft', 190, 470, { x: 40, y: 340, w: 295, h: CY + 265 - 340 }), sideDial(o, 'rmRight', 1730, 470, { x: 1585, y: 340, w: 295, h: CY + 265 - 340 }));
+            bigDial(o, 'speed', SX, CY, BK, true), bigDial(o, 'rpm', RX, CY, BK, true),
+            sideDial(o, 'rmLeft', 208, 480, { x: 58, y: 345, w: 295, h: 645 - 345 }), sideDial(o, 'rmRight', 1712, 480, { x: 1567, y: 345, w: 295, h: 645 - 345 }));
         // the speedometer's window, its reading
-        out.push({ key: 'speedWinBox', kind: 'panel', x: 520, y: CY - 76, w: 160, h: 34, z: 5, params: { u_box: [3, 1, 0, 1] },
+        out.push({ key: 'speedWinBox', kind: 'panel', x: SX - 80, y: CY - 76, w: 160, h: 34, z: 5, params: { u_box: [3, 1, 0, 1] },
             colors: (t) => ({ top: t.win, bottom: t.win, border: t.speedWinEdge }) });
-        out.push(Object.assign(textAt('speedWin', 600, CY - 51, 150, 26, windowText(o), white, { tracking: 0.02 }), { z: 25 }));
+        out.push(Object.assign(textAt('speedWin', SX, CY - 51, 150, 26, windowText(o), white, { tracking: 0.02 }), { z: 25 }));
         // the gear in its window, the M stripes under it
         out.push({ key: 'gearWin', kind: 'panel', x: 896, y: 360, w: 128, h: 62, z: 5, params: { u_box: [6, 3, 0, 1] },
             colors: (t) => ({ top: t.win, bottom: t.win, border: t.winEdge }) });

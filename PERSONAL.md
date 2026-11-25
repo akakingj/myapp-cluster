@@ -345,7 +345,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   engine and DSC off are lamps outside the glass). node tools/clearance.js --lights names what lies under them (not
   yet held by the test). Moved clear of them: JDM 1 at its own size (K 1, its side boxes in from the edges), GT3's
   side columns (x 150-410, 1510-1780), Track's speed (x 150-550), its right two tiles (1360-1780) and its shift
-  lights (y 172, under the turn arrows), JDM 2's beginner's mark (smaller, further in).
+  lights (y 172, under the turn arrows), JDM 2's beginner's mark (smaller, further in). Those just touching them,
+  made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
+  (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
+  the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
 - Layouts 0.58.0, Centre 0.14.19, Info 1.10.16 (Nov 25 2026), with Car profile 1.8.0: Settings > Fuel % from follows
   the Car profile's *Fuel % from*, as Fuel tank size does. New: Settings > **Speedometer up to** (260 km/h, 330 km/h
   for an M car: 0-330 by 30s, 200 mph) for every speedometer (layout_common.speedScale; Twin cowl's own scale went

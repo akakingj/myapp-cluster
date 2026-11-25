@@ -114,7 +114,7 @@ function dash(o) {
     // the dash's lines: the bottom one from the left upright to the right one, the uprights standing on it
     // (0.40.4: the uprights up to the panel's top, into its rounded corners: hairlines, tools/clearance.js)
     const up = (key, x) => Object.assign(C.flat(key, x, 18, 2, CURVE.base - 18, 'line'), { hairline: true });
-    list.push(C.flat('lnBase', 150, CURVE.base, 1672, 2, 'line'), up('lnL', 150), up('lnR1', 1772), up('lnR2', 1820),
+    list.push(C.flat('lnBase', 150, CURVE.base, 1672, 2, 'line'), up('lnL', 150), up('lnR1', 1772), up('lnR2', 1806),
         // (the stubs from the left upright to the box)
         C.flat('lnS1', 152, 300, 16, 2, 'line'), C.flat('lnS2', 152, 420, 16, 2, 'line'));
     // the rev bar (the engine speed eased; on electricity the battery's power), its figures

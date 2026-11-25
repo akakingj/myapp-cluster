@@ -272,9 +272,9 @@ module.exports = {
         // (0.41.0: all of it 110 px to the left, the beginner driver's mark at the right, the owner's)
         // (0.41.6: the G meter smaller and higher, clear of the strip's fuel bar under it; the tach a little smaller
         // and lower, its top clear of the camera's cowl, as seen on the car; the mark smaller and further in, clear of
-        // the KOMBI's Auto Hold, parking brake and steering lights: C.SIDE_LIGHTS)
-        return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 335, 385, 215), tach(o, 790, 393, 248),
-            gearDisc(o, 1177, 262, 100), small(o, 'rpm', 1187, 526, 112), small(o, 'speed', 1390, 404, 110), [wakaba(1530, 224, 300)]);
+        // the KOMBI's Auto Hold, parking brake and steering lights: C.SIDE_LIGHTS; the tach's rim clear of its turn arrow)
+        return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 335, 385, 215), tach(o, 790, 393, 240),
+            gearDisc(o, 1177, 262, 100), small(o, 'rpm', 1187, 526, 112), small(o, 'speed', 1390, 404, 110), [wakaba(1514, 224, 300)]);
     },
 };
 

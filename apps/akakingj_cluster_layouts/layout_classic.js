@@ -152,6 +152,6 @@ module.exports = {
             return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(dial(o, 'speed', 208, 360, 404), dial(o, 'rpm', 1712, 360, 404));
         }
         // the car's own bottom strip (the default): the two dials either side of the amber display, above the strip
-        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dial(o, 'speed', 468, 326, 600), dial(o, 'rpm', 1452, 326, 600), display(o, 796, 236, 328, 380, false));
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dial(o, 'speed', 468, 326, 576), dial(o, 'rpm', 1452, 326, 576), display(o, 796, 236, 328, 380, false));   // (the rims clear of the KOMBI's turn arrows: layout_common TURN_ARROWS)
     },
 };
