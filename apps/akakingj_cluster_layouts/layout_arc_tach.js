@@ -267,12 +267,13 @@ function cup(o, clear) {
     };
 }
 /*
- * The dash is drawn in design px (x 150..1822, y 132..602) and shown bigger (0.40.2): K times, its middle at x 960, its
- * bottom line at y 642 just above the car's strip (layout_common.STRIP_Y 646), its top lines just under the camera
- * cowl, its uprights clear of the panel's corners (tools/clearance.js). The shaders take their geometry in design px
+ * The dash is drawn in design px (x 150..1822, y 132..602) and shown K times, its middle at x 960, its bottom line at
+ * y 642 just above the car's strip (layout_common.STRIP_Y 646), its top lines just under the camera cowl, its uprights
+ * clear of the panel's corners (tools/clearance.js). K 1: its side boxes clear of the KOMBI's warning lights along the
+ * glass's sides (layout_common.SIDE_LIGHTS; at 1.1 they ran under them). The shaders take their geometry in design px
  * (u_k); the lines stay 2 px.
  */
-const K = 1.1, SX = (x) => 960 + (x - 986) * K, SY = (y) => 642 - (602 - y) * K;
+const K = 1.0, SX = (x) => 960 + (x - 986) * K, SY = (y) => 642 - (602 - y) * K;
 function scaled(list) {
     return list.map((p) => {
         if (p.key === 'bg') return p;

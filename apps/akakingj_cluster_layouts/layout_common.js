@@ -324,6 +324,16 @@ function powerMeter(cx, size, cy, lbl, o) {
 
 /* the stock warning lights and the fallback gear letter along the bottom middle */
 const TELLTALES = { x: 560, y: 652, w: 960, h: 68 };
+/*
+ * The warning lights the KOMBI draws over us on the glass's sides and its turn signal arrows (BMW's own guide to the
+ * G-series cluster, TE18-0859, laid on AK Cluster ID8's measured arrows, tyre and parking brake lights: each about
+ * 96 px round its place; Auto Hold and the parking brake as a photo of a G20's cluster shows them, 2026-11-25). Left:
+ * lane departure, brakes, tyres, ABS, DSC; right: Auto Hold, parking brake, steering.
+ * Those outside the glass (the lights, fog lights, engine, DSC off, the turn signals' own lamps) are no matter.
+ */
+const TURN_ARROWS = [{ x: 675, y: 88, w: 84, h: 80 }, { x: 1136, y: 84, w: 86, h: 75 }];
+const SIDE_LIGHTS = [[163, 207], [94, 248], [88, 308], [80, 366], [73, 424], [1834, 247], [1880, 293], [1888, 349]]
+    .map(([x, y]) => ({ x: Math.max(0, x - 48), y: y - 48, w: 96 - Math.max(0, 48 - x) - Math.max(0, x + 48 - 1920), h: 96 }));
 /** Rectangles covering r but not hole: r itself when they don't meet, else up to four around the hole (the
  * background drawn around the KOMBI's dark box, so nothing of ours sits under it). */
 function cut(r, hole) {
@@ -791,5 +801,5 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
 
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
-    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
 };

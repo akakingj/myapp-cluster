@@ -121,7 +121,7 @@ module.exports = {
         }
         if (o.centre === 'stock') {
             // the stock centre (x 566-1104) left alone: the speed side left of it, the tiles between it and the box
-            return [C.flat('bg', 0, 0, 566, 720, 'bg'), C.flat('bgR', 1104, 0, 816, 720, 'bg'), shiftLights(o, 150, 160, 400, 36, 10)].concat(
+            return [C.flat('bg', 0, 0, 566, 720, 'bg'), C.flat('bgR', 1104, 0, 816, 720, 'bg'), shiftLights(o, 220, 160, 330, 36, 10)].concat(
                 [
                     C.text('gear', 60, 214, 260, 200, C.gearText, gearC),
                     C.text('rpm', 60, 418, 260, 32, (d) => rpmText(d), acc),
@@ -138,7 +138,7 @@ module.exports = {
             );
         }
 
-        // full screen
+        // full screen (the shift lights under the KOMBI's turn signal arrows: C.TURN_ARROWS)
         const X0 = 580, X1 = 1340, GX = 760, GW = 400;
         // the car's own bottom strip (it shows the ranges): the speed on the left, the 0-60 timer and the peak on
         // the right, either side of the middle, all above the strip and its fuel and charge gauges
@@ -154,27 +154,29 @@ module.exports = {
                 if (r.tone) c[2] = Object.assign({}, c[2], { tone: r.tone });
                 return c;
             };
-            return [C.flat('bg', 0, 0, 1920, 720, 'bg'), shiftLights(o, X0, 136, X1 - X0, 40, 15), rpmBar(o, X0, 188, X1 - X0, 26)].concat(
+            return [C.flat('bg', 0, 0, 1920, 720, 'bg'), shiftLights(o, X0, 172, X1 - X0, 40, 15), rpmBar(o, X0, 218, X1 - X0, 26)].concat(
                 [
                     { key: 'gearCard', kind: 'panel', x: GX, y: 262, w: GW, h: 290, params: { u_box: [14, 2, 0.4, 1] }, colors: (t) => ({ top: t.tileTop, bottom: t.tileBottom, border: t.accent }) },
                     C.text('gear', GX, 272, GW, 200, C.gearText, gearC),
                     C.text('rpm', GX, 478, GW, 40, rpmText, acc),
                     C.text('rpmLbl', GX, 522, GW, 18, 'RPM', lbl, { tracking: 0.2 }),
-                    C.text('speedDigits', 60, 216, 460, 190, (d) => C.speedText(o, d), white),
-                    C.text('speedUnit', 60, 410, 460, 28, C.speedUnit(o), lbl, { tracking: 0.12 }),
+                    // (the speed clear of the KOMBI's warning lights on the glass's left: C.SIDE_LIGHTS)
+                    C.text('speedDigits', 150, 216, 400, 190, (d) => C.speedText(o, d), white),
+                    C.text('speedUnit', 150, 410, 400, 28, C.speedUnit(o), lbl, { tracking: 0.12 }),
                     C.text('clock', 90, 486, 200, 36, C.clock, white, { align: 0 }),
                     C.text('outside', 290, 486, 200, 36, (d) => C.outsideText(o, d.outside), lbl, { align: 1 }),
                 ],
-                tp('tile5', 'zero', 1400, 262, 220, 200, zeroLabel(o), zeroText(o), acc, 96, [C.text('zeroBest', 1414, 418, 192, 24, bestText(o), lbl, { align: 0, tracking: 0.06 })]),
-                tp('tile6', 'peak', 1640, 262, 220, 200, engine ? 'PEAK BOOST ' + C.pressLabel(o).toUpperCase() : 'PEAK POWER', peakText(o), white, 96,
-                    [C.text('peakLbl2', 1654, 418, 192, 24, 'THIS DRIVE', lbl, { align: 0, tracking: 0.06 })]),
+                // (the two right tiles clear of the KOMBI's Auto Hold and parking brake lights: C.SIDE_LIGHTS)
+                tp('tile5', 'zero', 1360, 262, 200, 200, zeroLabel(o), zeroText(o), acc, 96, [C.text('zeroBest', 1374, 418, 172, 24, bestText(o), lbl, { align: 0, tracking: 0.06 })]),
+                tp('tile6', 'peak', 1580, 262, 200, 200, engine ? 'PEAK BOOST ' + C.pressLabel(o).toUpperCase() : 'PEAK POWER', peakText(o), white, 96,
+                    [C.text('peakLbl2', 1594, 418, 172, 24, 'THIS DRIVE', lbl, { align: 0, tracking: 0.06 })]),
                 tp('tile1', 'oil', X0, 262, 164, 135, 'OIL', (d) => C.tempText(o, d.oil)),
                 tp('tile2', 'coolant', X0, 417, 164, 135, 'COOLANT', (d) => C.tempText(o, d.coolant)),
                 tp('tile3', 'boost', 1176, 262, 164, 135, boostLbl, boostNum(o)),
                 tp('tile4', 'power', 1176, 417, 164, 135, powerLbl, powerNum(o), powerC(o)),
             );
         }
-        return [C.flat('bg', 0, 0, 1920, 720, 'bg'), shiftLights(o, X0, 136, X1 - X0, 40, 15), rpmBar(o, X0, 188, X1 - X0, 26)].concat(
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg'), shiftLights(o, X0, 172, X1 - X0, 40, 15), rpmBar(o, X0, 218, X1 - X0, 26)].concat(
             [
                 { key: 'gearCard', kind: 'panel', x: GX, y: 262, w: GW, h: 290, params: { u_box: [14, 2, 0.4, 1] }, colors: (t) => ({ top: t.tileTop, bottom: t.tileBottom, border: t.accent }) },
                 C.text('gear', GX, 272, GW, 200, C.gearText, gearC),

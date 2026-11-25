@@ -337,6 +337,14 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   50 / 100 on the thousands' figures (the rpm figures blank, no new layers: 56 of 60), POWER % with eDRIVE, CHARGE
   or eBOOST under it; the rpm figures stayed and 0 - 100 drew from the start before. GT3, Pulse, Simple and Track
   (figures only) left as they are. Centre 0.14.17: the same shared shaders.js.
+- Layouts 0.58.1 (Nov 25 2026): the KOMBI's own lights placed from BMW's guide to the G-series cluster (TE18-0859,
+  its warning lights' numbers) and a photo of the owner's G20 (Auto Hold and the parking brake): layout_common
+  TURN_ARROWS (the turn signal arrows, AK Cluster ID8's measured places) and SIDE_LIGHTS (lane departure, brakes,
+  tyres, ABS, DSC on the glass's left; Auto Hold, parking brake, steering on its right; the lights, fog lights,
+  engine and DSC off are lamps outside the glass). node tools/clearance.js --lights names what lies under them (not
+  yet held by the test). Moved clear of them: JDM 1 at its own size (K 1, its side boxes in from the edges), GT3's
+  side columns (x 150-410, 1510-1780), Track's speed (x 150-550), its right two tiles (1360-1780) and its shift
+  lights (y 172, under the turn arrows), JDM 2's beginner's mark (smaller, further in).
 - Layouts 0.58.0, Centre 0.14.19, Info 1.10.16 (Nov 25 2026), with Car profile 1.8.0: Settings > Fuel % from follows
   the Car profile's *Fuel % from*, as Fuel tank size does. New: Settings > **Speedometer up to** (260 km/h, 330 km/h
   for an M car: 0-330 by 30s, 200 mph) for every speedometer (layout_common.speedScale; Twin cowl's own scale went

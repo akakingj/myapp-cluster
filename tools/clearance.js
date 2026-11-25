@@ -1,8 +1,11 @@
 'use strict';
 /**
  * clearance.js - what a layout's pieces must keep clear of on the glass (see the test in test_engine.js), and a
- * report of every clash: node tools/clearance.js
+ * report of every clash: node tools/clearance.js. With --lights it also names the pieces under the KOMBI's turn
+ * signal arrows and its warning lights along the glass's sides (layout_common TURN_ARROWS, SIDE_LIGHTS), which
+ * the test does not hold the layouts to yet.
  */
+const LIGHTS = process.argv.indexOf('--lights') >= 0;
 require('./scene');
 const path = require('path');
 const C0 = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layout_common'));
@@ -34,6 +37,8 @@ function clashesOf(p, o) {
         if (C.strip(o) && pts.some(([, y]) => y > C.STRIP_Y)) out.push('over the strip');
         if (C.mCar(o) && C.M_HOLES.some(inB)) out.push('in an M box');
         if (inB(C.TELLTALES)) out.push('over the warning lights');
+        if (LIGHTS && C.TURN_ARROWS.some(inB)) out.push('under a turn arrow');
+        if (LIGHTS && C.SIDE_LIGHTS.some(inB)) out.push('under a side warning light');
         if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
         return out;
     }
@@ -50,6 +55,8 @@ function clashesOf(p, o) {
         if (inB(C.NOTCH)) out.push('under the cowl');
         if (C.strip(o) && pts.some(([, y]) => y > C.STRIP_Y)) out.push('over the strip');
         if (inB(C.TELLTALES)) out.push('over the warning lights');
+        if (LIGHTS && C.TURN_ARROWS.some(inB)) out.push('under a turn arrow');
+        if (LIGHTS && C.SIDE_LIGHTS.some(inB)) out.push('under a side warning light');
         if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
         if (o && o.centre === 'map' && inB(C.MAP)) out.push('over the map');
         return out;
@@ -65,6 +72,8 @@ function clashesOf(p, o) {
         if (inB(C.NOTCH)) out.push('under the cowl');
         if (C.strip(o) && pts.some(([, y]) => y > C.STRIP_Y)) out.push('over the strip');
         if (inB(C.TELLTALES)) out.push('over the warning lights');
+        if (LIGHTS && C.TURN_ARROWS.some(inB)) out.push('under a turn arrow');
+        if (LIGHTS && C.SIDE_LIGHTS.some(inB)) out.push('under a side warning light');
         if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
         return out;
     }
@@ -83,6 +92,8 @@ function clashesOf(p, o) {
     if (C.strip(o) && round && cy + r - 6 > C.STRIP_Y + 4) out.push('over the strip');
     if (C.mCar(o) && C.M_HOLES.some(hit)) out.push('in an M box');
     if (hit(C.TELLTALES)) out.push('over the warning lights');
+    if (LIGHTS && C.TURN_ARROWS.some(hit)) out.push('under a turn arrow');
+    if (LIGHTS && C.SIDE_LIGHTS.some(hit)) out.push('under a side warning light');
     const pts = round ? [[cx - r * 0.7, cy - r * 0.7], [cx + r * 0.7, cy - r * 0.7], [cx, cy - r]] : [[p.x, p.y], [p.x + p.w, p.y]];
     if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
     return out;

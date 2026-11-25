@@ -114,9 +114,10 @@ module.exports = {
         // (the stock centre: its window left clear as the map's)
         const engine = C.engineFocus(o), ice = o.vehicle === 'ice', strip = C.strip(o), map = o.centre === 'map' || o.centre === 'stock';
         const kmh = o.speedUnit === 'kmh';
-        // the side columns: left of the centre (or the map), and right of it; full screen the right one keeps
-        // clear of the dark box the KOMBI leaves (x 1410-1662) and its eDrive box (top right)
-        const L = { x: 110, w: 290 }, R = strip ? { x: 1520, w: 290 } : { x: 1672, w: 226 };
+        // the side columns: left of the centre (or the map), and right of it, each clear of the KOMBI's warning lights
+        // along the glass's sides (C.SIDE_LIGHTS); full screen the right one keeps clear of the dark box the KOMBI
+        // leaves (x 1410-1662) and its eDrive box (top right)
+        const L = { x: 150, w: 260 }, R = strip ? { x: 1510, w: 270 } : { x: 1672, w: 226 };
         const top = strip ? 262 : 300, bottom = strip ? 586 : 640;
         const h1 = Math.round((bottom - top) * 0.34), h2 = Math.round((bottom - top) * 0.22), gap = 10, h3 = bottom - top - h1 - h2 - 2 * gap;
         const y2 = top + h1 + gap, y3 = y2 + h2 + gap;
