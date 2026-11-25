@@ -337,6 +337,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   50 / 100 on the thousands' figures (the rpm figures blank, no new layers: 56 of 60), POWER % with eDRIVE, CHARGE
   or eBOOST under it; the rpm figures stayed and 0 - 100 drew from the start before. GT3, Pulse, Simple and Track
   (figures only) left as they are. Centre 0.14.17: the same shared shaders.js.
+- Layouts 0.57.1 (Nov 25 2026): Settings > Fuel % from follows the Car profile app's *Fuel % from* (Car profile
+  1.7.4), as Fuel tank size does: the engine unit's tank level or the litres over the tank's size, set once for
+  Layouts and AK Cluster ID8.
 - Layouts 0.57.0, Centre 0.14.18 (Nov 25 2026): every reading the car gives in every place, the same as AK Cluster
   ID8's, as the owner asked. Readout places add the rpm, the speed in the other unit, the outside temperature, the
   fuel level, oil pressure, the 12 V voltage, both fuel pressures, the boost target, this drive's peak boost and peak

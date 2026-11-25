@@ -44,16 +44,16 @@ const PROFILE_VALUES = {
     warmCoolant: [60, 90], hotOil: [110, 125, 140], hotCoolant: [110, 125, 140], hotGearbox: [80, 100, 130], speedUnit: ['kmh', 'mph'], distUnit: ['km', 'mi'], tempUnit: ['c', 'f'],
     pressUnit: ['bar', 'psi', 'kpa'], fuelUnit: ['l100', 'kml', 'mpguk', 'mpgus'], torqueUnit: ['nm', 'lbft', 'kgm'],
     powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'], theme: ['m_red', 'ice'], layout: ['full', 'standard'], renderer: ['auto', 'software'],
-    demo: ['auto', 'on', 'off'], clock: ['12', '24'], timeZone: ['utc+9', 'eastern'], tankLitres: [40, 59, 90], eFull: [20, 31, 50],
+    demo: ['auto', 'on', 'off'], clock: ['12', '24'], timeZone: ['utc+9', 'eastern'], tankLitres: [40, 59, 90], fuelFrom: ['engine', 'litres'], eFull: [20, 31, 50],
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
-    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', timeZone: 'timeZone', clock: 'clock', tankLitres: 'tankLitres', eFull: 'eFull' , econUnit: 'fuelUnit', redLight: 'lightRed', yellowLight: 'lightStart' },
+    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', timeZone: 'timeZone', clock: 'clock', tankLitres: 'tankLitres', fuelFrom: 'fuelFrom', eFull: 'eFull' , econUnit: 'fuelUnit', redLight: 'lightRed', yellowLight: 'lightStart' },
     centre: { vehicle: 'engine', redline: 'redline', shiftAt: 'shiftAt', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', timeZone: 'timeZone', clock: 'clock', tankLitres: 'tankLitres', eFull: 'eFull' },
     info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin', theme: 'theme', layout: 'layout', renderer: 'renderer', demo: 'demo' },
 };
 const MINE = { vehicle: 'petrol', skin: 'idrive7', theme: 'm_tricolour', layout: 'standard', renderer: 'software', demo: 'on', clock: '24', timeZone: 'utc', tankLitres: 60, eFull: 30, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftAt: 6500, _reset_shiftAt: 1, gScale: '1', coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
-    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500 };
+    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, fuelFrom: 'litres' };
 
 const cases = {
     'Car profile > Engine: Plug-in hybrid, Petrol, Diesel and Auto over the clusters\' Vehicle; Each app leaves it (0.35.7)'() {
