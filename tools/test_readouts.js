@@ -405,13 +405,15 @@ check('the speedometers\' and boost gauges\' ends: Settings > Speedometer up to 
     C.setScales(o({ boostMax: 2, pressUnit: 'psi' }));
     assert.ok(Math.abs(C.READOUTS.boost.frac(d) - 14.5038 / 30) < 1e-9);
     assert.deepStrictEqual(C.BOOST_PSI, { 1: 15, 1.5: 20, 2: 30, 2.5: 35, 3: 40, 3.5: 50 });
-    // the numbers, evenly apart: four where the step is whole
+    // the numbers by the end's figure, the same in each unit
     const ticks = (e, u) => C.boostTicks(e, u).map((t) => t[1]).join(' ');
     assert.deepStrictEqual([15, 20, 30, 35, 40, 50].map((e) => ticks(e, 'psi')),
-        ['0 5 10 15', '0 5 10 15 20', '0 10 20 30', '0 17.5 35', '0 10 20 30 40', '0 25 50']);
+        ['0 5 10 15', '0 10 20', '0 10 20 30', '0 15 25 35', '0 20 40', '0 25 50']);
     assert.deepStrictEqual([1, 1.5, 2, 2.5, 3, 3.5].map((e) => ticks(e, 'bar')),
-        ['0.0 0.5 1.0', '0.0 0.5 1.0 1.5', '0.0 1.0 2.0', '0.0 1.25 2.5', '0.0 1.0 2.0 3.0', '0.0 1.75 3.5']);
-    assert.deepStrictEqual(C.boostTicks(30, 'psi').map((t) => +t[0].toFixed(3)), [0, 0.333, 0.667, 1]);
+        ['0.0 0.5 1.0', '0.0 0.5 1.0 1.5', '0.0 1.0 2.0', '0.0 1.5 2.5', '0.0 1.0 2.0 3.0', '0.0 1.5 2.5 3.5']);
+    assert.deepStrictEqual([100, 150, 200, 250, 300, 350].map((e) => ticks(e, 'kpa')),
+        ['0 50 100', '0 50 100 150', '0 100 200', '0 150 250', '0 100 200 300', '0 150 250 350']);
+    assert.deepStrictEqual(C.boostTicks(35, 'psi').map((t) => +t[0].toFixed(3)), [0, 0.429, 0.714, 1], 'each at its place');
     assert.deepStrictEqual(SPEC.settings.find((x) => x.key === 'boostMax').steps, [0, 1, 1.5, 2, 2.5, 3, 3.5]);
     // From the car's Sport Display (0): its gauge's end as the least pair at or over it; set in the Car profile alone
     const bm = SPEC.settings.find((x) => x.key === 'boostMax');

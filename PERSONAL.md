@@ -343,8 +343,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   to it) and the speed-in-the-other-unit bar, and **Boost gauge up to** (pairs as the car's own gauge reads them: 1.0 bar / 15
   psi, 1.5 / 20, 2.0 / 30, 2.5 / 35, 3.0 / 40, 3.5 / 50 - layout_common.BOOST_PSI; 0: each layout's own, 1.6 bar,
   the M layout's 0-3 bar / 0-40 psi) for every boost gauge and bar (boostShare: in psi on the pair's psi end; the M
-  layout's numbers evenly apart, four where the step is whole - layout_common.boostTicks: 0 10 20 30, 0 5 10 15 20,
-  0 25 50, 0 17.5 35 - its bar (MBAR_FS) taking a fourth and a fifth number, u_lab4). Boost gauge up to is set in
+  layout's numbers by the end's figure - layout_common.boostTicks: 0 5 10 15, 0 10 20, 0 10 20 30, 0 15 25 35, 0 20 40,
+  0 25 50 psi; bar x 10 and kPa / 10 the same figures, 10 0 5 10, 25 0 15 25 - its bar (MBAR_FS) taking a fourth and a fifth number, u_lab4). Boost gauge up to is set in
   the Car profile alone (hidden here): 0 is From the car's Sport Display - data.js boostMaxCar (FES
   displayMaximumValueBoostPressure, in the car's pressure unit, 0.5 - 4 bar taken), snapBoost to the least pair (within 5 %) at
   or over it, redrawn once it comes; each layout's own (Centre 2 bar) until then. Speedometer up to and Boost gauge

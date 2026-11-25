@@ -48,19 +48,17 @@ function setScales(o) {
 const snapBoost = (bar) => (isNum(bar) && bar > 0 ? Object.keys(BOOST_PSI).map(Number).sort((a, b) => a - b).find((v) => v * 1.05 >= bar) || 3.5 : 0);
 /** A boost gauge's top, bar: Settings' Boost gauge up to, else the layout's own (own). */
 const boostTop = (own) => scales.boost || own;
+const BOOST_TICKS = { 10: [0, 5, 10], 15: [0, 5, 10, 15], 20: [0, 10, 20], 25: [0, 15, 25], 30: [0, 10, 20, 30], 35: [0, 15, 25, 35], 40: [0, 20, 40], 50: [0, 25, 50] };
 /**
- * A boost scale's numbers, evenly apart: the end divided in 3 (four numbers) where the step is a whole figure (psi
- * and kPa whole, bar to a tenth), else in 4, 2 or 5 - each number at least a quarter of the scale from the next (bar's
- * and kPa's wider figures three tenths) - else in 2 with a decimal more: 0 5 10 15, 0 5 10 15 20, 0 10 20 30,
- * 0 10 20 30 40, 0 25 50; 0.0 1.0 2.0 3.0; 0 17.5 35. end in the unit. [[at 0..1, text]]
+ * A boost scale's numbers by its end's figure (psi as it is, bar x 10, kPa / 10): 15 0 5 10 15, 20 0 10 20, 30 0 10 20 30,
+ * 35 0 15 25 35, 40 0 20 40, 50 0 25 50; 10 0 5 10, 25 0 15 25 - in bar 0.0 1.5 2.5 3.5, in kPa 0 150 250 350. Any
+ * other end: 0, its middle and it. end in the unit. [[at 0..1, text]] (M Vitals' and AK Cluster ID8's the same)
  */
 function boostTicks(end, unit) {
-    const dec = unit === 'bar' ? 1 : 0, room = unit === 'psi' ? 0.25 : 0.3;
-    const whole = (v) => Math.abs(v * Math.pow(10, dec) - Math.round(v * Math.pow(10, dec))) < 1e-6;
-    const k = [3, 4, 2, 5].find((n) => whole(end / n) && 1 / n >= room - 1e-9) || 2;
-    // (each with the decimals it needs: 0 17.5 35, 0.0 1.25 2.5)
-    const text = (v) => v.toFixed(whole(v) ? dec : dec + 1);
-    return Array.from({ length: k + 1 }, (_, i) => [i / k, text(i * end / k)]);
+    const per = unit === 'bar' ? 10 : unit === 'kpa' ? 0.1 : 1, f = Math.round(end * per);
+    const at = Math.abs(end * per - f) < 1e-6 && BOOST_TICKS[f] ? BOOST_TICKS[f].map((v) => v / per) : [0, end / 2, end];
+    const dec = unit === 'bar' ? 1 : 0, whole = (v) => Math.abs(v * Math.pow(10, dec) - Math.round(v * Math.pow(10, dec))) < 1e-6;
+    return at.map((v) => [v / end, v.toFixed(whole(v) ? dec : dec + 1)]);
 }
 /** A boost reading (bar) as a share of its gauge: in psi on the pair's psi end where Boost gauge up to is set. */
 const boostShare = (v, own) => (scales.boost && scales.psi && BOOST_PSI[scales.boost] ? v * 14.5038 / BOOST_PSI[scales.boost] : v / boostTop(own));
