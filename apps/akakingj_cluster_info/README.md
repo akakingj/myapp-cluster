@@ -52,7 +52,9 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   `vSLISpeedValue`, `vSLISymbol`, `statusVZA` ..., with `pia.piaSliNpi` / `piaHUDSliNpi`, the driver's choice of
   showing it): each change written to the log at once with the car's speed, the last two on the page, to match the
   figures to the sign the cluster shows. **Catalog** lists every service in the head unit's catalog whose
-  name looks like the driving assistant's or the HUD's, with its fields and broadcasts. Subscribed from the first
+  name looks like the driving assistant's or the HUD's, with its fields and broadcasts, and before them every
+  member of any service whose name looks like the brakes', the parking brake's or Auto Hold's (the cluster draws
+  its AUTO H light under the apps' layers, so an app would draw it itself if the head unit gets its state). Subscribed from the first
   time it is turned on; everything also goes to `cluster-info-adas.log` in the app's data folder (the catalog once,
   each source's first three values and one a minute; at most 2 x 256 KiB). The cluster's picture itself is drawn in
   the cluster and never reaches the head unit, so only its data can be looked for.

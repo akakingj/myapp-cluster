@@ -12,6 +12,10 @@
  *     assistant's are picked out.
  *   - The head unit's service catalog (/etc/oap/someip/someip-interfaces.json): every service whose name looks like
  *     the driving assistant's, with its fields and broadcasts, to be declared in app.json by a later version.
+ *   - Every member (field, broadcast, method) of any service in that catalog whose name looks like the brakes', the
+ *     parking brake's or Auto Hold's (BRAKE_RE): the cluster draws its AUTO H light under the apps' layers (2026-11-26,
+ *     the parking brake's over them), so an app would draw it itself if the head unit gets its state. Listed only: a
+ *     member is read once an app.json declares it (tools/known_signals.json).
  *   - The speed limit in the HUD's data (xSpeedLimitAssist: vSLISpeedValue, vSLISymbol, statusVZA ..., and any other
  *     member named for a speed limit): each change logged at once, with the car's speed and the time, to match the
  *     figures to the speed limit sign the cluster shows.
@@ -43,6 +47,8 @@ const MEMBER_RE = /acc|cruise|lane|ldw|lka|lcw|lca|assist|object|target|distance
 /* a member of the HUD's data that belongs to the speed limit (Speed Limit Info, its assist: VZA; pia.pia...SliNpi: the
    driver's choice of showing it, in the cluster and in the HUD) - not the limiter (statusLimiter) */
 const SLI_RE = /speedlimit|vsli|vza|slinpi/i;
+/* a service member that looks like the brakes', the parking brake's or Auto Hold's (CDS.statusHandBrake is one) */
+const BRAKE_RE = /hold|hand_?brake|park_?brake|parking_?brake|standstill|stillstand|brake|bremse|\bepb|\bdsc|\bhdc|drive_?away|anfahr/i;
 const LOG_MAX = 256 * 1024;
 
 /** Every leaf of a value as 'a.b.c=v' (arrays: their length and the first two), at most `max`. */
@@ -67,24 +73,35 @@ function sliOf(v) {
     return all.filter(fig).concat(all.filter((l) => !fig(l)));
 }
 
-/** The catalog's services whose name matches: [{ iface, parts: { fields: [names], broadcasts: [...], ... } }]. */
+/** A catalog service's members by kind: { fields: [names], broadcasts: [...], ... }. */
+function partsOf(entry) {
+    const parts = {};
+    Object.keys(entry || {}).forEach((k) => {
+        const v = entry[k];
+        if (v && typeof v === 'object' && !Array.isArray(v)) parts[k] = Object.keys(v);
+        else if (Array.isArray(v)) parts[k] = v.map((e) => (e && typeof e === 'object' ? e.name || JSON.stringify(e).slice(0, 40) : String(e)));
+    });
+    return parts;
+}
+
+/** The catalog's services whose name matches: [{ iface, parts: { fields: [names], broadcasts: [...], ... } }], and
+ * (brakes) every member of any service whose name matches BRAKE_RE: [{ iface, kind, name }]. */
 function scanCatalog(file, re) {
     let db;
-    try { db = JSON.parse(fs.readFileSync(file || CATALOG, 'utf8')); } catch (e) { return { list: [], total: 0, error: 'catalog not readable: ' + (e.code || e.message) }; }
-    const ifs = db.interfaces || {}, list = [];
+    try { db = JSON.parse(fs.readFileSync(file || CATALOG, 'utf8')); } catch (e) { return { list: [], brakes: [], total: 0, error: 'catalog not readable: ' + (e.code || e.message) }; }
+    const ifs = db.interfaces || {}, list = [], brakes = [];
     Object.keys(ifs).forEach((iface) => {
-        if (!(re || IFACE_RE).test(iface)) return;
-        const parts = {};
-        Object.keys(ifs[iface] || {}).forEach((k) => {
-            const v = ifs[iface][k];
-            if (v && typeof v === 'object' && !Array.isArray(v)) parts[k] = Object.keys(v);
-            else if (Array.isArray(v)) parts[k] = v.map((e) => (e && typeof e === 'object' ? e.name || JSON.stringify(e).slice(0, 40) : String(e)));
-        });
-        list.push({ iface, parts });
+        const parts = partsOf(ifs[iface]);
+        Object.keys(parts).forEach((kind) => parts[kind].forEach((name) => { if (BRAKE_RE.test(name)) brakes.push({ iface, kind, name }); }));
+        if ((re || IFACE_RE).test(iface)) list.push({ iface, parts });
     });
     list.sort((a, b) => a.iface.localeCompare(b.iface));
-    return { list, total: Object.keys(ifs).length, error: null };
+    brakes.sort((a, b) => a.iface.localeCompare(b.iface) || a.name.localeCompare(b.name));
+    return { list, brakes, total: Object.keys(ifs).length, error: null };
 }
+
+/** One line for a brakes' member: 'de.bmw.infotainment.vehicle.CDS  fields statusHandBrake'. */
+const brakeLine = (b) => b.iface + '  ' + b.kind + ' ' + b.name;
 
 /** One line for a catalog entry: 'de.bmw.dass.X  fields a, b  broadcasts c'. */
 const catalogLine = (e) => e.iface + '  ' + Object.keys(e.parts).filter((k) => e.parts[k].length).map((k) => k + ' ' + e.parts[k].join(', ')).join('  ');
@@ -147,7 +164,10 @@ function startAdasProbe(ctx, log, opts) {
         catalog = scanCatalog(opts.catalog);
         write('catalog ' + (opts.catalog || CATALOG) + ': ' + (catalog.error || catalog.list.length + ' of ' + catalog.total + ' services look like the driving assistant\'s or the HUD\'s'));
         catalog.list.forEach((e) => write('  ' + catalogLine(e)));
-        if (log) log.info('driving assistant check: ' + (catalog.error || catalog.list.length + ' catalog services'));
+        if (!catalog.error) write('catalog: ' + catalog.brakes.length + ' members look like the brakes\', the parking brake\'s or Auto Hold\'s');
+        (catalog.brakes || []).forEach((b) => write('  ' + brakeLine(b)));
+        if (log) log.info('driving assistant check: ' + (catalog.error || catalog.list.length + ' catalog services, ' + catalog.brakes.length + ' brake members'));
+        if (log && !catalog.error) catalog.brakes.slice(0, 40).forEach((b) => log.info('driving assistant check: brakes: ' + brakeLine(b)));   // (all in the adas log)
         state.forEach((s) => {
             s.status = 'subscribing';
             Promise.resolve().then(() => ctx.signals.watch(s.iface, '1', { [s.name]: onValue(s) }, log, s === hud ? { pollMs: 2000, active: want } : undefined))
@@ -190,9 +210,9 @@ function startAdasProbe(ctx, log, opts) {
         started: () => started,
         stop() { if (timer) clearInterval(timer); },
         status: () => ({ started, sources: started ? sources() : [], hud: hudMembers(30), sli: { now: sli.now, changes: sli.changes },
-            catalog: catalog || { list: [], total: 0, error: null } }),
+            catalog: catalog || { list: [], brakes: [], total: 0, error: null } }),
         file,
     };
 }
 
-module.exports = { startAdasProbe, scanCatalog, catalogLine, leaves, sliOf, SOURCES, HUD, IFACE_RE, MEMBER_RE, SLI_RE };
+module.exports = { startAdasProbe, scanCatalog, catalogLine, brakeLine, leaves, sliOf, SOURCES, HUD, IFACE_RE, MEMBER_RE, SLI_RE, BRAKE_RE };

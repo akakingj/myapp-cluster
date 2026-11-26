@@ -22,7 +22,7 @@ const IND = require('./indicators');
 const { startBlindSpot } = require('./blindspot');
 const { startHvSoc } = require('./hvsoc');
 const { ReadOnlyDiag } = require('./kit/readonly-diag');
-const { startAdasProbe, catalogLine } = require('./adas_probe');
+const { startAdasProbe, catalogLine, brakeLine } = require('./adas_probe');
 const logs = require('./logs');
 
 const W = 1600, H = 520;
@@ -356,12 +356,19 @@ mgu.run({
             L(head, 280, 18, t.dim, true);
             if (!st.started) { L('Starting…', 310, 18, t.text); return; }
             if (adasMode() === 'catalog') {
-                const c = st.catalog;
-                L(c.error || ('Catalog: ' + c.list.length + ' of ' + c.total + ' services look like the driving assistant\'s or the HUD\'s'), 306, 18, t.text, true);
-                const rows = [];
-                (c.list.length ? c.list.map(catalogLine) : ['(none)']).forEach((r) => { for (let i = 0; i < r.length; i += 170) rows.push((i ? '      ' : '') + r.slice(i, i + 170)); });
-                rows.slice(0, 9).forEach((r, i) => L(r, 330 + i * 20, 15, t.text));
-                if (rows.length > 9) L('… ' + (rows.length - 9) + ' more lines in the log', 330 + 9 * 20, 15, t.dim);
+                const c = st.catalog, brakes = c.brakes || [];
+                if (c.error) { L(c.error, 306, 18, t.text, true); return; }
+                // (each list's lines cut at 170 letters, the rest in the log)
+                const wrap = (lines) => { const rows = []; lines.forEach((r) => { for (let i = 0; i < r.length; i += 170) rows.push((i ? '      ' : '') + r.slice(i, i + 170)); }); return rows; };
+                const block = (title, lines, y, room) => {
+                    L(title, y, 17, t.text, true);
+                    const rows = wrap(lines.length ? lines : ['(none)']);
+                    rows.slice(0, room).forEach((r, i) => L(r, y + 22 + i * 18, 14, t.text));
+                    if (rows.length > room) L('… ' + (rows.length - room) + ' more lines in the log', y + 22 + room * 18, 14, t.dim);
+                };
+                // the brakes', the parking brake's and Auto Hold's members first (Auto Hold: drawn under the apps' layers)
+                block('Brakes, parking brake, Auto Hold: ' + brakes.length + ' members in the catalog of ' + c.total + ' services', brakes.map(brakeLine), 306, 4);
+                block('Driving assistant or HUD: ' + c.list.length + ' services', c.list.map(catalogLine), 306 + 22 + 5 * 18 + 6, 3);
                 return;
             }
             const age = (ms) => (ms === null ? '' : ms < 1000 ? 'now' : Math.round(ms / 1000) + ' s ago');

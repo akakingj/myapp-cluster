@@ -22,7 +22,7 @@ const tick = () => new Promise((r) => setTimeout(r, 10));
     fs.writeFileSync(cat, JSON.stringify({ interfaces: {
         'de.bmw.dass.pad.communication.ObjectListSuAAR': { serviceId: 1, broadcasts: { suAARObjectList: { id: 2 } }, fields: {} },
         'de.bmw.infotainment.displaydataserver.DisplayDataServer': { fields: { functionalLibraryData: { getter: { id: 1 }, notifier: { id: 2 } } } },
-        'de.bmw.infotainment.vehicle.CDS': { fields: { statusEngineSpeed2: {} } },
+        'de.bmw.infotainment.vehicle.CDS': { fields: { statusEngineSpeed2: {}, statusHandBrake: {}, statusAutoHold: {} } },
     } }));
     const handlers = {}, watched = [], calls = [];
     let on = false, t = 1000000;
@@ -101,6 +101,15 @@ const tick = () => new Promise((r) => setTimeout(r, 10));
         const log = fs.readFileSync(pr.file, 'utf8');
         assert(/2 of 3 services/.test(log) && /ObjectListSuAAR {2}broadcasts suAARObjectList/.test(log));
         assert(P.scanCatalog(cat + '.none').error);
+    });
+    await check('the catalog: every service\'s members that look like the brakes\' or Auto Hold\'s, listed and logged', async () => {
+        const c = pr.status().catalog;
+        assert.deepStrictEqual(c.brakes.map(P.brakeLine), ['de.bmw.infotainment.vehicle.CDS  fields statusAutoHold',
+            'de.bmw.infotainment.vehicle.CDS  fields statusHandBrake']);
+        const log = fs.readFileSync(pr.file, 'utf8');
+        assert(/2 members look like the brakes/.test(log) && /CDS {2}fields statusHandBrake/.test(log), log);
+        assert(!/statusEngineSpeed2/.test(c.brakes.map(P.brakeLine).join()));
+        assert.deepStrictEqual(P.scanCatalog(cat + '.none').brakes, []);
     });
     await check('app.json: the services optional (the app installs without them), the check off by default', async () => {
         const spec = require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'app.json'));
