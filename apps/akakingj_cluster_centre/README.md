@@ -73,7 +73,7 @@ Buttons: **Show in the cluster**, **Next page**, **Arm 0-60 timer** (it turns th
 **Signals**, **Logs** (this app's logs as QR codes, three to a page, and the full logs in
 `cluster-logs/cluster-logs-centre-<time>.txt` on a USB stick: as Cluster Layouts' Logs), **Settings**.
 
-Settings, 52 of them, kept for each driver profile:
+Settings, 60 of them, kept for each driver profile:
 
 - **Pages**: each page on or off; change page by itself (off, 5 s ... 1 min).
 - **Look**: like the factory cluster or modern; tiles on the built-in pages (number and bar, arc gauge, number only), colour (blue, white,
@@ -86,6 +86,8 @@ Settings, 52 of them, kept for each driver profile:
 - **Warnings**: when oil, coolant, intake air, gearbox and battery count as too hot, and low pressure fuel as
   too low (the value and its bar turn red).
 - **Custom pages**: how many slots, the tile style, and the reading in each slot.
+- **Car**: the vehicle, the fuel tank's size, and **Electric range when full** (km, in miles with mph): the electric
+  range worked out from the charge (shown with ~) until the car's own comes, and where its gauge is full.
 
 ## Signals
 

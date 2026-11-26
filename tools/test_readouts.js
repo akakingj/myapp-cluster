@@ -433,4 +433,15 @@ check('the speedometers\' and boost gauges\' ends: Settings > Speedometer up to 
     assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'kpa', boostMax: 20 }).frac - 0.5) < 1e-6);
     assert.ok(Math.abs(R.view('boostActual', { boostActual: 1 }, { press: 'psi', boostMax: 20 }).frac - 14.5038 / 20) < 1e-3);
 });
+check('the electric range: full at Settings > Electric range when full; an estimate with ~ (Layouts and Centre alike)', () => {
+    const est = { erange: 20, erangeFull: 40, erangeEst: true }, own = { erange: 20, erangeFull: 40 };
+    assert.strictEqual(C.READOUTS.erange.frac(est), 0.5);
+    assert.strictEqual(C.READOUTS.erange.frac({ erange: 80, erangeFull: 40 }), 1);
+    assert.strictEqual(C.erangeText(o(), est).slice(0, 3), '~20');
+    assert.strictEqual(C.erangeText(o(), own).slice(0, 2), '20');
+    assert.strictEqual(R.view('erange', est, { speed: 'kmh' }).frac, 0.5);
+    assert.strictEqual(R.view('erange', est, { speed: 'kmh' }).text, '~20');
+    assert.strictEqual(R.view('erange', own, { speed: 'kmh' }).text, '20');
+    assert.ok(Math.abs(R.view('erange', est, { speed: 'mph' }).frac - 0.5) < 1e-9, 'in miles the same share');
+});
 console.log(n + ' passed');

@@ -360,7 +360,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   diesel's included); a saved 5000 is 6000. Electric range when full is eFullKm: kept in km (30 - 100, 50 as it comes),
   shown in miles with mph (the kit's numberText, "unitBy": speedUnit; Settings' list and build.py's drop-down name both,
   "50 km / 31 mi"), the Car profile's eFullKm followed (1.9.0; its eFull in miles is no longer written); a saved eFull
-  (miles) is its nearest km once and leaves the file (main.js).
+  (miles) is its nearest km once and leaves the file (main.js). The electric range's bars and gauges are full at it
+  (data.js erangeFull: Layouts' E-RNG, it was 100 km; Centre's ELECTRIC reading, it was 60 km), and Centre shows an
+  estimate with ~ as Layouts does (readings.js view).
 - Layouts 0.60.1, Centre 0.14.22, Info 1.10.19 (Nov 26 2026): Settings > BMW's bottom strip is On / Off after a test on
   a car (photos, 2026-11-26): On is the band at 18 (the trims of 6 and 12 px left pieces of the stock dials at the sides,
   nothing below the layout left more), Off hides it to BMW's gear letter (the wider gap showed the T of COMFORT).

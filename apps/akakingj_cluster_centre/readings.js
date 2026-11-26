@@ -77,10 +77,12 @@ function view(key, d, u, warn) {
     // the Redline app's HUD)
     const warmAt = key === 'oil' && warn && isNum(warn.oilWarm) ? warn.oilWarm : null;
     const level = !isNum(raw) ? 'none' : isNum(hi) && raw >= hi ? 'warn' : isNum(lo) && raw <= lo ? 'warn' : isNum(r.cold) && raw < r.cold ? 'cold' : isNum(warmAt) && raw < warmAt ? 'warm' : 'ok';
-    const text = isNum(v) ? (r.kind === 'kw' && v > 0.05 ? '+' : '') + v.toFixed(decimals(r.kind, v, u)) : '--';
+    // ('~' before an estimate: the electric range worked out from the charge, as Cluster Layouts shows it)
+    const text = isNum(v) ? (r.kind === 'kw' && v > 0.05 ? '+' : key === 'erange' && d.erangeEst ? '~' : '') + v.toFixed(decimals(r.kind, v, u)) : '--';
     // (boost to Settings > Boost gauge up to, the Car profile's where it sets it: its end in psi, or in bar)
     const g = /^boost/.test(key) && u ? BOOST_GAUGES[u.boostMax] : null;
-    const top = g ? g.bar : r.max;
+    // (the electric range: full at Settings > Electric range when full, data.js erangeFull)
+    const top = g ? g.bar : key === 'erange' && isNum(d.erangeFull) && d.erangeFull > 0 ? d.erangeFull : r.max;
     const lo2 = convert(r.kind, r.min, u), hi2 = g && u.press === 'psi' ? g.psi : convert(r.kind, top, u);
     const warnAt = isNum(hi) ? Math.max(0, Math.min(2, (convert(r.kind, hi, u) - lo2) / (hi2 - lo2))) : 2;
     return { key, title: r.title, short: r.short, icon: r.icon || 0, value: isNum(v) ? v : null, text, unit: unitText(r.kind, u), frac: isNum(v) ? Math.max(0, Math.min(1, (v - lo2) / (hi2 - lo2))) : 0, warnAt, level };

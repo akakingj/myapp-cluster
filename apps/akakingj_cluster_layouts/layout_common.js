@@ -475,7 +475,7 @@ const READOUTS = {
     soc: { short: 'SOC', long: 'BATTERY', num: (o, d) => (isNum(d.soc) ? Math.round(d.soc) + '%' : '--'), frac: (d) => (isNum(d.soc) ? d.soc / 100 : 0) },
     battTemp: { short: 'BATT', long: 'BATTERY TEMP', num: tempOf('battTemp'), frac: (d) => (isNum(d.battTemp) ? (d.battTemp + 10) / 60 : 0) },
     kw: { short: 'kW', long: 'BATTERY POWER', num: (o, d) => (isNum(d.kw) ? (d.kw > 0.05 ? '+' : '') + (Math.abs(d.kw) < 10 ? d.kw.toFixed(1) : String(Math.round(d.kw))) : '--'), unit: () => 'kW', frac: (d) => (isNum(d.kw) ? Math.min(1, Math.abs(d.kw) / kwRange(d).out) : 0) },
-    erange: { short: 'E-RNG', long: 'ELECTRIC RANGE', num: (o, d) => erangeText(o, d), frac: (d) => (isNum(d.erange) ? Math.min(1, d.erange / 100) : 0) },
+    erange: { short: 'E-RNG', long: 'ELECTRIC RANGE', num: (o, d) => erangeText(o, d), frac: (d) => (isNum(d.erange) ? Math.min(1, d.erange / (d.erangeFull || 50)) : 0) },   // (full at Electric range when full)
     oil: { short: 'OIL', long: 'ENGINE OIL', num: tempOf('oil'), frac: (d) => (isNum(d.oil) ? (d.oil - 40) / 100 : 0) },
     coolant: { short: 'CLT', long: 'COOLANT', num: tempOf('coolant'), frac: (d) => (isNum(d.coolant) ? (d.coolant - 40) / 90 : 0) },
     boost: { short: 'BST', long: 'BOOST', num: numOrOff((o, d) => pressNum(o, d.boostActual)), unit: (o) => pressLabel(o), frac: (d) => boostFrac(d), needs: ['boostActual', 'boostTarget'] },
