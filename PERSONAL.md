@@ -348,6 +348,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.62.2, Centre 0.15.3, Info 1.10.23 (Nov 26 2026): a setting the Car profile sets looks it in Settings (the
+  owner: with the Car profile starting AK Cluster ID8, Layouts' Start on the cluster with the car looked changeable):
+  its row dimmed, its value with "· Car profile", no arrow (kit sheet.js rows: held; it was already not opened).
+  kit/tools/test_car_profile.js.
 - Layouts 0.62.1 (Nov 26 2026): the speed limit sign's figures larger (the owner: too small to read at a glance) - the
   text box r 1.56 x 1.06 (from 1.44 x 0.8), still fitted to three wide figures (sliFit), the ring 0.16 of the radius
   (from 0.2): about 30 px tall, from 20 - 24. The places as before.

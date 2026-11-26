@@ -209,6 +209,17 @@ const cases = {
         sh.choose();
         assert.strictEqual(sh.open, null, 'no list of values for a held setting');
         assert.strictEqual(s.values.redline, 7000);
+        // its row dimmed, its value with "Car profile", no arrow (0.62.2: a held row looked like any other)
+        const row = sh.rows()[sh.focus];
+        assert.deepStrictEqual([row.held, row.kind, /Car profile$/.test(row.value)], [true, null, true], JSON.stringify(row));
+        // the start with the car: Layouts' own row held off while the Car profile starts AK Cluster ID8
+        writeProfile({ clusterStart: 'id8' });
+        const s2 = settingsIn('layouts', { autoStart: 'on' }), sh2 = listSheet(s2, { version: '0' });
+        const r2 = sh2.rows()[sh2.entries().findIndex((e) => e.key === 'autoStart')];
+        assert.deepStrictEqual([s2.get('autoStart'), r2.held, /^Off  ·  Car profile$/.test(r2.value)], ['off', true, true], JSON.stringify(r2));
+        sh2.focus = sh2.entries().findIndex((e) => e.key === 'autoStart'); sh2.choose();
+        assert.deepStrictEqual([sh2.open, s2.values.autoStart], [null, 'on'], 'not changed here');
+        writeProfile({ speedUnit: 'kmh', redline: 6000 });
         // one the profile leaves: its list opens
         sh.focus = sh.entries().findIndex((e) => e.key === 'rpmMax');
         sh.choose();
