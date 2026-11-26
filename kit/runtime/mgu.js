@@ -175,7 +175,6 @@ class Settings {
     }
     onChange(fn) { this.listeners.push(fn); }
     item(key) { return this.schema.find((s) => s.key === key); }
-    /** Human text for the current value of a setting. */
     /**
      * The text of a number setting's value. "labels": a value's own text (e.g. 0 = "Auto"). "unitBy" + "units": the
      * value is kept in "unit" and shown in the unit another setting chose (kit/tools/build.py names them all in the
@@ -189,6 +188,7 @@ class Settings {
         if (u && typeof v === 'number') return Math.round(v * (u.mul || 1) + (u.add || 0)) + ' ' + u.unit;
         return String(v) + (s.unit ? ' ' + s.unit : '');
     }
+    /** Human text for the current value of a setting. */
     display(key) {
         const s = this.item(key), v = this.get(key);
         if (!s) return String(v);
