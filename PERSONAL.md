@@ -348,6 +348,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.61.1 (Nov 26 2026): JDM 2 with the car's strip: the tach lower and a little smaller (centre y 413, radius
+  225, from 393 / 240) and the gear's disc lower and smaller (y 290, radius 92, from 262 / 100), each 30 px or more under
+  the KOMBI's turn arrows - on the car (a photo, 2026-11-26) the arrows sat on the tach's rim and the disc's top: they
+  stand about 10 - 15 px lower and further in than layout_common TURN_ARROWS. JDM 1 is clear of them.
 - Info 1.10.20 (Nov 26 2026): Driving assistant check > Signals: the speed limit in the HUD's data
   (DisplayDataServer.functionalLibraryData xSpeedLimitAssist, seen on a G20 plug-in hybrid 2026-11-18: vSLISpeedValue
   16 with the cruise control set at 82, vSLISymbol LDM_VZA_VSLI_NO_SYMBOL, statusVZA STATUS_INACTIVE; pia.piaSliNpi 8,
