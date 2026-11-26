@@ -353,7 +353,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   a car (photos, 2026-11-26): On is the band at 18 (the trims of 6 and 12 px left pieces of the stock dials at the sides,
   nothing below the layout left more), Off hides it to BMW's gear letter (the wider gap showed the T of COMFORT).
   main.js moves a saved 0 / 6 / 12 / 18 to on and hide / hideWide to off. Centre and Info +0.0.1 for the translations
-  (the six labels gone).
+  (the six labels gone). Car > Vehicle is **Engine**, with the Car profile's and AK Cluster ID8's five choices (Auto,
+  Diesel, Petrol, Petrol M car - a petrol car here, shared/data.js - and Plug-in hybrid), Layouts and Centre alike.
 - Layouts 0.60.0, Centre 0.14.21, Info 1.10.18 (Nov 26 2026): the Waze centre's map hosted from layers (map_host.js:
   client.host('panel', { target: 'map', x, y, w, h }), unhost when the layout stops showing or the centre isn't Waze)
   in place of the map window file our waze-on-cluster read (map_window.txt, layout_window_file), so the MGU Store's

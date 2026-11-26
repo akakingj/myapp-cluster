@@ -1908,32 +1908,33 @@
     },
     {
       "key": "vehicle",
-      "label": "Vehicle",
+      "label": "Engine",
       "type": "choice",
       "default": "petrol",
       "options": [
         [
           "auto",
-          "Auto (found from the car)"
-        ],
-        [
-          "phev",
-          "Plug-in hybrid (charge, electric range, battery power)"
-        ],
-        [
-          "petrol",
-          "Petrol (boost, timing, torque, fuel rail)"
+          "Auto (from the car)"
         ],
         [
           "diesel",
-          "Diesel (boost, torque, intake air; no ignition timing)"
+          "Diesel"
+        ],
+        [
+          "petrol",
+          "Petrol"
+        ],
+        [
+          "m",
+          "Petrol, M car"
+        ],
+        [
+          "phev",
+          "Plug-in hybrid (petrol)"
         ]
       ],
       "section": "Car",
-      "profile": "engine",
-      "profileMap": {
-        "m": "petrol"
-      }
+      "profile": "engine"
     },
     {
       "key": "tankLitres",

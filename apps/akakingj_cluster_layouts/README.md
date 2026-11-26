@@ -425,7 +425,9 @@ installing, clear the stored faults once (Fault Scanner) and check they stay awa
 Made and measured on a G05 X5 xDrive45e (iDrive 7 MGU, the 12.3" Live Cockpit Professional cluster); every
 car is taken to have the same cluster. What differs between cars is a setting, or found from the car:
 
-- **Vehicle** (default **Auto**): found from the car the way other apps identify one before assuming
+- **Car > Engine** (0.60.1: the Car profile's and AK Cluster ID8's five choices - Auto (from the car), Diesel, Petrol,
+  Petrol, M car (a petrol car here), Plug-in hybrid (petrol); Petrol as it comes). Auto: found from the car the way
+  other apps identify one before assuming
   anything: a plug-in hybrid's drive mode names, eDrive Live sharing its battery readings or the car giving an
   electric range say plug-in hybrid; none of these in 90 s shown, while the engine unit answers, says petrol
   or diesel. A petrol or diesel car gets the engine readings (boost, timing, torque, fuel rail), its own drive

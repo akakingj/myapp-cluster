@@ -2451,7 +2451,6 @@ JDM 1: the gear in the arc (the layout's own strip)	JDM 1: 아크 안 기어 표
 Arizona (no DST)	애리조나 (서머타임 없음)
 Arm 0-60 timer	0-60 타이머 준비
 Atlantic	대서양
-Auto (found from the car)	자동 (차량에서 감지)
 Auto (the shift point)	자동 (변속 시점)
 Background	배경
 Bar after the kW	kW 옆 막대
@@ -2555,7 +2554,6 @@ Panel and arrows: dimmer at night	패널과 화살표: 야간에 어둡게
 Panel items	패널 항목
 Panel position	패널 위치
 Petrol or diesel (boost, timing, torque, fuel rail)	가솔린 또는 디젤 (부스트, 점화 시기, 토크, 연료 레일)
-Plug-in hybrid (charge, electric range, battery power)	플러그인 하이브리드 (충전량, 전기 주행 거리, 배터리 출력)
 Pulse	Pulse
 Pure black (hides the cluster's gear box)	완전 검정 (계기판 기어 표시 가림)
 Readings (gear, ranges, temperatures)	표시값 (기어, 주행 가능 거리, 온도)
@@ -2725,8 +2723,6 @@ Left box: bottom (tyres)	왼쪽 상자: 아래 (타이어)
 Under the gear: left	기어 아래: 왼쪽
 Under the gear: right	기어 아래: 오른쪽
 Analog clock	아날로그 시계
-Petrol (boost, timing, torque, fuel rail)	가솔린 (부스트, 점화 시기, 토크, 연료 레일)
-Diesel (boost, torque, intake air; no ignition timing)	디젤 (부스트, 토크, 흡기 온도 · 점화 시기 없음)
 Centre readout: top left	가운데 표시: 왼쪽 위
 Centre readout: top right	가운데 표시: 오른쪽 위
 Centre readout: under the speed	가운데 표시: 속도 아래
@@ -2832,3 +2828,5 @@ Speedometer up to	속도계 최고값
 Boost gauge up to	부스트 게이지 최고값
 From the car's Sport Display	차량 스포츠 디스플레이 값
 BMW's bottom strip	BMW 하단바
+Petrol, M car	가솔린, M 차량
+Plug-in hybrid (petrol)	플러그인 하이브리드 (가솔린)

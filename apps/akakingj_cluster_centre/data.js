@@ -203,9 +203,10 @@ function startData(ctx, opts) {
     /* fresh: whoever shows the data hears of each new reading at once (the engine draws it then, not at its
      * next tick) */
     const freshFns = [];
-    /** Settings > Vehicle: 'ice' for a petrol or diesel car (no high-voltage battery), else a plug-in hybrid. */
+    /** Settings > Car > Engine: 'ice' for a petrol (an M car's too) or diesel car (no high-voltage battery), else a plug-in hybrid. */
     /*
-     * The vehicle (Settings > Vehicle): a plug-in hybrid, a petrol or diesel car, or Auto (the default): found
+     * The vehicle (Settings > Car > Engine, as the Car profile's and AK Cluster ID8's): a plug-in hybrid, a petrol (an
+     * M car: a petrol here) or diesel car, or Auto: found
      * from the car itself, as other apps identify a car before they assume anything about it: a plug-in hybrid's
      * drive mode names (PHEV_...) or an answer from its high-voltage battery unit say plug-in hybrid; that unit
      * not answering (with the diagnostic link up) says petrol or diesel. Until then: a plug-in hybrid.
@@ -215,7 +216,7 @@ function startData(ctx, opts) {
     let dmeAnswered = false;
     const detect = (v, why) => { if (detected.vehicle !== v) { detected.vehicle = v; detected.why = why; log.info('vehicle: ' + v + ' (' + why + ')'); } };
     /* Settings > Vehicle: Plug-in hybrid, Petrol, Diesel (0.35.7; 'ice', the petrol-or-diesel of before, as Petrol) or Auto */
-    const setVehicle = () => { const v = setting('vehicle'); return v === 'petrol' || v === 'diesel' || v === 'ice' ? 'ice' : v === 'phev' ? 'phev' : null; };
+    const setVehicle = () => { const v = setting('vehicle'); return v === 'petrol' || v === 'diesel' || v === 'm' || v === 'ice' ? 'ice' : v === 'phev' ? 'phev' : null; };
     const vehicleNow = () => setVehicle() || detected.vehicle || 'phev';
     /** the engine's fuel: Diesel as set, else petrol (Auto: the car's engine unit is read as a petrol one) */
     const fuelNow = () => (setting('vehicle') === 'diesel' ? 'diesel' : 'petrol');
