@@ -348,6 +348,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.62.1 (Nov 26 2026): the speed limit sign's figures larger (the owner: too small to read at a glance) - the
+  text box r 1.56 x 1.06 (from 1.44 x 0.8), still fitted to three wide figures (sliFit), the ring 0.16 of the radius
+  (from 0.2): about 30 px tall, from 20 - 24. The places as before.
 - Layouts 0.62.0, Centre 0.15.2 (Nov 26 2026): Settings > Display > Speed limit sign (sliSign, Off by default; the
   owner, Nov 26: BMW's sign does not show over Layouts): a red ring round a light disc with the figures, placed by
   layout_common.sliPlace at the point nearest BMW's own (528, 590) clear of the layout as drawn then (dials as circles,

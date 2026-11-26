@@ -892,11 +892,13 @@ const sliText = (d) => (isNum(d.speedLimit) && d.speedLimit > 0 ? String(Math.ro
 /** The sign's two pieces at place s ({ x, y, r }): the disc with its red ring, the figures; over everything (z: a
  * dial's square quad, its corners drawn too, Retro M's, would hide a panel at the kinds' own order). */
 function sliPieces(s) {
-    const r = s.r, ring = Math.round(r * 0.2);
+    // (the figures as large as three wide ones fit the disc, sliFit; the ring a little thinner: the owner, too small to
+    // read at a glance - 20 to 24 px tall at first, now about 30)
+    const r = s.r, ring = Math.round(r * 0.16);
     return [
         { key: 'sliDisc', kind: 'panel', z: 30, x: s.x - r, y: s.y - r, w: 2 * r, h: 2 * r, params: { u_box: [r, ring, 0, 1] },
             colors: () => ({ top: '#f4f4f2', bottom: '#d8d8d4', border: '#e0303a' }) },
-        text('sliNum', s.x - r * 0.72, s.y - r * 0.4, r * 1.44, r * 0.8, sliText, () => ({ color: ['#151515', 1], glow: ['#000000', 0] }), { z: 31 }),
+        text('sliNum', s.x - r * 0.78, s.y - r * 0.53, r * 1.56, r * 1.06, sliText, () => ({ color: ['#151515', 1], glow: ['#000000', 0] }), { z: 31 }),
     ];
 }
 
