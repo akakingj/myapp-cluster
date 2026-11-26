@@ -349,10 +349,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
-- Layouts 0.60.1, Centre 0.14.22, Info 1.10.19 (Nov 26 2026): Settings > BMW's bottom strip, two choices after a test on a car (photos, 2026-11-26):
-  *Show all of it* is the band at 18 (the trims of 6 and 12 px left pieces of the stock dials at the sides, nothing
-  below the layout left more) and *Hide it* (BMW's gear letter alone; the wider gap showed the T of COMFORT). main.js
-  moves a saved 0 / 6 / 12 to 18 and hideWide to hide. Centre and Info +0.0.1 for the translations (the four labels gone).
+- Layouts 0.60.1, Centre 0.14.22, Info 1.10.19 (Nov 26 2026): Settings > BMW's bottom strip is On / Off after a test on
+  a car (photos, 2026-11-26): On is the band at 18 (the trims of 6 and 12 px left pieces of the stock dials at the sides,
+  nothing below the layout left more), Off hides it to BMW's gear letter (the wider gap showed the T of COMFORT).
+  main.js moves a saved 0 / 6 / 12 / 18 to on and hide / hideWide to off. Centre and Info +0.0.1 for the translations
+  (the six labels gone).
 - Layouts 0.60.0, Centre 0.14.21, Info 1.10.18 (Nov 26 2026): the Waze centre's map hosted from layers (map_host.js:
   client.host('panel', { target: 'map', x, y, w, h }), unhost when the layout stops showing or the centre isn't Waze)
   in place of the map window file our waze-on-cluster read (map_window.txt, layout_window_file), so the MGU Store's

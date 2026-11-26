@@ -66,12 +66,12 @@ const CUT_Y = C0.STRIP_Y;
  * with one exception the KOMBI enforces: the gear. Cover its window (GEAR_WINDOW) and the KOMBI draws a black fallback
  * gear box in the rev dial, which can stay until the cluster restarts (measured by others on their cars, seen on the
  * owner's X3 M40i; the same rule as AK Cluster ID8's docs/CLUSTER-CONSTRAINTS.md section 2). So:
- *   "18"            show it: a black band 18 px below CUT_Y, over the stock dials' edges and the separator the KOMBI
+ *   "on"            shown: a black band 18 px below CUT_Y, over the stock dials' edges and the separator the KOMBI
  *                   draws above its strip (less leaves pieces of them at the sides: a photo of the car, 2026-11-26),
  *                   ending on the row above the gear's window (STRIP_TRIM_MAX). Over the strip's drive mode and gear
  *                   (x BG_NOTCH) only to BG_NOTCH_Y, short of the drive mode's tops at 660 (to 662 clipped them: a photo
  *                   of the car, 2026-11-09; the notch's left end at 1196 for the E of ELECTRIC INDIVIDUAL, the longest mode)
- *   "hide"          the band at 18 right across, and from there to the screen's foot two black covers, one each side of
+ *   "off"           hidden: the band at 18 right across, and from there to the screen's foot two black covers, one each side of
  *                   GEAR_KEEP (the left one ends a column short of the gear's window): BMW's gear letter is all that is
  *                   left of the strip
  * At most 3 pieces; the KOMBI's warning lights are drawn over them all.
@@ -80,13 +80,13 @@ const GEAR_WINDOW = { x: 1385, y: 665, w: 78, h: 56 };
 const STRIP_TRIM_MAX = GEAR_WINDOW.y - 1 - CUT_Y;                    // 18
 const GEAR_KEEP = { x: GEAR_WINDOW.x - 1, w: 116 };
 const BG_NOTCH = [1196, 1424], BG_NOTCH_Y = 658;
-const STRIP_COVERS = ['18', 'hide'];
-const stripCover = (o) => (o && STRIP_COVERS.indexOf(String(o.bottomExtra)) >= 0 ? String(o.bottomExtra) : '18');
+const STRIP_COVERS = ['on', 'off'];
+const stripCover = (o) => (o && STRIP_COVERS.indexOf(String(o.bottomExtra)) >= 0 ? String(o.bottomExtra) : 'on');
 const stripOn = (o) => C0.strip(o);
 const black = (key, x, y, w, h) => ({ key, kind: 'flat', x, y, w, h, colors: () => ({ color: ['#000000', 1] }) });
 function blackBand(o) {
     const foot = CUT_Y + STRIP_TRIM_MAX, k = GEAR_KEEP;
-    if (stripCover(o) === 'hide') {
+    if (stripCover(o) === 'off') {
         return [black('bgBand0', 0, CUT_Y, 1920, foot - CUT_Y), black('bgBand1', 0, foot, k.x, 720 - foot),
             black('bgBand2', k.x + k.w, foot, 1920 - (k.x + k.w), 720 - foot)];
     }

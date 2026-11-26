@@ -399,15 +399,15 @@
       "key": "bottomExtra",
       "label": "BMW's bottom strip",
       "type": "choice",
-      "default": "18",
+      "default": "on",
       "options": [
         [
-          "18",
-          "Show all of it"
+          "on",
+          "On"
         ],
         [
-          "hide",
-          "Hide it (BMW's own gear letter stays)"
+          "off",
+          "Off"
         ]
       ],
       "section": "Display"
