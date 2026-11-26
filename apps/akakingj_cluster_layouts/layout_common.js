@@ -132,7 +132,7 @@ const clock = () => require('./clock').hm(undefined, true);   // (12-hour: with 
 const MAP = { x: 416, y: 120, w: 1088, h: 480 };
 /*
  * What a layout leaves open of it: the middle between the KOMBI's own fins (x 574 and 1357 at the top; its "km/h",
- * speed-limit sign and "1/min" along the bottom edges), where waze-on-cluster draws its map (map_window.js), and
+ * speed-limit sign and "1/min" along the bottom edges), where Waze on cluster's map is hosted (map_host.js), and
  * STOCK_SPEED beside it, the KOMBI's own speed readout and speed bar at the left of its map (at 0 km/h x 416-705,
  * y 342-415), from just inside the fin's tip, as far left as the layouts' dials leave room, for a three-digit speed.
  */

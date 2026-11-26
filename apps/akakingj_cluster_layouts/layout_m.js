@@ -8,7 +8,7 @@
  *
  * Fitted to the G05: their time, fuel range, outside temperature and badge along the bottom left out (the car's own
  * strip shows them); the M stripes, the top numerals moved clear of the camera's cowl. With the Waze map their
- * window between the blades (the map drawn there, map_window.js) and their map-up places for the gear and speed; on
+ * window between the blades (the map hosted there, map_host.js) and their map-up places for the gear and speed; on
  * an M car (its KOMBI's two boxes in the middle) the gear and speed in those places. With the map the window reaches
  * from under the cowl to the foot of the map area, the speed in the left card and the gear in the right one. Full screen without the
  * car's strip the right-hand setup rows stand clear of the KOMBI's own gear box (above and below it).

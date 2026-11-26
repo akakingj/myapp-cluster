@@ -43,7 +43,7 @@ const { lookNow } = require('./themes');
 const { startData } = require('./data');
 const presence = require('./presence');
 const { DEMO: DAP_DEMO } = require('./dap');
-const { startMapWindow } = require('./map_window');
+const { startMapHost } = require('./map_host');
 const { findSignals } = require('./signal_finder');
 const logs = require('./logs');
 const path = require('path');
@@ -137,8 +137,9 @@ mgu.run({
         const look = () => (layout.dayNight && settings.get('look') === 'auto' ? (data().night ? 'comfort' : 'efficient') : lookNow(settings.get('look'), data()));
         /* the renderer target: the panel (slot 0x203), where the HMI's own cluster screen goes down and the
          * KOMBI shows its fallback gear box */
+        const client = new ClusterRender('akakingj_cluster_layouts');
         const start = () => startCluster({
-            client: new ClusterRender('akakingj_cluster_layouts'),
+            client,
             layout: () => layout,
             // (the glyphs: the layout's own family, else the bold)
             font: () => layout.font || 'bold',
@@ -151,16 +152,16 @@ mgu.run({
             onFresh: D.onFresh,
         });
         let cluster = start();
-        const mapWindow = startMapWindow(log);
+        const mapHost = startMapHost(log, client);
         let lastVehicle = null, lastModeGear = null, modeWant = null, modeAt = 0, lastBoostTop = null;
         // the engine-unit readings the layout shows, read fast while it shows
         setInterval(() => {
             if (showing()) D.want((typeof layout.needs === 'function' ? layout.needs(options()) : layout.needs || []).concat(require('./layout_common').focus.needs(options())));
             // Cluster Centre steps aside while a layout shows
             if (cluster.status().shown) presence.mark('layouts', { centre: options().centre });
-            // the Waze centre: Waze on cluster draws its map over the layout, filling the window (map_window.js): the
+            // the Waze centre: Waze on cluster's map hosted in the layout's window, under the layout (map_host.js): the
             // layout's own (M's: where bimmer-lab's put it), else the view the layouts leave open
-            mapWindow.set(cluster.status().shown && options().centre === 'map' ? (layout.mapWindow || require('./layout_common').MAP_VIEW) : null);
+            mapHost.set(cluster.status().shown && options().centre === 'map' ? (layout.mapWindow || require('./layout_common').MAP_VIEW) : null);
             // the vehicle found (Settings > Vehicle: Auto): the layout redrawn for it once known
             const v = D.vehicle().vehicle;
             if (v !== lastVehicle) { if (lastVehicle) cluster.rebuild(); lastVehicle = v; }

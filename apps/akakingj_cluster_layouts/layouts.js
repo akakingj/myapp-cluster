@@ -99,6 +99,16 @@ function blackBand(o) {
     return [[0, BG_NOTCH[0], foot], [BG_NOTCH[0], BG_NOTCH[1], BG_NOTCH_Y], [BG_NOTCH[1], 1920, foot]]
         .map(([x0, x1, y1], i) => black('bgBand' + i, x0, CUT_Y, x1 - x0, y1 - CUT_Y));
 }
+/*
+ * The Waze centre's window (the layout's own, M's, else the view the layouts leave open): a clear layer over it, with
+ * the backgrounds, which the map is hosted under (map_host.js; cluster-render hosts another target only where the
+ * host has a layer drawn over the rect, and draws it just under the lowest such layer). It draws nothing.
+ */
+const mapAnchor = (L, o) => {
+    if (o.centre !== 'map') return [];
+    const W = L.mapWindow || C0.MAP_VIEW;
+    return [{ key: 'bgMapHost', kind: 'flat', x: W.x, y: W.y, w: W.w, h: W.h, colors: () => ({ color: ['#000000', 0] }) }];
+};
 /* does a rectangle reach into the gear's window? */
 const overGear = (r) => r.x < GEAR_WINDOW.x + GEAR_WINDOW.w && r.x + r.w > GEAR_WINDOW.x && r.y < GEAR_WINDOW.y + GEAR_WINDOW.h && r.y + r.h > GEAR_WINDOW.y;
 function bottomCut(list) {
@@ -131,7 +141,8 @@ LAYOUTS.forEach((L) => {
         // over the car's own strip there is no dark box to work round: the stock centre content shows in the
         // map's window, so the layout takes the same form as with the map (its window left clear for it)
         const oo = stripOn(o) && o.centre === 'stock' ? Object.assign({}, o, { centre: 'map' }) : o;
-        let list = (own(oo) || []).slice();
+        // (a layout made from another's pieces, Simple's from Pulse's: the map's anchor below for this one's centre)
+        let list = (own(oo) || []).filter((p) => p.key !== 'bgMapHost');
         if (stripOn(o)) {
             list = list.filter((p) => !C0.STRIP_DROP.test(p.key));
             // the strip shows the gear and the drive mode: no second drive mode, and no second gear but in the
@@ -169,7 +180,7 @@ LAYOUTS.forEach((L) => {
             // the band goes in with the backgrounds (under everything)
             let i = 0;
             while (i < list.length && /^bg/.test(list[i].key)) i++;
-            list.splice(i, 0, ...blackBand(o));
+            list.splice(i, 0, ...blackBand(o), ...mapAnchor(L, o));
             return list;   // (no frame for the gear box: the KOMBI shows none over the strip)
         }
         return list;

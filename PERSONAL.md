@@ -349,6 +349,13 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.60.0, Centre 0.14.21, Info 1.10.18 (Nov 26 2026): the Waze centre's map hosted from layers (map_host.js:
+  client.host('panel', { target: 'map', x, y, w, h }), unhost when the layout stops showing or the centre isn't Waze)
+  in place of the map window file our waze-on-cluster read (map_window.txt, layout_window_file), so the MGU Store's
+  own Maps on cluster (robertnisipeanu, cluster-render 0.8.x) puts the map in the layout's window and akakingj/myapp-map
+  carries none of our own map code. cluster-render hosts only where the host has a seen layer over the rect and draws
+  the map just under the lowest: bgMapHost, a clear flat over the window with the backgrounds (tools/test_engine.js).
+  shared/cluster_render_client.js is cluster-render 0.8.14's (js/), for host('panel', ...); every app +1 for it.
 - Layouts 0.59.0, Centre 0.14.20, Info 1.10.17 (Nov 25 2026): Settings > **BMW's bottom strip** (bottomExtra, Display),
   the owner's ask so both AK Cluster ID8 and Layouts can be tried on the car: 0 (nothing below the layout), 6 / 12 / 18
   (layouts.js blackBand: a black band that far below 646, over the drive mode and gear x 1196-1424 only to 658; 18 as it

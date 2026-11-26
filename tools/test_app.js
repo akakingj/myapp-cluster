@@ -231,11 +231,13 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     await sleep(200);
     ctx.settings.set('centre', 'map');
     await sleep(700);
-    const mw = path.join(process.env.CLUSTER_INFO_DIR, 'map_window.txt');
-    check('Waze centre: the map window for Waze on cluster, the view the layout leaves open on the panel', () => assert.strictEqual(fs.readFileSync(mw, 'utf8'), 'panel 592 120 746 480\n'));
+    const mapHost = () => client.hosts && client.hosts.get('map');
+    check('Waze centre: Waze on cluster\'s map hosted on the panel at the view the layout leaves open', () => assert.deepStrictEqual(mapHost(), { into: 'panel', target: 'map', x: 592, y: 120, w: 746, h: 480 }));
+    check('the map window held, not sent again every second', () => assert.strictEqual(client.log.filter((m) => m.op === 'host').length, 1));
     ctx.settings.set('centre', 'info');
     await sleep(700);
-    check('the readings centre: no map window', () => assert(!fs.existsSync(mw)));
+    check('the readings centre: the map given back to its own slot', () => assert(!mapHost() && client.log.some((m) => m.op === 'unhost' && m.target === 'map')));
+    check('no map window file (Waze on cluster\'s old way)', () => assert(!fs.existsSync(path.join(process.env.CLUSTER_INFO_DIR, 'map_window.txt'))));
     check('the page draws', () => assert(pages > 0));
     check('warnings only for what this machine lacks (no catalog, no diagnostic link)', () => assert(warns.some((w) => /catalog not readable/.test(w)) && warns.every((w) => /catalog not readable|TASU/.test(w)), JSON.stringify(warns)));
     // (a sample again: the checks above take longer than the readings' staleness, 3 s, with the trip data's added)

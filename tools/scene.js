@@ -34,6 +34,8 @@ class FakeClient extends EventEmitter {
     drop(ref) { this.layers.delete(ref); this._count({ op: 'drop', ref }); }
     animate(ref, o) { const l = this.layers.get(ref); l.anims = l.anims || {}; const n = (l.nextAnim = (l.nextAnim || 0) + 1); l.anims[n] = o; this._count(Object.assign({ op: 'animate', ref, anim: n }, o)); return n; }
     stop(ref, anim) { const l = this.layers.get(ref); if (l && l.anims) delete l.anims[anim]; this._count({ op: 'stop', ref, anim }); }
+    host(into, o) { this.hosts = this.hosts || new Map(); this.hosts.set(o.target, Object.assign({ into }, o)); this._count(Object.assign({ op: 'host', into }, o)); return true; }
+    unhost(target) { if (this.hosts) this.hosts.delete(target); this._count({ op: 'unhost', target }); }
     reset() { this.bytes = 0; this.messages = 0; this.log = []; }
 }
 

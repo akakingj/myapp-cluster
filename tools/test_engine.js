@@ -102,7 +102,12 @@ LAYOUTS.forEach((L) => {
         const over = s.engine._pieces().filter((l) => overMap(l) || overSpeed(l));
         // a band's rectangle may reach into the window as long as what it draws stays out: only those may overlap
         const hole = (l) => /^mdash$/.test(l.kind) && l.params.u_hole && l.params.u_hole[2] > 0;   // (cut see-through there)
-        assert(over.every((l) => (l.geo && l.geo[2] > 0) || hole(l)), 'over the map: ' + over.map((l) => l.key).join(' '));
+        assert(over.every((l) => (l.geo && l.geo[2] > 0) || hole(l) || l.key === 'bgMapHost'), 'over the map: ' + over.map((l) => l.key).join(' '));
+        // the clear layer the map is hosted under (map_host.js): one, exactly the window, with the backgrounds, drawing nothing
+        const a = s.engine._pieces().filter((l) => l.key === 'bgMapHost');
+        assert(a.length === 1 && a[0].x === W.x && a[0].y === W.y && a[0].w === W.w && a[0].h === W.h && s.client.layers.get(a[0].layer).uniforms.u_color.v[3] === 0 && s.client.layers.get(a[0].layer).opts.visible === true, JSON.stringify(a.map((l) => [l.x, l.y, l.w, l.h])));
+        const ps = s.engine._pieces(), ai = ps.findIndex((l) => l.key === 'bgMapHost');
+        assert(ps.slice(0, ai).every((l) => /^bg/.test(l.key)), 'only backgrounds under it: ' + ps.slice(0, ai).filter((l) => !/^bg/.test(l.key)).map((l) => l.key).join(' '));
         s.stop();
     });
     ['comfort', 'sport', 'efficient'].forEach((look) => check(id + ': ' + look + ' palette has every colour its pieces use', () => {

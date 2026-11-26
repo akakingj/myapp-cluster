@@ -12,14 +12,13 @@ With the car's own bottom strip (the default) the strip shows the gear, the driv
 outside temperature, so no layout shows them a second time (ID7 M and Old M never show the time, the outside
 temperature or the fuel range at all): the places the time and temperature had show the
 battery's temperature (intake air on a petrol or diesel car) and the gearbox oil's, and where a layout had its gear
-it now has the digital speed or another reading. With **Waze** in the centre, Waze on cluster (0.9.107 or later,
-[eroobeeroo/idrive-apps](https://github.com/eroobeeroo/idrive-apps)) draws the map in the layout's own panel,
-above it, filling the window exactly; under the layout the cluster drew its own map screen (its speed, edge shading)
-over the map. Needs **Central display area: Map view** on the car. The MGU Store's own build (robertnisipeanu's
-"Maps on cluster", waze-on-cluster 0.10.x, 2026-11-16) does not read the layout's window file: with it the map stays
-in the car's map slot under the layout, seen through the window with the cluster's own map screen over it, as before
-0.21.0. (Its renderer, cluster-render 0.6.x, can host a target in a scene drawn from a RAMSES file, which a layout of
-shaders doesn't have yet.)
+it now has the digital speed or another reading. With **Waze** in the centre, the layout hosts Waze on cluster's map
+(robertnisipeanu's "Maps on cluster", the MGU Store's own) in its window: cluster-render (0.8.x, hosting from layers)
+draws the map on the layout's own panel at the window, under the layout's layers there, so the cluster's own map
+screen (its speed, edge shading) that covers the map in the car's map slot is not seen (`map_host.js`; a clear layer,
+`bgMapHost`, lies over the window for the map to be hosted under). Needs **Central display area: Map view** on the
+car. With a cluster-render that cannot host from layers the map stays in the car's map slot, seen through the window
+with the cluster's own map screen over it.
 
 ID7 M's map window runs between its blades from under the camera's cowl to the foot of the map area, the speed in its
 left card and the gear in its right one. Apart from ID7 M (its own window), the layouts leave the middle
@@ -548,7 +547,7 @@ module.exports = {
 (`speed` km/h, `rpm`, `gear`, `stage`, `mode`, `oil`, `coolant`, `outside` °C, `soc` %, `kw`, `erange` and
 `frange` km); `t` the layout's palette for the look now. Texts use the glyphs in `font.js`; add more there. A layout's
 `font` picks its face for every text and numeral: `'bold'` (the default), `'light'`, `'wide'` (Michroma, Sport) or
-`'orb'` (Orbitron, M); its `mapWindow` ({ x, y, w, h }) where Waze on cluster draws the map, if not the native map area.
+`'orb'` (Orbitron, M); its `mapWindow` ({ x, y, w, h }) where the Waze centre's map is hosted, if not the native map area.
 
 Check it before the car:
 
