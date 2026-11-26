@@ -348,6 +348,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Info 1.10.20 (Nov 26 2026): Driving assistant check > Signals: the speed limit in the HUD's data
+  (DisplayDataServer.functionalLibraryData xSpeedLimitAssist, seen on a G20 plug-in hybrid 2026-11-18: vSLISpeedValue
+  16 with the cruise control set at 82, vSLISymbol LDM_VZA_VSLI_NO_SYMBOL, statusVZA STATUS_INACTIVE; pia.piaSliNpi 8,
+  piaHUDSliNpi 0) - each change in cluster-info-adas.log and the app's log at once, with the car's speed; the page
+  shows it and the last two changes. To learn whether vSLISpeedValue is the limit the cluster's sign shows, and its
+  scale (16: 80 km/h in fives?), before Layouts and AK Cluster ID8 draw a sign of their own.
 - Layouts 0.61.0, Centre 0.15.0 (Nov 26 2026): the clock is the car's own (shared/clock.js, data.js: KombiIF
   statusShowTimeDate, as AK Cluster ID8 takes it; --:-- until the car says; the demo's at 10:09): Settings > Time zone is
   gone, from the Car profile too (1.9.0). Fuel economy unit: km/L, L/100km, mpg (US) or mpg (UK), every Car profile fuel

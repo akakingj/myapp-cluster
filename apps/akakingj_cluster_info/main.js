@@ -366,13 +366,17 @@ mgu.run({
             }
             const age = (ms) => (ms === null ? '' : ms < 1000 ? 'now' : Math.round(ms / 1000) + ' s ago');
             st.sources.forEach((s, i) => {
-                const y = 306 + i * 30, ok = s.count > 0;
+                const y = 306 + i * 26, ok = s.count > 0;
                 L(s.short, y, 17, ok ? GO : t.dim, true);
                 L((s.what + (s.count ? '   ·   ' + s.count + ' values, last ' + age(s.age) : '') + (s.sample ? '   ·   ' + s.sample : '')).slice(0, 140), y, 15, ok ? t.text : t.dim, false, 330);
             });
-            const hy = 306 + st.sources.length * 30 + 4;
+            const hy = 306 + st.sources.length * 26 + 4;
             L('HUD data, its driving assistant members: ' + (st.hud.length ? st.hud.join('  ').slice(0, 150) : 'none yet'), hy, 15, st.hud.length ? t.text : t.dim);
-            if (st.hud.length > 0) L(st.hud.join('  ').slice(150, 320), hy + 20, 15, t.text);
+            // the speed limit in the HUD's data, and its last changes (each also in the log)
+            const sy = hy + 24, clock = (ms) => { const d = new Date(ms); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2); };
+            const short = (str) => str.replace(/xSpeedLimitAssist\.|pia\./g, '');      // (in full in the log)
+            L('Speed limit (HUD data): ' + (st.sli.now.length ? short(st.sli.now.join('  ')).slice(0, 160) : 'none yet'), sy, 15, st.sli.now.length ? GO : t.dim);
+            st.sli.changes.slice(0, 2).forEach((c, i) => L(clock(c.at) + '  ' + short(c.line).slice(0, 170), sy + 19 + i * 17, 14, t.dim));
         }
         ctx.loop('MAIN', 2, render);
         Promise.resolve().then(render).then(() => log.info('first frame done')).catch((e) => log.warn('first render: ' + e));

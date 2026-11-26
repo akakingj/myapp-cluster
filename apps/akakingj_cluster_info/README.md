@@ -48,7 +48,10 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   for the four services that view is built from on a G05 (`de.bmw.dass.*`: the cruise control, the steering assist,
   the lane warnings, the cars around) and for the HUD's own data (DisplayDataServer.functionalLibraryData, with its
   members that look like the driving assistant's): not in this car's catalog, in the catalog but nothing provides
-  it, or values coming (how many, the last one). **Catalog** lists every service in the head unit's catalog whose
+  it, or values coming (how many, the last one), and the speed limit in the HUD's data (`xSpeedLimitAssist`:
+  `vSLISpeedValue`, `vSLISymbol`, `statusVZA` ..., with `pia.piaSliNpi` / `piaHUDSliNpi`, the driver's choice of
+  showing it): each change written to the log at once with the car's speed, the last two on the page, to match the
+  figures to the sign the cluster shows. **Catalog** lists every service in the head unit's catalog whose
   name looks like the driving assistant's or the HUD's, with its fields and broadcasts. Subscribed from the first
   time it is turned on; everything also goes to `cluster-info-adas.log` in the app's data folder (the catalog once,
   each source's first three values and one a minute; at most 2 x 256 KiB). The cluster's picture itself is drawn in

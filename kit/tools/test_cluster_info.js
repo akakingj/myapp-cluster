@@ -41,7 +41,8 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     SPEC.settings.forEach((s) => { S[s.key] = s.default; });
     // (the personal build's defaults are Korean and petrol; these checks are written for the original's)
     Object.assign(S, { tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', slot1: 'power', slot2: 'battery', slot3: 'oil' });
-    const handlers = {}, warns = [], loops = {}, drawn = [], clicks = {};
+    const handlers = {}, warns = [], loops = {}, drawn = [], clicks = {}, placed = [];
+    let lastCanvas = null;
     process.env.SOMEIP_CATALOG = path.join(tmp, 'no-catalog.json');
     const ctx = {
         app: {}, ui: { onClick: (k, fn) => { clicks[k] = fn; }, text() {}, image: async () => {} },
@@ -53,7 +54,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
             proxy: () => Promise.reject(new Error('no TASU here')), on: () => Promise.resolve(), onAvailable: () => Promise.resolve() },
         onTab() {}, hideButton() {}, onScroll() {},
         loop: (name, fps, fn) => { loops[name] = fn; },
-        theme: () => themes.theme('m_tricolour'), canvas: (w, h) => { const c = new Canvas(w, h), tx = c.text.bind(c); c.text = (str, ...a) => { drawn.push(String(str)); return tx(str, ...a); }; return c; },
+        theme: () => themes.theme('m_tricolour'), canvas: (w, h) => { const c = new Canvas(w, h), tx = c.text.bind(c); c.text = (str, x, y, size, ...a) => { drawn.push(String(str)); placed.push({ str: String(str), y, size, h }); return tx(str, x, y, size, ...a); }; lastCanvas = c; return c; },
     };
     require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'main.js'));
     await app.start(ctx);
@@ -103,6 +104,19 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     check('the driving assistant check on: each source\'s state on the page', () => {
         assert(drawn.some((d) => /^Driving assistant check/.test(d)), drawn.join(' | '));
         assert(drawn.indexOf('cars around (object list)') >= 0 && drawn.some((d) => /^HUD data, its driving assistant members/.test(d)));
+        assert(drawn.some((d) => /^Speed limit \(HUD data\): /.test(d)), 'the speed limit line');
+    });
+    if (handlers.functionalLibraryData) handlers.functionalLibraryData({ speed: { kmH: 64 }, pia: { piaSliNpi: 8, piaHUDSliNpi: 0 },
+        xSpeedLimitAssist: { vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', statusVZA: 'STATUS_INACTIVE', ldmAdditionalSign: 'TAKEOVER_SET', vSLISpeedValue: 16 } });
+    placed.length = 0; drawn.length = 0; await loops.MAIN();
+    if (process.env.SHOT_ADAS && lastCanvas) {     // (SHOT_ADAS=file.png: the page as a picture)
+        const { Canvas: Real } = require(path.join(KIT, 'canvas')), { play } = require(path.join(KIT, 'record'));
+        const cv = new Real(lastCanvas.w, lastCanvas.h); play(lastCanvas.words(), cv); fs.writeFileSync(process.env.SHOT_ADAS, cv.png());
+    }
+    check('the driving assistant check: every line of it on the page (the speed limit\'s under the rest)', () => {
+        const lim = placed.filter((p) => /^Speed limit \(HUD data\)|^\d\d:\d\d:\d\d {2}/.test(p.str));
+        assert(lim.length >= 1, drawn.join(' | '));
+        placed.forEach((p) => assert(p.y + p.size <= p.h, p.str.slice(0, 40) + ' at ' + p.y + ' + ' + p.size + ' of ' + p.h));
     });
     S.adasCheck = 'catalog';
     drawn.length = 0; await loops.MAIN();

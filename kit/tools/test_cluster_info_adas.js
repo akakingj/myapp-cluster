@@ -73,6 +73,25 @@ const tick = () => new Promise((r) => setTimeout(r, 10));
         const m = pr.status().hud;
         assert.deepStrictEqual(m.sort(), ['cruiseCtrlSpeedHUD=80', 'laneDepartureWarning=0', 'nested.accDistance=2']);
     });
+    await check('the speed limit in the HUD data: each change logged at once, with the car\'s speed; none while the same', async () => {
+        const h = handlers['de.bmw.infotainment.displaydataserver.DisplayDataServer.functionalLibraryData'];
+        /* as a G20's HUD data came (a plug-in hybrid, 2026-11-18), as JSON text and as an object */
+        const sample = (v, sym) => ({ speed: { kmH: 64, mlsH: 40 }, cruiseCtrlSpeedHUD: 82, statusLimiter: 'STATUS_ACTIVE', pia: { piaSliNpi: 8, piaHUDSliNpi: 0 },
+            xSpeedLimitAssist: { vSLISymbol: sym, statusVZA: 'STATUS_INACTIVE', ldmAdditionalSign: 'TAKEOVER_SET', vSLISpeedValue: v } });
+        const lines = () => fs.readFileSync(pr.file, 'utf8').split('\n').filter((l) => / speed limit: .*vSLI/.test(l));
+        h(JSON.stringify(sample(16, 'LDM_VZA_VSLI_NO_SYMBOL')));
+        h(sample(16, 'LDM_VZA_VSLI_NO_SYMBOL'));
+        assert.strictEqual(lines().length, 1, 'the same twice: once');
+        assert(/at 64 km\/h {2}xSpeedLimitAssist\.vSLISpeedValue=16 {2}pia\.piaSliNpi=8 {2}pia\.piaHUDSliNpi=0 {2}xSpeedLimitAssist\.vSLISymbol="LDM_VZA_VSLI_NO_SYMBOL"/.test(lines()[0]), lines()[0]);
+        assert(!/cruiseCtrlSpeedHUD|statusLimiter/.test(lines()[0]), 'the speed limit members alone (not the limiter)');
+        t += 1000; h(sample(12, 'LDM_VZA_VSLI_NO_SYMBOL'));
+        assert.strictEqual(lines().length, 2);
+        const st = pr.status().sli;
+        assert(st.now.indexOf('xSpeedLimitAssist.vSLISpeedValue=12') >= 0, st.now.join(' '));
+        assert.strictEqual(st.changes.length, 3, 'none in the HUD data before (logged too), then two');
+        assert(/vSLISpeedValue=12/.test(st.changes[0].line) && st.changes[0].at === t);
+        assert.deepStrictEqual(P.sliOf('not json'), []);
+    });
     await check('the catalog: the matching services with their fields and broadcasts, the rest left out', async () => {
         const c = pr.status().catalog;
         assert.strictEqual(c.error, null);

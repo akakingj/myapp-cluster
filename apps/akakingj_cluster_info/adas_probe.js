@@ -12,6 +12,9 @@
  *     assistant's are picked out.
  *   - The head unit's service catalog (/etc/oap/someip/someip-interfaces.json): every service whose name looks like
  *     the driving assistant's, with its fields and broadcasts, to be declared in app.json by a later version.
+ *   - The speed limit in the HUD's data (xSpeedLimitAssist: vSLISpeedValue, vSLISymbol, statusVZA ..., and any other
+ *     member named for a speed limit): each change logged at once, with the car's speed and the time, to match the
+ *     figures to the speed limit sign the cluster shows.
  *
  * The cluster's picture itself is drawn in the cluster, from the car's own bus: nothing of it reaches the head
  * unit, so only its data can be looked for here.
@@ -37,6 +40,9 @@ const HUD = { iface: 'de.bmw.infotainment.displaydataserver.DisplayDataServer', 
 const IFACE_RE = /\.dass\.|assistedDriving|driverAssist|drivingAssist|kafas|\badas|objectList|surround|laneDeparture|laneChange|laneKeep|headUp|\bhud|displaydataserver/i;
 /* a member of the HUD's data that looks like the driving assistant's */
 const MEMBER_RE = /acc|cruise|lane|ldw|lka|lcw|lca|assist|object|target|distance|gap|follow|steer|lateral|longitud|vehicle(ahead|front)|warn|collision|speedlimit|sli\b/i;
+/* a member of the HUD's data that belongs to the speed limit (Speed Limit Info, its assist: VZA; pia.pia...SliNpi: the
+   driver's choice of showing it, in the cluster and in the HUD) - not the limiter (statusLimiter) */
+const SLI_RE = /speedlimit|vsli|vza|slinpi/i;
 const LOG_MAX = 256 * 1024;
 
 /** Every leaf of a value as 'a.b.c=v' (arrays: their length and the first two), at most `max`. */
@@ -51,6 +57,14 @@ function leaves(v, max) {
     };
     walk(v, '', 0);
     return out;
+}
+
+/** The HUD data's speed limit members as 'a.b=v', its figures (...SpeedValue) first (a value sent as JSON text read as
+ *  JSON). */
+function sliOf(v) {
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return []; } }
+    const all = leaves(v, 400).filter((l) => SLI_RE.test(l.split('=')[0])), fig = (l) => /speedvalue/i.test(l.split('=')[0]);
+    return all.filter(fig).concat(all.filter((l) => !fig(l)));
 }
 
 /** The catalog's services whose name matches: [{ iface, parts: { fields: [names], broadcasts: [...], ... } }]. */
@@ -85,6 +99,7 @@ function startAdasProbe(ctx, log, opts) {
         status: 'not started', available: false, count: 0, last: null, lastAt: 0, logged: 0, loggedAt: 0, sub: null }));
     const hud = state[state.length - 1];
     let catalog = null, started = false, said = {};
+    const sli = { now: [], key: null, changes: [] };      // the speed limit members now, and their last changes
 
     function write(line) {
         try {
@@ -103,11 +118,27 @@ function startAdasProbe(ctx, log, opts) {
         return (v) => {
             const t = now();
             s.count++; s.last = v; s.lastAt = t;
+            if (s === hud) onSli(v, t);
             if (s.logged < 3 || t - s.loggedAt > 60000) {
                 s.logged++; s.loggedAt = t;
                 write(s.short + ' value ' + s.count + ': ' + JSON.stringify(v).slice(0, 4000));
             }
         };
+    }
+
+    /* the speed limit members: each change written at once (the HUD's data comes every 2 s or on a change) */
+    function onSli(v, t) {
+        const now = sliOf(v), key = now.join('  ');
+        if (key === sli.key) return;
+        sli.key = key; sli.now = now;
+        let o = v;
+        if (typeof o === 'string') { try { o = JSON.parse(o); } catch (e) { o = {}; } }
+        const kmh = o && o.speed && typeof o.speed.kmH === 'number' ? o.speed.kmH : null;
+        const line = (kmh === null ? '' : 'at ' + kmh + ' km/h  ') + (key || '(none)');
+        sli.changes.unshift({ at: t, line });
+        sli.changes.length = Math.min(sli.changes.length, 8);
+        write('speed limit: ' + line);
+        if (log) log.info('driving assistant check: speed limit: ' + line);
     }
 
     function start() {
@@ -158,9 +189,10 @@ function startAdasProbe(ctx, log, opts) {
         start,
         started: () => started,
         stop() { if (timer) clearInterval(timer); },
-        status: () => ({ started, sources: started ? sources() : [], hud: hudMembers(30), catalog: catalog || { list: [], total: 0, error: null } }),
+        status: () => ({ started, sources: started ? sources() : [], hud: hudMembers(30), sli: { now: sli.now, changes: sli.changes },
+            catalog: catalog || { list: [], total: 0, error: null } }),
         file,
     };
 }
 
-module.exports = { startAdasProbe, scanCatalog, catalogLine, leaves, SOURCES, HUD, IFACE_RE, MEMBER_RE };
+module.exports = { startAdasProbe, scanCatalog, catalogLine, leaves, sliOf, SOURCES, HUD, IFACE_RE, MEMBER_RE, SLI_RE };
