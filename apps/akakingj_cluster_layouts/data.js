@@ -704,10 +704,10 @@ function startData(ctx, opts) {
             // the engine's power (kW) from its own torque (the crankshaft's, FES) and speed
             if (isNum(o.torque) && isNum(o.rpm)) o.enginePower = o.engineOn ? o.torque * o.rpm / 9549.3 : 0;
             // no electric range from the car or an app yet: an estimate from the charge and the range a full battery
-            // gives (Settings > Electric range when full, miles), shown with '~'
+            // gives (Settings > Electric range when full, km; shown in miles with mph), shown with '~'
             if (!isNum(o.erange) && isNum(o.soc) && !ice()) {
-                const full = Number(ctx.settings && ctx.settings.get && ctx.settings.get('eFull')) || Number(cfg.eFullMiles) || 31;
-                o.erange = Math.max(0, o.soc) / 100 * full * 1.609344; o.erangeEst = true;
+                const full = Number(ctx.settings && ctx.settings.get && ctx.settings.get('eFullKm')) || (Number(cfg.eFullMiles) * 1.609344) || 50;
+                o.erange = Math.max(0, o.soc) / 100 * full; o.erangeEst = true;
             }
             // the tank's fill, 0..100 %: the engine unit's own (OBD tank level, the one Live Data shows) while it
             // answers, else the car's litres over the tank's size (config.tankLitres: 69 for an X5 45e). The two

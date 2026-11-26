@@ -173,11 +173,12 @@ function list7(r, t, key, rows, focus, y0, controller, opts) {
 
 
 /* ---------------- settings ---------------- */
-function values(s) {
+function values(s, settings) {
     if (s.type === 'choice') return (s.options || []).map((o) => [o[0], o[1]]);
     if (s.type === 'number') {
-        // "labels": a value's own text (e.g. 0 = "Auto"), as Settings.display() shows it
-        const text = (v) => (s.labels && s.labels[String(v)] !== undefined ? s.labels[String(v)] : String(v) + (s.unit ? ' ' + s.unit : ''));
+        // a value's text as Settings.display() shows it: "labels" (e.g. 0 = "Auto"), "unitBy" (mgu.js numberText)
+        const text = (v) => (settings && settings.numberText ? settings.numberText(s, v)
+            : s.labels && s.labels[String(v)] !== undefined ? s.labels[String(v)] : String(v) + (s.unit ? ' ' + s.unit : ''));
         return (s.steps || []).map((v) => [v, text(v) + (s.markDefault && v === s.default ? ' (default)' : '')]);
     }
     return null;
@@ -206,13 +207,13 @@ function listSheet(settings, title, opts) {
         rows() {
             if (this.open) {
                 const cur = settings.get(this.open.key);
-                return values(this.open).map((v) => ({ label: v[1], kind: 'radio', on: v[0] === cur }));
+                return values(this.open, settings).map((v) => ({ label: v[1], kind: 'radio', on: v[0] === cur }));
             }
             return this.entries().map((s) => (s.section && !s.key
                 ? { label: s.section, value: schema.filter((x) => x.section === s.section).length + ' settings', kind: 'more' }
                 : s.type === 'bool'
                 ? { label: s.label, kind: 'toggle', on: !!settings.get(s.key) }
-                : { label: s.label, value: settings.display(s.key), kind: values(s) && !held(s) ? 'more' : null }));
+                : { label: s.label, value: settings.display(s.key), kind: values(s, settings) && !held(s) ? 'more' : null }));
         },
         draw(r, t) {
             r.clear(t.bg);
@@ -279,7 +280,7 @@ function listSheet(settings, title, opts) {
         preview() {
             const none = { rows: [] };
             if (this.open) {
-                const vs = values(this.open), v = vs[this.sub];
+                const vs = values(this.open, settings), v = vs[this.sub];
                 if (!v) return none;
                 const cur = vs.find((q) => q[0] === settings.get(this.open.key));
                 return { text: v[1], note: !cur ? null : cur[0] !== v[0] ? translate('Saved') + ': ' + translate(String(cur[1])) : translate('Saved'), rows: [] };
@@ -292,7 +293,7 @@ function listSheet(settings, title, opts) {
             }
             if (held(s)) return { text: settings.display(s.key), note: translate('Car profile'), rows: [] };
             if (s.type === 'bool') return { text: translate(settings.get(s.key) ? 'On' : 'Off'), rows: [] };
-            const vs = values(s);
+            const vs = values(s, settings);
             if (vs) { const cur = settings.get(s.key); return { rows: vs.map((v) => ({ label: v[1], kind: 'radio', on: v[0] === cur })) }; }
             return { text: settings.display(s.key), rows: [] };
         },
@@ -318,7 +319,7 @@ function listSheet(settings, title, opts) {
         },
         choose() {
             if (this.open) {
-                const v = values(this.open)[this.sub];
+                const v = values(this.open, settings)[this.sub];
                 if (v && v[0] !== settings.get(this.open.key)) settings.set(this.open.key, v[0]);
                 this.open = null;
                 return null;
@@ -328,9 +329,9 @@ function listSheet(settings, title, opts) {
             if (s.section && !s.key) { this.secFocus = this.focus; this.sec = s.section; this.focus = 0; return null; }
             if (held(s)) return null;      // the Car profile sets it (Settings.held): changed in Car profile
             if (s.type === 'bool') settings.set(s.key, !settings.get(s.key));
-            else if (values(s)) {
+            else if (values(s, settings)) {
                 this.open = s;
-                this.sub = Math.max(0, values(s).findIndex((v) => v[0] === settings.get(s.key)));
+                this.sub = Math.max(0, values(s, settings).findIndex((v) => v[0] === settings.get(s.key)));
             } else settings.cycle(s.key);
             return null;
         },

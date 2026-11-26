@@ -357,7 +357,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   the cluster" on Layouts' page, "Waiting: AK Cluster Layouts is on the cluster" on ID8's; an older ID8, with no file
   of its own, is not waited for, as before). tools/known_signals.json: KombiIF statusShowTimeDate (rs), as MGU Styles
   and ID8 declare it on G20s. Gauge goes up to: 5000 rpm gone (the Car profile's too: no car's rev gauge ends below 6000, a
-  diesel's included); a saved 5000 is 6000.
+  diesel's included); a saved 5000 is 6000. Electric range when full is eFullKm: kept in km (30 - 100, 50 as it comes),
+  shown in miles with mph (the kit's numberText, "unitBy": speedUnit; Settings' list and build.py's drop-down name both,
+  "50 km / 31 mi"), the Car profile's eFullKm followed (1.9.0; its eFull in miles is no longer written); a saved eFull
+  (miles) is its nearest km once and leaves the file (main.js).
 - Layouts 0.60.1, Centre 0.14.22, Info 1.10.19 (Nov 26 2026): Settings > BMW's bottom strip is On / Off after a test on
   a car (photos, 2026-11-26): On is the band at 18 (the trims of 6 and 12 px left pieces of the stock dials at the sides,
   nothing below the layout left more), Off hides it to BMW's gear letter (the wider gap showed the T of COMFORT).

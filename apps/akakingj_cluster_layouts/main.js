@@ -76,6 +76,14 @@ mgu.run({
         if (STRIP[settings.get('bottomExtra')]) settings.set('bottomExtra', STRIP[settings.get('bottomExtra')]);
         // Gauge goes up to (0.61.0): 5000 rpm is gone - no car's rev gauge ends below 6000, a diesel's included
         if (settings.values && settings.values.rpmMax === 5000) settings.set('rpmMax', 6000);
+        // Electric range when full (0.61.0): in km, shown in miles with mph - one saved in miles before moves once, to the
+        // nearest of its values
+        if (settings.values && typeof settings.values.eFull === 'number') {
+            const mi = settings.values.eFull, km = mi * 1.609344;
+            const steps = ((settings.item('eFullKm') || {}).steps || []).filter((x) => x > 0);
+            delete settings.values.eFull;           // (saved without it with eFullKm: once)
+            settings.set('eFullKm', mi > 0 && steps.length ? steps.reduce((a, b) => (Math.abs(b - km) < Math.abs(a - km) ? b : a)) : settings.get('eFullKm'));
+        }
         // Fuel economy unit (0.61.0): Auto is gone - a saved Auto, or none saved, becomes km/L, or mpg (US) with mph, once
         const saved = settings.values;
         if (saved && !saved._econMoved) {

@@ -71,6 +71,15 @@ mgu.run({
         const clockNow = () => { clock.setTwelve(settings.get('clock') !== '24'); };
         clockNow();
         settings.onChange((k) => { if (k === 'clock') clockNow(); });
+        // Electric range when full (0.15.0): in km, shown in miles with mph - one saved in miles before moves once, to the
+        // nearest of its values
+        if (settings.values && typeof settings.values.eFull === 'number') {
+            const mi = settings.values.eFull, km = mi * 1.609344;
+            const steps = ((settings.item('eFullKm') || {}).steps || []).filter((x) => x > 0);
+            delete settings.values.eFull;           // (saved without it with eFullKm: once)
+            settings.set('eFullKm', mi > 0 && steps.length ? steps.reduce((a, b) => (Math.abs(b - km) < Math.abs(a - km) ? b : a)) : settings.get('eFullKm'));
+        }
+
         const showing = () => settings.get('show') === 'on';
         const data = startData(ctx, { shown: showing });
         // (the car's last speed / rpm / acceleration sample: engine.js frozen() hides the pages while they stopped coming)

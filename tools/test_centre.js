@@ -173,10 +173,11 @@ check('pages are groups: a page is built alone, a layer a piece; a switch puts t
     SPEC.settings.forEach((s) => { S[s.key] = s.default; });
     // (the personal build's defaults are Korean and petrol; these checks are written for the original's)
     Object.assign(S, { vehicle: 'auto', tankLitres: 69, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'lbft', pressUnit: 'psi', redline: 6500, shiftAt: 6200, coldLimit: 3500, warmTarget: 90 });
+    S.eFull = 37;                               // (Electric range when full saved in miles, before 0.15.0)
     let pages = 0, lastImage = null;
     const ctx = {
         app: {}, ui: { onClick(n, fn) { clicks[n] = fn; }, text() {}, image: async (n, cv) => { pages++; lastImage = cv; } },
-        settings: { schema: SPEC.settings, get: (k) => S[k], set: (k, v) => { S[k] = v; changes.forEach((f) => f(k, v)); }, onChange(f) { changes.push(f); }, display: (k) => String(S[k]) },
+        settings: { schema: SPEC.settings, values: S, item: (k) => SPEC.settings.find((q) => q.key === k), get: (k) => S[k], set: (k, v) => { S[k] = v; changes.forEach((f) => f(k, v)); }, onChange(f) { changes.push(f); }, display: (k) => String(S[k]) },
         log: { info() {}, warn: (m) => warns.push(m), error: (m, e) => warns.push(m + ' ' + e) },
         spec: SPEC, dataDir: fs.mkdtempSync(path.join(os.tmpdir(), 'cc-')),
         signals: {
@@ -188,6 +189,10 @@ check('pages are groups: a page is built alone, a layer a piece; a switch puts t
     require(path.join(APP, 'main.js'));
     await app.start(ctx);
     await new Promise((r) => setTimeout(r, 300));
+    check('app: Electric range when full saved in miles: in km, once', () => {
+        assert.strictEqual(S.eFullKm, 60, '37 mi: 60 km (59.5, the nearest)');
+        assert(!('eFull' in S), 'the miles gone');
+    });
     const effects = () => Array.from(client.layers.values()).filter((l) => l.kind === 'effect');
     check('app: every signal it reads is declared in app.json', () => {
         const declared = [].concat(...Object.keys(SPEC.signals).map((i) => Object.keys(SPEC.signals[i])));

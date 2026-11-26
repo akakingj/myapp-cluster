@@ -35,11 +35,12 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     SPEC.settings.forEach((s) => { S[s.key] = s.default; });
     // (the personal build's defaults are Korean and petrol; these checks are written for the original's)
     Object.assign(S, { vehicle: 'auto', tankLitres: 69, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', econUnit: 'l100', redline: 7000, rpmMax: 8000 });
+    S.eFull = 31;                               // (Electric range when full saved in miles, before 0.61.0)
     const handlers = {}, clicks = {}, warns = [];
     let pages = 0, lastPage = null, sheets = null;
     const ctx = {
         app: {}, ui: { onClick(n, fn) { clicks[n] = fn; }, text() {}, image: async (n, cv) => { pages++; lastPage = cv; }, sheet: (sh) => { if (!sheets) return false; sheets.push(sh); return true; } },
-        settings: { get: (k) => S[k], set: (k, v) => { S[k] = v; changes.forEach((f) => f(k, v)); }, onChange(f) { changes.push(f); }, display: (k) => String(S[k]) },
+        settings: { values: S, item: (k) => SPEC.settings.find((q) => q.key === k), get: (k) => S[k], set: (k, v) => { S[k] = v; changes.forEach((f) => f(k, v)); }, onChange(f) { changes.push(f); }, display: (k) => String(S[k]) },
         log: { info() {}, warn: (m) => warns.push(m), error: (m, e) => warns.push(m + ' ' + e) },
         spec: SPEC, dataDir: fs.mkdtempSync(path.join(os.tmpdir(), 'cl-')),
         signals: { watch: (iface, inst, h) => { Object.assign(handlers, h); return Promise.resolve({ available: true }); },
@@ -48,6 +49,10 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     };
     require(path.join(APP, 'main.js'));
     await app.start(ctx);
+    check('Electric range when full saved in miles: in km, once', () => {
+        assert.strictEqual(S.eFullKm, 50, '31 mi: 50 km');
+        assert(!('eFull' in S), 'the miles gone');
+    });
     await sleep(300);
     const effects = () => Array.from(client.layers.values()).filter((l) => l.kind === 'effect');
     check('every signal the app reads is declared in app.json', () => {

@@ -1958,27 +1958,33 @@
       "section": "Car"
     },
     {
-      "key": "eFull",
-      "profile": "eFull",
+      "key": "eFullKm",
+      "profile": "eFullKm",
       "label": "Electric range when full (until the car's own is found)",
       "type": "number",
-      "unit": "mi",
-      "default": 31,
+      "unit": "km",
+      "unitBy": "speedUnit",
+      "units": {
+        "mph": {
+          "unit": "mi",
+          "mul": 0.621371
+        }
+      },
+      "default": 50,
       "steps": [
-        20,
-        22,
-        24,
-        26,
-        28,
         30,
-        31,
-        32,
-        34,
-        36,
-        38,
+        35,
         40,
         45,
-        50
+        50,
+        55,
+        60,
+        65,
+        70,
+        75,
+        80,
+        90,
+        100
       ],
       "section": "Car"
     },

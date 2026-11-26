@@ -176,11 +176,24 @@ class Settings {
     onChange(fn) { this.listeners.push(fn); }
     item(key) { return this.schema.find((s) => s.key === key); }
     /** Human text for the current value of a setting. */
+    /**
+     * The text of a number setting's value. "labels": a value's own text (e.g. 0 = "Auto"). "unitBy" + "units": the
+     * value is kept in "unit" and shown in the unit another setting chose (kit/tools/build.py names them all in the
+     * HMI's drop-down), e.g. "unit": "km", "unitBy": "speedUnit", "units": { "mph": { "unit": "mi", "mul": 0.621371 } }
+     * (as akakingj/myapp-id7's kit).
+     */
+    numberText(s, v) {
+        if (s.labels && s.labels[String(v)] !== undefined) return s.labels[String(v)];
+        const u = s.unitBy && s.units ? s.units[this.get(s.unitBy)] : null;      // (get: the Car profile's unit where it sets it)
+        if (u && u.of && u.of[String(v)] !== undefined) return u.of[String(v)] + ' ' + u.unit;
+        if (u && typeof v === 'number') return Math.round(v * (u.mul || 1) + (u.add || 0)) + ' ' + u.unit;
+        return String(v) + (s.unit ? ' ' + s.unit : '');
+    }
     display(key) {
         const s = this.item(key), v = this.get(key);
         if (!s) return String(v);
         if (s.type === 'choice') { const o = (s.options || []).find((x) => x[0] === v); return o ? o[1] : String(v); }
-        if (s.type === 'number') return (s.labels && s.labels[String(v)] !== undefined ? s.labels[String(v)] : String(v) + (s.unit ? ' ' + s.unit : '')) + (s.markDefault && v === s.default ? ' (default)' : '');
+        if (s.type === 'number') return this.numberText(s, v) + (s.markDefault && v === s.default ? ' (default)' : '');
         if (s.type === 'bool') return v ? 'On' : 'Off';
         return String(v);
     }

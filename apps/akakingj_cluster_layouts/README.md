@@ -446,7 +446,7 @@ car is taken to have the same cluster. What differs between cars is a setting, o
   acceleration (on electricity). With the engine running and none of the car's signals fitted, and with *eDrive
   Live's readings only*, the readings as they are. Nothing shows when eDrive Live has said nothing for 4 s. Logs >
   *fast power* shows each source: how often it came, its fit and its average miss in kW.
-- **Electric range when full**: the estimate shown (with ~) until the car's own electric range arrives.
+- **Electric range when full** (km, in miles with mph): the estimate shown (with ~) until the car's own electric range arrives.
 - The glass and the KOMBI's boxes (the camera cowl, the gear bracket, the eDrive box, the warning lights)
   are taken as the same on every car with this cluster (`layout_common.js`; every layout is checked against
   them by `tools/clearance.js`).

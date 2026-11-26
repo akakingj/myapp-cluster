@@ -32,8 +32,8 @@ const nullLog = { info() {}, warn() {}, error(m) { console.error(m); } };
 
 /* the settings each app offers here: its own, less those that only matter on the car */
 const SKIP = {
-    layouts: ['show', 'demo', 'sweep', 'eFull', 'batteryReads'],
-    centre: ['show', 'demo', 'eFull', 'kwFast'],
+    layouts: ['show', 'demo', 'sweep', 'eFullKm', 'batteryReads'],
+    centre: ['show', 'demo', 'eFullKm', 'kwFast'],
     info: ['demo', 'renderer', 'layout'],
 };
 /* the choices in Korean, as the car shows them (kit/runtime/locales/ko.json; the English where it has none) */
