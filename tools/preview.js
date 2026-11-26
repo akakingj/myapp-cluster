@@ -7,7 +7,7 @@
  *   node tools/preview.js [--layout analog_sport] [--look comfort|sport|efficient] [--centre info|stock] [--kmh]
  *                         [--black] [--speed 62] [--rpm 3200] [--gear 4] [--stage D] [--mode S] [--oil 96] [--coolant 90]
  *                         [--celsius] [--mcar] [--strip] [--dap] [--hotOil 125] [--hotCoolant 112] [--hotGearbox 120] [--tempGauge scale]
- *                         [--gtrail 1] [--speedMax 330] [--boostMax 30] [--pressUnit bar] [--bottomExtra 0|6|12|18|hide|hideWide] [--out preview.png]
+ *                         [--gtrail 1] [--speedMax 330] [--boostMax 30] [--pressUnit bar] [--bottomExtra 18|hide] [--out preview.png]
  * --gtrail: the G over the last 3.2 s through a bend (JDM 2's trail)
  * --mcar: the M KOMBI's two dark boxes drawn over the layout (as it left them over the full-screen form, gone in 0.34.0:
  *         the layouts always keep the car's strip now, so --strip changes nothing either)

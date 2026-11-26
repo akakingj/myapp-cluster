@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.60.0",
+  "version": "0.60.1",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -402,24 +402,8 @@
       "default": "18",
       "options": [
         [
-          "0",
-          "Show all of it"
-        ],
-        [
-          "6",
-          "Trim its top edge: 6 px"
-        ],
-        [
-          "12",
-          "Trim its top edge: 12 px"
-        ],
-        [
           "18",
-          "Trim its top edge: 18 px"
-        ],
-        [
-          "hideWide",
-          "Hide it, a wider gap left beside the gear"
+          "Show all of it"
         ],
         [
           "hide",

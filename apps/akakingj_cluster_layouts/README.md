@@ -388,14 +388,13 @@ text back together. The full logs go to a file on any USB stick plugged into the
 (`cluster-logs/cluster-logs-layout-<time>.txt`) and to the app's data folder. Cluster Info and Cluster Centre have
 **Logs** of their own, the same way (`cluster-logs-info-<time>.txt`, `cluster-logs-centre-<time>.txt`).
 
-**Settings > BMW's bottom strip** (0.59.0, as AK Cluster ID8's): how much of the KOMBI's strip below the layout stays in
-view. *Show all of it*; *Trim its top edge* 6, 12 or 18 px (as it comes: 18), a black band over the stock dials' edges
-and the grey line the KOMBI draws above its strip, which over the drive mode goes only to y 658, short of its letters;
-*Hide it (BMW's own gear letter stays)*, everything of the strip covered in black but the gear; and *Hide it, a wider
-gap left beside the gear*, the same with more room left of the gear (the end of a long drive mode name shows in it).
-BMW's gear letter always stays: cover its window (x 1385-1462, y 665-720) and the KOMBI draws a black fallback gear
-box in the rev dial, which can stay until the cluster restarts; nothing of the layout ever reaches it. The warning
-lights are drawn over the covers.
+**Settings > BMW's bottom strip** (0.59.0, as AK Cluster ID8's; two choices from 0.60.1): *Show all of it*, the KOMBI's
+strip below the layout with a black band over its top 18 px (the stock dials' edges and the grey line the KOMBI draws
+above its strip; over the drive mode only to y 658, short of its letters; less leaves pieces of the stock dials at the
+sides, a photo of the car), or *Hide it (BMW's own gear letter stays)*, everything of the strip covered in black but the
+gear. A choice saved before 0.60.1 moves to the nearer of the two. BMW's gear letter always stays: cover its window
+(x 1385-1462, y 665-720) and the KOMBI draws a black fallback gear box in the rev dial, which can stay until the cluster
+restarts; nothing of the layout ever reaches it. The warning lights are drawn over the covers.
 
 **The car's own bottom strip, always** (since 0.34.0): the layout ends at y 646, so the KOMBI's own strip along the
 bottom shows below it (the fuel range, the time, the street, the drive mode and gear, the outside temperature and the

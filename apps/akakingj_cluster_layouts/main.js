@@ -71,6 +71,9 @@ mgu.run({
         if (settings.get('vehicle') === 'ice') settings.set('vehicle', 'petrol');
         const GONE = { three_pods: 'arc_tach', freedom: 'arc_tach', digital_round: 'analog_sport', modern_wide: 'pulse', digital_dash: 'track', sport: 'm' };
         ['layout', 'layoutSport', 'layoutEco'].forEach((k) => { if (GONE[settings.get(k)]) settings.set(k, GONE[settings.get(k)]); });
+        // BMW's bottom strip (0.60.1): show it (its top edge trimmed 18 px) or hide it; the trims and the wider gap are gone
+        const STRIP = { 0: '18', 6: '18', 12: '18', hideWide: 'hide' };
+        if (STRIP[settings.get('bottomExtra')]) settings.set('bottomExtra', STRIP[settings.get('bottomExtra')]);
         const showing = () => settings.get('show') === 'on';
         // every reading (data.js, shared with Cluster Centre): the car's signals, the engine unit over UDS for
         // what a layout needs (layout.needs), eDrive Live's charge and power while shown

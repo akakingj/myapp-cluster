@@ -127,7 +127,7 @@ LAYOUTS.forEach((L) => {
  */
 const { clashes } = require('./clearance');
 /* the car's own strip: no background below CUT_Y but the black band, nothing small crossing it */
-const { CUT_Y, BG_NOTCH, BG_NOTCH_Y, GEAR_WINDOW, GEAR_KEEP, GEAR_KEEP_WIDE, STRIP_TRIM_MAX, STRIP_COVERS, blackBand, overGear } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
+const { CUT_Y, BG_NOTCH, BG_NOTCH_Y, GEAR_WINDOW, GEAR_KEEP, STRIP_TRIM_MAX, STRIP_COVERS, blackBand, overGear } = require(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'layouts'));
 LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ice'].forEach((vehicle) => check(L.id + ' (' + centre + ', ' + vehicle + '): the layout ends at y ' + CUT_Y + ', at most 60 pieces, clear of the cowl and corners', () => {
     // (the options as an older save might pass them: the layouts hold the car's strip whatever they say)
     const o = { speedUnit: 'mph', tempUnit: 'f', centre, redline: 7000, rpmMax: 8000, vehicle, cluster: 'm', bottomStrip: 'layout' };
@@ -147,7 +147,7 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['phev', 'ic
 
 /* BMW's bottom strip (bottomExtra, as AK Cluster ID8's): each choice's black pieces, none of them ever in the gear's
  * window (the KOMBI's fallback gear box), at most 3, in every layout */
-check('BMW\'s bottom strip: show all, the three trims, hide and hide with the wider gap - never over the gear', () => {
+check('BMW\'s bottom strip: show it (its top 18 px trimmed) or hide it - never over the gear', () => {
     assert.strictEqual(STRIP_TRIM_MAX, 18);
     assert.strictEqual(GEAR_WINDOW.y, CUT_Y + STRIP_TRIM_MAX + 1, 'the largest trim ends on the row above the gear\'s window');
     const foot = (b) => Math.max(...b.map((p) => p.y + p.h));
@@ -157,14 +157,12 @@ check('BMW\'s bottom strip: show all, the three trims, hide and hide with the wi
         b.forEach((p) => assert(!overGear(p), v + ': ' + p.key + ' over the gear\'s window ' + JSON.stringify([p.x, p.y, p.w, p.h])));
         b.forEach((p) => assert(p.y >= CUT_Y && p.x >= 0 && p.x + p.w <= 1920 && p.y + p.h <= 720, v + ': ' + p.key + ' off the strip'));
     });
-    assert.deepStrictEqual(blackBand({ bottomExtra: '0' }), [], 'show all of it: nothing below the layout');
-    assert.strictEqual(foot(blackBand({ bottomExtra: '6' })), CUT_Y + 6);
-    assert.strictEqual(foot(blackBand({ bottomExtra: '12' })), CUT_Y + 12);
+    assert.deepStrictEqual(STRIP_COVERS, ['18', 'hide']);
     assert.strictEqual(foot(blackBand({ bottomExtra: '18' })), CUT_Y + 18);
-    // an unknown value (or none) is the default, 18
+    // an unknown value (or none, or one of before 0.60.1) is the default, 18
     assert.deepStrictEqual(blackBand({}).map((p) => [p.x, p.y, p.w, p.h]), blackBand({ bottomExtra: '18' }).map((p) => [p.x, p.y, p.w, p.h]));
     // hidden: to the screen's foot either side of the gear's columns, the left cover a column short of its window
-    [['hide', GEAR_KEEP], ['hideWide', GEAR_KEEP_WIDE]].forEach(([v, k]) => {
+    [['hide', GEAR_KEEP]].forEach(([v, k]) => {
         const b = blackBand({ bottomExtra: v });
         assert.strictEqual(foot(b), 720, v);
         const l = b.find((p) => p.x === 0 && p.y + p.h === 720), r = b.find((p) => p.x > GEAR_WINDOW.x && p.y + p.h === 720);
