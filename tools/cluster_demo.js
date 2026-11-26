@@ -79,7 +79,7 @@ function startLayouts(set) {
     const { lookNow } = req('layouts', 'themes');
     const clock = req('layouts', 'clock');
     const dap = tryReq('layouts', 'dap');
-    clock.setZone(set.timeZone); clock.setTwelve(set.clock !== '24');
+    clock.setTwelve(set.clock !== '24'); if (!clock.local()) { const n = new Date(); clock.fromCar({ statusDisplayClockTimeDate: 1, displayHour: n.getHours(), displayMinute: n.getMinutes(), displaySecond: n.getSeconds() }); }
     const { layoutFor } = req('layouts', 'layouts');
     let layout = byId(set.layout);
     const o = {
@@ -133,7 +133,7 @@ function startCentre(set) {
     const { pieces, palette } = req('centre', 'pages');
     const { WarmUp, CoolDown, PerfTimer } = req('centre', 'features');
     const clock = req('centre', 'clock');
-    clock.setZone(set.timeZone); clock.setTwelve(set.clock !== '24');
+    clock.setTwelve(set.clock !== '24'); if (!clock.local()) { const n = new Date(); clock.fromCar({ statusDisplayClockTimeDate: 1, displayHour: n.getHours(), displayMinute: n.getMinutes(), displaySecond: n.getSeconds() }); }
     const vehicle = vehicleOf(set);
     const enabled = () => CENTRE_PAGES.filter((id) => set['page_' + id] === 'on' && !(id === 'edrive' && vehicle === 'ice'));
     const o = {

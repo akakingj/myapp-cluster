@@ -67,10 +67,10 @@ mgu.run({
         const { ui, settings, log } = ctx;
         // (Settings > Vehicle: 'ice', petrol or diesel, became Petrol and Diesel apart in 0.9.19)
         if (settings.get('vehicle') === 'ice') settings.set('vehicle', 'petrol');
-        // the clock's zone and format (clock.js: the unit runs its apps on UTC)
-        const clockNow = () => { clock.setZone(settings.get('timeZone')); clock.setTwelve(settings.get('clock') !== '24'); };
+        // the clock's format (clock.js: the time itself is the car's own)
+        const clockNow = () => { clock.setTwelve(settings.get('clock') !== '24'); };
         clockNow();
-        settings.onChange((k) => { if (k === 'timeZone' || k === 'clock') clockNow(); });
+        settings.onChange((k) => { if (k === 'clock') clockNow(); });
         const showing = () => settings.get('show') === 'on';
         const data = startData(ctx, { shown: showing });
         // (the car's last speed / rpm / acceleration sample: engine.js frozen() hides the pages while they stopped coming)

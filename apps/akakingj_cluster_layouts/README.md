@@ -69,8 +69,7 @@ can show the car's own trip computer: **Average fuel economy**, **Trip distance*
 the **Fuel range** and the **Clock** (the time of day) - read-only,
 from the cluster's KombiIF (`statusBordcomputerAverage`: trip 1's average economy and the unit the car shows it in;
 `statusBordcomputerTravelData`: the distance and the driving time; as Live Data reads them), every 15 s and on each
-change. **Settings > Fuel economy unit**: as the car's trip computer (the default; km/L with km/h, mpg with mph while
-the car hasn't said), km/L, L/100km or mpg (US). KO 1's display and KO 2's show all three (KO 1's the economy as a
+change. **Settings > Fuel economy unit** (or the Car profile's fuel use unit): km/L, L/100km, mpg (US) or mpg (UK). KO 1's display and KO 2's show all three (KO 1's the economy as a
 bar too, 0 to 30 km/L). A car that doesn't send them shows `--`. Each line of KO 1's and KO 2's
 trip computer is a place on the page (0.45.1: *Trip computer: line 1-3*): any readout there, or nothing; KO 1's bar
 follows its third line.
@@ -127,6 +126,9 @@ follows the mode (blue, red in sport, teal in ECO PRO).
 - **On / off (0.57.0)**, under the cards, as AK Cluster ID8's under its picture: the status's dot (green on the
   cluster, amber waiting for the car, grey off) and what a press does; the same words and colours as ID8's page
   (*On the cluster*, *Off - BMW original cluster*). The HMI's *Show on the cluster* button does the same.
+- **Taking turns with AK Cluster ID8 (0.61.0):** the one that came up first keeps the cluster; the other waits, its page
+  saying so (*Waiting: AK Cluster ID8 is on the cluster* here, *Waiting: AK Cluster Layouts is on the cluster* on ID8's),
+  and comes up once the first goes off.
 - **The cards:** every layout's picture (made beforehand with demo readings for a petrol car, km/h, °C:
   `previews.wad`, from `python3 tools/make_previews.py`, which draws each with `tools/preview.js`), as it looks over
   the car's own strip (the layout above it and a grey stand-in for the strip the car draws), six a row, the
@@ -141,7 +143,7 @@ follows the mode (blue, red in sport, teal in ECO PRO).
   The readouts, the small gauges, Centre display, JDM 1's cup and JDM 2's left dial are set here only, not on the
   Settings tab.
 - **Every other place (0.35.0):** each layout's places that had a fixed reading - 90's gauge between the dials (also an
-  analog clock, 0.35.1, on Settings > Time zone), 20's
+  analog clock, 0.35.1, on the car's own time), 20's
   gauge in the tach's foot, ID7 M's four card gauges and two bottom bars, JDM 2's four temperature quarters, Track's six tiles, Pulse's bottom row, GT3's boxes and the
   readings under the gear - are cards on the page too, set for that layout alone (a gauge place any small gauge's
   reading, with its scale, red zone and figures; a readout place any readout). *The layout's own* keeps it as
@@ -388,10 +390,10 @@ text back together. The full logs go to a file on any USB stick plugged into the
 (`cluster-logs/cluster-logs-layout-<time>.txt`) and to the app's data folder. Cluster Info and Cluster Centre have
 **Logs** of their own, the same way (`cluster-logs-info-<time>.txt`, `cluster-logs-centre-<time>.txt`).
 
-**Settings > BMW's bottom strip** (0.59.0, as AK Cluster ID8's; On / Off from 0.60.1): *On*, the KOMBI's strip below the
+**Settings > BMW's bottom strip** (0.59.0, as AK Cluster ID8's; On / Off from 0.61.0): *On*, the KOMBI's strip below the
 layout with a black band over its top 18 px (the stock dials' edges and the grey line the KOMBI draws above its strip;
 over the drive mode only to y 658, short of its letters; less leaves pieces of the stock dials at the sides, a photo of
-the car), or *Off*, everything of the strip covered in black but BMW's gear letter. A choice saved before 0.60.1 moves to
+the car), or *Off*, everything of the strip covered in black but BMW's gear letter. A choice saved before 0.61.0 moves to
 On (show it, trim it) or Off (hide it). BMW's gear letter always stays: cover its window (x 1385-1462, y 665-720) and the
 KOMBI draws a black fallback gear box in the rev dial, which can stay until the cluster restarts; nothing of the layout
 ever reaches it. The warning lights are drawn over the covers.
@@ -425,7 +427,7 @@ installing, clear the stored faults once (Fault Scanner) and check they stay awa
 Made and measured on a G05 X5 xDrive45e (iDrive 7 MGU, the 12.3" Live Cockpit Professional cluster); every
 car is taken to have the same cluster. What differs between cars is a setting, or found from the car:
 
-- **Car > Engine** (0.60.1: the Car profile's and AK Cluster ID8's five choices - Auto (from the car), Diesel, Petrol,
+- **Car > Engine** (0.61.0: the Car profile's and AK Cluster ID8's five choices - Auto (from the car), Diesel, Petrol,
   Petrol, M car (a petrol car here), Plug-in hybrid (petrol); Petrol as it comes). Auto: found from the car the way
   other apps identify one before assuming
   anything: a plug-in hybrid's drive mode names, eDrive Live sharing its battery readings or the car giving an
@@ -449,9 +451,9 @@ car is taken to have the same cluster. What differs between cars is a setting, o
   are taken as the same on every car with this cluster (`layout_common.js`; every layout is checked against
   them by `tools/clearance.js`).
 
-**Clock:** the unit runs its apps on UTC, so both apps take the time zone from Settings > Time zone (US
-Eastern by default; US and EU daylight saving built in; Korea / Japan as a fixed UTC+9) and Settings > Clock
-(12- or 24-hour).
+**Clock:** the unit runs its apps on UTC, so both apps take the time of day from the car's own cluster (its display
+time, KombiIF `statusShowTimeDate`: the zone, the summer time and any minutes it is set fast are the car's; `--:--`
+until it has said) and Settings > Clock (12- or 24-hour).
 
 ## How it gets onto the cluster
 

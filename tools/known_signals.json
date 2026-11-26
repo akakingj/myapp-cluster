@@ -1,5 +1,5 @@
 {
- "comment": "Signal flags the installer accepts on the car, as the apps of idrive7-apps (cauliflowermossgrape and eroobeeroo) declare them: r needs a getter, s a notifier; the head unit's app manager refuses an app whose flags its catalog does not have (generateSomeipInterfaces). tools/test_signals.js checks every app.json against this. KombiIF.displayRangeElectricVehicle (get, notify): from the G05 PHEV's own catalog (Cluster Layouts logs). Efficiencytainment2.statusPowerRelativHybrid, ResetLogic.currentConsumption, DisplayDataServer.functionalLibraryData (get, notify) and FES.displaySportPowertrain (notify): the same catalog, Nov 10 2026. Navigation guidance (Guidance, ProjectedModeGuiding, CarPlayManager, AndroidAutoProjectedManager fields): as idrive7-apps' Redline declares them for its HUD directions, installed and read on a G21 (Nov 9 2026).",
+ "comment": "Signal flags the installer accepts on the car, as the apps of idrive7-apps (cauliflowermossgrape and eroobeeroo) declare them: r needs a getter, s a notifier; the head unit's app manager refuses an app whose flags its catalog does not have (generateSomeipInterfaces). tools/test_signals.js checks every app.json against this. KombiIF.displayRangeElectricVehicle (get, notify): from the G05 PHEV's own catalog (Cluster Layouts logs). Efficiencytainment2.statusPowerRelativHybrid, ResetLogic.currentConsumption, DisplayDataServer.functionalLibraryData (get, notify) and FES.displaySportPowertrain (notify): the same catalog, Nov 10 2026. Navigation guidance (Guidance, ProjectedModeGuiding, CarPlayManager, AndroidAutoProjectedManager fields): as idrive7-apps' Redline declares them for its HUD directions, installed and read on a G21 (Nov 9 2026). KombiIF.statusShowTimeDate (get, notify): as MGU Styles (waliworld) and AK Cluster ID8 declare it for their clock, installed on G20s (Nov 2026).",
  "signals": {
   "de.bmw.body.Light": {
    "StatusFunctionsIndicators": [
@@ -49,6 +49,9 @@
     "rs"
    ],
    "displayRangeElectricVehicle": [
+    "rs"
+   ],
+   "statusShowTimeDate": [
     "rs"
    ]
   },

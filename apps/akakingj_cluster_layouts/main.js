@@ -61,19 +61,26 @@ const SIGNALS_PER_PAGE = 7;
 mgu.run({
     async start(ctx) {
         const { ui, settings, log } = ctx;
-        // the clock's zone and format (clock.js: the unit runs its apps on UTC)
-        const clockNow = () => { clock.setZone(settings.get('timeZone')); clock.setTwelve(settings.get('clock') !== '24'); };
+        // the clock's format (clock.js: the time itself is the car's own)
+        const clockNow = () => { clock.setTwelve(settings.get('clock') !== '24'); };
         clockNow();
-        settings.onChange((k) => { if (k === 'timeZone' || k === 'clock') clockNow(); });
+        settings.onChange((k) => { if (k === 'clock') clockNow(); });
         // Three pods and Freedom are gone (akakingj's build): a layout saved as either is Arc tach now
         // layouts taken out: a saved one moves to the nearest kept (0.30.0: Digital round, Modern wide and Digital dash; 0.54.0: ID8 M, to ID7 M)
         // (Settings > Vehicle: 'ice', petrol or diesel, became Petrol and Diesel apart in 0.35.7)
         if (settings.get('vehicle') === 'ice') settings.set('vehicle', 'petrol');
         const GONE = { three_pods: 'arc_tach', freedom: 'arc_tach', digital_round: 'analog_sport', modern_wide: 'pulse', digital_dash: 'track', sport: 'm' };
         ['layout', 'layoutSport', 'layoutEco'].forEach((k) => { if (GONE[settings.get(k)]) settings.set(k, GONE[settings.get(k)]); });
-        // BMW's bottom strip (0.60.1): on (its top edge trimmed 18 px) or off (hidden); the trims and the wider gap are gone
+        // BMW's bottom strip (0.61.0): on (its top edge trimmed 18 px) or off (hidden); the trims and the wider gap are gone
         const STRIP = { 0: 'on', 6: 'on', 12: 'on', 18: 'on', hide: 'off', hideWide: 'off' };
         if (STRIP[settings.get('bottomExtra')]) settings.set('bottomExtra', STRIP[settings.get('bottomExtra')]);
+        // Fuel economy unit (0.61.0): Auto is gone - a saved Auto, or none saved, becomes km/L, or mpg (US) with mph, once
+        const saved = settings.values;
+        if (saved && !saved._econMoved) {
+            const e = saved.econUnit;
+            if (e === undefined || e === 'auto') settings.set('econUnit', settings.get('speedUnit') === 'mph' ? 'mpg' : 'kml');
+            settings.set('_econMoved', 1);
+        }
         const showing = () => settings.get('show') === 'on';
         // every reading (data.js, shared with Cluster Centre): the car's signals, the engine unit over UDS for
         // what a layout needs (layout.needs), eDrive Live's charge and power while shown
@@ -148,20 +155,32 @@ mgu.run({
             font: () => layout.font || 'bold',
             options, log, live, data,
             theme: () => themeNow(),
-            // (not while the car is locked and left: nobody sees it, and the cluster can sleep)
-            enabled: () => showing() && !D.awake().parked,
+            // (not while the car is locked and left: nobody sees it, and the cluster can sleep; nor while AK Cluster ID8
+            // is on the cluster, having come up first - presence.js)
+            enabled: () => showing() && !D.awake().parked && !id8Ahead(),
             sweep: () => settings.get('sweep') !== 'off',
             target: 'panel',
             onFresh: D.onFresh,
         });
-        let cluster = start();
+        /* taking turns with AK Cluster ID8 (presence.js): when this one came up, and whether ID8 keeps the cluster */
+        const ME = 'akakingj_cluster_layouts', ID8 = 'akakingj_cluster_id8';
+        let upSince = null, cluster = null;
+        const id8Ahead = () => {
+            if (upSince === null && cluster && cluster.status().shown) upSince = Date.now();
+            return presence.ahead(ID8, ME, upSince);
+        };
+        cluster = start();
         const mapHost = startMapHost(log, client);
         let lastVehicle = null, lastModeGear = null, modeWant = null, modeAt = 0, lastBoostTop = null;
         // the engine-unit readings the layout shows, read fast while it shows
         setInterval(() => {
             if (showing()) D.want((typeof layout.needs === 'function' ? layout.needs(options()) : layout.needs || []).concat(require('./layout_common').focus.needs(options())));
             // Cluster Centre steps aside while a layout shows
-            if (cluster.status().shown) presence.mark('layouts', { centre: options().centre });
+            if (cluster.status().shown) {
+                if (upSince === null) upSince = Date.now();
+                presence.mark('layouts', { app: ME, centre: options().centre });
+                presence.mark(ME, { app: ME, since: upSince });
+            } else upSince = null;
             // the Waze centre: Waze on cluster's map hosted in the layout's window, under the layout (map_host.js): the
             // layout's own (M's: where bimmer-lab's put it), else the view the layouts leave open
             mapHost.set(cluster.status().shown && options().centre === 'map' ? (layout.mapWindow || require('./layout_common').MAP_VIEW) : null);
@@ -365,7 +384,8 @@ mgu.run({
             const RX = 652, RW = W - 24 - RX;
             cv.text(byId(shownId).title, RX, 50, 34, t.text, { font: 'bold' });
             // (the words and colours of AK Cluster ID8's page: green on the cluster, amber waiting, dim off)
-            const state = !on ? 'Off - BMW original cluster' : st.shown ? 'On the cluster' : 'Waiting for live car data';
+            const state = !on ? 'Off - BMW original cluster' : st.shown ? 'On the cluster'
+                : id8Ahead() ? 'Waiting: AK Cluster ID8 is on the cluster' : 'Waiting for live car data';
             cv.text(state, RX + RW, 50, 20, !on ? t.dim : st.shown ? ON_GREEN : WAIT_AMBER, { align: 'right', font: 'bold' });
             const modeName = modeKey() === 'layoutSport' ? 'Layout in Sport' : modeKey() === 'layoutEco' ? 'Layout in ECO PRO' : 'Layout';
             cv.text(modeName, RX, 80, 17, t.dim, { font: 'bold' });
@@ -513,7 +533,8 @@ mgu.run({
             const tmp = (c) => (isNum(c) ? Math.round(o.tempUnit === 'c' ? c : c * 9 / 5 + 32) + '°' : '--');
             const lines = [
                 ['On the cluster', !showing() ? 'Off - BMW original cluster (press Show on the cluster)'
-                    : st.shown ? 'Showing: ' + layout.title + ', ' + look() + ' colours' : 'Waiting for live car data'],
+                    : st.shown ? 'Showing: ' + layout.title + ', ' + look() + ' colours'
+                    : id8Ahead() ? 'Waiting: AK Cluster ID8 is on the cluster' : 'Waiting for live car data'],
                 ['Cluster renderer', st.renderer + '   ·   panel: ' + st.target + '   ·   ' + st.layers + ' layers' + (st.refused ? '   ·   refused: ' + st.refused : '')],
                 ['Car data', (d.demo ? 'demo   ·   ' : live() ? 'live   ·   ' : 'not live   ·   ') + spd + '   ·   ' + (isNum(d.rpm) ? Math.round(d.rpm) + ' rpm' : '-- rpm')
                     + '   ·   gear ' + layout.gearText(d) + '   ·   oil ' + tmp(d.oil) + '   ·   coolant ' + tmp(d.coolant) + '   ·   outside ' + tmp(d.outside)],

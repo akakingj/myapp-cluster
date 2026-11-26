@@ -32,6 +32,7 @@ const { DidReader } = require('./kit/dids');
 const { startProviders } = require('./providers');
 const { createFuse } = require('./kwfuse');
 const Awake = require('./kit/awake');
+const clock = require('./clock');
 
 const isNum = (v) => typeof v === 'number' && isFinite(v);
 const PROGRAMS = { S_MINUS_PROGRAMM: 'S', M_MINUS_PROGRAMM: 'M', 1: 'S', 2: 'M' };
@@ -420,6 +421,8 @@ function startData(ctx, opts) {
     } : {}), 'units' + (opts && opts.dayNight ? ', day / night' : ''), { pollMs: 60000 });
     watch('de.bmw.infotainment.KombiIF', {
         statusRangeTankStatus: (v) => { fes('statusRangeTankStatus')(v); pickRanges(v); odometer(v); },
+        // the time of day: the cluster's own display time, its zone and summer time the car's (clock.js)
+        statusShowTimeDate: (v) => { clock.fromCar(v); },
         // the trip computer (0.45.0): trip 1's average fuel economy, tenths, in the unit the car's trip computer
         // shows (l/100 km, km/l, mpg); 65535 left out (no value). 0 kept (a trip just reset: the car shows 0.0, so
         // does the cluster - not the last trip's figure). The unit taken from every reply: the car's own unit changed
@@ -742,6 +745,8 @@ function startData(ctx, opts) {
 /** Demo values for the readings the kit's simulator has none of. */
 function demo(d) {
     const t = Date.now() / 1000, rpm = d.rpm || 1500;
+    // (no car to tell the time: the demo's clock starts at 10:09)
+    if (!clock.local()) clock.fromCar({ statusDisplayClockTimeDate: 1, displayHour: 10, displayMinute: 9 });
     return {
         outside: 9, gearbox: 72 + 4 * Math.sin(t / 50), iat: 34 + 6 * Math.sin(t / 20), hpfp: 50 + rpm / 40, lpfp: 5.2 + 0.2 * Math.sin(t),
         oilPress: Math.min(5, 1.2 + rpm / 1500), volts: 14.1 + 0.1 * Math.sin(t / 9),

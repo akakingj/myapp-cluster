@@ -34,7 +34,6 @@ The package keeps its plain version (no `-ko` suffix): the Store looks for `dist
 | Layouts, Centre | Speed, temperature | mph, °F > km/h, °C |
 | Layouts, Centre, Info | Torque, pressure | Nm (lb-ft), auto > kgm, psi |
 | Layouts, Centre | Power unit (new) | hp (PS, kW) |
-| Layouts, Centre | Time zone | US Eastern > Korea / Japan (UTC+9) |
 | Layouts | Red zone from, rev scale | 7000, 8000 > 6000, 7000 |
 | Centre | Rev limit when warm, shift light flashes at | 6500, 6200 > 6000, 5700 |
 | Info | Panel slots 1-3 | power, battery, oil > boost, torque, oil |
@@ -349,6 +348,15 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.61.0, Centre 0.15.0 (Nov 26 2026): the clock is the car's own (shared/clock.js, data.js: KombiIF
+  statusShowTimeDate, as AK Cluster ID8 takes it; --:-- until the car says; the demo's at 10:09): Settings > Time zone is
+  gone, from the Car profile too (1.9.0). Fuel economy unit: km/L, L/100km, mpg (US) or mpg (UK), every Car profile fuel
+  use unit taken; Auto (as the car's trip computer) is gone - a saved Auto, or none saved, becomes km/L, or mpg (US) with
+  mph, once (main.js). Layouts and AK Cluster ID8 take turns on the cluster (shared/presence.js ahead: each keeps a file
+  of its own with when it came up, the one up first keeps the cluster, the other waits - "Waiting: AK Cluster ID8 is on
+  the cluster" on Layouts' page, "Waiting: AK Cluster Layouts is on the cluster" on ID8's; an older ID8, with no file
+  of its own, is not waited for, as before). tools/known_signals.json: KombiIF statusShowTimeDate (rs), as MGU Styles
+  and ID8 declare it on G20s.
 - Layouts 0.60.1, Centre 0.14.22, Info 1.10.19 (Nov 26 2026): Settings > BMW's bottom strip is On / Off after a test on
   a car (photos, 2026-11-26): On is the band at 18 (the trims of 6 and 12 px left pieces of the stock dials at the sides,
   nothing below the layout left more), Off hides it to BMW's gear letter (the wider gap showed the T of COMFORT).

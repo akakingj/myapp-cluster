@@ -122,7 +122,7 @@ const modeText = (d, t) => {
     if (d && (d.mode === 'S' || d.mode === 'M')) return d.mode === 'M' ? 'MANUAL' : 'SPORT';
     return t.mode;
 };
-/* the local time (clock.js: the unit's apps run on UTC; the Time zone setting says where the car is) */
+/* the local time (clock.js: the car's own; --:-- until the car has said) */
 const clock = () => require('./clock').hm(undefined, true);   // (12-hour: with AM / PM)
 
 /* ---------- the map window and the extra readings ---------- */
@@ -415,8 +415,8 @@ const numOrOff = (f) => (o, d) => (d.engineOn === false ? 'OFF' : f(o, d));
 /*
  * The car's own trip computer (0.45.0; data.js: KombiIF, read-only): trip 1's average fuel economy in the unit the car
  * shows it (avgConsUnit: 'l100', 'kml', 'mpg' US, 'mpguk'), its distance (km) and driving time (minutes). Settings > Fuel
- * economy unit: as the car's trip computer (Auto; km/L with km/h, mpg with mph while the car hasn't said), or km/L,
- * L/100km, mpg. Each unit is its own number over litres a 100 km, so one turns into another as 100 / x does.
+ * economy unit (or the Car profile's): km/L, L/100km, mpg (US) or mpg (UK); none set, the car's own unit. Each unit is
+ * its own number over litres a 100 km, so one turns into another as 100 / x does.
  */
 const ECON_UNITS = { kml: 'km/L', l100: 'L/100km', mpg: 'mpg', mpguk: 'mpg' };
 const ECON_K = { l100: 1, kml: 100, mpg: 235.215, mpguk: 282.481 };   // (x to l/100 km: K / x, l100 itself)
@@ -493,7 +493,7 @@ const READOUTS = {
     tripTime: { short: 'TIME', long: 'TIME', num: (o, d) => tripTimeText(d), frac: (d) => (isNum(d.tripMin) ? Math.min(1, d.tripMin / 600) : 0) },
     // (0.48.8) the odometer: the trip since delivery, whatever the head unit's trip data shows
     odo: { short: 'ODO', long: 'ODO', num: (o, d) => distText(o, d.odometer), frac: () => 0 },
-    // (0.45.0) the fuel range (the car's, as the strip shows it) and the time of day (Settings > Time zone), anywhere
+    // (0.45.0) the fuel range (the car's, as the strip shows it) and the time of day (the car's own clock), anywhere
     frange: { short: 'RANGE', long: 'RANGE', num: (o, d) => distText(o, d.frange), frac: (d) => (isNum(d.frange) ? Math.min(1, d.frange / 800) : 0) },
     // (no name: '7:37 PM' says what it is)
     clock: { short: '', long: '', num: () => clock(), frac: () => 0 },

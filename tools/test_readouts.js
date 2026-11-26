@@ -90,7 +90,7 @@ check('the engine unit reads what the readouts show', () => {
 check('the settings offer every readout, and the defaults are this build\'s', () => {
     const s = (k) => SPEC.settings.find((x) => x.key === k);
     ['infoA', 'infoB', 'infoMain'].forEach((k) => Object.keys(C.READOUTS).forEach((r) => assert(s(k).options.some((x) => x[0] === r), k + ' ' + r)));
-    const want = { vehicle: 'petrol', tankLitres: 59, speedUnit: 'kmh', tempUnit: 'c', torqueUnit: 'kgm', pressUnit: 'psi', powerUnit: 'hp', timeZone: 'utc+9', infoA: 'auto', infoB: 'auto', infoMain: 'auto', redline: 6000, rpmMax: 7000 };
+    const want = { vehicle: 'petrol', tankLitres: 59, speedUnit: 'kmh', tempUnit: 'c', torqueUnit: 'kgm', pressUnit: 'psi', powerUnit: 'hp', infoA: 'auto', infoB: 'auto', infoMain: 'auto', redline: 6000, rpmMax: 7000 };
     Object.keys(want).forEach((k) => assert.strictEqual(s(k).default, want[k], k));
     // (a number setting is a drop-down on the car: its steps, the default among them)
     SPEC.settings.filter((x) => x.type === 'number').forEach((x) => assert(Array.isArray(x.steps) && x.steps.indexOf(x.default) >= 0, x.key));
@@ -288,7 +288,12 @@ check('the speed and rpm figures hold until the reading is past them, as the clu
 // (the clock with AM / PM on a 12-hour clock; the average economy's 0.0 and its name; the fuel gauge's marks 0, 1/2, 1)
 check('the clock: AM / PM on a 12-hour clock, none on a 24-hour one', () => {
     const clk = require(path.join(ROOT, 'apps', 'akakingj_cluster_layouts', 'clock.js'));
-    clk.setZone('utc+9');
+    // (the car's own time: the cluster's display time, here 9 hours ahead of the unit's UTC; none until it says)
+    const T0 = Date.UTC(2026, 10, 18, 0, 0);
+    assert.strictEqual(clk.fromCar({ statusDisplayClockTimeDate: 15 }, T0), undefined, '15: not filled, nothing changes');
+    assert.strictEqual(clk.fromCar({ statusDisplayClockTimeDate: 2, displayHour: 9, displayMinute: 0 }, T0), null, 'even: the car shows --:--');
+    assert.strictEqual(clk.hm(T0, true), '--:--');
+    clk.fromCar({ statusDisplayClockTimeDate: 1, displayHour: 9, displayMinute: 0, displaySecond: 0 }, T0);
     const at = (h, m) => Date.UTC(2026, 10, 18, (h - 9 + 24) % 24, m);
     assert.deepStrictEqual([[0, 5], [7, 37], [12, 0], [19, 37]].map(([h, m]) => clk.hm(at(h, m), true)), ['12:05 AM', '7:37 AM', '12:00 PM', '7:37 PM']);
     assert.strictEqual(clk.hm(at(19, 37)), '7:37', 'without ampm: as before (the Centre\'s AT 7:05)');

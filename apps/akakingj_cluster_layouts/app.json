@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.60.1",
+  "version": "0.61.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -64,12 +64,13 @@
       "statusPowerRelativHybrid": "rs"
     },
     "de.bmw.infotainment.KombiIF": {
-      "_optional": "the car's power distribution figures, its fuel and electric ranges, and its trip computer (average fuel economy, distance, driving time)",
+      "_optional": "the car's power distribution figures, its fuel and electric ranges, its trip computer (average fuel economy, distance, driving time) and its clock (the time of day)",
       "statusBordcomputerAverage": "rs",
       "statusBordcomputerTravelData": "rs",
       "statusDisplayElectricalPowerDistribution": "rs",
       "statusRangeTankStatus": "rs",
-      "displayRangeElectricVehicle": "rs"
+      "displayRangeElectricVehicle": "rs",
+      "statusShowTimeDate": "rs"
     },
     "de.bmw.chassis.SteeringAngle": {
       "_optional": "the steering angle (the Steering page)",
@@ -1753,16 +1754,13 @@
       "profileMap": {
         "l100": "l100",
         "kml": "kml",
-        "mpgus": "mpg"
+        "mpgus": "mpg",
+        "mpguk": "mpguk"
       },
       "label": "Fuel economy unit",
       "type": "choice",
-      "default": "auto",
+      "default": "kml",
       "options": [
-        [
-          "auto",
-          "As the car's trip computer"
-        ],
         [
           "kml",
           "km/L"
@@ -1774,6 +1772,10 @@
         [
           "mpg",
           "mpg (US)"
+        ],
+        [
+          "mpguk",
+          "mpg (UK)"
         ]
       ],
       "section": "Units and clock"
@@ -1822,68 +1824,6 @@
         [
           "kw",
           "kW"
-        ]
-      ],
-      "section": "Units and clock"
-    },
-    {
-      "key": "timeZone",
-      "profile": "timeZone",
-      "label": "Time zone (the clock)",
-      "type": "choice",
-      "default": "utc+9",
-      "options": [
-        [
-          "eastern",
-          "US Eastern"
-        ],
-        [
-          "central",
-          "US Central"
-        ],
-        [
-          "mountain",
-          "US Mountain"
-        ],
-        [
-          "arizona",
-          "Arizona (no DST)"
-        ],
-        [
-          "pacific",
-          "US Pacific"
-        ],
-        [
-          "alaska",
-          "Alaska"
-        ],
-        [
-          "hawaii",
-          "Hawaii"
-        ],
-        [
-          "atlantic",
-          "Atlantic"
-        ],
-        [
-          "utc",
-          "UTC"
-        ],
-        [
-          "uk",
-          "UK / Ireland / Portugal"
-        ],
-        [
-          "cet",
-          "Central Europe"
-        ],
-        [
-          "eet",
-          "Eastern Europe"
-        ],
-        [
-          "utc+9",
-          "Korea / Japan (UTC+9)"
         ]
       ],
       "section": "Units and clock"

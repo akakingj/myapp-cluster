@@ -34,7 +34,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     const S = {}, changes = [];
     SPEC.settings.forEach((s) => { S[s.key] = s.default; });
     // (the personal build's defaults are Korean and petrol; these checks are written for the original's)
-    Object.assign(S, { vehicle: 'auto', tankLitres: 69, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', timeZone: 'eastern', redline: 7000, rpmMax: 8000 });
+    Object.assign(S, { vehicle: 'auto', tankLitres: 69, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', econUnit: 'l100', redline: 7000, rpmMax: 8000 });
     const handlers = {}, clicks = {}, warns = [];
     let pages = 0, lastPage = null, sheets = null;
     const ctx = {
@@ -196,7 +196,10 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     ctx.settings.set('econUnit', 'kml');
     await sleep(180);
     check('Fuel economy unit km/L: 100 / 8.5', () => assert(eng()._pieces().some((p) => p.text === '11.8 km/L')));
-    ctx.settings.set('econUnit', 'auto');
+    ctx.settings.set('econUnit', 'mpguk');
+    await sleep(180);
+    check('Fuel economy unit mpg (UK): 282.481 / 8.5', () => assert(eng()._pieces().some((p) => p.text === '33.2 mpg')));
+    ctx.settings.set('econUnit', 'l100');
     // (a trip just reset: 0.0, as the car shows it, not the last trip's figure; the car's unit changed on the MGU with
     // no figure yet: the old figure gone, the new unit's when it comes)
     handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 0, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_L_S_100KM' });
@@ -212,6 +215,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         const texts = eng()._pieces().filter((p) => p.text !== null).map((p) => p.text);
         assert(texts.indexOf('8.5 L/100km') < 0 && texts.indexOf('11.8 km/L') < 0, JSON.stringify(texts));
     });
+    ctx.settings.set('econUnit', 'kml');
     handlers.statusBordcomputerAverage({ consumptionAverage1BC1: 118, statusUnitOfMeasurementConsumptionBC: 'VERBRAUCH_IN_KM_S_L' });
     await sleep(40);
     check('then the new unit\'s figure', () => assert(eng()._pieces().some((p) => p.text === '11.8 km/L')));
@@ -264,6 +268,10 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     handlers.statusCarSpeed2({ speedVehicleCentreOfGravity: 0 });
     await sleep(300);
     check('someone in the car again: the layout back', () => assert(effects().length > 0));
+    // the time of day: the car's own cluster's (KombiIF statusShowTimeDate), not a zone set here
+    handlers.statusShowTimeDate({ statusDisplayClockTimeDate: 1, displayHour: 21, displayMinute: 7, displaySecond: 0 });
+    check('the clock: the car\'s own time', () => assert.strictEqual(require(path.join(APP, 'clock.js')).hm(undefined, true), '9:07 PM'));
+    check('no Time zone setting', () => assert(!SPEC.settings.some((x) => x.key === 'timeZone')));
     console.log(ok + ' passed');
     process.exit(0);
 })().catch((e) => { console.error(e); process.exit(1); });
