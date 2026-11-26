@@ -348,6 +348,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.61.2, Centre 0.15.1, Info 1.10.21 (Nov 26 2026): a settings section's row counts its settings in Korean
+  ("설정 7개"; English "1 setting" / "7 settings"), as AK Cluster ID8 0.21.0: it said "7 settings" in English in the
+  Korean build too, put together from a number so the catalog never had it (kit sheet.js, since the sections of Nov 12).
 - Layouts 0.61.1 (Nov 26 2026): JDM 2 with the car's strip: the tach lower and a little smaller (centre y 413, radius
   225, from 393 / 240) and the gear's disc lower and smaller (y 290, radius 92, from 262 / 100), each 30 px or more under
   the KOMBI's turn arrows - on the car (a photo, 2026-11-26) the arrows sat on the tach's rim and the disc's top: they

@@ -23,7 +23,7 @@
  */
 const { withAlpha } = require('./canvas');
 const G = require('./gauges');
-const { t: translate } = require('./i18n');
+const { t: translate, getLanguage } = require('./i18n');
 
 const W = 1600, TOP = 46, BOTTOM = 512;
 const ROW_H = 66, GAP = 8;
@@ -190,6 +190,8 @@ function listSheet(settings, title, opts) {
     const schema = settings.schema.filter((s) => !s.hidden);
     // a setting the Car profile app sets now: its value shown, not changed here (mgu.js Settings.held)
     const held = (s) => !!(s && s.key && settings.held && settings.held(s.key));
+    // a section's row: how many settings it holds ("7 settings"; Korean "설정 7개", as AK Cluster ID8's)
+    const count = (n) => (getLanguage() === 'ko' ? '설정 ' + n + '개' : n + (n === 1 ? ' setting' : ' settings'));
     // settings with a "section" (app.json) go in a row of their own that opens them: the top lists the others, then
     // the sections in the order they first come (none: one list, as before)
     const sections = [];
@@ -210,7 +212,7 @@ function listSheet(settings, title, opts) {
                 return values(this.open, settings).map((v) => ({ label: v[1], kind: 'radio', on: v[0] === cur }));
             }
             return this.entries().map((s) => (s.section && !s.key
-                ? { label: s.section, value: schema.filter((x) => x.section === s.section).length + ' settings', kind: 'more' }
+                ? { label: s.section, value: count(schema.filter((x) => x.section === s.section).length), kind: 'more' }
                 : s.type === 'bool'
                 ? { label: s.label, kind: 'toggle', on: !!settings.get(s.key) }
                 : { label: s.label, value: settings.display(s.key), kind: values(s, settings) && !held(s) ? 'more' : null }));
