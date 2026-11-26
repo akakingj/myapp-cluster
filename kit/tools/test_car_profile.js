@@ -45,16 +45,16 @@ const PROFILE_VALUES = {
     pressUnit: ['bar', 'psi', 'kpa'], fuelUnit: ['l100', 'kml', 'mpguk', 'mpgus'], torqueUnit: ['nm', 'lbft', 'kgm'],
     powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'], theme: ['m_red', 'ice'], layout: ['full', 'standard'], renderer: ['auto', 'software'],
     demo: ['auto', 'on', 'off'], clock: ['12', '24'], tankLitres: [40, 59, 90], fuelFrom: ['engine', 'litres'], eFullKm: [30, 50, 100],
-    speedMax: ['260', '330'], boostMax: [0, 15, 20, 45],
+    speedMax: ['260', '330'], boostMax: [0, 15, 20, 45], clusterStart: ['layouts', 'id8', 'none'],
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
-    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', tankLitres: 'tankLitres', fuelFrom: 'fuelFrom', eFullKm: 'eFullKm' , econUnit: 'fuelUnit', redLight: 'lightRed', yellowLight: 'lightStart', speedMax: 'speedMax', boostMax: 'boostMax' },
+    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', tankLitres: 'tankLitres', fuelFrom: 'fuelFrom', eFullKm: 'eFullKm' , econUnit: 'fuelUnit', redLight: 'lightRed', yellowLight: 'lightStart', speedMax: 'speedMax', boostMax: 'boostMax', autoStart: 'clusterStart' },
     centre: { vehicle: 'engine', redline: 'redline', shiftAt: 'shiftAt', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', tankLitres: 'tankLitres', eFullKm: 'eFullKm', boostMax: 'boostMax' },
     info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin', theme: 'theme', layout: 'layout', renderer: 'renderer', demo: 'demo' },
 };
 const MINE = { vehicle: 'petrol', skin: 'idrive7', theme: 'm_tricolour', layout: 'standard', renderer: 'software', demo: 'on', clock: '24', tankLitres: 60, eFullKm: 40, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftAt: 6500, _reset_shiftAt: 1, gScale: '1', coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
-    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, fuelFrom: 'litres', speedMax: '330', boostMax: 30 };
+    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, fuelFrom: 'litres', speedMax: '330', boostMax: 30, autoStart: 'on' };
 
 const cases = {
     'Electric range when full: kept in km, shown in miles with mph (the Car profile\'s speed unit too)'() {
@@ -79,6 +79,19 @@ const cases = {
         });
         writeProfile({ engine: 'app' });
         ['layouts', 'centre'].forEach((app) => { const s = settingsIn(app, { vehicle: 'diesel' }); assert.strictEqual(s.get('vehicle'), 'diesel'); assert(!s.held('vehicle')); });
+        clear();
+    },
+    'Car profile > Start on the cluster: Layouts on, ID8 or none off, Each app its own (0.62.0)'() {
+        clear();
+        [['layouts', 'on'], ['id8', 'off'], ['none', 'off']].forEach(([prof, want]) => {
+            writeProfile({ clusterStart: prof });
+            const s = settingsIn('layouts', { autoStart: prof === 'layouts' ? 'off' : 'on' });
+            assert.strictEqual(s.get('autoStart'), want, prof);
+            assert(s.held('autoStart'), prof);
+        });
+        writeProfile({ clusterStart: 'app' });
+        const s = settingsIn('layouts', { autoStart: 'on' });
+        assert.deepStrictEqual([s.get('autoStart'), s.held('autoStart')], ['on', false]);
         clear();
     },
     'each app follows the names it says, a known name of the Car profile each'() {

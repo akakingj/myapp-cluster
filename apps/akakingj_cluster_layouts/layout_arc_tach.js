@@ -287,6 +287,11 @@ function scaled(list) {
 module.exports = {
     id: 'arc_tach',
     title: 'JDM 1',
+    // Settings > Speed limit sign: with the readings in the centre, just above TACH, inside the tach's curve (the owner,
+    // 2026-11-26) - the tach's pieces' boxes take in all of that hollow (sliSkip: it keeps clear of the bar and the
+    // lines as drawn, checked with tools/preview.js); with the map, by BMW's own place as in the other layouts
+    sliHome: (o) => (o.centre === 'map' || o.centre === 'stock' ? null : { x: 768, y: 452 }),
+    sliSkip: ['rtachTop', 'rtach'],
     // one look in every drive mode (0.35.4)
     palette: (look) => Object.assign({}, PALETTES.comfort, DASH, LCD[look] || {}),
     font: 'wide',     // (0.40.0: the dash's lettering, Michroma)

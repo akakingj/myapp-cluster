@@ -223,14 +223,14 @@ check('the throttle (the valve, as Live Data: 4600 / 5858, OBD 11) apart from th
     assert.strictEqual(low({ infoLow: 'throttle' }).text({ throttle: 40 }), 'THROTTLE 40%');
     assert.strictEqual(low({ infoLow: 'boost' }).text({ boostActual: 1, engineOn: true }), 'BOOST 14.5 psi');
 });
-check('settings in sections: the top lists Show, Layout, Colours and the sections; a section opens, Back returns', () => {
+check('settings in sections: the top lists Show, Start with the car, Layout, Colours and the sections; a section opens, Back returns', () => {
     const { listSheet } = require(path.join(ROOT, 'kit', 'runtime', 'sheet.js'));
     const vals = {}; SPEC.settings.forEach((x) => { vals[x.key] = x.default; });
     const st = { schema: SPEC.settings, get: (k) => vals[k], set: (k, v) => { vals[k] = v; }, display: (k) => String(vals[k]), cycle() {} };
     const sh = listSheet(st, null, {});
     const top = sh.entries().map((e) => e.key || '[' + e.section + ']');
-    assert.deepStrictEqual(top, ['show', 'layout', 'look', '[Display]', '[Readouts and gauges]', '[Red zone and shift]', '[Units and clock]', '[Car]']);
-    sh.focus = 4; sh.choose();
+    assert.deepStrictEqual(top, ['show', 'autoStart', 'layout', 'look', '[Display]', '[Readouts and gauges]', '[Red zone and shift]', '[Units and clock]', '[Car]']);
+    sh.focus = 5; sh.choose();
     assert.strictEqual(sh.sec, 'Readouts and gauges');
     // (the readouts and the small gauges are set on the page alone: not in the section)
     const keys = sh.entries().map((e) => e.key);
@@ -239,7 +239,7 @@ check('settings in sections: the top lists Show, Layout, Colours and the section
     sh.focus = 0; sh.choose(); assert.strictEqual(sh.open.key, 'stripBars');
     sh.sub = sh.open.options.findIndex((x) => x[0] !== vals.stripBars); const want = sh.open.options[sh.sub][0]; sh.choose();
     assert.strictEqual(vals.stripBars, want); assert.strictEqual(sh.sec, 'Readouts and gauges');
-    assert.strictEqual(sh.back(), null); assert.strictEqual(sh.sec, null); assert.strictEqual(sh.focus, 4);
+    assert.strictEqual(sh.back(), null); assert.strictEqual(sh.sec, null); assert.strictEqual(sh.focus, 5);
     assert.strictEqual(sh.back(), 'close');
 });
 check('too hot: Settings > Too hot (the Car profile\'s) for the colours, the small gauges\' and the C-H gauges\' red', () => {

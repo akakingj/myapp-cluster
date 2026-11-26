@@ -840,12 +840,18 @@ function sliPoints(r, home) {
 }
 /* a piece the sign may lie over: a background (bg*, the whole-screen kinds, anything over half the screen) */
 const sliUnder = (p) => /^bg/.test(p.key) || p.kind === 'bg' || p.kind === 'rmbg' || p.w * p.h > 1920 * 720 / 2;
-/* what the sign keeps clear of: [{ c: [x, y, r] } | { r: [x, y, w, h] }] */
-function sliObstacles(list, map) {
+/* what the sign keeps clear of: [{ c: [x, y, r] } | { r: [x, y, w, h] }]; skip: keys of pieces whose box is mostly
+   empty and drawn round (a layout's sliSkip: JDM 1's tach's top, its fine lines only) */
+function sliObstacles(list, map, skip) {
     const out = [];
     list.forEach((p) => {
-        if (!p || sliUnder(p) || !(p.w > 0 && p.h > 0)) return;
+        if (!p || sliUnder(p) || !(p.w > 0 && p.h > 0) || (skip && skip.indexOf(p.key) >= 0)) return;
+        const g = p.params && p.params.u_geo;
         if (SLI_ROUND[p.kind] && p.w === p.h) out.push({ c: [p.x + p.w / 2, p.y + p.h / 2, p.w / 2] });
+        // (an arc band, KO 1's and KO 2's dials: drawn only where its box and its circle meet - centre u_geo.xy in the
+        // piece, radius u_geo.z, u_geo.w thick - so in the way only where both are; its box alone, a dial's square with
+        // the arc's open foot, would keep the sign far off)
+        else if (p.kind === 'band' && g && g[2] > 0) out.push({ r: [p.x, p.y, p.w, p.h], c: [p.x + g[0], p.y + g[1], g[2] + Math.abs(g[3]) / 2], both: true });
         else out.push({ r: [p.x, p.y, p.w, p.h] });
     });
     SIDE_LIGHTS.concat(TURN_ARROWS).forEach((q) => out.push({ r: [q.x, q.y, q.w, q.h] }));
@@ -854,27 +860,32 @@ function sliObstacles(list, map) {
 }
 function sliFree(x, y, r, obs) {
     const R = r + SLI_GAP;
+    const inC = (c) => { const dx = x - c[0], dy = y - c[1], q = R + c[2]; return dx * dx + dy * dy < q * q; };
+    const inR = (b) => { const dx = Math.max(b[0] - x, 0, x - (b[0] + b[2])), dy = Math.max(b[1] - y, 0, y - (b[1] + b[3])); return dx * dx + dy * dy < R * R; };
     for (let i = 0; i < obs.length; i++) {
         const o = obs[i];
-        if (o.c) {
-            const dx = x - o.c[0], dy = y - o.c[1], q = R + o.c[2];
-            if (dx * dx + dy * dy < q * q) return false;
-        } else {
-            const b = o.r, dx = Math.max(b[0] - x, 0, x - (b[0] + b[2])), dy = Math.max(b[1] - y, 0, y - (b[1] + b[3]));
-            if (dx * dx + dy * dy < R * R) return false;
-        }
+        if (o.both ? inC(o.c) && inR(o.r) : o.c ? inC(o.c) : inR(o.r)) return false;
     }
     return true;
 }
 /** Where the sign goes among the pieces in list: { x, y, r } (its centre and radius), or null where it has no room. */
 function sliPlace(list, opts) {
     opts = opts || {};
-    const obs = sliObstacles(list, opts.map), home = opts.home || SLI_HOME;
+    const obs = sliObstacles(list, opts.map, opts.skip), home = opts.home || SLI_HOME;
     for (let k = 0; k < SLI_R.length; k++) {
         const r = SLI_R[k], pts = sliPoints(r, home);
         for (let i = 0; i < pts.length; i++) if (sliFree(pts[i].x, pts[i].y, r, obs)) return { x: pts[i].x, y: pts[i].y, r };
     }
     return null;
+}
+/** The sign's figures piece made to hold three wide figures ('888') in the layout's glyph family (fitText's way): JDM 1's
+ * wide face ran over the ring. */
+function sliFit(p, fam) {
+    const a = require('./font').atlas(fam || 'bold');
+    const need = Array.from('888').reduce((x, ch) => { const c = a.code(ch); return x + (c < 0 ? 0.6 : a.adv[c]); }, 0) * 0.85;
+    if (!need || need * p.h <= p.w) return p;
+    const h = Math.max(10, Math.floor(p.w / need));
+    return Object.assign({}, p, { y: p.y + Math.round((p.h - h) / 2), h });
 }
 /** The limit's figures: the car's (d.speedLimit, once read), else '--'. */
 const sliText = (d) => (isNum(d.speedLimit) && d.speedLimit > 0 ? String(Math.round(d.speedLimit)) : '--');
@@ -892,5 +903,5 @@ function sliPieces(s) {
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
-    SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliPieces, sliText, sliObstacles, sliFree,
+    SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliPieces, sliFit, sliText, sliObstacles, sliFree,
 };

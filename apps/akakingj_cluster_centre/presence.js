@@ -8,6 +8,9 @@
  * The two full-panel apps, AK Cluster Layouts and AK Cluster ID8 (akakingj/myapp-cluster-high), take turns: each also
  * keeps a file of its own, named by its id, with since (when it came up), and the one that came up first keeps the
  * cluster - the other waits while it shows (ahead). Cluster Centre steps aside for either (layouts.json).
+ * Settings > Start on the cluster with the car (the Car profile's choice, or each app's own): the app chosen says auto
+ * in its file and keeps the cluster from the other whichever came up first (0.62.0: the lighter Layouts came up first at
+ * every start, and AK Cluster ID8, also on, waited).
  */
 const fs = require('fs');
 const path = require('path');
@@ -51,14 +54,17 @@ function active(name) {
 /** What `name` said with its mark ({} when it isn't showing). */
 const info = (name) => (active(name) ? seen.get(name).v : {});
 /**
- * Whether the app `other` is on the cluster and keeps it from app `me`: while me waits (since null), whenever other
- * shows; while me shows (since: when it came up), only if other came up before it (the same moment: the smaller id).
- * An older app with no since never comes first.
+ * Whether the app `other` is on the cluster and keeps it from app `me`: the one started with the car (auto) first,
+ * whichever came up first; else while me waits (since null), whenever other shows; while me shows (since: when it came
+ * up), only if other came up before it (the same moment: the smaller id). An older app with no since never comes
+ * first, nor one with no auto before one started with the car.
  */
-function ahead(other, me, since) {
+function ahead(other, me, since, auto) {
     if (!active(other)) return false;
+    const v = seen.get(other).v, theirs = v.auto === true;
+    if (theirs !== !!auto) return theirs;
     if (since === null || since === undefined) return true;
-    const v = seen.get(other).v, at = typeof v.since === 'number' ? v.since : Infinity;
+    const at = typeof v.since === 'number' ? v.since : Infinity;
     return at < since || (at === since && String(other) < String(me));
 }
 

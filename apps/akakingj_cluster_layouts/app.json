@@ -138,6 +138,28 @@
       ]
     },
     {
+      "key": "autoStart",
+      "label": "Start on the cluster with the car",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "on",
+          "On"
+        ]
+      ],
+      "profile": "clusterStart",
+      "profileMap": {
+        "layouts": "on",
+        "id8": "off",
+        "none": "off"
+      }
+    },
+    {
       "key": "layout",
       "label": "Layout",
       "type": "choice",

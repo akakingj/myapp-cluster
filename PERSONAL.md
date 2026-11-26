@@ -353,7 +353,14 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   layout_common.sliPlace at the point nearest BMW's own (528, 590) clear of the layout as drawn then (dials as circles,
   14 px), the KOMBI's lights, the map's window and the strip; z over everything (Retro M's dial quad hid it at the
   panel's own z). '--' until the car's value is known (Info's Driving assistant check). Two pieces: 58 at most (JDM 1,
-  plug-in hybrid). Centre: the translation only. tools/test_sli.js.
+  plug-in hybrid). Centre: the translation only. tools/test_sli.js. JDM 1: above TACH, inside the tach's curve
+  (layout sliHome / sliSkip; the owner: the first places, top left and at the far left, stood apart); an arc band
+  (KO 1's, KO 2's dials) in the way only where its box and circle meet; the figures fitted to the layout's face (sliFit).
+- Layouts 0.62.0, Centre 0.15.2 (Nov 26 2026): Settings > Start on the cluster with the car (autoStart, Off; the Car
+  profile's clusterStart: layouts on, id8 / none off). The owner: AK Cluster ID8 left on did not come up at a start -
+  Layouts, also on and lighter, came up first and kept it. shared/presence.js ahead(other, me, since, auto): the app
+  started with the car keeps the cluster whichever came up first; main.js turns Show on the cluster on at start, as
+  the car wakes (parked -> not) and when it is chosen. tools/test_presence.js, kit/tools/test_car_profile.js.
 - Info 1.10.22 (Nov 26 2026): Driving assistant check > Catalog also lists every member of any service in the head
   unit's catalog whose name looks like the brakes', the parking brake's or Auto Hold's (adas_probe BRAKE_RE; the
   screen first, the log all of them, the app log the first 40), to find whether the head unit gets Auto Hold's state:

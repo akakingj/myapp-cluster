@@ -47,9 +47,20 @@ assert.strictEqual(P3.ahead(ID8, ME, now - 100), true, 'Layouts up after ID8: it
 fs.writeFileSync(path.join(dir, ID8 + '.json'), JSON.stringify({ app: ID8, at: Date.now() }));
 past();
 assert.strictEqual(P3.ahead(ID8, ME, now - 100), false, 'an ID8 file with no since never comes first');
+// Start on the cluster with the car: the one chosen (auto) keeps the cluster, whichever came up first
+fs.writeFileSync(path.join(dir, ID8 + '.json'), JSON.stringify({ app: ID8, since: now - 100, auto: true, at: Date.now() }));
+past();
+assert.strictEqual(P3.ahead(ID8, ME, now - 1000), true, 'ID8 started with the car: Layouts, up first, steps aside');
+assert.strictEqual(P3.ahead(ID8, ME, null), true, 'ID8 started with the car: Layouts waits');
+assert.strictEqual(P3.ahead(ID8, ME, now - 1000, true), false, 'both started with the car: the one up first');
+fs.writeFileSync(path.join(dir, ID8 + '.json'), JSON.stringify({ app: ID8, since: now - 5000, at: Date.now() }));
+past();
+assert.strictEqual(P3.ahead(ID8, ME, null, true), false, 'Layouts started with the car: it comes up over ID8, up first');
+assert.strictEqual(P3.ahead(ID8, ME, now - 100, true), false, 'Layouts started with the car: it keeps the cluster');
+assert.strictEqual(P3.ahead(ID8, ME, now - 100), true, 'neither: the one up first, as before');
 // a mark of each name on its own clock: layouts.json and Layouts' own file in the same second
 P3.mark('layouts2', {}); P3.mark(ME, { app: ME, since: now });
 assert.ok(fs.existsSync(path.join(dir, 'layouts2.json')) && fs.existsSync(path.join(dir, ME + '.json')), 'two marks in one second');
 ['akakingj_cluster_centre', 'akakingj_cluster_layouts'].forEach((a) => assert.strictEqual(fs.readFileSync(path.join(__dirname, '..', 'apps', a, 'presence.js'), 'utf8'),
     fs.readFileSync(path.join(__dirname, '..', 'shared', 'presence.js'), 'utf8'), a + ': the shared copy'));
-console.log('15 passed');
+console.log('21 passed');

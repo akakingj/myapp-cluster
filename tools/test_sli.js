@@ -31,7 +31,7 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['ice', 'phe
     // clear of every other piece (its backgrounds aside), the lights, the map's window
     const mapForm = centre === 'map' || centre === 'stock';
     const others = ps.filter((p) => !/^sli/.test(p.key));
-    const obs = C.sliObstacles(others, mapForm ? (L.mapWindow || C.MAP_VIEW) : null);
+    const obs = C.sliObstacles(others, mapForm ? (L.mapWindow || C.MAP_VIEW) : null, L.sliSkip);
     assert(C.sliFree(x, y, r, obs), what + ': clear of the layout at ' + x + ',' + y);
     assert(d.z > 20 && num[0].z > d.z, what + ': over everything');
     n++;

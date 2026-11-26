@@ -128,8 +128,9 @@ function withSign(L, o, list) {
     list = list.filter((p) => !/^sli/.test(p.key));
     if (!signOn(o)) return list;
     const mapForm = o.centre === 'map' || (stripOn(o) && o.centre === 'stock');
-    const at = C0.sliPlace(list, { map: mapForm ? (L.mapWindow || C0.MAP_VIEW) : null, home: L.sliHome });
-    return at ? list.concat(C0.sliPieces(at)) : list;
+    const at = C0.sliPlace(list, { map: mapForm ? (L.mapWindow || C0.MAP_VIEW) : null,
+        home: typeof L.sliHome === 'function' ? L.sliHome(o) : L.sliHome, skip: L.sliSkip });
+    return at ? list.concat(C0.sliPieces(at).map((p) => (p.key === 'sliNum' ? C0.sliFit(p, L.font || 'bold') : p))) : list;
 }
 LAYOUTS.forEach((L) => {
     const own = L.pieces;

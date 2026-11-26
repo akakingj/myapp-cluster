@@ -92,6 +92,19 @@ mgu.run({
             settings.set('_econMoved', 1);
         }
         const showing = () => settings.get('show') === 'on';
+        /*
+         * Settings > Start on the cluster with the car (the Car profile's Start on the cluster: Layouts, ID8 or none;
+         * else this app's own): Show on the cluster turned on at the app's start (each start of the head unit), when the
+         * car wakes again and when it is chosen; and it keeps the cluster from AK Cluster ID8 (presence.js auto).
+         */
+        const autoOn = () => settings.get('autoStart') === 'on';
+        const pressShow = (why) => {
+            if (!autoOn() || showing()) return;
+            settings.set('show', 'on');
+            log.info('start on the cluster with the car: Show on the cluster on (' + why + ')');
+        };
+        pressShow('start');
+        settings.onChange((k) => { if (k === 'autoStart') pressShow('chosen'); });
         // every reading (data.js, shared with Cluster Centre): the car's signals, the engine unit over UDS for
         // what a layout needs (layout.needs), eDrive Live's charge and power while shown
         const D = startData(ctx, { shown: showing, tyres: true, dayNight: true });
@@ -177,19 +190,23 @@ mgu.run({
         let upSince = null, cluster = null;
         const id8Ahead = () => {
             if (upSince === null && cluster && cluster.status().shown) upSince = Date.now();
-            return presence.ahead(ID8, ME, upSince);
+            return presence.ahead(ID8, ME, upSince, autoOn());
         };
         cluster = start();
         const mapHost = startMapHost(log, client);
         let lastVehicle = null, lastModeGear = null, modeWant = null, modeAt = 0, lastBoostTop = null;
+        let lastParked = null;   // (Start on the cluster with the car: the car waking again, the head unit still up)
         // the engine-unit readings the layout shows, read fast while it shows
         setInterval(() => {
+            const parked = !!D.awake().parked;
+            if (lastParked === true && !parked) pressShow('the car on');
+            lastParked = parked;
             if (showing()) D.want((typeof layout.needs === 'function' ? layout.needs(options()) : layout.needs || []).concat(require('./layout_common').focus.needs(options())));
             // Cluster Centre steps aside while a layout shows
             if (cluster.status().shown) {
                 if (upSince === null) upSince = Date.now();
                 presence.mark('layouts', { app: ME, centre: options().centre });
-                presence.mark(ME, { app: ME, since: upSince });
+                presence.mark(ME, { app: ME, since: upSince, auto: autoOn() });
             } else upSince = null;
             // the Waze centre: Waze on cluster's map hosted in the layout's window, under the layout (map_host.js): the
             // layout's own (M's: where bimmer-lab's put it), else the view the layouts leave open
