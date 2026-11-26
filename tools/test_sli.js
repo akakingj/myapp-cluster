@@ -28,6 +28,10 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['ice', 'phe
     assert(C.SLI_R.indexOf(r) >= 0 && d.w === d.h, what + ': its size');
     assert(d.y >= 8 && y + r <= C.STRIP_Y - 6 && d.x >= 8 && d.x + d.w <= 1912, what + ': on the glass, above the car\'s strip');
     assert(!C.inCorner(x, y - r), what + ': clear of the slanted corners');
+    // (and of the driver camera's cowl over the top middle, NOTCH, where the glass shows nothing: AK Cluster ID8 0.22.0
+    // put its M styles' signs there)
+    const N = C.NOTCH;
+    assert(x + r <= N.x || x - r >= N.x + N.w || y - r >= N.y + N.h, what + ': clear of the camera\'s cowl');
     // clear of every other piece (its backgrounds aside), the lights, the map's window
     const mapForm = centre === 'map' || centre === 'stock';
     const others = ps.filter((p) => !/^sli/.test(p.key));
