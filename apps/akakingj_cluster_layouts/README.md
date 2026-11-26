@@ -398,6 +398,14 @@ On (show it, trim it) or Off (hide it). BMW's gear letter always stays: cover it
 KOMBI draws a black fallback gear box in the rev dial, which can stay until the cluster restarts; nothing of the layout
 ever reaches it. The warning lights are drawn over the covers.
 
+**Settings > Speed limit sign** (0.62.0, Off by default): a round sign of our own (a red ring round a light disc, the
+limit in figures) in room the layout leaves. BMW's own speed limit sign is drawn under the apps' layers, so it is gone
+under any layout. Its place is the nearest to BMW's own (over the clock, x 528, y 590 above the car's strip) where it
+stays 14 px clear of everything the layout draws then (a round dial as its circle), of the KOMBI's lights over us, the
+map's window, the glass's corners and the strip; worked out again with each change of layout or setting
+(layout_common.sliPlace, tools/test_sli.js: every layout, centre, car and strip). For now it shows `--`: the car's
+value comes once AK Cluster Info's Driving assistant check (Signals) has shown which value is the sign's.
+
 **The car's own bottom strip, always** (since 0.34.0): the layout ends at y 646, so the KOMBI's own strip along the
 bottom shows below it (the fuel range, the time, the street, the drive mode and gear, the outside temperature and the
 electric range, and the warning lights; 660 just touched the top of its drive mode). Found and tested on cars by

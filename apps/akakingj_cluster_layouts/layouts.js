@@ -117,6 +117,20 @@ function bottomCut(list) {
     return out;
 }
 
+/*
+ * Settings > Speed limit sign (layout_common.sliPlace): over the layout as drawn now, in the room it leaves; with the
+ * map in the centre (or the stock centre over the car's strip) its window kept clear too. Its place is worked out
+ * again whenever the layout is (a setting changes), so a readout put somewhere else moves it on.
+ */
+const signOn = (o) => !!o && (o.sliSign === 'on' || o.sliSign === true);
+function withSign(L, o, list) {
+    // (a layout made from another's pieces, Simple's from Pulse's: that one's sign left out, this one's placed)
+    list = list.filter((p) => !/^sli/.test(p.key));
+    if (!signOn(o)) return list;
+    const mapForm = o.centre === 'map' || (stripOn(o) && o.centre === 'stock');
+    const at = C0.sliPlace(list, { map: mapForm ? (L.mapWindow || C0.MAP_VIEW) : null, home: L.sliHome });
+    return at ? list.concat(C0.sliPieces(at)) : list;
+}
 LAYOUTS.forEach((L) => {
     const own = L.pieces;
     // (Settings > Bottom strip, Cluster: M car and Frame behind the gear box are gone: always the car's strip, which
@@ -126,7 +140,7 @@ LAYOUTS.forEach((L) => {
         const o = C0.resolveReadouts(Object.assign({}, o0 || {}, { bottomStrip: 'stock', cluster: 'standard', boxBezel: false }));
         // a setting this build can't draw (a stale saved value) must not stop the app (the main app deletes an app
         // that keeps failing): the layout as designed, its places and readouts on their defaults
-        try { return finish(L, o, withPowerWords(o, built(o))); } catch (e) {
+        try { return withSign(L, o, finish(L, o, withPowerWords(o, built(o)))); } catch (e) {
             const safe = Object.assign({}, o, { places: {}, infoMain: undefined, infoA: undefined, infoB: undefined, infoLow: undefined, gaugeSpeed: 'auto', gaugeRpm: 'auto', leftDial: 'gmeter' });
             return finish(L, safe, built(safe));
         }
@@ -294,4 +308,4 @@ function layoutFor(get, d) {
     const k = /SPORT|XTRABOOST/.test(m) ? get('layoutSport') : /ECO|ELECTRIC/.test(m) && !/HYBRID|BATTERY/.test(m) ? get('layoutEco') : null;
     return k && k !== 'same' && LAYOUTS.some((l) => l.id === k) ? k : get('layout');
 }
-module.exports = { LAYOUTS, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotLabel, slotValue, placesFor, placeItem, CUT_Y, BG_NOTCH, BG_NOTCH_Y, GEAR_WINDOW, GEAR_KEEP, STRIP_TRIM_MAX, STRIP_COVERS, stripCover, blackBand, overGear, bottomCut };
+module.exports = { LAYOUTS, withSign, signOn, byId, layoutFor, SLOTS, SLOT_KEYS, slotsFor, slotLabel, slotValue, placesFor, placeItem, CUT_Y, BG_NOTCH, BG_NOTCH_Y, GEAR_WINDOW, GEAR_KEEP, STRIP_TRIM_MAX, STRIP_COVERS, stripCover, blackBand, overGear, bottomCut };

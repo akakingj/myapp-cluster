@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.61.2",
+  "version": "0.62.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -409,6 +409,23 @@
         [
           "off",
           "Off"
+        ]
+      ],
+      "section": "Display"
+    },
+    {
+      "key": "sliSign",
+      "label": "Speed limit sign",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "on",
+          "On"
         ]
       ],
       "section": "Display"

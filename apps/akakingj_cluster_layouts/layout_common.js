@@ -809,7 +809,88 @@ const text = (key, x, y, w, h, txt, colors, extra) => Object.assign({ key, kind:
 /** A flat rectangle. */
 const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colors: (t, d) => ({ color: [typeof colour === 'function' ? colour(t, d) : t[colour], 1] }) });
 
+/*
+ * Settings > Speed limit sign (sliSign, off by default, 0.62.0): a round sign of our own, a red ring round a light disc
+ * with the limit in figures, in room the layout leaves. BMW's own sign is drawn under the apps' layers (the owner,
+ * 2026-11-26: not seen over Layouts; on the car's own screen at x 472-583, y 553-660, over the clock). Its place:
+ * of the points nearest BMW's (SLI_HOME, or the layout's own sliHome), the first where the sign keeps SLI_GAP from
+ * every piece the layout draws now (a round dial as its circle, the rest as their boxes; the backgrounds aside), the
+ * KOMBI's lights over us (SIDE_LIGHTS, TURN_ARROWS), the map's window, the glass's slanted corners and the car's
+ * strip; a smaller sign where the full one has no room, none where neither has. The figure: d.speedLimit, which
+ * nothing reads yet ('--': the car's value comes once Cluster Info's Driving assistant check has shown where it is).
+ */
+const SLI_R = [46, 38], SLI_GAP = 14, SLI_HOME = { x: 528, y: 590 }, SLI_STEP = 8;
+const SLI_ROUND = { dial: 1, e9x: 1, mround: 1, jdm: 1, rmdial: 1, ring: 1, aclock: 1, rtach: 1 };
+/* the points a sign of radius r may stand at, nearest `home` first (made once per radius and home) */
+const sliSpots = {};
+function sliPoints(r, home) {
+    const k = r + ':' + home.x + ':' + home.y;
+    if (sliSpots[k]) return sliSpots[k];
+    const pts = [], top = r + 8, foot = STRIP_Y - 6 - r;
+    for (let y = top; y <= foot; y += SLI_STEP) {
+        for (let x = r + 8; x <= 1912 - r; x += SLI_STEP) {
+            // (the glass's slanted top corners: the circle's top and its upper sides clear of them)
+            if (inCorner(x, y - r) || inCorner(x - r * 0.72, y - r * 0.72) || inCorner(x + r * 0.72, y - r * 0.72) || inCorner(x - r, y) || inCorner(x + r, y)) continue;
+            pts.push({ x, y, d: (x - home.x) * (x - home.x) + (y - home.y) * (y - home.y) });
+        }
+    }
+    pts.sort((a, b) => a.d - b.d || a.y - b.y || a.x - b.x);
+    sliSpots[k] = pts;
+    return pts;
+}
+/* a piece the sign may lie over: a background (bg*, the whole-screen kinds, anything over half the screen) */
+const sliUnder = (p) => /^bg/.test(p.key) || p.kind === 'bg' || p.kind === 'rmbg' || p.w * p.h > 1920 * 720 / 2;
+/* what the sign keeps clear of: [{ c: [x, y, r] } | { r: [x, y, w, h] }] */
+function sliObstacles(list, map) {
+    const out = [];
+    list.forEach((p) => {
+        if (!p || sliUnder(p) || !(p.w > 0 && p.h > 0)) return;
+        if (SLI_ROUND[p.kind] && p.w === p.h) out.push({ c: [p.x + p.w / 2, p.y + p.h / 2, p.w / 2] });
+        else out.push({ r: [p.x, p.y, p.w, p.h] });
+    });
+    SIDE_LIGHTS.concat(TURN_ARROWS).forEach((q) => out.push({ r: [q.x, q.y, q.w, q.h] }));
+    if (map) out.push({ r: [map.x, map.y, map.w, map.h] });
+    return out;
+}
+function sliFree(x, y, r, obs) {
+    const R = r + SLI_GAP;
+    for (let i = 0; i < obs.length; i++) {
+        const o = obs[i];
+        if (o.c) {
+            const dx = x - o.c[0], dy = y - o.c[1], q = R + o.c[2];
+            if (dx * dx + dy * dy < q * q) return false;
+        } else {
+            const b = o.r, dx = Math.max(b[0] - x, 0, x - (b[0] + b[2])), dy = Math.max(b[1] - y, 0, y - (b[1] + b[3]));
+            if (dx * dx + dy * dy < R * R) return false;
+        }
+    }
+    return true;
+}
+/** Where the sign goes among the pieces in list: { x, y, r } (its centre and radius), or null where it has no room. */
+function sliPlace(list, opts) {
+    opts = opts || {};
+    const obs = sliObstacles(list, opts.map), home = opts.home || SLI_HOME;
+    for (let k = 0; k < SLI_R.length; k++) {
+        const r = SLI_R[k], pts = sliPoints(r, home);
+        for (let i = 0; i < pts.length; i++) if (sliFree(pts[i].x, pts[i].y, r, obs)) return { x: pts[i].x, y: pts[i].y, r };
+    }
+    return null;
+}
+/** The limit's figures: the car's (d.speedLimit, once read), else '--'. */
+const sliText = (d) => (isNum(d.speedLimit) && d.speedLimit > 0 ? String(Math.round(d.speedLimit)) : '--');
+/** The sign's two pieces at place s ({ x, y, r }): the disc with its red ring, the figures; over everything (z: a
+ * dial's square quad, its corners drawn too, Retro M's, would hide a panel at the kinds' own order). */
+function sliPieces(s) {
+    const r = s.r, ring = Math.round(r * 0.2);
+    return [
+        { key: 'sliDisc', kind: 'panel', z: 30, x: s.x - r, y: s.y - r, w: 2 * r, h: 2 * r, params: { u_box: [r, ring, 0, 1] },
+            colors: () => ({ top: '#f4f4f2', bottom: '#d8d8d4', border: '#e0303a' }) },
+        text('sliNum', s.x - r * 0.72, s.y - r * 0.4, r * 1.44, r * 0.8, sliText, () => ({ color: ['#151515', 1], glow: ['#000000', 0] }), { z: 31 }),
+    ];
+}
+
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
+    SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliPieces, sliText, sliObstacles, sliFree,
 };
