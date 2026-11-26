@@ -74,6 +74,8 @@ mgu.run({
         // BMW's bottom strip (0.61.0): on (its top edge trimmed 18 px) or off (hidden); the trims and the wider gap are gone
         const STRIP = { 0: 'on', 6: 'on', 12: 'on', 18: 'on', hide: 'off', hideWide: 'off' };
         if (STRIP[settings.get('bottomExtra')]) settings.set('bottomExtra', STRIP[settings.get('bottomExtra')]);
+        // Gauge goes up to (0.61.0): 5000 rpm is gone - no car's rev gauge ends below 6000, a diesel's included
+        if (settings.values && settings.values.rpmMax === 5000) settings.set('rpmMax', 6000);
         // Fuel economy unit (0.61.0): Auto is gone - a saved Auto, or none saved, becomes km/L, or mpg (US) with mph, once
         const saved = settings.values;
         if (saved && !saved._econMoved) {

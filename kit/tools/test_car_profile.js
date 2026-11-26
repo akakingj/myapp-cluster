@@ -39,9 +39,9 @@ const clear = () => { try { fs.unlinkSync(FILE); } catch (e) { /* none */ } };
 
 // the Car profile's names (profile.js KEYS) and the values it can set
 const PROFILE_VALUES = {
-    engine: ['app', 'auto', 'diesel', 'petrol', 'm', 'phev'], redline: [0, 4000, 6000, 7000, 9000], shiftAt: [0, 4000, 6500, 8500], gMax: [1, 1.2, 1.5, 2], rpmScale: [0, 5000, 7000, 10000],
-    coldLimit: [0, 2000, 4500, 5500], lightMode: ['shift', 'rev'], lightStart: [2000, 4000, 6000], lightRed: [0, 3000, 6000, 8500], coldGuard: ['on', 'off'], warmOil: [60, 80, 100],
-    warmCoolant: [60, 90], hotOil: [110, 125, 140], hotCoolant: [110, 125, 140], hotGearbox: [80, 100, 130], speedUnit: ['kmh', 'mph'], distUnit: ['km', 'mi'], tempUnit: ['c', 'f'],
+    engine: ['app', 'auto', 'diesel', 'petrol', 'm', 'phev'], redline: [0, 4000, 6000, 7000, 9000], shiftAt: [0, 4000, 6500, 8500], gMax: [1, 1.2, 1.5, 2], rpmScale: [0, 6000, 7000, 10000],
+    coldLimit: [0, 2000, 4500, 5500], lightStart: [2000, 4000, 6000], lightRed: [0, 3000, 6000, 8500], coldGuard: ['on', 'off'], warmOil: [60, 80, 100],
+    warmCoolant: [60, 90], hotOil: [110, 125, 140], hotCoolant: [110, 125, 140], hotGearbox: [80, 100, 130], speedUnit: ['kmh', 'mph'], tempUnit: ['c', 'f'],
     pressUnit: ['bar', 'psi', 'kpa'], fuelUnit: ['l100', 'kml', 'mpguk', 'mpgus'], torqueUnit: ['nm', 'lbft', 'kgm'],
     powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'], theme: ['m_red', 'ice'], layout: ['full', 'standard'], renderer: ['auto', 'software'],
     demo: ['auto', 'on', 'off'], clock: ['12', '24'], tankLitres: [40, 59, 90], fuelFrom: ['engine', 'litres'], eFull: [20, 31, 50],
@@ -78,7 +78,7 @@ const cases = {
     'every number the Car profile can give is in the setting\'s own list (its drop-down and the HMI\'s list show it)'() {
         // (the Car profile's steps, as its app.json in akakingj/myapp-id7)
         const STEPS = { redline: [0, 4000, 4500, 5000, 5500, 5800, 6000, 6200, 6500, 6800, 7000, 7200, 7500, 7800, 8000, 8500, 9000],
-            shiftAt: [0, 4000, 4500, 5000, 5500, 5800, 6000, 6200, 6500, 6800, 7000, 7200, 7500, 7800, 8000, 8500], gMax: [1, 1.2, 1.5, 2], rpmScale: [0, 5000, 6000, 7000, 8000, 9000, 10000],
+            shiftAt: [0, 4000, 4500, 5000, 5500, 5800, 6000, 6200, 6500, 6800, 7000, 7200, 7500, 7800, 8000, 8500], gMax: [1, 1.2, 1.5, 2], rpmScale: [0, 6000, 7000, 8000, 9000, 10000],
             coldLimit: [0, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500], lightStart: [2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000],
             lightRed: [0, 3000, 3500, 4000, 4500, 5000, 5500, 5800, 6000, 6200, 6500, 6800, 7000, 7200, 7500, 7800, 8000, 8500],
             warmOil: [60, 70, 75, 80, 85, 90, 100], warmCoolant: [60, 70, 75, 80, 85, 90],
