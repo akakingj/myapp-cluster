@@ -46,15 +46,17 @@ const PROFILE_VALUES = {
     powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'], theme: ['m_red', 'ice'], layout: ['full', 'standard'], renderer: ['auto', 'software'],
     demo: ['auto', 'on', 'off'], clock: ['12', '24'], tankLitres: [40, 59, 90], fuelFrom: ['engine', 'litres'], eFullKm: [30, 50, 100],
     speedMax: ['260', '330'], boostMax: [0, 15, 20, 45], clusterStart: ['layouts', 'id8', 'none'],
+    // (the engine's most power and torque, kW and Nm: the Car profile 1.13.0's Power / Torque gauge up to)
+    powerMax: [135, 215, 375], torqueMax: [300, 420, 650],
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
-    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', tankLitres: 'tankLitres', fuelFrom: 'fuelFrom', eFullKm: 'eFullKm' , econUnit: 'fuelUnit', redLight: 'lightRed', yellowLight: 'lightStart', speedMax: 'speedMax', boostMax: 'boostMax', autoStart: 'clusterStart' },
+    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', tankLitres: 'tankLitres', fuelFrom: 'fuelFrom', eFullKm: 'eFullKm' , econUnit: 'fuelUnit', redLight: 'lightRed', yellowLight: 'lightStart', speedMax: 'speedMax', boostMax: 'boostMax', autoStart: 'clusterStart', powerMax: 'powerMax', torqueMax: 'torqueMax' },
     centre: { vehicle: 'engine', redline: 'redline', shiftAt: 'shiftAt', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', tankLitres: 'tankLitres', eFullKm: 'eFullKm', boostMax: 'boostMax' },
     info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin', theme: 'theme', layout: 'layout', renderer: 'renderer', demo: 'demo' },
 };
 const MINE = { vehicle: 'petrol', skin: 'idrive7', theme: 'm_tricolour', layout: 'standard', renderer: 'software', demo: 'on', clock: '24', tankLitres: 60, eFullKm: 40, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftAt: 6500, _reset_shiftAt: 1, gScale: '1', coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
-    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, fuelFrom: 'litres', speedMax: '330', boostMax: 30, autoStart: 'on' };
+    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, fuelFrom: 'litres', speedMax: '330', boostMax: 30, autoStart: 'on', powerMax: 0, torqueMax: 0 };
 
 const cases = {
     'Electric range when full: kept in km, shown in miles with mph (the Car profile\'s speed unit too)'() {
@@ -111,7 +113,9 @@ const cases = {
             warmOil: [60, 70, 75, 80, 85, 90, 100], warmCoolant: [60, 70, 75, 80, 85, 90],
             hotOil: [110, 115, 120, 125, 130, 135, 140], hotCoolant: [110, 115, 120, 125, 130, 135, 140], hotGearbox: [80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130],
             tankLitres: [40, 42, 46, 50, 52, 55, 57, 59, 60, 63, 65, 66, 68, 69, 70, 74, 80, 83, 85, 90], eFullKm: [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100],
-            boostMax: [0, 15, 20, 30, 45] };
+            boostMax: [0, 15, 20, 30, 45],
+            powerMax: [100, 120, 135, 140, 150, 160, 170, 185, 190, 200, 215, 230, 240, 250, 260, 275, 285, 300, 320, 340, 360, 375, 390, 405, 420, 450, 460, 480, 500, 530, 550, 600],
+            torqueMax: [200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 900] };
         Object.keys(FOLLOWS).forEach((app) => schemaOf(app).filter((s) => s.profile && s.type === 'number').forEach((s) => {
             const lost = STEPS[s.profile].filter((v) => v > 0 || (v === 0 && (s.steps || []).indexOf(0) >= 0)).filter((v) => s.steps.indexOf(v) < 0);
             assert.deepStrictEqual(lost, [], app + ' ' + s.key + ': ' + lost.join(', '));

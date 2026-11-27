@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.63.1",
+  "version": "0.64.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -1260,6 +1260,8 @@
       "section": "Readouts and gauges",
       "hidden": true
     },
+    {"key": "powerMax", "profile": "powerMax", "label": "Power gauge up to", "type": "number", "unit": "kW", "default": 0, "labels": {"0": "Auto"}, "steps": [0, 100, 120, 135, 140, 150, 160, 170, 185, 190, 200, 215, 230, 240, 250, 260, 275, 285, 300, 320, 340, 360, 375, 390, 405, 420, 450, 460, 480, 500, 530, 550, 600], "section": "Readouts and gauges", "hidden": true},
+    {"key": "torqueMax", "profile": "torqueMax", "label": "Torque gauge up to", "type": "number", "unit": "Nm", "default": 0, "labels": {"0": "Auto"}, "steps": [0, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 900], "section": "Readouts and gauges", "hidden": true},
     {
       "key": "gaugeSpeed",
       "label": "Small gauge in the speedometer",

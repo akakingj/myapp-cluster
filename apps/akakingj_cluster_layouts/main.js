@@ -147,6 +147,7 @@ mgu.run({
             // (Boost gauge up to: From the car's Sport Display, 0 or no gauge's end - its gauge's end as one of the gauges
             // once the car has sent it, else each layout's own)
             speedMax: settings.get('speedMax'), boostMax: boostSet() || require('./layout_common').snapBoost(D.data().boostMaxCar),
+            powerMax: settings.get('powerMax'), torqueMax: settings.get('torqueMax'),
         });
         /** Live: demo data on, or the car's signals answer (a parked car sends nothing new for minutes, so a
          * provider that is there counts), or a value came in the last STALE_MS. */
@@ -235,7 +236,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'bottomExtra', 'sliSign', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'yellowLight', 'redLight', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy', 'speedMax', 'boostMax'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'bottomExtra', 'sliSign', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'yellowLight', 'redLight', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy', 'speedMax', 'boostMax', 'powerMax', 'torqueMax'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */

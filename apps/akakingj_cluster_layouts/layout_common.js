@@ -35,7 +35,11 @@ const rpmShown = (d) => {
  * to (bar; 0: each layout's own), the Car profile's where it sets them. Held here for the readings' bars, which are
  * given the car's data alone (main.js setScales, as the options change).
  */
-const scales = { speedKmh: 260, boost: 0, psi: false };
+const scales = { speedKmh: 260, boost: 0, psi: false, powerKw: 0, torqueNm: 0 };
+/* The power and torque gauges' ends (kW, Nm): the engine's most as the Car profile gives it (Power / Torque gauge up
+   to: on Auto the car's own Sport Display's, 0.64.0), else the layouts' own 200 kW and 450 Nm */
+const powerTop = () => scales.powerKw || 200;
+const torqueTop = () => scales.torqueNm || 450;
 /* Boost gauge up to: the car's own boost gauges, each by its end in psi - in bar 2.0 up to 30 psi, 3.0 at 45 (kPa a
    hundredfold) */
 const BOOST_GAUGES = { 15: { psi: 15, bar: 2 }, 20: { psi: 20, bar: 2 }, 30: { psi: 30, bar: 2 }, 45: { psi: 45, bar: 3 } };
@@ -43,6 +47,8 @@ function setScales(o) {
     scales.speedKmh = o && Number(o.speedMax) === 330 ? 330 : 260;
     scales.boost = o && BOOST_GAUGES[Number(o.boostMax)] ? Number(o.boostMax) : 0;
     scales.psi = !!o && pressUnitOf(o) === 'psi';
+    scales.powerKw = o && Number(o.powerMax) >= 60 && Number(o.powerMax) <= 600 ? Number(o.powerMax) : 0;
+    scales.torqueNm = o && Number(o.torqueMax) >= 150 && Number(o.torqueMax) <= 1000 ? Number(o.torqueMax) : 0;
 }
 /** The car's sport display's boost gauge end (bar) as one of Boost gauge up to's gauges (psi): the least at or over it,
  * within 5 % (200 kPa, 29 psi: 30 psi / 2.0 bar). */
@@ -479,8 +485,8 @@ const READOUTS = {
     oil: { short: 'OIL', long: 'ENGINE OIL', num: tempOf('oil'), frac: (d) => (isNum(d.oil) ? (d.oil - 40) / 100 : 0) },
     coolant: { short: 'CLT', long: 'COOLANT', num: tempOf('coolant'), frac: (d) => (isNum(d.coolant) ? (d.coolant - 40) / 90 : 0) },
     boost: { short: 'BST', long: 'BOOST', num: numOrOff((o, d) => pressNum(o, d.boostActual)), unit: (o) => pressLabel(o), frac: (d) => boostFrac(d), needs: ['boostActual', 'boostTarget'] },
-    power: { short: (o) => powerUnitText(o).toUpperCase(), long: 'ENGINE POWER', num: (o, d) => powerNum(o, d.enginePower), unit: (o) => powerUnitText(o), frac: (d) => (isNum(d.enginePower) ? d.enginePower / 200 : 0) },
-    torque: { short: 'TQ', long: 'ENGINE TORQUE', num: (o, d) => torqueNum(o, d.torque), unit: (o) => torqueUnit(o), frac: (d) => (isNum(d.torque) ? d.torque / 450 : 0) },
+    power: { short: (o) => powerUnitText(o).toUpperCase(), long: 'ENGINE POWER', num: (o, d) => powerNum(o, d.enginePower), unit: (o) => powerUnitText(o), frac: (d) => (isNum(d.enginePower) ? d.enginePower / powerTop() : 0) },
+    torque: { short: 'TQ', long: 'ENGINE TORQUE', num: (o, d) => torqueNum(o, d.torque), unit: (o) => torqueUnit(o), frac: (d) => (isNum(d.torque) ? d.torque / torqueTop() : 0) },
     throttle: { short: 'THR', long: 'THROTTLE', num: (o, d) => (isNum(d.throttle) ? Math.round(d.throttle) + '%' : '--'), frac: (d) => (isNum(d.throttle) ? d.throttle / 100 : 0), needs: ['throttle'] },
     pedal: { short: 'PDL', long: 'PEDAL', num: (o, d) => (isNum(d.pedal) ? Math.round(d.pedal) + '%' : '--'), frac: (d) => (isNum(d.pedal) ? d.pedal / 100 : 0), needs: ['pedal'] },
     timing: { short: 'TIM', long: 'TIMING', num: (o, d) => timingText(d), frac: (d) => (isNum(d.timing) ? (d.timing + 10) / 50 : 0), needs: ['timing'] },
@@ -510,7 +516,7 @@ const READOUTS = {
     boostTarget: { short: 'TGT', long: 'BOOST TARGET', num: numOrOff((o, d) => pressNum(o, d.boostTarget)), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.boostTarget) ? boostShare(d.boostTarget, 1.6) : 0), needs: ['boostActual', 'boostTarget'] },
     // this drive's figures (driveSample)
     boostPeak: { short: 'PKBST', long: 'PEAK BOOST', num: (o, d) => pressNum(o, d.boostPeak), unit: (o) => pressLabel(o), frac: (d) => (isNum(d.boostPeak) ? boostShare(d.boostPeak, 1.6) : 0), needs: ['boostActual', 'boostTarget'] },
-    powerPeak: { short: (o) => 'PK ' + powerUnitText(o).toUpperCase(), long: 'PEAK POWER', num: (o, d) => powerNum(o, d.powerPeak), unit: (o) => powerUnitText(o), frac: (d) => (isNum(d.powerPeak) ? d.powerPeak / 200 : 0) },
+    powerPeak: { short: (o) => 'PK ' + powerUnitText(o).toUpperCase(), long: 'PEAK POWER', num: (o, d) => powerNum(o, d.powerPeak), unit: (o) => powerUnitText(o), frac: (d) => (isNum(d.powerPeak) ? d.powerPeak / powerTop() : 0) },
     zero100: { short: (o) => (o.speedUnit === 'kmh' ? '0-100' : '0-60'), long: (o) => (o.speedUnit === 'kmh' ? '0-100 KM/H' : '0-60 MPH'),
         num: (o, d) => (isNum(d.zero100) ? d.zero100.toFixed(1) : '--'), unit: () => 's', frac: () => 0 },
     lastShift: { short: 'SHIFT', long: 'LAST SHIFT', num: (o, d) => (d.lastShift ? String(d.lastShift.rpm) : '--'), unit: () => 'rpm', frac: (d) => (d.lastShift ? d.lastShift.rpm / 8000 : 0) },
@@ -661,8 +667,8 @@ const GAUGES = {
     iat: { label: 'INTAKE', min: 0, max: 80, red: 60, v: (d) => d.iat, text: tempOf('iat'), needs: ['iat'] },
     gearbox: { label: 'TRANS', min: 40, max: 140, red: 115, v: (d) => d.gearbox, text: tempOf('gearbox'), needs: ['gearbox'] },
     boost: { label: 'BOOST', min: 0, max: 1.6, red: null, v: (d) => (d.engineOn === false ? 0 : d.boostActual), text: (o, d) => { const n = numOrOff((o2, d2) => pressNum(o2, d2.boostActual))(o, d); return n === '--' || n === 'OFF' ? n : n + ' ' + pressLabel(o); }, needs: ['boostActual', 'boostTarget'] },
-    power: { label: 'POWER', min: 0, max: 200, red: null, v: (d) => d.enginePower, text: (o, d) => { const n = powerNum(o, d.enginePower); return n === '--' ? n : n + ' ' + powerUnitText(o); } },
-    torque: { label: 'TORQUE', min: 0, max: 450, red: null, v: (d) => d.torque, text: (o, d) => { const n = torqueNum(o, d.torque); return n === '--' ? n : n + ' ' + torqueUnit(o); } },
+    power: { label: 'POWER', min: 0, get max() { return powerTop(); }, red: null, v: (d) => d.enginePower, text: (o, d) => { const n = powerNum(o, d.enginePower); return n === '--' ? n : n + ' ' + powerUnitText(o); } },
+    torque: { label: 'TORQUE', min: 0, get max() { return torqueTop(); }, red: null, v: (d) => d.torque, text: (o, d) => { const n = torqueNum(o, d.torque); return n === '--' ? n : n + ' ' + torqueUnit(o); } },
     throttle: { label: 'THROTTLE', min: 0, max: 100, red: null, v: (d) => d.throttle, text: (o, d) => (isNum(d.throttle) ? Math.round(d.throttle) + '%' : '--'), needs: ['throttle'] },
     pedal: { label: 'PEDAL', min: 0, max: 100, red: null, v: (d) => d.pedal, text: (o, d) => (isNum(d.pedal) ? Math.round(d.pedal) + '%' : '--'), needs: ['pedal'] },
     timing: { label: 'TIMING', min: -10, max: 40, red: null, v: (d) => d.timing, text: (o, d) => timingText(d), needs: ['timing'] },
@@ -759,7 +765,7 @@ const focus = {
     powerLabel: (o, long) => (engineFocus(o) || phevPick(o, 'infoMain') ? mainOff(o) ? '' : nameOf(readoutOf(mainKey(o)), o, true).replace('ENGINE ', long ? 'ENGINE ' : '') : (long ? 'BATTERY POWER' : 'POWER')),
     /** 0..1 for the main readout's bar (the torque to 450 Nm by default), or none (the eDrive layouts draw their own centre-zero bar) */
     mainFrac: (o) => { if (mainOff(o)) return () => 0; const r = readoutOf(mainKey(o)); return (d) => Math.max(0, Math.min(1, r.frac(d) || 0)); },
-    torqueFrac: (d) => (isNum(d.torque) ? Math.max(0, Math.min(1, d.torque / 450)) : 0),
+    torqueFrac: (d) => (isNum(d.torque) ? Math.max(0, Math.min(1, d.torque / torqueTop())) : 0),
     // (a diesel has no ignition timing: the intake air temperature in its place, Settings > Vehicle: Diesel)
     charge: (o) => (!engineFocus(o) ? socText : diesel(o) ? (d) => tempOf('iat')(o, d) : timingText),
     chargeLabel: (o) => (!engineFocus(o) ? 'CHARGE' : diesel(o) ? 'INTAKE' : 'TIMING'),
@@ -903,7 +909,7 @@ function sliPieces(s) {
 }
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, powerTop, torqueTop, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
     SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliPieces, sliFit, sliText, sliObstacles, sliFree,
 };

@@ -348,6 +348,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.64.0, Centre 0.15.6, Info 1.10.24 (Nov 27 2026): the POWER and TORQUE gauges and readouts end at the
+  engine's most from the Car profile 1.13.0 (powerMax kW, torqueMax Nm, hidden settings following it: on Auto the car's
+  Sport Display's, FES statusVehicleDynamicEngineMaxValue), else at 200 kW and 450 Nm as before (layout_common
+  powerTop / torqueTop; tools/test_gauge_tops.js). Centre and Info: the Korean row for Torque gauge up to.
 - Layouts 0.63.1, Centre 0.15.5 (Nov 27 2026): the sign keeps the last limit the car read (the owner: the last one
   while driving; 0.63.0 went back to '--' after 10 s without a reading); '--' at 0 or none yet. The HUD's data is
   watched second instead of seventh: every watch's set-up waits for the one before (kit signals.js nativeTick), and on
