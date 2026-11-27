@@ -111,6 +111,28 @@ const tick = () => new Promise((r) => setTimeout(r, 10));
         assert(!/statusEngineSpeed2/.test(c.brakes.map(P.brakeLine).join()));
         assert.deepStrictEqual(P.scanCatalog(cat + '.none').brakes, []);
     });
+    await check('the catalog: speed limit and traffic sign members, and the sign services looked for by name (1.10.25)', async () => {
+        // (no such service in this fixture: its members named so only; the services looked for: not in the catalog)
+        const c = pr.status().catalog;
+        assert.deepStrictEqual(c.signs.map(P.brakeLine), [], 'none named so in this fixture');
+        assert.deepStrictEqual(c.signServices.map((v) => v.name + ':' + v.found.length), ['TrafficSignRecognition:0', 'SignRecognitionFrontCamera:0', 'TrafficSignRecognitionFrontCamera:0']);
+        const cat2 = path.join(dir, 'with-signs.json');
+        fs.writeFileSync(cat2, JSON.stringify({ interfaces: {
+            'de.bmw.dass.TrafficSignRecognition': { fields: { presentClassLimitSpeed: {}, qualityRecognition: {} } },
+            'de.bmw.environmentalmodel.SignRecognitionFrontCamera': { broadcasts: { signList: {} } },
+            'de.bmw.infotainment.displaydataserver.DisplayDataServer': { fields: { functionalLibraryData: {}, speedLimitInfo: {} } },
+            'de.bmw.infotainment.vehicle.CDS': { fields: { statusEngineSpeed2: {} } },
+        } }));
+        const c2 = P.scanCatalog(cat2);
+        assert.deepStrictEqual(c2.signs.map(P.brakeLine), [
+            'de.bmw.dass.TrafficSignRecognition  fields presentClassLimitSpeed', 'de.bmw.dass.TrafficSignRecognition  fields qualityRecognition',
+            'de.bmw.environmentalmodel.SignRecognitionFrontCamera  broadcasts signList',
+            'de.bmw.infotainment.displaydataserver.DisplayDataServer  fields speedLimitInfo'], 'every member of a sign service, and one named for a speed limit elsewhere');
+        assert.deepStrictEqual(c2.signServices.map((v) => v.found.join()), ['de.bmw.dass.TrafficSignRecognition', 'de.bmw.environmentalmodel.SignRecognitionFrontCamera', '']);
+        assert(/in the catalog/.test(c2.signServices[0].what) && /not in this car/.test(c2.signServices[2].what));
+        const log = fs.readFileSync(pr.file, 'utf8');
+        assert(/0 members look like a speed limit's or a traffic sign's/.test(log) && /TrafficSignRecognition: not in this car's catalog/.test(log), log);
+    });
     await check('app.json: the services optional (the app installs without them), the check off by default', async () => {
         const spec = require(path.join(ROOT, 'apps', 'akakingj_cluster_info', 'app.json'));
         P.SOURCES.forEach((s) => {

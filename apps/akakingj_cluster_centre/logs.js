@@ -114,6 +114,22 @@ function draw(cv, q, x, y, px) {
     return full;
 }
 
+/**
+ * Where save() put the full logs, as the Logs page says it: { en, ko, file } - on a USB stick; a stick the head unit
+ * mounts read-only for the apps here (EROFS: the owner's car, two different sticks, Cluster Info and AK Cluster ID8
+ * alike) and the file in the app's data folder instead; or no stick at all. layout: Layouts' wording of the last.
+ */
+function savedNote(saved, again) {
+    const isData = (r) => /[\\/]exports[\\/]/.test(r.file || '');
+    const usb = (saved || []).filter((r) => r.file && !isData(r)), failed = (saved || []).filter((r) => r.dir && r.error);
+    const inData = (saved || []).filter((r) => r.file && isData(r));
+    if (usb.length) return { en: 'The full logs are also on the USB stick: ', ko: '전체 로그는 USB에도 저장했습니다: ', file: usb[0].file };
+    if (failed.length) return { en: 'The USB stick is read-only, so it cannot be written: the full logs are saved in the app data folder: ',
+        ko: 'USB가 읽기 전용이라 저장할 수 없습니다. 로그는 앱 데이터 폴더에 저장됨: ', file: inData.length ? inData[0].file : '' };
+    return { en: 'Plug in a USB stick and press ' + (again || 'Logs again from the start') + ' for the full logs as a file',
+        ko: 'USB를 꽂고 처음부터 로그 버튼을 다시 누르면 전체 로그를 파일로 저장합니다', file: '' };
+}
+
 /** An app's Logs button: press() saves the full bundle (bundleOf(true)) to the data folder and the USB sticks as
  * cluster-logs-<tag>-<time>.txt and shows the short one's (bundleOf(false)) codes, three a page; each press the next
  * page, after the last none. draw(cv, t, W) draws the page shown. */
@@ -131,12 +147,10 @@ function pager(bundleOf, dataDir, log, tag) {
         },
         draw(cv, t) {
             const n = view.codes.length, pages = Math.ceil(n / PER), first = view.page * PER;
-            const usb = view.saved.filter((r) => r.file && !/exports/.test(r.file));
-            const last = Math.min(n, first + PER);
+            const note = savedNote(view.saved), last = Math.min(n, first + PER);
             cv.text(KO ? '로그: 코드를 하나씩 사진으로 찍으세요 (' + pages + '쪽 중 ' + (view.page + 1) + '쪽, 코드 ' + (first + 1) + '-' + last + ' / ' + n + '). 다음 쪽은 로그 버튼'
                 : 'Logs: photograph each code (page ' + (view.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + last + ' of ' + n + '), then press Logs for the next', 40, 34, 20, t.text, { font: 'bold', literal: true });
-            cv.text(usb.length ? (KO ? '전체 로그는 USB에도 저장했습니다: ' : 'The full logs are also on the USB stick: ') + usb[0].file
-                : KO ? 'USB를 꽂고 처음부터 로그 버튼을 다시 누르면 전체 로그를 파일로 저장합니다' : 'Plug in a USB stick and press Logs again from the start for the full logs as a file', 40, 62, 16, t.dim, { font: 'label', literal: true });
+            cv.text((KO ? note.ko : note.en) + note.file, 40, 62, 16, t.dim, { font: 'label', literal: true });
             view.codes.slice(first, first + PER).forEach((q, i) => {
                 const px = Math.max(3, Math.floor(420 / (q.size + 8)));
                 draw(cv, q, 40 + i * 520, 84, px);
@@ -146,4 +160,4 @@ function pager(bundleOf, dataDir, log, tag) {
     };
 }
 
-module.exports = { tail, siblingLog, bundle, save, codes, draw, pager, RENDER_LOG, CHUNK };
+module.exports = { tail, siblingLog, bundle, save, savedNote, codes, draw, pager, RENDER_LOG, CHUNK };

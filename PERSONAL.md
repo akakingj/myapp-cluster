@@ -348,6 +348,17 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.64.1, Centre 0.15.7, Info 1.10.25 (Nov 27 2026): vSLISpeedValue is the limit Speed Limit Assist has taken
+  for the limiter or the cruise control, not the camera's sign (Info's log of Nov 24: a value only with the limiter
+  STATUS_ACTIVE or the cruise control on and ldmAdditionalSign TAKEOVER_SET, 0 with the limiter off at 60 km/h, the last
+  one taken kept - AK Cluster ID8's log of Nov 27: 30 at 106 km/h on a motorway; the owner: with the cruise control on
+  the figures come). The sign shows it only then (shared/data.js sliOf, as ID8 0.25.1's), '--' otherwise and 10 s after
+  the head-up display's data stops; 0.63.1's last one kept is gone. Logs: --- sli --- (each change of Speed Limit
+  Assist's data with the time and speed, the QR codes the last 8, the file 20; how often the data came); data now
+  sliRaw, sliTakeover, sliLimiter, sliAgeS. A read-only USB stick (EROFS on two sticks): every Logs page says so and
+  where the file is (shared/logs.js savedNote). Info: Settings > Driving assistant check (catalog) lists every member
+  named for a speed limit or a traffic sign and every member of a service named so, and whether TrafficSignRecognition
+  / SignRecognitionFrontCamera are in the catalog (listed only: a service the catalog lacks gets the app refused).
 - Layouts 0.64.0, Centre 0.15.6, Info 1.10.24 (Nov 27 2026): the POWER and TORQUE gauges and readouts end at the
   engine's most from the Car profile 1.13.0 (powerMax kW, torqueMax Nm, hidden settings following it: on Auto the car's
   Sport Display's, FES statusVehicleDynamicEngineMaxValue), else at 200 kW and 450 Nm as before (layout_common

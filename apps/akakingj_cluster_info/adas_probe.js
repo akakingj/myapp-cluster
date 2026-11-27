@@ -16,6 +16,10 @@
  *     parking brake's or Auto Hold's (BRAKE_RE): the cluster draws its AUTO H light under the apps' layers (2026-11-26,
  *     the parking brake's over them), so an app would draw it itself if the head unit gets its state. Listed only: a
  *     member is read once an app.json declares it (tools/known_signals.json).
+ *   - (1.10.25) Every member of any service in that catalog named for a speed limit or a traffic sign, and every member of
+ *     a service named so (SIGN_RE, SIGN_IFACE_RE), and whether TrafficSignRecognition / SignRecognitionFrontCamera are
+ *     in it: the camera's sign, which vSLISpeedValue is not. Listed only: declaring a service the catalog does not have
+ *     gets the app refused by the head unit (tools/known_signals.json), so it is declared once its names are known.
  *   - The speed limit in the HUD's data (xSpeedLimitAssist: vSLISpeedValue, vSLISymbol, statusVZA ..., and any other
  *     member named for a speed limit): each change logged at once, with the car's speed and the time, to match the
  *     figures to the speed limit sign the cluster shows.
@@ -49,6 +53,14 @@ const MEMBER_RE = /acc|cruise|lane|ldw|lka|lcw|lca|assist|object|target|distance
 const SLI_RE = /speedlimit|vsli|vza|slinpi/i;
 /* a service member that looks like the brakes', the parking brake's or Auto Hold's (CDS.statusHandBrake is one) */
 const BRAKE_RE = /hold|hand_?brake|park_?brake|parking_?brake|standstill|stillstand|brake|bremse|\bepb|\bdsc|\bhdc|drive_?away|anfahr/i;
+/* (1.10.25) the real speed limit sign: vSLISpeedValue is only the limit Speed Limit Assist has taken for the limiter or
+   the cruise control (Nov 24 and 27 2026 logs). Any member of any service named for a speed limit or a traffic sign, and
+   every member of a service named so - to find the camera's sign or the traffic sign recognition (on another car:
+   de.bmw.dass.TrafficSignRecognition, presentClassLimitSpeed x 5; SignRecognitionFrontCamera's list of signs) */
+const SIGN_RE = /speed_?limit|traffic_?sign|sign_?recognition|vsli|vza|(^|[^a-z])sli|tsr\b/i;
+const SIGN_IFACE_RE = /traffic_?sign|sign_?recognition|speed_?limit/i;
+/* the services looked for by name, at the end of the service's name */
+const SIGN_SERVICES = ['TrafficSignRecognition', 'SignRecognitionFrontCamera', 'TrafficSignRecognitionFrontCamera'];
 const LOG_MAX = 256 * 1024;
 
 /** Every leaf of a value as 'a.b.c=v' (arrays: their length and the first two), at most `max`. */
@@ -88,16 +100,25 @@ function partsOf(entry) {
  * (brakes) every member of any service whose name matches BRAKE_RE: [{ iface, kind, name }]. */
 function scanCatalog(file, re) {
     let db;
-    try { db = JSON.parse(fs.readFileSync(file || CATALOG, 'utf8')); } catch (e) { return { list: [], brakes: [], total: 0, error: 'catalog not readable: ' + (e.code || e.message) }; }
-    const ifs = db.interfaces || {}, list = [], brakes = [];
+    try { db = JSON.parse(fs.readFileSync(file || CATALOG, 'utf8')); } catch (e) { return { list: [], brakes: [], signs: [], signServices: [], total: 0, error: 'catalog not readable: ' + (e.code || e.message) }; }
+    const ifs = db.interfaces || {}, list = [], brakes = [], signs = [];
     Object.keys(ifs).forEach((iface) => {
-        const parts = partsOf(ifs[iface]);
-        Object.keys(parts).forEach((kind) => parts[kind].forEach((name) => { if (BRAKE_RE.test(name)) brakes.push({ iface, kind, name }); }));
+        const parts = partsOf(ifs[iface]), signIface = SIGN_IFACE_RE.test(iface);
+        Object.keys(parts).forEach((kind) => parts[kind].forEach((name) => {
+            if (BRAKE_RE.test(name)) brakes.push({ iface, kind, name });
+            if (signIface || SIGN_RE.test(name)) signs.push({ iface, kind, name });
+        }));
         if ((re || IFACE_RE).test(iface)) list.push({ iface, parts });
     });
     list.sort((a, b) => a.iface.localeCompare(b.iface));
     brakes.sort((a, b) => a.iface.localeCompare(b.iface) || a.name.localeCompare(b.name));
-    return { list, brakes, total: Object.keys(ifs).length, error: null };
+    signs.sort((a, b) => a.iface.localeCompare(b.iface) || a.name.localeCompare(b.name));
+    // the services looked for by name: in this catalog (their names) or not
+    const signServices = SIGN_SERVICES.map((n) => {
+        const found = Object.keys(ifs).filter((i) => i === n || i.endsWith('.' + n));
+        return { name: n, found, what: found.length ? 'in the catalog (not declared by this app: no value read yet)' : 'not in this car\'s catalog' };
+    });
+    return { list, brakes, signs, signServices, total: Object.keys(ifs).length, error: null };
 }
 
 /** One line for a brakes' member: 'de.bmw.infotainment.vehicle.CDS  fields statusHandBrake'. */
@@ -164,6 +185,16 @@ function startAdasProbe(ctx, log, opts) {
         catalog = scanCatalog(opts.catalog);
         write('catalog ' + (opts.catalog || CATALOG) + ': ' + (catalog.error || catalog.list.length + ' of ' + catalog.total + ' services look like the driving assistant\'s or the HUD\'s'));
         catalog.list.forEach((e) => write('  ' + catalogLine(e)));
+        if (!catalog.error) {
+            write('catalog: ' + catalog.signs.length + ' members look like a speed limit\'s or a traffic sign\'s');
+            catalog.signs.forEach((b) => write('  ' + brakeLine(b)));
+            catalog.signServices.forEach((v) => write('  ' + v.name + ': ' + v.what + (v.found.length ? ' - ' + v.found.join(', ') : '')));
+            if (log) {
+                log.info('driving assistant check: ' + catalog.signs.length + ' speed limit / traffic sign members');
+                catalog.signServices.forEach((v) => log.info('driving assistant check: ' + v.name + ': ' + v.what + (v.found.length ? ' - ' + v.found.join(', ') : '')));
+                catalog.signs.slice(0, 40).forEach((b) => log.info('driving assistant check: signs: ' + brakeLine(b)));
+            }
+        }
         if (!catalog.error) write('catalog: ' + catalog.brakes.length + ' members look like the brakes\', the parking brake\'s or Auto Hold\'s');
         (catalog.brakes || []).forEach((b) => write('  ' + brakeLine(b)));
         if (log) log.info('driving assistant check: ' + (catalog.error || catalog.list.length + ' catalog services, ' + catalog.brakes.length + ' brake members'));
@@ -210,9 +241,9 @@ function startAdasProbe(ctx, log, opts) {
         started: () => started,
         stop() { if (timer) clearInterval(timer); },
         status: () => ({ started, sources: started ? sources() : [], hud: hudMembers(30), sli: { now: sli.now, changes: sli.changes },
-            catalog: catalog || { list: [], brakes: [], total: 0, error: null } }),
+            catalog: catalog || { list: [], brakes: [], signs: [], signServices: [], total: 0, error: null } }),
         file,
     };
 }
 
-module.exports = { startAdasProbe, scanCatalog, catalogLine, brakeLine, leaves, sliOf, SOURCES, HUD, IFACE_RE, MEMBER_RE, SLI_RE, BRAKE_RE };
+module.exports = { startAdasProbe, scanCatalog, catalogLine, brakeLine, leaves, sliOf, SOURCES, HUD, IFACE_RE, MEMBER_RE, SLI_RE, BRAKE_RE, SIGN_RE, SIGN_SERVICES };

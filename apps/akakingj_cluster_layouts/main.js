@@ -279,6 +279,8 @@ mgu.run({
                 ['engine', JSON.stringify(cluster.status())],
                 ['cluster renderer status', squeeze(cluster.rendererStatus() || '(no answer yet)', full)],
                 ['data now', JSON.stringify(snap)],
+                // the speed limit sign: Speed Limit Assist's data as it changed (the QR codes the last 8, the file 20)
+                ['sli', D.sliLog ? D.sliLog(n(8, 20)) : '-'],
                 ['raw signals', JSON.stringify(D.status().raw || {})],
                 ['driving assistant', 'not subscribed (0.36.7): the cruise control from the head-up display\'s set speed'],
                 // (0.48.4) the trip data: the car's trip computer follows the head unit's "values shown since" choice
@@ -513,9 +515,9 @@ mgu.run({
             const cv = ctx.canvas(W, H).clear(t.bg);
             if (logView) {
                 const n = logView.codes.length, pages = Math.ceil(n / PER_PAGE), first = logView.page * PER_PAGE;
-                const usb = logView.saved.filter((r) => r.file && !/exports/.test(r.file));
+                const note = logs.savedNote(logView.saved);
                 cv.text('Logs: photograph each code (page ' + (logView.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + Math.min(n, first + PER_PAGE) + ' of ' + n + '), then press Logs for the next', 40, 34, 20, t.text, { font: 'bold', literal: true });
-                cv.text(usb.length ? 'The full logs are also on the USB stick: ' + usb[0].file : 'Plug in a USB stick and press Logs again from the start for the full logs as a file', 40, 62, 16, t.dim, { font: 'label', literal: true });
+                cv.text(note.en + note.file, 40, 62, 16, t.dim, { font: 'label', literal: true });
                 logView.codes.slice(first, first + PER_PAGE).forEach((q, i) => {
                     const px = Math.max(3, Math.floor(420 / (q.size + 8)));
                     logs.draw(cv, q, 40 + i * 520, 84, px);

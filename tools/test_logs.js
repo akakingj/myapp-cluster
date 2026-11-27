@@ -42,4 +42,11 @@ console.log('ok   ' + files.length + ' photographed pages read back to the same 
 const saved = logs.save('hello', dir, 'x.txt');
 assert(saved.some((r) => r.file && fs.readFileSync(r.file, 'utf8') === 'hello'));
 console.log('ok   saved to the data folder (and any writable USB stick)');
-console.log('2 passed');
+// where the page says the full logs went: a stick; a read-only stick (EROFS, the owner's car) and the data folder's file; none
+const inData = { file: '/data/exports/cluster-logs-info-x.txt' };
+assert.deepStrictEqual(logs.savedNote([inData, { file: '/media/A/cluster-logs/x.txt' }]).file, '/media/A/cluster-logs/x.txt');
+const ro = logs.savedNote([inData, { dir: '/media/A/cluster-logs', error: 'EROFS' }, { dir: '/media/B/cluster-logs', error: 'EROFS' }]);
+assert.ok(/read-only/.test(ro.en) && /읽기 전용/.test(ro.ko) && ro.file === inData.file, JSON.stringify(ro));
+assert.ok(/^Plug in a USB stick/.test(logs.savedNote([inData]).en) && logs.savedNote([inData]).file === '');
+console.log('ok   the page\'s note: a stick, a read-only stick and where the file is, or none');
+console.log('3 passed');

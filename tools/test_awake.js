@@ -92,18 +92,28 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             assert.deepStrictEqual(D.data().cruise, { on: true, set: 70 });
             handlers.functionalLibraryData({ cruiseCtrlSpeedHUD: 0 });
             assert.deepStrictEqual(D.data().cruise, { on: false, set: undefined });
-            // the speed limit as the head-up display gets it, in steps of 5 (the car's log: 14 on a 70 road); kept
-            // while the symbol goes back to none, none at an invalid value
+            // the speed limit sign: the limit Speed Limit Assist has taken (the limiter or the cruise control on and
+            // TAKEOVER_SET), else none - AK Cluster Info's log of Nov 24 2026
+            const row = (value, takeover, limiter, extra) => Object.assign({ xSpeedLimitAssist: { vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', ldmAdditionalSign: takeover, vSLISpeedValue: value },
+                activeCruiseControl: { symbolACC: 'LDM_CAR_OFF' }, statusLimiter: limiter, cruiseCtrlSpeedHUD: 65535 }, extra || {});
             assert.strictEqual(D.data().speedLimit, undefined, 'no limit read yet');
-            handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISymbol: 'LDM_VZA_VSLI_SPEED_LIMIT', vSLISpeedValue: 14 }, cruiseCtrlSpeedHUD: 65535 });
-            assert.strictEqual(D.data().speedLimit, 70);
-            handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', vSLISpeedValue: 8 } });
-            assert.strictEqual(D.data().speedLimit, 40, 'the value, also without the symbol');
-            const was = Date.now, later = Date.now() + 10 * 60000;
+            handlers.functionalLibraryData(row(10, 'TAKEOVER_SET', 'STATUS_ACTIVE'));
+            assert.strictEqual(D.data().speedLimit, 50, '00:43: the limiter on, 10 taken: 50');
+            assert.deepStrictEqual([D.data().sliRaw, D.data().sliTakeover, D.data().sliLimiter], [10, 'TAKEOVER_SET', 'STATUS_ACTIVE']);
+            handlers.functionalLibraryData(row(12, 'NO_TAKEOVER_OFFER', 'STATUS_ACTIVE'));
+            assert.strictEqual(D.data().speedLimit, undefined, '00:56: no takeover: --');
+            handlers.functionalLibraryData(row(0, 'NO_TAKEOVER_OFFER', 'STATUS_ACTIVE', { cruiseCtrlSpeedHUD: 60 }));
+            assert.strictEqual(D.data().speedLimit, undefined, '05:00: 0: --');
+            handlers.functionalLibraryData(row(6, 'TAKEOVER_SET', 'STATUS_INACTIVE'));
+            assert.strictEqual(D.data().speedLimit, undefined, 'the limiter off, a value left: -- (not 30 on a motorway)');
+            handlers.functionalLibraryData(row(14, 'TAKEOVER_SET', 'STATUS_INACTIVE', { activeCruiseControl: { symbolACC: 'LDM_CAR_NORMAL' } }));
+            assert.strictEqual(D.data().speedLimit, 70, 'the cruise control on: its limit');
+            const was = Date.now, later = Date.now() + 10001;
             Date.now = () => later;
-            try { assert.strictEqual(D.data().speedLimit, 40, 'kept while nothing new comes (10 min)'); } finally { Date.now = was; }
-            handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISpeedValue: 0 } });
-            assert.strictEqual(D.data().speedLimit, undefined, '0: none');
+            try { assert.strictEqual(D.data().speedLimit, undefined, 'no head-up display data for 10 s: --'); } finally { Date.now = was; }
+            const lines = D.sliLog(20).split('\n');
+            assert.ok(/^head-up display data: \d+ in the last 60 s, the last [\d.]+ s ago; shown: 70$/.test(lines[0]), lines[0]);
+            assert.ok(lines.length >= 6 && / shown 70  \{"value":14/.test(lines[lines.length - 1]), lines[lines.length - 1]);
         } finally { D.stop(); }
     });
 

@@ -301,7 +301,8 @@ mgu.run({
                 ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
                 ['overlay', JSON.stringify(ov)],
                 ['turn signals and day / night (raw)', JSON.stringify(live.raw)],
-                ['driving assistant check', st ? JSON.stringify(full ? st : { sources: st.sources, hud: st.hud, catalog: st.catalog && { total: st.catalog.total, found: (st.catalog.list || []).length, error: st.catalog.error } }) : 'not started'],
+                ['driving assistant check', st ? JSON.stringify(full ? st : { sources: st.sources, hud: st.hud, catalog: st.catalog && { total: st.catalog.total, found: (st.catalog.list || []).length, error: st.catalog.error,
+                    signServices: st.catalog.signServices, signs: (st.catalog.signs || []).slice(0, 30).map(brakeLine), signsTotal: (st.catalog.signs || []).length } }) : 'not started'],
                 ['driving assistant log', logs.tail(path.join(dataDir, 'cluster-info-adas.log'), n(40, 3000))],
                 ['directions log', logs.tail(path.join(dataDir, 'cluster-info-nav.log'), n(15, 1500))],
                 ['this app\'s log', logs.tail(path.join(dataDir, 'akakingj_cluster_info.log'), n(40, 600))],
@@ -366,9 +367,12 @@ mgu.run({
                     rows.slice(0, room).forEach((r, i) => L(r, y + 22 + i * 18, 14, t.text));
                     if (rows.length > room) L('… ' + (rows.length - room) + ' more lines in the log', y + 22 + room * 18, 14, t.dim);
                 };
-                // the brakes', the parking brake's and Auto Hold's members first (Auto Hold: drawn under the apps' layers)
-                block('Brakes, parking brake, Auto Hold: ' + brakes.length + ' members in the catalog of ' + c.total + ' services', brakes.map(brakeLine), 306, 4);
-                block('Driving assistant or HUD: ' + c.list.length + ' services', c.list.map(catalogLine), 306 + 22 + 5 * 18 + 6, 3);
+                // (1.10.25) the speed limit sign's candidates first: the services looked for by name, then every member
+                // named for a speed limit or a traffic sign; then the brakes' (Auto Hold) and the driving assistant's
+                const signs = c.signs || [], sv = (c.signServices || []).map((v) => v.name + ': ' + (v.found.length ? v.found.join(', ') : 'not in this car\'s catalog'));
+                block('Speed limit and traffic signs: ' + signs.length + ' members in the catalog of ' + c.total + ' services', sv.concat(signs.map(brakeLine)), 306, 3);
+                block('Brakes, parking brake, Auto Hold: ' + brakes.length + ' members', brakes.map(brakeLine), 406, 1);
+                block('Driving assistant or HUD: ' + c.list.length + ' services', c.list.map(catalogLine), 470, 1);
                 return;
             }
             const age = (ms) => (ms === null ? '' : ms < 1000 ? 'now' : Math.round(ms / 1000) + ' s ago');

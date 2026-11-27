@@ -823,7 +823,7 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
  * every piece the layout draws now (a round dial as its circle, the rest as their boxes; the backgrounds aside), the
  * KOMBI's lights over us (SIDE_LIGHTS, TURN_ARROWS), the map's window, the glass's slanted corners and the car's
  * strip; a smaller sign where the full one has no room, none where neither has. The figure: d.speedLimit, the limit
- * the car has read (data.js: the head-up display's xSpeedLimitAssist.vSLISpeedValue x 5, 0.63.0; the last one kept, 0.63.1), '--' while none.
+ * Speed Limit Assist has taken for the limiter or the cruise control (data.js sliOf, 0.64.1), '--' while neither has one.
  */
 const SLI_R = [46, 38], SLI_GAP = 14, SLI_HOME = { x: 528, y: 590 }, SLI_STEP = 8;
 const SLI_ROUND = { dial: 1, e9x: 1, mround: 1, jdm: 1, rmdial: 1, ring: 1, aclock: 1, rtach: 1 };
