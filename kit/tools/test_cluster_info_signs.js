@@ -71,6 +71,13 @@ check('pictures: South Korea\'s own signs - the types the camera read get theirs
     assert.strictEqual(S.artOf('DS_UNEVEN_ROAD'), 'bumpy_road');
     assert.strictEqual(S.artOf('DS_TRAFFIC_LIGHTS'), 'traffic_lights');
     assert.strictEqual(S.artOf('DS_SOMETHING_NEW'), 'danger');
+    // the regulatory ones before the warnings: no left turn is no bend
+    assert.strictEqual(S.artOf('NO_LEFT_TURN'), 'no_left_turn');
+    assert.strictEqual(S.artOf('NO_U_TURN'), 'no_u_turn');
+    assert.strictEqual(S.artOf('NO_PARKING'), 'no_parking');
+    assert.strictEqual(S.artOf('NO_STOPPING'), 'no_stopping');
+    assert.strictEqual(S.artOf('ONE_WAY_STREET'), 'one_way');
+    assert(S.wanted('NO_LEFT_TURN') && S.wanted('STOP') && !S.wanted('END_OF_NO_PASSING') && !S.wanted('SPEED_LIMIT_END') && !S.wanted('NONE'));
     // every name it can give has a picture, as wide as the HUD's signs (made for overlay.js SIGNS.size)
     const art = require(path.join(APP, 'sign_art.js'));
     assert.strictEqual(art.size, SIGNS.size, 'sign_art.js made for this size: tools/make_sign_art.py');
@@ -171,6 +178,34 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         // any other service: as it was
         await sv.watch('de.bmw.dass.TrafficSignRecognition', '1', {}, log);
         assert.strictEqual(sig.watches.length, 2);
+    });
+
+    await acheck('the car\'s own list of sign types (its interface config): logged whole in lines the Logs keep, and on the page', async () => {
+        // an interface config with the type's enumeration somewhere inside (its shape is the head unit's)
+        const many = []; for (let i = 0; i < 40; i++) many.push('DS_SIGN_NUMBER_' + i);
+        const cfg = { events: { TrafficSignRecognitionFrontCamera: { type: 'struct' } }, types: { E_TrafficSignType: { kind: 'enum',
+            values: [{ name: 'SPEED_LIMIT', value: 0 }, { name: 'GIVE_WAY', value: 1 }, { name: 'NO_PASSING_SIGN', value: 2 }, { name: 'STOP', value: 3 },
+                { name: 'DS_TRAFFIC_JAM', value: 4 }, { name: 'END_OF_NO_PASSING', value: 5 }].concat(many.map((n, i) => ({ name: n, value: 6 + i }))) },
+            E_Unit: { kind: 'enum', values: [{ name: 'KM_H', value: 0 }, { name: 'MPH', value: 1 }] } } };
+        assert.strictEqual(S.typeNames(cfg).length, 46);
+        assert.deepStrictEqual(S.typeNames({ a: ['GIVE_WAY', 'DS_X'] }), ['GIVE_WAY', 'DS_X']);
+        assert.deepStrictEqual(S.typeNames({ a: { GIVE_WAY: 1, DS_Y: 2 } }), ['GIVE_WAY', 'DS_Y']);
+        assert.deepStrictEqual(S.typeNames({ units: ['KM_H', 'MPH'] }), []);
+        const sig = fakeSignals(), lg = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.push('WARN ' + m); } };
+        const sg = S.startSigns({ signals: sig }, lg, { kitDir: kitWith([CAM]), loadConfig: (i) => { assert.strictEqual(i, S.CAM_IFACE); return cfg; } });
+        await wait();
+        const st = sg.status();
+        assert.strictEqual(st.carTypes.length, 46);
+        assert.strictEqual(st.drawn, 43, 'all but the limit, no passing and its end');
+        assert.strictEqual(st.asDanger, 40, 'the 40 unknown DS_ ones (jam, stop, give way have their own)');
+        const typeLines = lg.lines.filter((l) => /^road signs: types \d+: /.test(l));
+        assert(typeLines.length > 1 && typeLines.every((l) => l.length <= 200), 'chunked: ' + typeLines.map((l) => l.length));
+        const back = typeLines.map((l) => l.replace(/^road signs: types \d+: /, '')).join(', ').split(', ');
+        assert.deepStrictEqual(back, st.carTypes, 'the whole list, in order');
+        // no config: said once, nothing else
+        const sg2 = S.startSigns({ signals: fakeSignals() }, lg, { kitDir: kitWith([CAM]), loadConfig: () => { throw new Error('no SOME/IP config'); } });
+        await wait();
+        assert.deepStrictEqual(sg2.status().carTypes, []);
     });
 
     check('read only: signs.js calls no method and writes nothing', () => {

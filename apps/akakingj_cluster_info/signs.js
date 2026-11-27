@@ -52,7 +52,8 @@ function parseSigns(v) {
 }
 
 /** Whether a type is drawn: the danger signs and give way (the HUD shows the speed limit and no passing itself). */
-const wanted = (t) => /^DS_/.test(t) || /^(GIVE_WAY|YIELD|STOP|NO_ENTRY)/.test(t);
+const shownByHud = (t) => /SPEED_LIMIT|NO_PASSING|OVERTAK|(^|_)END(_|$)/.test(t);
+const wanted = (t) => !shownByHud(t) && (/^DS_/.test(t) || artOf(t) !== 'danger');
 
 /** The signs seen lately: add(types, t), current(t) -> the types to show, oldest first. */
 function makeTracker(showMs, max) {
@@ -91,7 +92,13 @@ function pic(name) {
  * DS_SPLIPPERY_ROAD, DS_TRAFFIC_JAM, DS_ANIMAL_CROSSING, DS_RIGHT_DOWNWARDS, GIVE_WAY; the rest by their likely words) */
 const side = (l, r) => (t) => (/LEFT/.test(t) ? l : r);
 const ART_OF = [
-    [/GIVE_WAY|YIELD/, 'give_way'], [/^STOP/, 'stop'], [/NO_ENTRY/, 'no_entry'],
+    // regulatory and instruction signs first (NO_LEFT_TURN is no bend)
+    [/GIVE_WAY|YIELD/, 'give_way'], [/^STOP/, 'stop'], [/NO_ENTRY|DO_NOT_ENTER/, 'no_entry'],
+    [/U_TURN/, 'no_u_turn'], [/NO_.*LEFT|LEFT_TURN_PROHIB|TURN_LEFT_PROHIB/, 'no_left_turn'],
+    [/NO_.*RIGHT|RIGHT_TURN_PROHIB|TURN_RIGHT_PROHIB/, 'no_right_turn'], [/NO_.*STRAIGHT|STRAIGHT_PROHIB/, 'no_straight'],
+    [/NO_.*(STOPPING|WAITING|STANDING)/, 'no_stopping'], [/NO_.*PARK|PARKING_PROHIB/, 'no_parking'],
+    [/NO_.*(CAR|MOTOR|VEHICLE)/, 'no_cars'], [/DISTANCE|HEADWAY/, 'keep_distance_50m'], [/ONE_WAY/, 'one_way'],
+    [/UNPROTECTED/, 'unprotected_left'], [/^SLOW|_SLOW/, 'slow'],
     [/SLIP|SPLIP|SKID/, 'slippery'], [/JAM|QUEUE|CONGEST/, 'traffic_jam'], [/ANIMAL|DEER|WILD/, 'wild_animal'],
     [/DOWNWARD|DESCENT|DOWNHILL/, 'downhill'], [/UPWARD|ASCENT|UPHILL/, 'uphill'],
     [/DOUBLE|SERIES|WINDING|(^|[^A-Z])S_(CURVE|BEND)/, (t) => (/LEFT.*RIGHT|LEFT_FIRST|^DS_LEFT/.test(t) ? 'double_bend_left' : 'double_bend_right')],
@@ -123,6 +130,42 @@ function drawSigns(cv, types, size, gap) {
     types.forEach((t, i) => drawSign(cv, t, i * (size + gap) + Math.round((size - ART.size) / 2), cv.h / 2));
 }
 
+/* ---------- the car's own list of the camera's sign types ----------
+ * The camera's value comes with its type as a name (the head unit's interface config holds the enumeration): this
+ * app's own config for the camera's service (someipInterfaces/, made at install from the car's catalog) is read for
+ * the list of names, so what this car's camera can say is known without driving past every sign - logged once in
+ * lines the Logs' codes keep whole, and on the app's page. */
+const NAME_RE = /^[A-Z][A-Z0-9_]{2,}$/;
+/** The sign type names in an interface config: the enumeration holding GIVE_WAY or SPEED_LIMIT, [] if none. */
+function typeNames(cfg) {
+    let best = [];
+    const seen = new Set();
+    const names = (o) => {
+        const out = [];
+        const add = (v) => { if (typeof v === 'string' && NAME_RE.test(v)) out.push(v); };
+        if (Array.isArray(o)) o.forEach((e) => { add(e); if (e && typeof e === 'object') { add(e.name); add(e.Name); add(e.value && typeof e.value === 'string' ? e.value : null); } });
+        else Object.keys(o).forEach((k) => { add(k); add(o[k]); if (o[k] && typeof o[k] === 'object' && !Array.isArray(o[k])) { add(o[k].name); add(o[k].Name); } });
+        return out;
+    };
+    const walk = (o, d) => {
+        if (!o || typeof o !== 'object' || d > 12 || seen.has(o)) return;
+        seen.add(o);
+        const n = names(o);
+        if (n.length > best.length && (n.indexOf('GIVE_WAY') >= 0 || n.indexOf('SPEED_LIMIT') >= 0 || n.some((x) => /^DS_/.test(x)))) best = n;
+        (Array.isArray(o) ? o : Object.keys(o).map((k) => o[k])).forEach((v) => walk(v, d + 1));
+    };
+    walk(cfg, 0);
+    return Array.from(new Set(best));
+}
+/** Names in lines of at most n letters (the log keeps 200 a line). */
+function chunk(list, n) {
+    const out = [];
+    let line = '';
+    list.forEach((x) => { if (line && line.length + x.length + 2 > n) { out.push(line); line = ''; } line += (line ? ', ' : '') + x; });
+    if (line) out.push(line);
+    return out;
+}
+
 /* ---------- the camera ---------- */
 function startSigns(ctx, log, opts) {
     opts = opts || {};
@@ -135,6 +178,19 @@ function startSigns(ctx, log, opts) {
     const listeners = {};            // member -> [fn] (this and the survey)
     let mine = null;                 // the subscription: { proxy, available }
     const subscribed = {};           // member -> promise (on our proxy)
+
+    // the car's list of types (its interface config; only where the camera is declared)
+    let carTypes = null;
+    function readTypes() {
+        if (carTypes || !item) return;
+        let cfg = null;
+        try { cfg = (opts.loadConfig || signals.loadConfig)(CAM_IFACE); } catch (e) { carTypes = []; log.info('road signs: the car\'s list of sign types not readable (' + e.message + ')'); return; }
+        carTypes = typeNames(cfg);
+        if (!carTypes.length) { log.info('road signs: no list of sign types in the camera\'s interface config'); return; }
+        const shown = carTypes.filter(wanted), noArt = shown.filter((t) => artOf(t) === 'danger' && !/^DS_DANGER|GENERAL|OTHER/.test(t));
+        log.info('road signs: this car\'s camera knows ' + carTypes.length + ' sign types, ' + shown.length + ' drawn (' + noArt.length + ' as "!")');
+        chunk(carTypes, 180).forEach((l, i) => log.info('road signs: types ' + (i + 1) + ': ' + l));
+    }
 
     let item = null;
     try {
@@ -167,7 +223,7 @@ function startSigns(ctx, log, opts) {
         Promise.resolve().then(() => signals.watch(CAM_IFACE, item.instance || '1', {}, log)).then((sub) => {
             if (!sub || sub.error || !sub.proxy) { state = 'refused: ' + ((sub && sub.error) || 'no proxy'); log.warn('road signs: ' + state); return; }
             mine = sub;
-            return listen(CAM_EVENT, onSign).then(() => { state = 'subscribed'; log.info('road signs: the camera\'s signs subscribed'); });
+            return listen(CAM_EVENT, onSign).then(() => { state = 'subscribed'; log.info('road signs: the camera\'s signs subscribed'); readTypes(); });
         }).catch((e) => { state = 'refused: ' + e; log.warn('road signs: ' + e); });
     }
 
@@ -193,7 +249,8 @@ function startSigns(ctx, log, opts) {
 
     return {
         current: () => tracker.current(now()),
-        status: () => ({ state, seen, types: Object.assign({}, types) }),
+        status: () => ({ state, seen, types: Object.assign({}, types), carTypes: carTypes ? carTypes.slice() : null,
+            drawn: carTypes ? carTypes.filter(wanted).length : null, asDanger: carTypes ? carTypes.filter((t) => wanted(t) && artOf(t) === 'danger').length : null }),
         signalsFor,
         _onSign: onSign,
     };
@@ -202,4 +259,4 @@ function startSigns(ctx, log, opts) {
 /** Samples for checking the place (Settings: Road signs on the HUD: sample). */
 const SAMPLE = ['GIVE_WAY', 'DS_SPLIPPERY_ROAD', 'DS_ANIMAL_CROSSING'];
 
-module.exports = { startSigns, parseSigns, wanted, makeTracker, drawSign, drawSigns, signBox, artOf, ART_SIZE: ART.size, SAMPLE, CAM_IFACE, CAM_EVENT, SHOW_MS, MAX_SIGNS };
+module.exports = { startSigns, parseSigns, wanted, typeNames, chunk, makeTracker, drawSign, drawSigns, signBox, artOf, ART_SIZE: ART.size, SAMPLE, CAM_IFACE, CAM_EVENT, SHOW_MS, MAX_SIGNS };

@@ -323,7 +323,7 @@ mgu.run({
                     return (b.refused ? 'the BDC has no D347 (' + b.refused + ')' : b.left !== null ? 'mirror lamps: left ' + b.left + ', right ' + b.right : b.reading ? 'no answer yet' : 'not read now (panel off or parked)')
                         + '   ·   BDC 22 D347: ' + b.good + ' of ' + b.reads + ' answered   ·   link ' + b.link; })()],
                 ['Road signs', settings.get('roadSigns') === 'off' ? 'off (settings)' : (() => { const g = signs ? signs.status() : null, o = overlay && overlay.roadSigns ? overlay.roadSigns() : null;
-                    return (g ? 'camera: ' + g.state + '   ·   ' + g.seen + ' read' + (Object.keys(g.types).length ? ' (' + Object.keys(g.types).map((k) => k + ' ' + g.types[k]).join(', ') + ')' : '') : 'not started')
+                    return (g ? 'camera: ' + g.state + (g.carTypes ? '   ·   this car\'s camera knows ' + g.carTypes.length + ' types, ' + g.drawn + ' drawn' + (g.asDanger ? ' (' + g.asDanger + ' as "!")' : '') : '') + '   ·   ' + g.seen + ' read' + (Object.keys(g.types).length ? ' (' + Object.keys(g.types).map((k) => k + ' ' + g.types[k]).join(', ') + ')' : '') : 'not started')
                         + (settings.get('roadSigns') === 'sample' ? '   ·   showing the sample' : '') + (o && o.shown ? '   ·   on the HUD: ' + o.types.join(', ') : ''); })()],
                 ['Turn signals', st('turn signals') + (live.indicator !== 'off' ? ' (now ' + live.indicator + ')' : '')
                     + '   ·   Day / night: ' + (live.night === null ? st('day / night') + ', none received' : live.night ? 'night' : 'day')

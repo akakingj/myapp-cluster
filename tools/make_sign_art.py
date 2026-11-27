@@ -26,6 +26,7 @@ from PIL import Image, ImageDraw
 from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parent.parent
+HMAX = 64        # the row's height: round and octagonal signs at full width; taller ones narrower
 SRC = ROOT / 'tools' / 'sign_art'
 OUT = ROOT / 'apps' / 'akakingj_cluster_info' / 'sign_art.js'
 OVERLAY = ROOT / 'apps' / 'akakingj_cluster_info' / 'overlay.js'
@@ -34,7 +35,11 @@ OVERLAY = ROOT / 'apps' / 'akakingj_cluster_info' / 'overlay.js'
 NAMES = ['slippery', 'traffic_jam', 'wild_animal', 'downhill', 'uphill', 'curve_right', 'curve_left',
          'double_bend_right', 'double_bend_left', 'road_works', 'crosswalk', 'children', 'bicycle', 'speed_hump',
          'bumpy_road', 'falling_rocks', 'crosswind', 'tunnel', 'bridge', 'railway', 'traffic_lights', 'roundabout',
-         'merge_right', 'merge_left', 'riverside', 'give_way', 'stop', 'no_entry']
+         'merge_right', 'merge_left', 'riverside', 'give_way', 'stop', 'no_entry',
+         # the regulatory and instruction signs (the camera's names for them not known yet: kept till the car's own
+         # list of types says which it has - signs.js logs it)
+         'slow', 'no_u_turn', 'no_left_turn', 'no_right_turn', 'no_straight', 'no_cars', 'no_parking', 'no_stopping',
+         'keep_distance_50m', 'one_way', 'unprotected_left']
 
 
 def size_from_overlay():
@@ -62,6 +67,9 @@ def cut(im):
     a = np.asarray(im.convert('RGB')).astype(int)
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     red = (r > 150) & (g < 100) & (b < 100)
+    blue = (b > 110) & (r < 60) & (g < 110)
+    if red.sum() < blue.sum() * 0.5:                  # a blue sign (one way, unprotected left turn): its blue edge
+        red = blue
     k = max(2, round(im.width / 110))                     # the thin outer line (~1 % of the width) goes, the edge stays
     yy, xx = np.mgrid[-k:k + 1, -k:k + 1]
     disk = (xx * xx + yy * yy) <= k * k
@@ -101,9 +109,16 @@ def danger(base):
     return im
 
 
-def shrink(im, w):
-    h = max(1, round(im.height * w / im.width))
-    return im.resize((w, h), Image.LANCZOS)     # (Pillow resizes RGBA premultiplied: no dark fringe)
+def shrink(im, w, hmax):
+    """size wide, or narrower to be at most hmax high (a tall sign), centred in a size-wide picture."""
+    k = min(w / im.width, hmax / im.height)
+    sw, sh = max(1, round(im.width * k)), max(1, round(im.height * k))
+    s = im.resize((sw, sh), Image.LANCZOS)      # (Pillow resizes RGBA premultiplied: no dark fringe)
+    if sw == w:
+        return s
+    out = Image.new('RGBA', (w, sh), (0, 0, 0, 0))
+    out.paste(s, ((w - sw) // 2, 0))
+    return out
 
 
 def main():
@@ -119,7 +134,7 @@ def main():
         cuts[n] = cut(Image.open(f))
     cuts['danger'] = danger(cuts['speed_hump'])
     for n, im in cuts.items():
-        s = shrink(im, size)
+        s = shrink(im, size, HMAX)
         raw = s.tobytes()
         art[n] = {'w': s.width, 'h': s.height, 'z': base64.b64encode(zlib.compress(raw, 9)).decode()}
     body = ',\n'.join('    %s: %s' % (json.dumps(n), json.dumps(v, separators=(',', ':'))) for n, v in sorted(art.items()))
