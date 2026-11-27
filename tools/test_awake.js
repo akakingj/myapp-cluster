@@ -99,6 +99,9 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             assert.strictEqual(D.data().speedLimit, 70);
             handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', vSLISpeedValue: 8 } });
             assert.strictEqual(D.data().speedLimit, 40, 'the value, also without the symbol');
+            const was = Date.now, later = Date.now() + 10 * 60000;
+            Date.now = () => later;
+            try { assert.strictEqual(D.data().speedLimit, 40, 'kept while nothing new comes (10 min)'); } finally { Date.now = was; }
             handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISpeedValue: 0 } });
             assert.strictEqual(D.data().speedLimit, undefined, '0: none');
         } finally { D.stop(); }

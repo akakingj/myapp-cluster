@@ -411,7 +411,8 @@ stays 14 px clear of everything the layout draws then (a round dial as its circl
 map's window, the glass's corners and the strip; worked out again with each change of layout or setting
 (layout_common.sliPlace, tools/test_sli.js: every layout, centre, car and strip). Its figures (0.63.0) are the limit
 the car has read, as the head-up display gets it (DisplayDataServer xSpeedLimitAssist.vSLISpeedValue, in steps of 5: 14
-is 70); `--` until the car has sent one, and again 10 s after it stops. A layout may name its own
+is 70); the last one stays while the car sends nothing new, `--` until it has sent one and at 0 (none recognised).
+A layout may name its own
 starting point and the pieces whose boxes are mostly empty (sliHome, sliSkip): JDM 1's sign stands just above TACH,
 inside the tach's curve (its foot is full); KO 1's and KO 2's arc dials count as their circles, not their squares.
 

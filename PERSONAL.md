@@ -348,6 +348,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.63.1, Centre 0.15.5 (Nov 27 2026): the sign keeps the last limit the car read (the owner: the last one
+  while driving; 0.63.0 went back to '--' after 10 s without a reading); '--' at 0 or none yet. The HUD's data is
+  watched second instead of seventh: every watch's set-up waits for the one before (kit signals.js nativeTick), and on
+  the car the figures came about 30 s after a start.
 - Layouts 0.63.0, Centre 0.15.4 (Nov 27 2026): the speed limit sign shows the car's limit (shared/data.js:
   DisplayDataServer.functionalLibraryData xSpeedLimitAssist.vSLISpeedValue x 5). Info's QR log of Nov 27 2026: 14 at
   64 km/h, 10 at 23 - 24, 12 at 38 - 45, 8 at 35 (roads of 70, 50, 60, 40), and 16 with the cruise control at 82 on Nov
