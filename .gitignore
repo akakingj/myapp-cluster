@@ -22,3 +22,5 @@ secret/
 # the personal build's app icons (the Store shows them; the build uses them)
 !apps/akakingj_cluster_*/icon.png
 .demo/
+# the road signs Cluster Info draws on the HUD come from these (tools/make_sign_art.py)
+!tools/sign_art/*.png

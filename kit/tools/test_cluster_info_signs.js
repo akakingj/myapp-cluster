@@ -59,34 +59,43 @@ check('each shows 10 s after it was last seen, oldest first, at most 4', () => {
     assert.deepStrictEqual(tr.current(31000), ['DS_B', 'DS_C', 'DS_D', 'DS_E']);
 });
 
-check('pictures: the types the camera read get their own; another danger sign the "!"', () => {
-    assert.deepStrictEqual(S.pictureOf('DS_SPLIPPERY_ROAD'), ['slippery']);
-    assert.deepStrictEqual(S.pictureOf('DS_TRAFFIC_JAM'), ['jam']);
-    assert.deepStrictEqual(S.pictureOf('DS_ANIMAL_CROSSING'), ['animal']);
-    assert.deepStrictEqual(S.pictureOf('DS_RIGHT_DOWNWARDS'), ['down', true]);
-    assert.deepStrictEqual(S.pictureOf('DS_LEFT_DOWNWARDS'), ['down', false]);
-    assert.deepStrictEqual(S.pictureOf('DS_ROAD_WORKS'), ['general']);
+check('pictures: South Korea\'s own signs - the types the camera read get theirs; another warning 위험 ("!")', () => {
+    assert.strictEqual(S.artOf('DS_SPLIPPERY_ROAD'), 'slippery');
+    assert.strictEqual(S.artOf('DS_TRAFFIC_JAM'), 'traffic_jam');
+    assert.strictEqual(S.artOf('DS_ANIMAL_CROSSING'), 'wild_animal');
+    assert.strictEqual(S.artOf('DS_RIGHT_DOWNWARDS'), 'downhill');
+    assert.strictEqual(S.artOf('GIVE_WAY'), 'give_way');
+    assert.strictEqual(S.artOf('DS_LEFT_CURVE'), 'curve_left');
+    assert.strictEqual(S.artOf('DS_CURVE_RIGHT'), 'curve_right');
+    assert.strictEqual(S.artOf('DS_SPEED_BUMP'), 'speed_hump');
+    assert.strictEqual(S.artOf('DS_UNEVEN_ROAD'), 'bumpy_road');
+    assert.strictEqual(S.artOf('DS_TRAFFIC_LIGHTS'), 'traffic_lights');
+    assert.strictEqual(S.artOf('DS_SOMETHING_NEW'), 'danger');
+    // every name it can give has a picture, as wide as the HUD's signs (made for overlay.js SIGNS.size)
+    const art = require(path.join(APP, 'sign_art.js'));
+    assert.strictEqual(art.size, SIGNS.size, 'sign_art.js made for this size: tools/make_sign_art.py');
+    const src = fs.readFileSync(path.join(APP, 'signs.js'), 'utf8');
+    const block = src.slice(src.indexOf('const ART_OF'), src.indexOf('function artOf'));
+    const names = new Set((block.match(/'([a-z_]+)'/g) || []).map((q) => q.slice(1, -1)));
+    names.add('danger');
+    assert(names.size > 20);
+    names.forEach((n) => { const a = art.art[n]; assert(a, 'no picture ' + n); assert.strictEqual(a.w, SIGNS.size, n); });
 });
 
 const px = (cv, x, y) => { const i = (Math.round(y) * cv.w + Math.round(x)) * 4; return [cv.d[i], cv.d[i + 1], cv.d[i + 2], cv.d[i + 3]]; };
-check('drawn as Korean signs: a yellow triangle with a red edge, give way white and point down; a picture in each', () => {
-    const size = 56, box = S.signBox(size), cv = new Canvas(2 * size + 8, box.h + 2);
-    S.drawSigns(cv, ['DS_ANIMAL_CROSSING', 'GIVE_WAY'], size, 8);
-    const y0 = Math.floor((cv.h - box.h) / 2);
-    // the first: red at its foot's middle edge, yellow inside, clear in its top corners
-    const red = px(cv, size / 2, y0 + box.h - 2), yel = px(cv, size * 0.5, y0 + box.h * 0.80), corner = px(cv, 2, y0 + 2);
-    assert(red[0] > 200 && red[1] < 80 && red[3] > 200, 'red edge ' + red);
-    assert(yel[0] > 200 && yel[1] > 170 && yel[2] < 80, 'yellow ' + yel);
-    assert.strictEqual(corner[3], 0, 'clear outside');
-    // the second: point down - its top edge red, white inside, clear at its foot's corners
-    const x2 = size + 8;
-    const top = px(cv, x2 + size / 2, y0 + 1), white = px(cv, x2 + size / 2, y0 + box.h * 0.35), foot = px(cv, x2 + 2, y0 + box.h - 2);
-    assert(top[0] > 200 && top[1] < 80, 'red top ' + top);
-    assert(white[0] > 220 && white[1] > 220 && white[2] > 220, 'white ' + white);
-    assert.strictEqual(foot[3], 0);
-    // each type its own picture: the rows differ
-    const pic = (t) => { const c = new Canvas(size, box.h + 2); S.drawSigns(c, [t], size, 0); return Buffer.from(c.d).toString('base64'); };
-    const all = ['DS_SPLIPPERY_ROAD', 'DS_TRAFFIC_JAM', 'DS_ANIMAL_CROSSING', 'DS_RIGHT_DOWNWARDS', 'DS_ROAD_WORKS'].map(pic);
+check('drawn: the sign\'s own colours, the ground around it clear (light on the HUD), each in its place in the row', () => {
+    const size = SIGNS.size, gap = 8, box = S.signBox(size), cv = new Canvas(2 * size + gap, box.h + 2);
+    S.drawSigns(cv, ['DS_ANIMAL_CROSSING', 'GIVE_WAY'], size, gap);
+    const cnt = (x0, x1, f) => { let n = 0; for (let y = 0; y < cv.h; y++) for (let x = x0; x < x1; x++) if (f(px(cv, x, y))) n++; return n; };
+    const red = (p) => p[3] > 200 && p[0] > 170 && p[1] < 70 && p[2] < 70, yellow = (p) => p[3] > 200 && p[0] > 200 && p[1] > 140 && p[2] < 80;
+    const white = (p) => p[3] > 200 && p[0] > 220 && p[1] > 220 && p[2] > 220;
+    assert(cnt(0, size, red) > 300 && cnt(0, size, yellow) > 300, 'warning sign');
+    assert(cnt(size + gap, cv.w, red) > 300 && cnt(size + gap, cv.w, white) > 150 && cnt(size + gap, cv.w, yellow) < 20, 'give way');
+    assert.strictEqual(px(cv, 1, 1)[3], 0); assert.strictEqual(px(cv, size - 2, 1)[3], 0);
+    for (let y = 0; y < cv.h; y++) for (let x = size + 1; x < size + gap - 1; x++) assert.strictEqual(px(cv, x, y)[3], 0, 'gap');
+    assert.strictEqual(cnt(0, size, white), 0, 'no white rim on the warning sign (a light outline on the HUD)');
+    const one = (t) => { const c = new Canvas(size, box.h + 2); S.drawSigns(c, [t], size, 0); return Buffer.from(c.d).toString('base64'); };
+    const all = ['DS_SPLIPPERY_ROAD', 'DS_TRAFFIC_JAM', 'DS_ANIMAL_CROSSING', 'DS_RIGHT_DOWNWARDS', 'DS_ROAD_WORKS', 'DS_NEW'].map(one);
     assert.strictEqual(new Set(all).size, all.length);
 });
 

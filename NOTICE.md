@@ -19,6 +19,10 @@
   `nav_canvas.js`) is jaimeen77's Cluster Redline 1.3.9
   ([jaimeen77-cmyk/apps](https://github.com/jaimeen77-cmyk/apps) `apps/cluster_redline` at 07d7925), MIT licence,
   used with its author's agreement.
+- Cluster Info's road signs on the HUD (`sign_art.js`, made by `tools/make_sign_art.py` from `tools/sign_art/`) are
+  South Korea's road signs (도로교통법 시행규칙 별표 6), works of the Government of the Republic of Korea made
+  public for free use (Article 24-2 of the Korean Copyright Act), as shown on Wikipedia's "Road signs in South Korea"
+  and Wikimedia Commons; cut out along their red edge and shrunk. Not covered by this repository's licence.
 - Everything else: Copyright (C) 2026 eroobeeroo, PolyForm Noncommercial License 1.0.0 (`LICENSE`): noncommercial
   use only; no selling, no paid installation. Versions published before 10 November 2026: GPL-3.0-or-later, as
   published.

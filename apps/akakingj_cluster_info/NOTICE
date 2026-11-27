@@ -1,3 +1,9 @@
+AK Cluster Info - road signs
+
+sign_art.js (the road signs on the HUD) holds South Korea's road signs (도로교통법 시행규칙 별표 6): works of the
+Government of the Republic of Korea made public for free use (Article 24-2 of the Korean Copyright Act), cut out
+along their red edge and shrunk. Not covered by this app's licence.
+
 AK Cluster Info - fonts
 
 plex_font.js (the panel's text) is made from IBM Plex Sans Condensed SemiBold: converted glyphs, not offered as a

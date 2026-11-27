@@ -10,9 +10,9 @@
  * Types seen: SPEED_LIMIT (value 40, 90, 110), NO_PASSING_SIGN, GIVE_WAY, DS_TRAFFIC_JAM, DS_SPLIPPERY_ROAD (BMW's
  * spelling), DS_RIGHT_DOWNWARDS, DS_ANIMAL_CROSSING. The HUD shows the speed limit and the no passing sign itself
  * (the limit sign moves up and the no passing sign takes its place, photo 2026-11-27), so those are left out; the
- * danger signs (DS_...) and give way are drawn as Korean signs: a yellow triangle with a red edge, give way a white
- * one point down. A DS_ type with no picture of its own gets the "!" sign. Each shows for SHOW_MS after it was last
- * seen, in a row in the order they came, at most MAX_SIGNS.
+ * danger signs (DS_...), give way, stop and no entry show as South Korea's own signs (sign_art.js: the government's
+ * designs, cut out along their red edge; tools/make_sign_art.py). A warning with no sign of its own gets 위험 ("!").
+ * Each shows for SHOW_MS after it was last seen, in a row in the order they came, at most MAX_SIGNS.
  *
  * Declared only where this car's catalog has it: app.json "survey" (group camera) and kit/runtime/survey_fit.js, as
  * the survey's members; this reads the list the fit wrote (kit/survey-signals.json). Read only: one event, no method,
@@ -52,7 +52,7 @@ function parseSigns(v) {
 }
 
 /** Whether a type is drawn: the danger signs and give way (the HUD shows the speed limit and no passing itself). */
-const wanted = (t) => /^DS_/.test(t) || t === 'GIVE_WAY';
+const wanted = (t) => /^DS_/.test(t) || /^(GIVE_WAY|YIELD|STOP|NO_ENTRY)/.test(t);
 
 /** The signs seen lately: add(types, t), current(t) -> the types to show, oldest first. */
 function makeTracker(showMs, max) {
@@ -73,112 +73,54 @@ function makeTracker(showMs, max) {
     };
 }
 
-/* ---------- drawing ---------- */
-const RED = '#e0261b', YELLOW = '#ffd21f', WHITE = '#f4f4f4', INK = '#101010';
-const ROOT3 = Math.sqrt(3);
+/* ---------- drawing: South Korea's own signs (sign_art.js, tools/make_sign_art.py) ---------- */
+const zlib = require('zlib');
+const ART = require('./sign_art');
+const pics = {};
 
-/** A sign's box: w wide, h tall (an equilateral triangle). */
-const signBox = (size) => ({ w: size, h: Math.round(size * ROOT3 / 2) });
-
-/** A triangle (point up, or down), its red edge and its fill; returns the corners of the fill. */
-function triangle(cv, x, y, w, h, down, fill) {
-    const pts = down ? [[x, y], [x + w, y], [x + w / 2, y + h]] : [[x + w / 2, y], [x + w, y + h], [x, y + h]];
-    cv.convex(pts, RED);
-    // the edge: a ninth of the width, all round (the corners moved toward the middle)
-    const cx = x + w / 2, cy = down ? y + h / 3 : y + h * 2 / 3, rIn = w / (2 * ROOT3), k = 1 - (w * 0.11) / rIn;
-    const inner = pts.map(([px, py]) => [cx + (px - cx) * k, cy + (py - cy) * k]);
-    cv.convex(inner, fill);
-    return inner;
+/** A picture by name: { w, h, d } (RGBA), unpacked once. */
+function pic(name) {
+    if (pics[name] === undefined) {
+        const a = ART.art[name];
+        pics[name] = a ? { w: a.w, h: a.h, d: new Uint8Array(zlib.inflateSync(Buffer.from(a.z, 'base64'))) } : null;
+    }
+    return pics[name];
 }
 
-/** The pictures, in the triangle's own measure: u across (0..1), v down (0..1). */
-const PICTURES = {
-    // "!" (any danger sign without a picture of its own)
-    general(cv, P, w) {
-        cv.convex([P(0.455, 0.36), P(0.545, 0.36), P(0.525, 0.70), P(0.475, 0.70)], INK);
-        cv.circle(P(0.5, 0.80)[0], P(0.5, 0.80)[1], w * 0.05, INK);
-    },
-    // a car, skidding: two S-shaped tracks behind it
-    slippery(cv, P, w) {
-        car(cv, P, w, 0.5, 0.47, 0.30);
-        [0.40, 0.58].forEach((u0) => {
-            const pts = [];
-            for (let i = 0; i <= 8; i++) { const f = i / 8; pts.push(P(u0 + 0.05 * Math.sin(f * Math.PI * 2), 0.60 + f * 0.26)); }
-            cv.polyline(pts, w * 0.04, INK);
-        });
-    },
-    // a queue: two cars from behind, the one ahead smaller
-    jam(cv, P, w) {
-        car(cv, P, w, 0.5, 0.45, 0.22);
-        car(cv, P, w, 0.5, 0.70, 0.36);
-    },
-    // a road going down to the right (or up)
-    down(cv, P, w, right) {
-        const m = (u) => (right ? u : 1 - u);
-        cv.convex([P(m(0.27), 0.52), P(m(0.27), 0.84), P(m(0.73), 0.84)].sort((a, b) => a[0] - b[0]), INK);
-    },
-    up(cv, P, w, right) { PICTURES.down(cv, P, w, !right); },
-    // a deer, leaping to the left (as the Korean wild animal sign)
-    animal(cv, P, w) {
-        cv.convex([P(0.38, 0.55), P(0.50, 0.50), P(0.64, 0.53), P(0.67, 0.60), P(0.60, 0.65), P(0.42, 0.64)], INK);   // body
-        cv.convex([P(0.36, 0.57), P(0.43, 0.54), P(0.39, 0.42), P(0.33, 0.44)], INK);                                 // neck
-        cv.convex([P(0.27, 0.43), P(0.33, 0.40), P(0.38, 0.43), P(0.33, 0.48)], INK);                                 // head
-        const lw = w * 0.04;
-        cv.polyline([P(0.35, 0.41), P(0.33, 0.33)], lw, INK);                                                          // antlers
-        cv.polyline([P(0.33, 0.36), P(0.29, 0.33)], lw, INK);
-        cv.polyline([P(0.34, 0.33), P(0.38, 0.30)], lw, INK);
-        cv.polyline([P(0.42, 0.61), P(0.33, 0.66), P(0.30, 0.62)], lw, INK);                                           // front legs, tucked
-        cv.polyline([P(0.46, 0.63), P(0.38, 0.71), P(0.35, 0.68)], lw, INK);
-        cv.polyline([P(0.62, 0.62), P(0.72, 0.72), P(0.80, 0.80)], lw, INK);                                           // back legs, out behind
-        cv.polyline([P(0.58, 0.64), P(0.66, 0.74), P(0.70, 0.83)], lw, INK);
-        cv.convex([P(0.64, 0.52), P(0.71, 0.49), P(0.68, 0.56)], INK);                                                 // tail
-    },
-    // a bend: an arrow bending right (or left)
-    curve(cv, P, w, right) {
-        const m = (u) => (right ? u : 1 - u);
-        const lw = w * 0.07;
-        cv.polyline([P(m(0.44), 0.86), P(m(0.44), 0.62), P(m(0.47), 0.55), P(m(0.54), 0.50)], lw, INK);
-        cv.convex([P(m(0.52), 0.42), P(m(0.66), 0.50), P(m(0.52), 0.58)].sort((a, b) => a[0] - b[0]), INK);
-    },
-};
-
-/** A car from behind: centred at u, v (its middle), wide of the triangle's width. */
-function car(cv, P, w, u, v, wide) {
-    const [x0, y0] = P(u - wide / 2, v - wide * 0.30), [x1, y1] = P(u + wide / 2, v + wide * 0.30);
-    const bw = x1 - x0, bh = y1 - y0;
-    cv.convex([[x0 + bw * 0.18, y0], [x1 - bw * 0.18, y0], [x1 - bw * 0.06, y0 + bh * 0.42], [x0 + bw * 0.06, y0 + bh * 0.42]], INK);  // roof
-    cv.roundRect(x0, y0 + bh * 0.38, bw, bh * 0.46, bh * 0.10, INK);                                                       // body
-    cv.fillRect(x0 + bw * 0.06, y0 + bh * 0.80, bw * 0.18, bh * 0.22, INK);                                                // wheels
-    cv.fillRect(x1 - bw * 0.24, y0 + bh * 0.80, bw * 0.18, bh * 0.22, INK);
+/* the camera's type -> the Korean sign (the first that matches; BMW's names as the camera gave them where seen:
+ * DS_SPLIPPERY_ROAD, DS_TRAFFIC_JAM, DS_ANIMAL_CROSSING, DS_RIGHT_DOWNWARDS, GIVE_WAY; the rest by their likely words) */
+const side = (l, r) => (t) => (/LEFT/.test(t) ? l : r);
+const ART_OF = [
+    [/GIVE_WAY|YIELD/, 'give_way'], [/^STOP/, 'stop'], [/NO_ENTRY/, 'no_entry'],
+    [/SLIP|SPLIP|SKID/, 'slippery'], [/JAM|QUEUE|CONGEST/, 'traffic_jam'], [/ANIMAL|DEER|WILD/, 'wild_animal'],
+    [/DOWNWARD|DESCENT|DOWNHILL/, 'downhill'], [/UPWARD|ASCENT|UPHILL/, 'uphill'],
+    [/DOUBLE|SERIES|WINDING|(^|[^A-Z])S_(CURVE|BEND)/, (t) => (/LEFT.*RIGHT|LEFT_FIRST|^DS_LEFT/.test(t) ? 'double_bend_left' : 'double_bend_right')],
+    [/CURVE|BEND/, side('curve_left', 'curve_right')],
+    [/WORK|CONSTRUCTION/, 'road_works'], [/PEDESTRIAN|CROSSWALK|ZEBRA/, 'crosswalk'], [/CHILD|SCHOOL/, 'children'],
+    [/BICYC|CYCLE/, 'bicycle'], [/HUMP|SPEED_BUMP/, 'speed_hump'], [/UNEVEN|BUMP/, 'bumpy_road'],
+    [/ROCK|FALLING/, 'falling_rocks'], [/WIND/, 'crosswind'], [/TUNNEL/, 'tunnel'], [/BRIDGE/, 'bridge'],
+    [/RAIL|TRAIN|LEVEL_CROSS/, 'railway'], [/LIGHT|SIGNAL/, 'traffic_lights'], [/ROUNDABOUT|CIRCLE/, 'roundabout'],
+    [/MERGE|JOIN/, side('merge_left', 'merge_right')], [/RIVER|QUAY|BANK/, 'riverside'],
+];
+/** Which sign a type gets: 'danger' (140, "!") for a warning with none of its own. */
+function artOf(t) {
+    for (const [re, n] of ART_OF) if (re.test(t)) return typeof n === 'function' ? n(t) : n;
+    return 'danger';
 }
 
-/** Which picture a type gets: [name, right] ('general' for a danger sign with none of its own). */
-function pictureOf(t) {
-    const right = !/LEFT/.test(t);
-    if (/SLIP|SPLIP|SLIPPERY|SKID/.test(t)) return ['slippery'];   // (BMW's DS_SPLIPPERY_ROAD)
-    if (/JAM|QUEUE|CONGEST/.test(t)) return ['jam'];
-    if (/ANIMAL|DEER|WILD/.test(t)) return ['animal'];
-    if (/DOWNWARD|DESCENT|DOWNHILL/.test(t)) return ['down', right];
-    if (/UPWARD|ASCENT|UPHILL/.test(t)) return ['up', right];
-    if (/CURVE|BEND/.test(t)) return ['curve', right];
-    return ['general'];
+/** A row's room: each sign size wide (the pictures' width), as tall as the tallest. */
+const signBox = (size) => ({ w: size, h: Object.keys(ART.art).reduce((m, k) => Math.max(m, ART.art[k].h), 0) });
+
+/** One sign at x, its middle at y. */
+function drawSign(cv, t, x, cy) {
+    const p = pic(artOf(t)) || pic('danger');
+    if (p) cv.blit(p, x, Math.round(cy - p.h / 2));
 }
 
-/** One sign at x, y (size wide). */
-function drawSign(cv, t, x, y, size) {
-    const { w, h } = signBox(size);
-    if (t === 'GIVE_WAY') { triangle(cv, x, y, w, h, true, WHITE); return; }
-    triangle(cv, x, y, w, h, false, YELLOW);
-    const P = (u, v) => [x + u * w, y + v * h];
-    const [name, right] = pictureOf(t);
-    PICTURES[name](cv, P, w, right);
-}
-
-/** A row of signs from the left of cv: each size wide, gap apart; cv cleared first. */
+/** A row of signs from the left of cv, each size wide, gap apart, their middles on the row's; cv cleared first. */
 function drawSigns(cv, types, size, gap) {
     cv.clear([0, 0, 0, 0]);
-    const { h } = signBox(size);
-    types.forEach((t, i) => drawSign(cv, t, i * (size + gap), Math.floor((cv.h - h) / 2), size));
+    types.forEach((t, i) => drawSign(cv, t, i * (size + gap) + Math.round((size - ART.size) / 2), cv.h / 2));
 }
 
 /* ---------- the camera ---------- */
@@ -260,4 +202,4 @@ function startSigns(ctx, log, opts) {
 /** Samples for checking the place (Settings: Road signs on the HUD: sample). */
 const SAMPLE = ['GIVE_WAY', 'DS_SPLIPPERY_ROAD', 'DS_ANIMAL_CROSSING'];
 
-module.exports = { startSigns, parseSigns, wanted, makeTracker, drawSign, drawSigns, signBox, pictureOf, SAMPLE, CAM_IFACE, CAM_EVENT, SHOW_MS, MAX_SIGNS };
+module.exports = { startSigns, parseSigns, wanted, makeTracker, drawSign, drawSigns, signBox, artOf, ART_SIZE: ART.size, SAMPLE, CAM_IFACE, CAM_EVENT, SHOW_MS, MAX_SIGNS };
