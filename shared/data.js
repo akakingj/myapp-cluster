@@ -180,27 +180,31 @@ function one(v, key, depth) {
 }
 
 /*
- * The speed limit sign's figures (Settings > Speed limit sign): the limit Speed Limit Assist has TAKEN for the limiter or
- * the cruise control, not the sign the camera reads. AK Cluster Info's logs (Nov 24 and 27 2026): vSLISpeedValue has a
- * value only while the limiter (statusLimiter STATUS_ACTIVE) or the cruise control is on and ldmAdditionalSign is
- * TAKEOVER_SET; with the limiter off it is 0, at 60 km/h too, and between two signs taken it keeps the last one (30 at
- * 106 km/h on a motorway). In steps of 5 (12: 60, 10: 50). Anything else: none, '--'. TAKEOVER_OCCURED, the moment one is
- * taken (Info's log of Nov 27, 04:16:44: SET -> OCCURED -> SET), counts too: no '--' blink (0.66.1). AK Cluster ID8's
- * vehicle.js sliOf is the same rule.
+ * The speed limit sign's figures (Settings > Speed limit sign), as the car's own cluster shows its sign (0.67.0): the last
+ * limit recognised, kept until another one is - 60 shown until an 80 is recognised, then 80 - whatever the cruise
+ * control does. AK Cluster Info's log of Nov 27 2026 (a drive with the cruise control off): vSLISpeedValue x 5 is the
+ * limit the car knows of (16: 80, 20: 100); a new one is first announced - vSLISymbol LDM_VZA_VSLI_SPEED_LIMIT,
+ * vSLIDistance counting down 1.3 km ... 250 m, vSLISpeedValue already the new figure - and counts once it is reached
+ * (vSLIDistance OFF, or the symbol gone). 0 or nothing: the one shown kept. Up to 140 km/h (28): a 30 (150) seen once on
+ * a motorway (Nov 24) is no road's. '--' till the first one, and 10 s after the head-up display's data stops. (0.64.1 -
+ * 0.66.2 showed it only with the limiter or the cruise control on and ldmAdditionalSign TAKEOVER_SET: '--' otherwise.)
+ * AK Cluster ID8's vehicle.js sliStep is the same rule.
  */
 function sliRawOf(v) {
     const x = one(v, 'xSpeedLimitAssist'), acc = one(v, 'activeCruiseControl');
     if (!x && !acc) return null;
-    return { value: x ? x.vSLISpeedValue : undefined, takeover: x ? x.ldmAdditionalSign : undefined, symbol: x ? x.vSLISymbol : undefined,
-        extra: x ? x.vSLIAdditionalSign : undefined, limiter: one(v, 'statusLimiter'), acc: acc ? acc.symbolACC : undefined,
-        cruise: one(v, 'cruiseCtrlSpeedHUD'), pia: one(v, 'pia') };
+    return { value: x ? x.vSLISpeedValue : undefined, symbol: x ? x.vSLISymbol : undefined, dist: x ? x.vSLIDistance : undefined,
+        takeover: x ? x.ldmAdditionalSign : undefined, extra: x ? x.vSLIAdditionalSign : undefined, limiter: one(v, 'statusLimiter'),
+        acc: acc ? acc.symbolACC : undefined, cruise: one(v, 'cruiseCtrlSpeedHUD'), pia: one(v, 'pia') };
 }
-/** A limiter or cruise control on: the limiter active, the ACC's symbol neither off nor on standby, or a set speed. */
-const sliAssistOn = (r) => r.limiter === 'STATUS_ACTIVE' || (typeof r.acc === 'string' && !!r.acc && !/OFF|STANDBY/.test(r.acc))
-    || (typeof r.cruise === 'number' && r.cruise > 0 && r.cruise !== 65535);
-/** The limit taken (the car's own figures, in steps of 5), or undefined. */
-const SLI_TAKEN = /^TAKEOVER_(SET|OCCURED|OCCURRED)$/;
-const sliOf = (r) => (r && SLI_TAKEN.test(String(r.takeover)) && sliAssistOn(r) && isNum(r.value) && r.value >= 1 && r.value <= 30 ? r.value * 5 : undefined);
+const SLI_MAX = 28;
+/** Whether the head-up display's data announces the NEXT limit (a sign ahead, its distance counting down). */
+const sliAhead = (r) => r.symbol === 'LDM_VZA_VSLI_SPEED_LIMIT' && !!r.dist && !/_OFF$/.test(String(r.dist));
+/** The limit shown after this data (km/h, the car's own figures), from the one shown before it (prev; undefined: none). */
+function sliStep(prev, r) {
+    if (!r || !isNum(r.value) || r.value < 1 || r.value > SLI_MAX || sliAhead(r)) return prev;
+    return r.value * 5;
+}
 
 function startData(ctx, opts) {
     const { log } = ctx;
@@ -269,7 +273,7 @@ function startData(ctx, opts) {
         if (key === sliLast) return;
         sliLast = key;
         const sp = car.data ? car.data().speed : null;
-        sliChanges.push({ at: now, speed: isNum(sp) ? Math.round(sp) : null, raw: r, shown: sliOf(r) });
+        sliChanges.push({ at: now, speed: isNum(sp) ? Math.round(sp) : null, raw: r, shown: x.sliShown });
         if (sliChanges.length > 20) sliChanges.shift();
     };
     // the cruise control's set speed as the head-up display shows it (the driving assistant's view services send nothing
@@ -279,9 +283,9 @@ function startData(ctx, opts) {
             fes('functionalLibraryData')(v);
             const c = numAt(v, 'cruiseCtrlSpeedHUD');
             if (c !== null) { x.cruiseSet = c; x.at.cruiseSet = Date.now(); }
-            /* what the head-up display has of Speed Limit Assist (sliRawOf; the sign's figures: sliOf) */
+            /* what the head-up display has of Speed Limit Assist (sliRawOf), and the limit shown after it (sliStep) */
             const r = sliRawOf(v);
-            if (r) { x.sli = r; x.at.sli = Date.now(); sliSeen(r); }
+            if (r) { x.sli = r; x.at.sli = Date.now(); x.sliShown = sliStep(x.sliShown, r); sliSeen(r); }
         },
     }, 'cruise control and speed limit (head-up display)', { pollMs: 2000 });
     // the driving experience switch and, on a plug-in hybrid, the eDrive mode
@@ -758,10 +762,10 @@ function startData(ctx, opts) {
             if (o.engineOn === undefined && Date.now() - (x.at.engineState || 0) < 60000) o.engineOn = x.engineState === 'on';
             if (x.startWhy) o.startWhy = x.startWhy;
             // the cruise control: on with a set speed (the head-up display's), off at 0
-            /* the limit Speed Limit Assist has taken for the limiter or the cruise control (sliOf), while the head-up
-             * display's data comes (10 s); '--' otherwise. And for the Logs' data now, what it goes by */
-            if (!d.demo && x.sli && Date.now() - (x.at.sli || 0) <= 10000) o.speedLimit = sliOf(x.sli);
-            if (x.sli) Object.assign(o, { sliRaw: x.sli.value, sliTakeover: x.sli.takeover, sliLimiter: x.sli.limiter, sliAgeS: Math.round((Date.now() - x.at.sli) / 100) / 10 });
+            /* the last limit recognised (sliStep), while the head-up display's data comes (10 s); '--' otherwise. And for
+             * the Logs' data now, what it goes by */
+            if (!d.demo && x.sli && Date.now() - (x.at.sli || 0) <= 10000) o.speedLimit = x.sliShown;
+            if (x.sli) Object.assign(o, { sliRaw: x.sli.value, sliSymbol: x.sli.symbol, sliDist: x.sli.dist, sliTakeover: x.sli.takeover, sliAgeS: Math.round((Date.now() - x.at.sli) / 100) / 10 });
             if (!d.demo && Date.now() - (x.at.cruiseSet || 0) < 10000) o.cruise = { on: x.cruiseSet > 0 && x.cruiseSet < 250, set: x.cruiseSet > 0 && x.cruiseSet < 250 ? x.cruiseSet : undefined };
             gZeroed(o, tNow);
             return o;
@@ -776,7 +780,7 @@ function startData(ctx, opts) {
         /** The Logs' --- sli --- (the last `last` changes, 20 at most). */
         sliLog(last) {
             const now = Date.now(), age = x.sli ? Math.round((now - x.at.sli) / 100) / 10 : null;
-            const shown = x.sli && now - x.at.sli <= 10000 ? sliOf(x.sli) : undefined;
+            const shown = x.sli && now - x.at.sli <= 10000 ? x.sliShown : undefined;
             return ['head-up display data: ' + sliTimes.filter((t) => now - t <= 60000).length + ' in the last 60 s, ' + (age === null ? 'none yet' : 'the last ' + age + ' s ago') + '; shown: ' + (shown || '--')]
                 .concat(sliChanges.slice(-(last || 20)).map((c) => new Date(c.at).toISOString() + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h  shown ' + (c.shown || '--') + '  ' + JSON.stringify(c.raw))).join('\n');
         },
@@ -806,4 +810,4 @@ function demo(d) {
     };
 }
 
-module.exports = { startData, DME_KEYS, FAST_KEYS, entries, modeOf, rangesOf, FES_MODES, sliOf, sliRawOf };
+module.exports = { startData, DME_KEYS, FAST_KEYS, entries, modeOf, rangesOf, FES_MODES, sliStep, sliRawOf, sliAhead };

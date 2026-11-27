@@ -348,6 +348,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.67.0, Centre 0.16.3 (Nov 27 2026): the speed limit sign as the car's own - the last limit recognised, kept
+  till another, cruise control or not (shared/data.js sliStep). Info's log of 27 Nov (a drive, the cruise control off):
+  vSLISpeedValue x 5 is the limit the car knows (16: 80, 20: 100); a new one announced with vSLISymbol SPEED_LIMIT and
+  vSLIDistance counting down (1.3 km ... 250 m), counted when reached (OFF / the symbol gone). 0 keeps it; over 28
+  (140) ignored (the 30 of Nov 24: no Korean road is 150; motorways 100 / 110). The HUD's own sign display was off
+  there (statusVZA INACTIVE, piaHUDSliNpi 0).
 - Info 1.11.0, Layouts 0.66.2, Centre 0.16.2 (Nov 27 2026): Signal survey (Settings > Driving assistant check), to
   find the speed limit sign itself in one drive: app.json "survey" says what to look for, kit/runtime/survey_fit.js
   declares in the manifest only what the car's own catalog has (build.py on the car, as the Store builds; oapgen/gen.js
