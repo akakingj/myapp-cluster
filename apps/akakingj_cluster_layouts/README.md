@@ -493,10 +493,9 @@ the KOMBI carries about 11.5 MB/s for everything, including the HMI's own conten
 - Each piece of a layout is an **effect layer**: a small GLSL ES 1.00 fragment shader over its own rectangle
   (`shared/shaders.js`). The dial (face, ticks, red zone, numerals, needle, hub) is one shader; each text is
   another; the background is a flat colour.
-- **The render service draws at most 8 layers for an app** (32 for all apps together), so only a layout's
-  first 8 pieces show today; the rest are refused (the app's page says so). Drawing many pieces with one big
-  generated shader instead made the cluster restart, so that is not done. The way on is the render
-  service allowing more layers an app.
+- **The render service gives an app 64 layers** (`shared/engine.js`: at most 60 up at once while one set replaces
+  another, the pieces every page shares kept). Drawing many pieces with one big generated shader instead made the
+  cluster restart, so that is not done: a dial (face, ticks, numerals, needle, hub) is one shader, each text another.
 - What is sent:
   - **once**: the shaders, their colours and one glyph atlas (a 1.5 KB-per-glyph distance field, ~96 KB):
     about **128 KB** in all;
