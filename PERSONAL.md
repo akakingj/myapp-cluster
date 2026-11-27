@@ -348,6 +348,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
+  가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -
   the camera's event (SignRecognitionFrontCamera.TrafficSignRecognitionFrontCamera, once a sign; the survey of Nov 26
   read GIVE_WAY, DS_TRAFFIC_JAM, DS_SPLIPPERY_ROAD, DS_RIGHT_DOWNWARDS, DS_ANIMAL_CROSSING besides the limit and no
