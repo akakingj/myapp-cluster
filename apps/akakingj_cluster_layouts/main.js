@@ -25,6 +25,10 @@ const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, slotLabel: layoutSlotLabe
 
 /** The shift point as layout_common takes it - so many rpm under the red zone - from Settings > Shift point (0.42.0,
  * the Car profile's: an rpm; 0 Auto, the red zone less 300). */
+/** Yellow light at Off (the Car profile's 'off'): kept as this figure, past any engine's red; the yellow then none. */
+const YELLOW_OFF = 99999;
+/** Yellow light at as a figure, 0 for Auto and Off. */
+const yellowOf = (settings) => { const v = Number(settings.get('yellowLight')); return v > 0 && v !== YELLOW_OFF ? v : 0; };
 /** The red zone's start: Red light at, or (Auto) the redline. */
 const redOf = (settings) => Number(settings.get('redLight')) || Number(settings.get('redline')) || 7000;
 /** How far the shift warning sits under the red zone (negative: above it, Shift now warning at past the red). */
@@ -134,7 +138,7 @@ mgu.run({
         const options = () => scaled({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
             powerUnit: settings.get('powerUnit'), econUnit: settings.get('econUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), jdmCup: slot('jdmCup'), centreView: slot('centreView'), stripBars: settings.get('stripBars'), bottomExtra: settings.get('bottomExtra'), sliSign: settings.get('sliSign'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'), places: placesOf(layout.id),
-            yellowFrom: Number(settings.get('yellowLight')) || 0, shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
+            yellowFrom: yellowOf(settings), yellowOff: Number(settings.get('yellowLight')) === YELLOW_OFF, shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
             redline: redOf(settings), rpmMax: Number(settings.get('rpmMax')) || 8000,

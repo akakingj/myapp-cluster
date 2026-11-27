@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.64.1",
+  "version": "0.65.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -1529,15 +1529,20 @@
     {
       "key": "yellowLight",
       "profile": "lightStart",
+      "profileMap": {
+        "off": 99999
+      },
       "label": "Yellow light at",
       "type": "number",
       "unit": "rpm",
       "default": 0,
       "labels": {
-        "0": "Auto (700 below the red)"
+        "0": "Auto (700 below the red)",
+        "99999": "Off (no yellow)"
       },
       "steps": [
         0,
+        99999,
         2000,
         2500,
         3000,

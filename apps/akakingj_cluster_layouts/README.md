@@ -236,7 +236,7 @@ regeneration. An original drawing.
 Round dials after the M cars' analog clusters of the mid 2010s, an original drawing (the M tricolour, no lettering):
 two big dials, each with a thin white ring round its top, open at the bottom, a dark band with white marks and large
 numerals, a darker disc in the middle and a long red-orange needle (blue in Efficient colours); the tach's shift lights along the outside of its
-top end, amber from Settings > Yellow light at (Auto: 700 rpm under the red) and red from the red zone (Red
+top end, amber from Settings > Yellow light at (Auto: 700 rpm under the red; Off: no amber) and red from the red zone (Red
 light at; lower while the oil is cold); the gear under the tach in a white arc; the speed in figures with its unit at the bottom of the middle, between the dials; no
 readouts beside the dials (the car's strip shows the time, temperature and ranges); a small fuel gauge (0, 1/2, 1) left of the
 speedometer and a small engine oil gauge (70-170 °C, 160-340 °F, red from Too hot) right of the tach, either of which
@@ -292,7 +292,7 @@ parts are one shader (`shaders.js` JDM_FS).
 ### Track
 
 A motorsport data display: a row of shift lights (green, yellow, then red, from Settings > Yellow light at
-when it is set, all flashing red at the shift warning, 300 rpm before the red zone unless set) over a segmented rpm
+when it is set; with it Off green, then red, no yellow; all flashing red at the shift warning, 300 rpm before the red zone unless set) over a segmented rpm
 bar (with Yellow light at set: white up to it, turning yellow towards the red zone, red from there), a huge gear with the engine speed in the middle, tiles for oil,
 coolant, boost and battery power either side of it (over the car's own strip, which shows the gear, the card holds
 the engine speed, large, instead) (timing and torque with Vehicle: ICE), the speed large on

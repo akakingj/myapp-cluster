@@ -55,7 +55,7 @@ function redMarks(o, max, d) {
     // (the red zone where the shift point puts it now, layout_common.shiftPoint: lower while the oil is cold)
     const redFrom = Math.min(C.shiftPoint(o, d || {}).red, max - 500) / max;
     // the amber run-up below it: from Settings > Yellow light at (Auto: 700 rpm under the red line's place)
-    const y = Math.min(o && Number(o.yellowFrom) > 0 ? C.yellowAt(o, d || {}) / max : redFrom - 700 / max, redFrom);
+    const y = Math.min(C.yellowSet(o) ? C.yellowAt(o, d || {}) / max : redFrom - 700 / max, redFrom);
     return [redFrom, y < redFrom ? y : 2];
 }
 /** At the shift point now (theirs: the red line less 300 rpm). */
