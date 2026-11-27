@@ -494,7 +494,10 @@ def build(app_id, language='en'):
         kit_dir = os.path.join(src, 'javascript', 'kit')
         json.dump(spec['survey'], open(os.path.join(kit_dir, 'survey-request.json'), 'w', encoding='utf-8', newline='\n'), indent=1)
         catalog = os.environ.get('MGU_SOMEIP_CATALOG', '/etc/oap/someip/someip-interfaces.json')
-        rc = subprocess.call(['node', os.path.join(kit_dir, 'survey_fit.js'), catalog, os.path.join(src, 'manifest.json'), kit_dir])
+        try:
+            rc = subprocess.call([os.environ.get('NODE', 'node'), os.path.join(kit_dir, 'survey_fit.js'), catalog, os.path.join(src, 'manifest.json'), kit_dir])
+        except OSError as e:
+            rc = str(e)
         if rc != 0:
             print('  signal survey: not fitted (node %s): built without it' % rc)
     rt_spec = {k: spec.get(k) for k in ('id', 'title', 'version', 'screens', 'settings', 'config', 'startWidget')}
