@@ -38,7 +38,7 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   and parking bans, one way; a warning with none of its own gets 위험, "!"). The car's own list of the camera's sign
   types (read from the app's interface config for the camera, made at install from the car's catalog) is logged
   once, whole, and counted on the app's page (types, drawn, as "!"): which pictures this car can ever show. As high as BMW's own limit sign (a round sign as big, a triangle as tall). Each 10 s after the camera last read it,
-  in a row in the order they came, as many as fit on the glass (three triangles); signs that would reach
+  in a row in the order they came, as many as fit on the glass (four triangles); signs that would reach
   the panel (a wide Waze map puts it low) are left off. From the camera's sign event
   (de.bmw.environmentalmodel.SignRecognitionFrontCamera, TrafficSignRecognitionFrontCamera: once a sign, found by the
   signal survey), declared only where the car's catalog has it, read only; the survey reads it through the same

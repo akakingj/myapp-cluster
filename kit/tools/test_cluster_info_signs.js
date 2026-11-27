@@ -247,9 +247,10 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         ov._signsTick(); assert.strictEqual(l.px, 1);
         list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick(); assert.strictEqual(l.px, 2);
         assert.deepStrictEqual(ov.roadSigns(), { shown: true, types: ['DS_ANIMAL_CROSSING', 'GIVE_WAY'] });
-        // as many as fit on the glass: three triangles at the limit sign's size
-        list = ['DS_A', 'DS_B', 'DS_C', 'DS_D']; ov._signsTick();
-        assert.deepStrictEqual(ov.roadSigns().types, ['DS_A', 'DS_B', 'DS_C']);
+        // as many as fit on the glass: four triangles at the limit sign's size, not five
+        list = ['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E']; ov._signsTick();
+        assert.deepStrictEqual(ov.roadSigns().types, ['DS_A', 'DS_B', 'DS_C', 'DS_D']);
+        assert(SIGNS.x + 4 * S.signWidth('DS_A') + 3 * SIGNS.gap <= HUD_SEEN.x + HUD_SEEN.w);
         list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick();
     });
     check('gone, off in the settings, or the HUD another app\'s: hidden', () => {
@@ -269,12 +270,12 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         lv.power = () => ({ kw: 12, text: '12', col: theme.text });
         settings.v.show = 'map'; ov._read(); await wait(50); ov._tick && ov._tick(); await wait(30);
         assert(ov.shown(), 'the panel is up');
-        list = ['DS_A', 'DS_B', 'DS_C', 'DS_D']; t += 10; ov._signsTick();
+        list = ['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E']; t += 10; ov._signsTick();
         const o = ov.roadSigns();
         assert(o.types.length < 4, JSON.stringify(o));
         settings.v.show = 'off'; fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'hud' })); ov._read(); await wait(50); ov._tick && ov._tick();
         t += 10; ov._signsTick();
-        assert.strictEqual(ov.roadSigns().types.length, 3, 'all that fit on the glass with the panel gone');
+        assert.strictEqual(ov.roadSigns().types.length, 4, 'all that fit on the glass with the panel gone');
     });
 
     ov.stop();

@@ -353,7 +353,7 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   read GIVE_WAY, DS_TRAFFIC_JAM, DS_SPLIPPERY_ROAD, DS_RIGHT_DOWNWARDS, DS_ANIMAL_CROSSING besides the limit and no
   passing) as South Korea's own signs (the owner's downloads of the government's designs, tools/sign_art/, cut out
   along the red or blue edge and shrunk to BMW's limit sign size (60 high; a triangle 69 wide) by tools/make_sign_art.py; 39 + 위험 "!"; the car's list of the
-  camera's types logged once from its interface config, to drop the pictures this car never shows) right of BMW's "km/h", in its row (x 382, middle y 388, 60 high as BMW's limit sign - the owner: too small at 54; as many as fit, three triangles), 10 s each;
+  camera's types logged once from its interface config, to drop the pictures this car never shows) right of BMW's "km/h", in its row (x 380, middle y 388, 60 high as BMW's limit sign - the owner: too small at 54; four triangles 6 apart to x 674), 10 s each;
   not the limit or no passing (the HUD shows those: the limit sign moves up for no passing, owner's photo). Place
   measured on the owner's HUD photo with the panel's text and the lane change sign as yardstick. Settings > Road signs
   on the HUD (on / sample / off). The survey reads the camera through the same subscription. ko.tsv: 4 lines, so all
