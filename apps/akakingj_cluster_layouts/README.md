@@ -39,7 +39,7 @@ gauges - 15, 20 or 30 psi (2.0 bar, 200 kPa), or 45 psi (3.0 bar, 300 kPa) - in 
 they are: 0 5 10 15, 0 10 20, 0 10 20 30, 0 15 30 45 psi; 0.0 1.0 2.0, 0.0 1.0 2.0 3.0 bar; 0 100
 200, 0 100 200 300 kPa. *Auto* is the car's own Sport Display's gauge end, as the least of those at or over it
 (within 5 %) (until the car sends it, each layout's own: 1.6 bar, the M layout's 3 bar). The
-Car profile app sets the speedometer's too, with the fuel gauge's *Fuel % from* and the tank's size.
+Car profile app sets the speedometer's too.
 
 ### Every reading the car gives, in every place (0.57.0)
 
@@ -236,7 +236,7 @@ regeneration. An original drawing.
 Round dials after the M cars' analog clusters of the mid 2010s, an original drawing (the M tricolour, no lettering):
 two big dials, each with a thin white ring round its top, open at the bottom, a dark band with white marks and large
 numerals, a darker disc in the middle and a long red-orange needle (blue in Efficient colours); the tach's shift lights along the outside of its
-top end, amber from Settings > Yellow light at (Auto: 700 rpm under the red; Off: no amber) and red from the red zone (Red
+top end, amber from Settings > Yellow light at (Auto: 700 rpm under the red) and red from the red zone (Red
 light at; lower while the oil is cold); the gear under the tach in a white arc; the speed in figures with its unit at the bottom of the middle, between the dials; no
 readouts beside the dials (the car's strip shows the time, temperature and ranges); a small fuel gauge (0, 1/2, 1) left of the
 speedometer and a small engine oil gauge (70-170 °C, 160-340 °F, red from Too hot) right of the tach, either of which
@@ -292,7 +292,7 @@ parts are one shader (`shaders.js` JDM_FS).
 ### Track
 
 A motorsport data display: a row of shift lights (green, yellow, then red, from Settings > Yellow light at
-when it is set; with it Off green, then red, no yellow; all flashing red at the shift warning, 300 rpm before the red zone unless set) over a segmented rpm
+when it is set, all flashing red at the shift warning, 300 rpm before the red zone unless set) over a segmented rpm
 bar (with Yellow light at set: white up to it, turning yellow towards the red zone, red from there), a huge gear with the engine speed in the middle, tiles for oil,
 coolant, boost and battery power either side of it (over the car's own strip, which shows the gear, the card holds
 the engine speed, large, instead) (timing and torque with Vehicle: ICE), the speed large on
@@ -454,7 +454,8 @@ car is taken to have the same cluster. What differs between cars is a setting, o
   electric range say plug-in hybrid; none of these in 90 s shown, while the engine unit answers, says petrol
   or diesel. A petrol or diesel car gets the engine readings (boost, timing, torque, fuel rail), its own drive
   modes and no eDrive page. Or set it.
-- **Fuel tank size** (40-90 L, 69 for an X5 45e): the fuel bar.
+- The fuel gauges and bars show the engine unit's own fill (its OBD tank level, the one Live Data shows), read every
+  10 s while shown, the last answer held; `--` until it first answers (0.66.0: no tank size to set).
 - The battery's charge and power come from **eDrive Live** only: this app never asks the battery unit itself
   (two apps asking it in turn left both without answers).
 - **Battery power (kW)**: *Fast* (the default) moves every power gauge as the car accelerates or regenerates, without

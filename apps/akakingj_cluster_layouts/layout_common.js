@@ -99,18 +99,12 @@ function shiftPoint(o, d) {
     const rpm = Math.round((cold + (n - cold) * f) / 50) * 50;
     return { rpm, red: Math.max(2000, Math.min(red, rpm + before)), cold: true };
 }
-/** Where the tach turns yellow now (Settings > Yellow light at; Auto: 700 under the red zone; Off, o.yellowOff: at
- * the red, so no yellow), never past the red zone; rpm. */
+/** Where the tach turns yellow now (Settings > Yellow light at; Auto: 700 under the red zone), never past
+ * the red zone; rpm. */
 function yellowAt(o, d) {
-    const red = shiftPoint(o, d).red;
-    if (o && o.yellowOff) return red;
-    const y = o && Number(o.yellowFrom) > 0 ? Number(o.yellowFrom) : red - 700;
+    const red = shiftPoint(o, d).red, y = o && Number(o.yellowFrom) > 0 ? Number(o.yellowFrom) : red - 700;
     return Math.min(y, red);
 }
-/** Whether Yellow light at is set (a figure, or Off): the yellow then where yellowAt says, not each look's own. */
-const yellowSet = (o) => !!o && (!!o.yellowOff || Number(o.yellowFrom) > 0);
-/** The shift lights' middle colour: yellow, or green with Yellow light at Off (green, then red). */
-const lightsYellow = (o, t) => (o && o.yellowOff ? t.green : t.yellow);
 /** A temperature (°C) on a 40-140 °C scale, 0..1. */
 const tempFrac = (c) => (isNum(c) ? Math.max(0, Math.min(1, (c - 40) / 100)) : 0);
 
@@ -915,7 +909,7 @@ function sliPieces(s) {
 }
 
 module.exports = {
-    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, powerTop, torqueTop, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, yellowSet, lightsYellow, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
+    isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, powerTop, torqueTop, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
     SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliPieces, sliFit, sliText, sliObstacles, sliFree,
 };

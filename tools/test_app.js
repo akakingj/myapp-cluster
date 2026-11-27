@@ -34,7 +34,7 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     const S = {}, changes = [];
     SPEC.settings.forEach((s) => { S[s.key] = s.default; });
     // (the personal build's defaults are Korean and petrol; these checks are written for the original's)
-    Object.assign(S, { vehicle: 'auto', tankLitres: 69, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', econUnit: 'l100', redline: 7000, rpmMax: 8000 });
+    Object.assign(S, { vehicle: 'auto', speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'auto', econUnit: 'l100', redline: 7000, rpmMax: 8000 });
     S.eFull = 31;                               // (Electric range when full saved in miles, before 0.61.0)
     const handlers = {}, clicks = {}, warns = [];
     let pages = 0, lastPage = null, sheets = null;

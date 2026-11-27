@@ -68,7 +68,7 @@ function lights(o, x, y, w, h) {
         value: (d) => { const at = shiftPoint(o, d.oil).rpm, from = Math.min(at - 500, Number(o.yellowFrom) > 0 ? Number(o.yellowFrom) : Math.max(3000, at - 2500)); return isNum(d.rpm) ? Math.max(0, Math.min(1, (d.rpm - from) / (at - from))) : 0; },
         params: { u_count: [18], u_soft: [0], u_shape: [0] },
         dyn: (d) => ({ u_flash: [isNum(d.rpm) && d.rpm >= shiftPoint(o, d.oil).rpm ? 1 : 0] }),
-        colors: (t) => ({ off: t.off, green: t.green, yellow: C.lightsYellow(o, t), red: t.red }),
+        colors: (t) => ({ off: t.off, green: t.green, yellow: t.yellow, red: t.red }),
     };
 }
 /** The segmented rpm bar, red from the red zone: white turning yellow from Settings > Yellow light at (Auto: white
@@ -76,7 +76,7 @@ function lights(o, x, y, w, h) {
 function revBar(o, x, y, w, h) {
     const r = C.rpmScale(o);
     return { key: 'revs', kind: 'band', x, y, w, h,
-        params: { u_geo: [4, h / 2, 0, Math.max(4, h - 6)], u_span: [0, 0, 52, 0.28], u_marks: [0, 0, 0, 0], u_red: [r.red / r.max], u_yellow: [C.yellowSet(o) ? Math.max(0.001, C.yellowAt(o, {}) / 1000 / r.max) : 0], u_soft: [1] },
+        params: { u_geo: [4, h / 2, 0, Math.max(4, h - 6)], u_span: [0, 0, 52, 0.28], u_marks: [0, 0, 0, 0], u_red: [r.red / r.max], u_yellow: [Number(o.yellowFrom) > 0 ? Math.max(0.001, C.yellowAt(o, {}) / 1000 / r.max) : 0], u_soft: [1] },
         colors: (t) => ({ track: t.track, fill0: t.text, fill1: t.accent, redc: t.red, tip: t.accent, tick: t.dim, num: t.num }),
         value: (d) => (isNum(d.rpm) ? d.rpm / 1000 / r.max : 0), max: 1, sweep: true };
 }

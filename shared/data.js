@@ -749,15 +749,10 @@ function startData(ctx, opts) {
             // the charge, shown with '~'
             o.erangeFull = Number(ctx.settings && ctx.settings.get && ctx.settings.get('eFullKm')) || (Number(cfg.eFullMiles) * 1.609344) || 50;
             if (!isNum(o.erange) && isNum(o.soc) && !ice()) { o.erange = Math.max(0, o.soc) / 100 * o.erangeFull; o.erangeEst = true; }
-            // the tank's fill, 0..100 %: the engine unit's own (OBD tank level, the one Live Data shows) while it
-            // answers, else the car's litres over the tank's size (config.tankLitres: 69 for an X5 45e). The two
-            // differ by a few % (the car's litres are whole litres, its gauge's own reckoning): Settings > Fuel %
-            // from picks one.
-            const tank = Number(setting('tankLitres')) || Number(cfg.tankLitres) || 69;   // Settings > Fuel tank size
-            const byLitres = isNum(o.fuelLevel) ? Math.max(0, Math.min(100, o.fuelLevel / tank * 100)) : undefined;
-            const byDme = !d.demo && setting('fuelFrom') !== 'litres' && fresh('fuelPctDme', 60000) ? x.fuelPctDme : undefined;
-            o.fuelPct = isNum(byDme) ? byDme : byLitres;
-            o.fuelPctFrom = isNum(byDme) ? 'engine' : isNum(byLitres) ? 'litres' : undefined;
+            // the tank's fill, 0..100 %: the engine unit's own (OBD tank level, the one Live Data shows), read in the
+            // every-10 s round while shown; the last answer held while it is silent, '--' till it first answers
+            // (0.66.0: the car's litres over a tank size set here, and Settings > Fuel tank size / Fuel % from, gone)
+            if (!d.demo) o.fuelPct = isNum(x.fuelPctDme) ? x.fuelPctDme : undefined;
             if (o.engineOn === undefined && Date.now() - (x.at.engineState || 0) < 60000) o.engineOn = x.engineState === 'on';
             if (x.startWhy) o.startWhy = x.startWhy;
             // the cruise control: on with a set speed (the head-up display's), off at 0
@@ -804,7 +799,7 @@ function demo(d) {
         timing: 18 - rpm / 800, pedal: Math.max(0, Math.min(100, (isNum(d.torque) ? d.torque : 40) / 4.2)), throttle: Math.max(0, Math.min(100, (isNum(d.torque) ? d.torque : 40) / 4.6 + 3)), boostTarget: Math.max(0, (rpm - 1500) / 4000), boostActual: Math.max(0, (rpm - 1600) / 4100),
         battTemp: 27, battMin: 25, battMax: 29, soc: 64, kw: -12 + 25 * Math.sin(t / 7), pdDrive: 60, pdClimate: 25, pdSeats: 15,
         avgCons: 11.7, avgConsUnit: 'kml', tripKm: 126, tripMin: 150, odometer: 48210,
-        erange: 29, frange: 520, fuelLevel: 38,
+        erange: 29, frange: 520, fuelLevel: 38, fuelPct: 64,
         tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } },
     };
 }

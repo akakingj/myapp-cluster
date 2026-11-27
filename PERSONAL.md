@@ -348,11 +348,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
-- Layouts 0.65.0, Centre 0.15.8, Info 1.10.26 (Nov 27 2026): Yellow light at Off (Car profile 1.14.0's 'off', kept as
-  99999 here): no yellow - the tach's amber, Track's and GT3's yellow bar and their shift lights' yellow (green, then
-  red) gone; Off can be chosen here too. Car profile 1.14.0 on Auto sends a G20's own: red from 6000, the shift now
-  warning at 6500 (where its red turns solid; past the red, Shift now warning at above Red light at), the redline (the
-  limiter) 7000, no yellow; an M3's yellow 6500, red and shift 7200, 8000. Centre: the Korean only.
+- Layouts 0.66.0, Centre 0.16.0, Info 1.10.27 (Nov 27 2026): the fuel % is the engine unit's own (OBD tank level)
+  only, its last answer held, '--' till it answers; the car's litres over a tank size, Settings > Fuel tank size and
+  Fuel % from gone (the size meant nothing; the Car profile 1.15.0 no longer sets them). 0.65.0's Yellow light at Off
+  taken back out (the shift lights need the yellow). The Car profile 1.14.0's Auto, kept: a G20's red from 6000, the
+  shift now warning at 6500 where its red turns solid (Shift now warning at above Red light at), the redline 7000; an
+  M3's yellow 6500, red and warning 7200, 8000.
 - Layouts 0.64.1, Centre 0.15.7, Info 1.10.25 (Nov 27 2026): vSLISpeedValue is the limit Speed Limit Assist has taken
   for the limiter or the cruise control, not the camera's sign (Info's log of Nov 24: a value only with the limiter
   STATUS_ACTIVE or the cruise control on and ldmAdditionalSign TAKEOVER_SET, 0 with the limiter off at 60 km/h, the last

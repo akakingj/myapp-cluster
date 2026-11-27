@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.65.0",
+  "version": "0.66.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -1529,20 +1529,15 @@
     {
       "key": "yellowLight",
       "profile": "lightStart",
-      "profileMap": {
-        "off": 99999
-      },
       "label": "Yellow light at",
       "type": "number",
       "unit": "rpm",
       "default": 0,
       "labels": {
-        "0": "Auto (700 below the red)",
-        "99999": "Off (no yellow)"
+        "0": "Auto (700 below the red)"
       },
       "steps": [
         0,
-        99999,
         2000,
         2500,
         3000,
@@ -1922,37 +1917,6 @@
       "profile": "engine"
     },
     {
-      "key": "tankLitres",
-      "profile": "tankLitres",
-      "label": "Fuel tank size",
-      "type": "number",
-      "unit": "L",
-      "default": 59,
-      "steps": [
-        40,
-        42,
-        46,
-        50,
-        52,
-        55,
-        57,
-        59,
-        60,
-        63,
-        65,
-        66,
-        68,
-        69,
-        70,
-        74,
-        80,
-        83,
-        85,
-        90
-      ],
-      "section": "Car"
-    },
-    {
       "key": "tripWraps",
       "label": "Trip distance past 65,535 km (the car's own-reset or since-delivery trip)",
       "type": "number",
@@ -1967,24 +1931,6 @@
         5
       ],
       "section": "Car"
-    },
-    {
-      "key": "fuelFrom",
-      "label": "Fuel % from",
-      "type": "choice",
-      "default": "engine",
-      "options": [
-        [
-          "engine",
-          "Engine unit (OBD tank level)"
-        ],
-        [
-          "litres",
-          "Litres / tank size"
-        ]
-      ],
-      "section": "Car",
-      "profile": "fuelFrom"
     },
     {
       "key": "kwFast",

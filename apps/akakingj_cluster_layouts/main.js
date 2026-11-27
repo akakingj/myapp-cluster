@@ -25,10 +25,6 @@ const { LAYOUTS, byId, layoutFor, slotValue, slotsFor, slotLabel: layoutSlotLabe
 
 /** The shift point as layout_common takes it - so many rpm under the red zone - from Settings > Shift point (0.42.0,
  * the Car profile's: an rpm; 0 Auto, the red zone less 300). */
-/** Yellow light at Off (the Car profile's 'off'): kept as this figure, past any engine's red; the yellow then none. */
-const YELLOW_OFF = 99999;
-/** Yellow light at as a figure, 0 for Auto and Off. */
-const yellowOf = (settings) => { const v = Number(settings.get('yellowLight')); return v > 0 && v !== YELLOW_OFF ? v : 0; };
 /** The red zone's start: Red light at, or (Auto) the redline. */
 const redOf = (settings) => Number(settings.get('redLight')) || Number(settings.get('redline')) || 7000;
 /** How far the shift warning sits under the red zone (negative: above it, Shift now warning at past the red). */
@@ -138,7 +134,7 @@ mgu.run({
         const options = () => scaled({
             speedUnit: settings.get('speedUnit'), tempUnit: settings.get('tempUnit'), torqueUnit: settings.get('torqueUnit'), pressUnit: settings.get('pressUnit'),
             powerUnit: settings.get('powerUnit'), econUnit: settings.get('econUnit'), infoA: slot('infoA'), infoB: slot('infoB'), infoMain: slot('infoMain'), infoLow: slot('infoLow'), gScale: settings.get('gScale'), jdmCup: slot('jdmCup'), centreView: slot('centreView'), stripBars: settings.get('stripBars'), bottomExtra: settings.get('bottomExtra'), sliSign: settings.get('sliSign'), tempGauge: settings.get('tempGauge'), tempTone: settings.get('tempTone'), shiftWarn: settings.get('shiftWarn'), gaugeSpeed: slot('gaugeSpeed'), gaugeRpm: slot('gaugeRpm'), leftDial: slot('leftDial'), places: placesOf(layout.id),
-            yellowFrom: yellowOf(settings), yellowOff: Number(settings.get('yellowLight')) === YELLOW_OFF, shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
+            yellowFrom: Number(settings.get('yellowLight')) || 0, shiftBefore: beforeOf(settings), coldGuard: settings.get('coldGuard'), coldLimit: settings.get('coldLimit'), warmOil: settings.get('warmOil'),
             hotOil: settings.get('hotOil'), hotCoolant: settings.get('hotCoolant'), hotGearbox: settings.get('hotGearbox'),
             centre: settings.get('centre') === 'pages' ? 'map' : settings.get('centre'),   // (a saved 'pages', retired: Waze)
             redline: redOf(settings), rpmMax: Number(settings.get('rpmMax')) || 8000,
@@ -240,7 +236,7 @@ mgu.run({
         settings.onChange((k) => {
             if (k === 'look') return cluster.recolour();
             if (k === 'layout' || k === 'layoutSport' || k === 'layoutEco') { layout = layoutNow(); modeWant = null; }
-            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'tankLitres', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'bottomExtra', 'sliSign', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'yellowLight', 'redLight', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy', 'speedMax', 'boostMax', 'powerMax', 'torqueMax'].indexOf(k) >= 0) cluster.rebuild();
+            if (['layout', 'layoutSport', 'layoutEco', 'tempGauge', 'tempTone', 'shiftWarn', 'centre', 'speedUnit', 'tempUnit', 'torqueUnit', 'pressUnit', 'redline', 'rpmMax', 'vehicle', 'powerUnit', 'econUnit', 'infoA', 'infoB', 'infoMain', 'infoLow', 'gScale', 'jdmCup', 'centreView', 'stripBars', 'bottomExtra', 'sliSign', 'leftDial', 'gaugeSpeed', 'gaugeRpm', 'yellowLight', 'redLight', 'shiftAt', 'coldGuard', 'coldLimit', 'warmOil', 'hotOil', 'hotCoolant', 'hotGearbox', 'slotsBy', 'speedMax', 'boostMax', 'powerMax', 'torqueMax'].indexOf(k) >= 0) cluster.rebuild();
         });
 
         /* ---------- the car's range and charge signals, from its own catalog ---------- */
@@ -579,7 +575,7 @@ mgu.run({
                     : ['Shared by apps', D.status().providers + '   ·   diagnostic link ' + D.status().diag + '   ·   charge ' + (isNum(d.soc) ? Math.round(d.soc) + '%' : '--') + '   ·   power ' + (isNum(d.kw) ? d.kw.toFixed(1) + ' kW' : '--')],
                 ['Drive mode (car)', (d.driveMode || '-') + '   ·   raw: ' + rawOf('statusFESVehicleDynamicSwitchHMI') + '  ' + rawOf('statusSwitchDriveDynamicSport2')],
                 ['Range (car)', 'fuel ' + (isNum(d.frange) ? Math.round(d.frange) : '--') + '  electric ' + (isNum(d.erange) ? Math.round(d.erange) : '--')
-                    + '   ·   tank ' + (isNum(d.fuelPct) ? Math.round(d.fuelPct) + '% (' + (d.fuelPctFrom === 'engine' ? 'engine unit' : 'litres') + ')' : '--') + '   ·   raw: ' + rawOf('statusRangeTankStatus')],
+                    + '   ·   tank ' + (isNum(d.fuelPct) ? Math.round(d.fuelPct) + '% (engine unit)' : '--') + '   ·   raw: ' + rawOf('statusRangeTankStatus')],
             ];
             cv.text(((ctx.spec && ctx.spec.title) || 'Cluster Layouts') + ' ' + ((ctx.spec && ctx.spec.version) || ''), 48, 80, 44, t.text, { font: 'bold', literal: true });
             lines.forEach(([k, v], i) => {

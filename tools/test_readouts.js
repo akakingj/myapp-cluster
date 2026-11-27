@@ -90,7 +90,7 @@ check('the engine unit reads what the readouts show', () => {
 check('the settings offer every readout, and the defaults are this build\'s', () => {
     const s = (k) => SPEC.settings.find((x) => x.key === k);
     ['infoA', 'infoB', 'infoMain'].forEach((k) => Object.keys(C.READOUTS).forEach((r) => assert(s(k).options.some((x) => x[0] === r), k + ' ' + r)));
-    const want = { vehicle: 'petrol', tankLitres: 59, speedUnit: 'kmh', tempUnit: 'c', torqueUnit: 'kgm', pressUnit: 'psi', powerUnit: 'hp', infoA: 'auto', infoB: 'auto', infoMain: 'auto', redline: 6000, rpmMax: 7000 };
+    const want = { vehicle: 'petrol', speedUnit: 'kmh', tempUnit: 'c', torqueUnit: 'kgm', pressUnit: 'psi', powerUnit: 'hp', infoA: 'auto', infoB: 'auto', infoMain: 'auto', redline: 6000, rpmMax: 7000 };
     Object.keys(want).forEach((k) => assert.strictEqual(s(k).default, want[k], k));
     // (a number setting is a drop-down on the car: its steps, the default among them)
     SPEC.settings.filter((x) => x.type === 'number').forEach((x) => assert(Array.isArray(x.steps) && x.steps.indexOf(x.default) >= 0, x.key));
