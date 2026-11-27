@@ -145,16 +145,28 @@ if (fs.existsSync(path.join(ROOT, 'oap-sdk', 'index.js'))) {
         const rep = path.join(src, 'javascript', 'kit', F.REPORT);
         return { manifest: fs.readFileSync(path.join(src, 'manifest.json'), 'utf8'), report: fs.existsSync(rep) ? JSON.parse(fs.readFileSync(rep, 'utf8')) : null };
     };
-    ok('build.py on the car: Cluster Info\'s manifest with what the catalog has; Layouts and Centre as without a catalog', () => {
+    ok('build.py on the car: Cluster Info\'s manifest with what the catalog has; Layouts the sign event where it has it; Centre as without a catalog', () => {
         const none = path.join(d, 'none.json');
         const info = build('akakingj_cluster_info', { MGU_SOMEIP_CATALOG: cat }), bare = build('akakingj_cluster_info', { MGU_SOMEIP_CATALOG: none });
         assert(JSON.parse(info.manifest).proxies['de.bmw.foo.VzaInfo'] && info.report.declared.length > 10);
         assert(!JSON.parse(bare.manifest).proxies['de.bmw.foo.VzaInfo'] && bare.report.catalog === false);
-        ['akakingj_cluster_layouts', 'akakingj_cluster_centre'].forEach((id) => {
+        ['akakingj_cluster_centre'].forEach((id) => {
             const a = build(id, { MGU_SOMEIP_CATALOG: cat }), b = build(id, { MGU_SOMEIP_CATALOG: none });
             assert.strictEqual(a.manifest, b.manifest, id);
             assert(a.report === null && b.report === null, id + ': no survey');
         });
+        /* Layouts (0.68.0): the speed limit sign's one event, only where the catalog has it */
+        const la = build('akakingj_cluster_layouts', { MGU_SOMEIP_CATALOG: cat }), lb = build('akakingj_cluster_layouts', { MGU_SOMEIP_CATALOG: none });
+        const has = !!(catalog().interfaces || {})['de.bmw.dass.TrafficSignRecognition'];
+        assert.strictEqual(!!JSON.parse(la.manifest).proxies['de.bmw.dass.TrafficSignRecognition'], has, 'Layouts: the sign where the catalog has it');
+        assert(!JSON.parse(lb.manifest).proxies['de.bmw.dass.TrafficSignRecognition'] && lb.report.catalog === false, 'Layouts: without a catalog, nothing');
+        assert(la.report.declared.length <= 1);
+        const c2 = catalog(), cat2 = path.join(d, 'cat2.json');
+        c2.interfaces['de.bmw.dass.TrafficSignRecognition'] = { fields: {}, events: { TrafficSignRecognition: { eventId: 32769 } } };
+        (c2.instanceIDs = c2.instanceIDs || {})['de.bmw.dass.TrafficSignRecognition'] = { 1: 1 };
+        fs.writeFileSync(cat2, JSON.stringify(c2));
+        const lc = JSON.parse(build('akakingj_cluster_layouts', { MGU_SOMEIP_CATALOG: cat2 }).manifest).proxies['de.bmw.dass.TrafficSignRecognition'];
+        assert.deepStrictEqual(lc, { instances: '1', broadcasts: ['TrafficSignRecognition'] }, JSON.stringify(lc));
     });
 } else console.log('--   build.py not run (no oap-sdk/ here)');
 

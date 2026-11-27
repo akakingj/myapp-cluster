@@ -409,13 +409,14 @@ limit in figures) in room the layout leaves. BMW's own speed limit sign is drawn
 under any layout. Its place is the nearest to BMW's own (over the clock, x 528, y 590 above the car's strip) where it
 stays 14 px clear of everything the layout draws then (a round dial as its circle), of the KOMBI's lights over us, the
 map's window, the glass's corners and the strip; worked out again with each change of layout or setting
-(layout_common.sliPlace, tools/test_sli.js: every layout, centre, car and strip). Its figures (0.67.0) work as the car's
-own sign: the last limit recognised, kept until another one is (60 shown until an 80 is recognised), the cruise
-control on or off - the head-up display's DisplayDataServer xSpeedLimitAssist.vSLISpeedValue in steps of 5 (16 is 80).
-A new limit is first announced, vSLISymbol LDM_VZA_VSLI_SPEED_LIMIT with vSLIDistance counting down, and shown once it
-is reached (AK Cluster Info's log of 27 November 2026). 0 or nothing keeps the one shown; up to 140 km/h; `--` before
-the first and 10 s after the head-up display's data stops. A curve's or junction's speed (vSLISymbol
-LDM_VZA_VSLI_COURSE, 0.67.1) is no limit and is not shown.
+(layout_common.sliPlace, tools/test_sli.js: every layout, centre, car and strip). Its figures (0.68.0) are the sign
+itself: `de.bmw.dass.TrafficSignRecognition`'s TrafficSignRecognition event, `presentClassLimitSpeed` x 5 (AK Cluster
+Info's signal survey of 27 November 2026: 8, 18, 22 as the front camera read 40, 90 and 110), about twice a second, the
+last kept through 254 (none). It is declared when the app is built or installed only on a car whose catalog has it
+(app.json `"survey"`, `kit/runtime/survey_fit.js`): on any other car, or with the event silent for 10 s, the head-up
+display's data as 0.67 had it - the last limit recognised (DisplayDataServer xSpeedLimitAssist.vSLISpeedValue x 5, an
+announced one counted once reached, a curve's speed (LDM_VZA_VSLI_COURSE) never), which with the limiter on is the
+figure the limiter took. Up to 140 km/h; `--` before the first.
 A layout may name its own
 starting point and the pieces whose boxes are mostly empty (sliHome, sliSkip): JDM 1's sign stands just above TACH,
 inside the tach's curve (its foot is full); KO 1's and KO 2's arc dials count as their circles, not their squares.

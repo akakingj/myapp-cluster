@@ -134,9 +134,51 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             Date.now = () => later;
             try { assert.strictEqual(D.data().speedLimit, undefined, 'no head-up display data for 10 s: --'); } finally { Date.now = was; }
             const lines = D.sliLog(20).split('\n');
-            assert.ok(/^head-up display data: \d+ in the last 60 s, the last [\d.]+ s ago; shown: 60$/.test(lines[0]), lines[0]);
+            assert.strictEqual(lines[0], 'sign (TrafficSignRecognition): none yet', 'a car without the sign event: the head-up display\'s');
+            assert.strictEqual(D.data().sliSource, 'head-up display');
+            assert.ok(/^head-up display data: \d+ in the last 60 s, the last [\d.]+ s ago; shown: 60$/.test(lines[1]), lines[1]);
             assert.ok(lines.length >= 6 && / shown 60  \{"value":12/.test(lines[lines.length - 1]), lines[lines.length - 1]);
         } finally { D.stop(); }
+    });
+
+    await check('the speed limit sign itself (0.68.0): TrafficSignRecognition\'s presentClassLimitSpeed x 5 over the head-up display\'s, as the survey of 27 Nov found', async () => {
+        const handlers = {}, events = {};
+        const log = { info() {}, warn() {}, debug() {} };
+        const spec = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'app.json'), 'utf8'));
+        const ctx = { log, spec, settings: { get: () => undefined },
+            signals: {
+                watch: (iface, inst, h) => { Object.assign(handlers, h); return Promise.resolve(iface === 'de.bmw.dass.TrafficSignRecognition' ? { proxy: { iface } } : {}); },
+                on: (p, name, fn) => { events[p.iface + '.' + name] = fn; return Promise.resolve(); },
+                proxy: () => Promise.reject(new Error('no link (test)')),
+            } };
+        const { startData, tsrStep } = require(path.join(__dirname, '..', 'shared', 'data'));
+        const D = startData(ctx, { dir: DIR });
+        try {
+            for (let i = 0; i < 40; i++) await new Promise((r) => setImmediate(r));
+            const sign = events['de.bmw.dass.TrafficSignRecognition.TrafficSignRecognition'];
+            assert.ok(sign, 'subscribed to the sign event');
+            assert.strictEqual(D.status()['speed limit sign'], 'subscribed');
+            const tsr = (cls) => ({ presentWithdrawalLimitSpeed: 1, nextWithdrawalLimitSpeed: 0, presentClassLimitSpeed: cls, nextClassLimitSpeed: 254, countryCodingTrafficSign: 7 });
+            /* the head-up display stuck at 100 (the limiter's taken figure), the sign 40 in town: 40 */
+            handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISpeedValue: 20, vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', ldmAdditionalSign: 'TAKEOVER_SET' } });
+            sign(tsr(8));
+            assert.deepStrictEqual([D.data().speedLimit, D.data().sliSource, D.data().sliSign], [40, 'sign', 8]);
+            sign(tsr(18));
+            assert.strictEqual(D.data().speedLimit, 90);
+            sign(tsr(254));
+            assert.strictEqual(D.data().speedLimit, 90, '254 (none): the last kept');
+            sign(tsr(22));
+            assert.strictEqual(D.data().speedLimit, 110);
+            assert.ok(/^sign \(TrafficSignRecognition\): presentClassLimitSpeed 22, [\d.]+ s ago, shown 110$/.test(D.sliLog(5).split('\n')[0]));
+            /* the sign silent for 10 s: the head-up display's again */
+            const was = Date.now, later = Date.now() + 10001;
+            Date.now = () => later;
+            try { assert.strictEqual(D.data().sliSource, 'head-up display'); } finally { Date.now = was; }
+            assert.deepStrictEqual([tsrStep(undefined, tsr(0)), tsrStep(60, tsr(0)), tsrStep(60, {}), tsrStep(undefined, tsr(29))], [undefined, 60, 60, undefined]);
+        } finally { D.stop(); }
+        /* the app asks the install for it, fitted to the car's catalog (kit/runtime/survey_fit.js) */
+        assert.deepStrictEqual(spec.survey.groups.map((g) => [g.iface, g.events]), [['de.bmw.dass.TrafficSignRecognition', '^TrafficSignRecognition$']]);
+        assert.ok(!spec.signals['de.bmw.dass.TrafficSignRecognition'], 'never in "signals": a car without it would refuse the app');
     });
 
     console.log(ok + ' passed');

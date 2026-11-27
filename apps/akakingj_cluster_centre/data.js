@@ -207,6 +207,19 @@ const sliAhead = (r) => r.symbol === 'LDM_VZA_VSLI_SPEED_LIMIT' && !!r.dist && !
 const SLI_COURSE = 'LDM_VZA_VSLI_COURSE', SLI_LIMIT = 'LDM_VZA_VSLI_SPEED_LIMIT';
 /** The limit shown after this data (km/h, the car's own figures), from the one shown before it (prev; undefined: none);
  *  mem (an object kept with it) remembers a curve's speed. */
+/*
+ * The speed limit SIGN itself (0.68.0): de.bmw.dass.TrafficSignRecognition's TrafficSignRecognition event, about twice a
+ * second - AK Cluster Info's signal survey of 27 Nov 2026 (21 min in town): presentClassLimitSpeed x 5 is the sign the
+ * front camera last read (8 = 40, 18 = 90, 22 = 110, within 1 - 3 s of the camera's own SPEED_LIMIT 40 / 90 / 110),
+ * while the head-up display's vSLISpeedValue stayed at 20 (100) the whole drive: the limiter's taken figure. So the
+ * sign comes from it, and from the head-up display only on a car without it (or while it is silent, 10 s). It is
+ * declared at install only where the car's catalog has it (app.json "survey", kit/runtime/survey_fit.js): a car
+ * without it would refuse the whole app. 1 - 28 (5 - 140 km/h): a sign; anything else (254: none) keeps the last.
+ */
+function tsrStep(prev, v) {
+    const n = one(v, 'presentClassLimitSpeed');
+    return isNum(n) && n >= 1 && n <= SLI_MAX ? n * 5 : prev;
+}
 function sliStep(prev, r, mem) {
     if (!r || !isNum(r.value) || r.value < 1 || r.value > SLI_MAX) return prev;
     if (r.symbol === SLI_COURSE) { if (mem) mem.course = r.value; return prev; }
@@ -298,6 +311,15 @@ function startData(ctx, opts) {
             if (r) { x.sli = r; x.at.sli = Date.now(); x.sliShown = sliStep(x.sliShown, r, x.sliMem || (x.sliMem = {})); sliSeen(r); }
         },
     }, 'cruise control and speed limit (head-up display)', { pollMs: 2000 });
+    // the speed limit sign itself (tsrStep): only where the install declared it; a car without it says so in the status
+    ctx.signals.watch('de.bmw.dass.TrafficSignRecognition', '1', {}, log)
+        .then((sub) => {
+            if (!sub || sub.error || !sub.proxy || !ctx.signals.on) { status['speed limit sign'] = 'not in this car' + (sub && sub.error ? ' (' + sub.error + ')' : ''); return null; }
+            return ctx.signals.on(sub.proxy, 'TrafficSignRecognition', (v) => {
+                x.tsr = v; x.at.tsr = Date.now(); x.tsrShown = tsrStep(x.tsrShown, v);
+            }, log).then(() => { status['speed limit sign'] = 'subscribed'; });
+        })
+        .catch((e) => { status['speed limit sign'] = 'error: ' + e; });
     // the driving experience switch and, on a plug-in hybrid, the eDrive mode
     // (each signal's raw value is kept for the Signals screen; only its first 20 distinct values go to the log,
     // since the boost pressure in it changes all the time while driving)
@@ -774,7 +796,11 @@ function startData(ctx, opts) {
             // the cruise control: on with a set speed (the head-up display's), off at 0
             /* the last limit recognised (sliStep), while the head-up display's data comes (10 s); '--' otherwise. And for
              * the Logs' data now, what it goes by */
-            if (!d.demo && x.sli && Date.now() - (x.at.sli || 0) <= 10000) o.speedLimit = x.sliShown;
+            const tsrOn = !!x.tsr && Date.now() - (x.at.tsr || 0) <= 10000;
+            if (!d.demo && tsrOn) o.speedLimit = x.tsrShown;
+            else if (!d.demo && x.sli && Date.now() - (x.at.sli || 0) <= 10000) o.speedLimit = x.sliShown;
+            o.sliSource = tsrOn ? 'sign' : x.sli ? 'head-up display' : 'none';
+            if (x.tsr) o.sliSign = one(x.tsr, 'presentClassLimitSpeed');
             if (x.sli) Object.assign(o, { sliRaw: x.sli.value, sliSymbol: x.sli.symbol, sliDist: x.sli.dist, sliTakeover: x.sli.takeover, sliAgeS: Math.round((Date.now() - x.at.sli) / 100) / 10 });
             if (!d.demo && Date.now() - (x.at.cruiseSet || 0) < 10000) o.cruise = { on: x.cruiseSet > 0 && x.cruiseSet < 250, set: x.cruiseSet > 0 && x.cruiseSet < 250 ? x.cruiseSet : undefined };
             gZeroed(o, tNow);
@@ -791,7 +817,9 @@ function startData(ctx, opts) {
         sliLog(last) {
             const now = Date.now(), age = x.sli ? Math.round((now - x.at.sli) / 100) / 10 : null;
             const shown = x.sli && now - x.at.sli <= 10000 ? x.sliShown : undefined;
-            return ['head-up display data: ' + sliTimes.filter((t) => now - t <= 60000).length + ' in the last 60 s, ' + (age === null ? 'none yet' : 'the last ' + age + ' s ago') + '; shown: ' + (shown || '--')]
+            const tsrAge = x.tsr ? Math.round((now - x.at.tsr) / 100) / 10 : null;
+            return ['sign (TrafficSignRecognition): ' + (tsrAge === null ? 'none yet' : 'presentClassLimitSpeed ' + one(x.tsr, 'presentClassLimitSpeed') + ', ' + tsrAge + ' s ago, shown ' + (x.tsrShown || '--')),
+                'head-up display data: ' + sliTimes.filter((t) => now - t <= 60000).length + ' in the last 60 s, ' + (age === null ? 'none yet' : 'the last ' + age + ' s ago') + '; shown: ' + (shown || '--')]
                 .concat(sliChanges.slice(-(last || 20)).map((c) => new Date(c.at).toISOString() + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h  shown ' + (c.shown || '--') + '  ' + JSON.stringify(c.raw))).join('\n');
         },
         /** fn() on each new reading (the car's speed and rpm samples, every changed reading). */
@@ -820,4 +848,4 @@ function demo(d) {
     };
 }
 
-module.exports = { startData, DME_KEYS, FAST_KEYS, entries, modeOf, rangesOf, FES_MODES, sliStep, sliRawOf, sliAhead };
+module.exports = { startData, DME_KEYS, FAST_KEYS, entries, modeOf, rangesOf, FES_MODES, sliStep, sliRawOf, sliAhead, tsrStep };

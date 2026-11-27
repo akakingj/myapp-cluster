@@ -348,6 +348,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.68.0, Centre 0.16.6 (Nov 27 2026): the speed limit sign from the sign itself - Info 1.11.1's survey (17:35,
+  21 min in town): de.bmw.dass.TrafficSignRecognition event TrafficSignRecognition, presentClassLimitSpeed x 5 (8/18/22 =
+  40/90/110 as the camera read them), ~2 Hz; the HUD's vSLISpeedValue sat at 20 (100, the limiter's) all along. Layouts'
+  app.json "survey" (one event) declares it at install only where the catalog has it; shared/data.js tsrStep, the HUD's
+  only without it or after 10 s silent. Logs: a sign line first; sliSource, sliSign.
 - Info 1.11.1, Layouts 0.67.2, Centre 0.16.5 (Nov 27 2026): the Logs' QR codes about 30 % fewer - "CLG2 <id> <n>/<count>
   <base45>." in alphanumeric mode (shared/qr.js encode alnum, shared/logs.js base45; Info's log of 16:35: 21 codes ->
   15), tools/decode_logs.py reads CLG1 and CLG2. Info's signal survey: one button, Start survey / Stop survey (조사 시작 /
