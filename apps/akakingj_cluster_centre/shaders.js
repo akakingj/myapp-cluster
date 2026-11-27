@@ -873,6 +873,24 @@ void main() {
 }`;
 
 /**
+ * A road sign the front camera read (AK Cluster Layouts' KO 1 and KO 2, layout_common.warnPieces): a picture from
+ * the signs' atlas (sign_atlas.js, South Korea's own signs: u_signs, RGBA as it is), its cell u_cell (x, y, w, h px;
+ * w 0: none), in the middle of the piece.
+ */
+const SIGN_FS = `#version 100
+${HIGHP}${COMMON}
+uniform vec2 u_size;
+uniform sampler2D u_signs;
+uniform vec2 u_signs_size;
+uniform vec4 u_cell;
+varying vec2 v_uv;
+void main() {
+    vec2 q = v_uv * u_size - (u_size - u_cell.zw) * 0.5;
+    if (u_cell.z < 0.5 || q.x < 0.0 || q.y < 0.0 || q.x > u_cell.z || q.y > u_cell.w) { gl_FragColor = vec4(0.0); return; }
+    gl_FragColor = texture2D(u_signs, (u_cell.xy + q) / u_signs_size);
+}`;
+
+/**
  * A trend line: up to 64 samples (u_hist, 0..1 each, -1 none, oldest first; u_count of them), drawn across
  * the layer with a glow and the area under it filled, the last sample marked.
  */
@@ -2410,4 +2428,4 @@ uniform vec2 u_size;
 varying vec2 v_uv;
 void main() { gl_FragColor = rmPanel(v_uv * u_size + u_origin); }`;
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, MDASH_FS, MTACH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, RMDIAL_FS, RMBG_FS, JDM_FS_MODES, MROUND_FS_MODES };
+module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SIGN_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, MDASH_FS, MTACH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, RMDIAL_FS, RMBG_FS, JDM_FS_MODES, MROUND_FS_MODES };

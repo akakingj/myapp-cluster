@@ -29,6 +29,9 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'tools' / 'sign_art'
 OUT = ROOT / 'apps' / 'akakingj_cluster_info' / 'sign_art.js'
 OVERLAY = ROOT / 'apps' / 'akakingj_cluster_info' / 'overlay.js'
+# AK Cluster Layouts' warning signs (KO 1, KO 2: layout_common.js WARN): one atlas, every sign WARN.h high
+ATLAS = ROOT / 'apps' / 'akakingj_cluster_layouts' / 'sign_atlas.js'
+COMMON = ROOT / 'apps' / 'akakingj_cluster_layouts' / 'layout_common.js'
 
 # the signs used (the camera's types map to these in signs.js)
 NAMES = ['slippery', 'traffic_jam', 'wild_animal', 'downhill', 'uphill', 'curve_right', 'curve_left',
@@ -49,6 +52,35 @@ def box_from_overlay():
         raise SystemExit('overlay.js: no SIGNS')
     v = dict(re.findall(r'(\w+):\s*(\d+)', m.group(1)))
     return int(v['h']), int(v['wmax'])
+
+
+# not in Layouts' atlas: the cluster shows the warning signs only (the yellow triangles)
+REGULATORY = {'give_way', 'stop', 'no_entry', 'slow', 'no_u_turn', 'no_left_turn', 'no_right_turn', 'no_straight', 'no_cars',
+              'no_parking', 'no_stopping', 'keep_distance_50m', 'one_way', 'unprotected_left'}
+
+
+def warn_h():
+    m = re.search(r'const WARN = \{[^}]*h:\s*(\d+)', COMMON.read_text(encoding='utf-8'))
+    if not m:
+        raise SystemExit('layout_common.js: no WARN h')
+    return int(m.group(1))
+
+
+def atlas(cuts, h):
+    """Every sign h high (at most 1.2 h wide), packed in rows of an atlas at most 1024 wide, 2 px apart."""
+    ims = {n: shrink(im, h, round(h * 1.2)) for n, im in cuts.items() if n not in REGULATORY}
+    W, x, y, cells = 1024, 0, 0, {}
+    for n in sorted(ims):
+        im = ims[n]
+        if x + im.width > W:
+            x, y = 0, y + h + 2
+        cells[n] = [x, y, im.width, im.height]
+        x += im.width + 2
+    H = y + h
+    sheet = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    for n, (cx, cy, cw, ch) in cells.items():
+        sheet.paste(ims[n], (cx, cy))
+    return sheet, cells
 
 
 def import_dir(d):
@@ -149,6 +181,27 @@ module.exports = {
 };
 """.replace('시行', '시행') % (h, wmax, h, wmax, body), encoding='utf-8')
     print('%s: %d signs, %d px high, %d bytes' % (OUT.relative_to(ROOT), len(art), h, OUT.stat().st_size))
+    # Layouts' atlas
+    ah = warn_h()
+    sheet, cells = atlas(cuts, ah)
+    ATLAS.write_text("""'use strict';
+/**
+ * sign_atlas.js - made by tools/make_sign_art.py; don't edit. South Korea's road signs (Government of the Republic of
+ * Korea, 도로교통법 시행규칙 별표 6; free to use as public works, Article 24-2 of the Korean Copyright Act), cut out
+ * along their red or blue edge, %d px high, in one atlas (%dx%d; raw RGBA, deflated, base64) for AK Cluster Layouts'
+ * warning signs (layout_common.warnPieces; the warning signs only): cells { name: [x, y, w, h] }.
+ */
+module.exports = {
+    h: %d,
+    w: %d,
+    ah: %d,
+    cells: %s,
+    z: %s,
+};
+""" % (ah, sheet.width, sheet.height, ah, sheet.width, sheet.height, json.dumps(cells, separators=(',', ':')),
+           json.dumps(base64.b64encode(zlib.compress(sheet.tobytes(), 9)).decode())), encoding='utf-8')
+    sheet.save('/tmp/sign_atlas.png')
+    print('%s: %d signs, %d px high, atlas %dx%d, %d bytes' % (ATLAS.relative_to(ROOT), len(cells), ah, sheet.width, sheet.height, ATLAS.stat().st_size))
     # a contact sheet to look at
     sheet = Image.new('RGBA', (len(cuts) * (wmax + 6), h + 6), (40, 44, 50, 255))
     for i, n in enumerate(sorted(art)):

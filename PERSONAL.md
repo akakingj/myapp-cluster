@@ -348,6 +348,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.69.0, Centre 0.16.9, Info 1.12.2 (Nov 28 2026): KO 1's and KO 2's warning signs (the owner's ask): the
+  camera's warnings (DS_ types) as Korean triangles 76 high, up to two, the first just above the speed limit sign, the
+  second mirrored right of the centre panel, with Settings > Speed limit sign On (a GPU piece "sign" sampling
+  sign_atlas.js; layout_common.warnPlace/warnPieces; data.js d.roadSigns, the camera's event declared by the survey
+  fit). The top middle is the driver camera's cowl (the owner reminded): NOTCH now kept clear by the speed limit sign
+  too. shared/road_signs.js now holds the camera logic for Info and Layouts (Info takes it by name).
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
   가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -

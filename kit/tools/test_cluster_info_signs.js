@@ -85,7 +85,7 @@ check('pictures: South Korea\'s own signs - the types the camera read get theirs
     assert.strictEqual(art.art.slippery.h, SIGNS.h, 'a triangle as tall as the limit sign');
     assert(art.art.slippery.w >= 66 && art.art.slippery.w <= SIGNS.wmax, 'and wider: ' + art.art.slippery.w);
     assert(Math.abs(art.art.no_entry.w - SIGNS.h) <= 1 && art.art.no_entry.h === SIGNS.h, 'a round sign as big as the limit sign');
-    const src = fs.readFileSync(path.join(APP, 'signs.js'), 'utf8');
+    const src = fs.readFileSync(path.join(APP, 'road_signs.js'), 'utf8');
     const block = src.slice(src.indexOf('const ART_OF'), src.indexOf('function artOf'));
     const names = new Set((block.match(/'([a-z_]+)'/g) || []).map((q) => q.slice(1, -1)));
     names.add('danger');
@@ -212,8 +212,8 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert.deepStrictEqual(sg2.status().carTypes, []);
     });
 
-    check('read only: signs.js calls no method and writes nothing', () => {
-        const src = fs.readFileSync(path.join(APP, 'signs.js'), 'utf8');
+    check('read only: signs.js and road_signs.js call no method and write nothing', () => {
+        const src = fs.readFileSync(path.join(APP, 'signs.js'), 'utf8') + fs.readFileSync(path.join(APP, 'road_signs.js'), 'utf8');
         assert(!/signals\.(call|set|proxy)\(|callMethod|setValue|writeFileSync/.test(src));
     });
 

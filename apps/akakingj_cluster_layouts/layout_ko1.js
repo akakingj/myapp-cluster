@@ -217,6 +217,8 @@ function build(o, dialOf, look) {
 
 module.exports = {
     id: 'ko1',
+    // the warning signs the camera reads, beside the speed limit sign (layout_common.warnPlace, 0.69.0)
+    warnSigns: true,
     title: 'KO 1',
     font: 'light',
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,

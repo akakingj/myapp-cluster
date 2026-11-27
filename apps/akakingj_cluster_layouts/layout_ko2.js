@@ -43,6 +43,8 @@ function dial(o, which, cx, cy, R) {
 
 module.exports = {
     id: 'ko2',
+    // the warning signs the camera reads, beside the speed limit sign (layout_common.warnPlace, 0.69.0)
+    warnSigns: true,
     title: 'KO 2',
     font: 'light',
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,

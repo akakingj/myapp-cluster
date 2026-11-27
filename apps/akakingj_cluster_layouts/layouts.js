@@ -125,12 +125,14 @@ function bottomCut(list) {
 const signOn = (o) => !!o && (o.sliSign === 'on' || o.sliSign === true);
 function withSign(L, o, list) {
     // (a layout made from another's pieces, Simple's from Pulse's: that one's sign left out, this one's placed)
-    list = list.filter((p) => !/^sli/.test(p.key));
+    list = list.filter((p) => !/^(sli|warn\d)/.test(p.key));
     if (!signOn(o)) return list;
     const mapForm = o.centre === 'map' || (stripOn(o) && o.centre === 'stock');
-    const at = C0.sliPlace(list, { map: mapForm ? (L.mapWindow || C0.MAP_VIEW) : null,
-        home: typeof L.sliHome === 'function' ? L.sliHome(o) : L.sliHome, skip: L.sliSkip });
-    return at ? list.concat(C0.sliPieces(at).map((p) => (p.key === 'sliNum' ? C0.sliFit(p, L.font || 'bold') : p))) : list;
+    const where = { map: mapForm ? (L.mapWindow || C0.MAP_VIEW) : null, home: typeof L.sliHome === 'function' ? L.sliHome(o) : L.sliHome, skip: L.sliSkip };
+    const at = C0.sliPlace(list, where);
+    const out = at ? list.concat(C0.sliPieces(at).map((p) => (p.key === 'sliNum' ? C0.sliFit(p, L.font || 'bold') : p))) : list;
+    // the warning signs the camera reads beside it (KO 1, KO 2: warnSigns; with the speed limit sign, its setting)
+    return L.warnSigns ? out.concat(C0.warnPieces(C0.warnPlace(out, where))) : out;
 }
 LAYOUTS.forEach((L) => {
     const own = L.pieces;

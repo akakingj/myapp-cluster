@@ -826,6 +826,9 @@ const flat = (key, x, y, w, h, colour) => ({ key, kind: 'flat', x, y, w, h, colo
  * the last limit recognised, kept till another (data.js sliStep, 0.67.0), '--' before the first.
  */
 const SLI_R = [46, 38], SLI_GAP = 14, SLI_HOME = { x: 528, y: 590 }, SLI_STEP = 8;
+/* the warning signs the camera reads (KO 1, KO 2; warnPieces below): every sign this high, at most 1.2 x as wide, in
+ * sign_atlas.js (tools/make_sign_art.py) */
+const WARN = { h: 76, gap: 12, max: 2 };
 const SLI_ROUND = { dial: 1, e9x: 1, mround: 1, jdm: 1, rmdial: 1, ring: 1, aclock: 1, rtach: 1 };
 /* the points a sign of radius r may stand at, nearest `home` first (made once per radius and home) */
 const sliSpots = {};
@@ -861,6 +864,8 @@ function sliObstacles(list, map, skip) {
         else out.push({ r: [p.x, p.y, p.w, p.h] });
     });
     SIDE_LIGHTS.concat(TURN_ARROWS).forEach((q) => out.push({ r: [q.x, q.y, q.w, q.h] }));
+    // (the driver camera's cowl over the top middle: nothing under it is seen - the owner, 2026-11-28)
+    out.push({ r: [NOTCH.x, NOTCH.y, NOTCH.w, NOTCH.h] });
     if (map) out.push({ r: [map.x, map.y, map.w, map.h] });
     return out;
 }
@@ -908,8 +913,82 @@ function sliPieces(s) {
     ];
 }
 
+/*
+ * The warning signs the front camera reads (KO 1, KO 2: a layout's warnSigns; shared/road_signs.js, data.js's
+ * d.roadSigns, their pictures' names, each shown 10 s after the camera last read it): South Korea's own signs
+ * (sign_atlas.js), WARN.h high, beside the speed limit sign - the first in the free place nearest it (WARN.gap from
+ * every piece, the sign, the KOMBI's lights over us and the camera's cowl), the second mirrored across the middle
+ * (or the next free place). Only the warning signs (the owner: one on most roads, two at most), each a triangle
+ * point up at most 1.2 h wide: kept clear along its outline, not its box.
+ */
+const WARN_W = Math.round(WARN.h * 1.2);
+/* points along a sign's outline (its middle at x, y): a warning sign, a triangle point up */
+function warnOutline(x, y) {
+    const h = WARN.h, w = WARN_W, top = [x, y - h / 2], l = [x - w / 2, y + h / 2], r = [x + w / 2, y + h / 2], out = [];
+    [[top, r], [r, l], [l, top]].forEach(([a, b]) => { for (let i = 0; i < 8; i++) out.push([a[0] + (b[0] - a[0]) * i / 8, a[1] + (b[1] - a[1]) * i / 8]); });
+    return out;
+}
+function warnFree(x, y, obs) {
+    const g = WARN.gap;
+    if (y + WARN.h / 2 > STRIP_Y - 4 || y - WARN.h / 2 < 0 || x - WARN_W / 2 < 0 || x + WARN_W / 2 > 1920) return false;
+    return warnOutline(x, y).every(([px, py]) => {
+        if (inCorner(px, py)) return false;
+        return obs.every((o) => {
+            const inC = (c) => { const dx = px - c[0], dy = py - c[1], q = g + c[2]; return dx * dx + dy * dy < q * q; };
+            const inR = (b) => px > b[0] - g && px < b[0] + b[2] + g && py > b[1] - g && py < b[1] + b[3] + g;
+            return !(o.both ? inC(o.c) && inR(o.r) : o.c ? inC(o.c) : inR(o.r));
+        });
+    });
+}
+/** Where the warning signs go among the pieces in list (the speed limit sign's among them, or none): up to WARN.max
+ * centres [{ x, y }], beside the limit sign (or home where there is none). */
+function warnPlace(list, opts) {
+    opts = opts || {};
+    const sign = list.find((p) => p.key === 'sliDisc');
+    const home = sign ? { x: sign.x + sign.w / 2, y: sign.y + sign.h / 2 } : (opts.home || SLI_HOME);
+    const obs = sliObstacles(list, opts.map, opts.skip);
+    const nearest = (h, extra) => {
+        let best = null;
+        // (within 480 px of it: a sign further off is beside nothing)
+        for (let y = Math.max(WARN.h / 2 + 4, h.y - 480); y <= Math.min(STRIP_Y - 4 - WARN.h / 2, h.y + 480); y += 4) {
+            for (let x = Math.max(WARN_W / 2 + 4, h.x - 480); x <= Math.min(1916 - WARN_W / 2, h.x + 480); x += 4) {
+                const d = (x - h.x) * (x - h.x) + (y - h.y) * (y - h.y);
+                if ((!best || d < best.d) && warnFree(x, y, obs.concat(extra || []))) best = { x, y, d };
+            }
+        }
+        return best;
+    };
+    const first = nearest(home);
+    if (!first) return [];
+    const box = (s) => ({ r: [s.x - WARN_W / 2, s.y - WARN.h / 2, WARN_W, WARN.h] });
+    const mirror = { x: 1920 - first.x, y: first.y };
+    const second = warnFree(mirror.x, mirror.y, obs.concat([box(first)])) ? mirror : nearest(first, [box(first)]);
+    return [{ x: first.x, y: first.y }].concat(second ? [{ x: second.x, y: second.y }] : []).slice(0, WARN.max);
+}
+let atlasImg = null;
+/** The signs' atlas as the cluster takes a texture: { w, h, px } (unpacked once). */
+function signAtlas() {
+    if (!atlasImg) {
+        const A = require('./sign_atlas');
+        atlasImg = { w: A.w, h: A.ah, px: require('zlib').inflateSync(Buffer.from(A.z, 'base64')) };
+    }
+    return atlasImg;
+}
+/** The warning signs' pieces at places [{ x, y }]: the i-th shows d.roadSigns[i] (a picture's name), hidden while none. */
+function warnPieces(spots) {
+    const A = require('./sign_atlas');
+    const cell = (n) => A.cells[n] || A.cells.danger;
+    return spots.map((s, i) => ({
+        key: 'warn' + i, kind: 'sign', z: 30, x: Math.round(s.x - WARN_W / 2), y: Math.round(s.y - WARN.h / 2), w: WARN_W, h: WARN.h,
+        textures: { u_signs: signAtlas },
+        visible: (d) => !!(d && d.roadSigns && d.roadSigns[i]),
+        dyn: (d) => ({ u_cell: d && d.roadSigns && d.roadSigns[i] ? cell(d.roadSigns[i]) : [0, 0, 0, 0] }),
+    }));
+}
+
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, powerTop, torqueTop, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
     SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliPieces, sliFit, sliText, sliObstacles, sliFree,
+    WARN, WARN_W, warnPlace, warnPieces, warnFree, signAtlas,
 };

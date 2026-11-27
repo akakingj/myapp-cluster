@@ -147,7 +147,7 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
         const spec = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'app.json'), 'utf8'));
         const ctx = { log, spec, settings: { get: () => undefined },
             signals: {
-                watch: (iface, inst, h) => { Object.assign(handlers, h); return Promise.resolve(iface === 'de.bmw.dass.TrafficSignRecognition' ? { proxy: { iface } } : {}); },
+                watch: (iface, inst, h) => { Object.assign(handlers, h); return Promise.resolve(iface === 'de.bmw.dass.TrafficSignRecognition' || iface === 'de.bmw.environmentalmodel.SignRecognitionFrontCamera' ? { proxy: { iface } } : {}); },
                 on: (p, name, fn) => { events[p.iface + '.' + name] = fn; return Promise.resolve(); },
                 proxy: () => Promise.reject(new Error('no link (test)')),
             } };
@@ -175,9 +175,24 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             Date.now = () => later;
             try { assert.strictEqual(D.data().sliSource, 'head-up display'); } finally { Date.now = was; }
             assert.deepStrictEqual([tsrStep(undefined, tsr(0)), tsrStep(60, tsr(0)), tsrStep(60, {}), tsrStep(undefined, tsr(29))], [undefined, 60, 60, undefined]);
+            /* the warning signs the front camera reads (0.69.0, KO 1 and KO 2): its event, the warnings only, as pictures' names */
+            const cam = events['de.bmw.environmentalmodel.SignRecognitionFrontCamera.TrafficSignRecognitionFrontCamera'];
+            assert.ok(cam, 'subscribed to the camera\'s signs');
+            assert.strictEqual(D.status()['warning signs'], 'subscribed');
+            const signs = (...t) => ({ trafficSignRecognition: { numberSigns: t.length }, trafficSign: t.map((type) => ({ type, value: 0 })) });
+            assert.deepStrictEqual(D.data().roadSigns, []);
+            cam(signs('DS_ANIMAL_CROSSING', 'SPEED_LIMIT'));
+            cam(signs('GIVE_WAY'));
+            cam(signs('DS_SPLIPPERY_ROAD'));
+            assert.deepStrictEqual(D.data().roadSigns, ['wild_animal', 'slippery'], 'the warnings, oldest first; give way and the limit not');
+            assert.ok(/^warning signs \(front camera\): DS_SPLIPPERY_ROAD, [\d.]+ s ago; seen DS_ANIMAL_CROSSING 1, SPEED_LIMIT 1, GIVE_WAY 1, DS_SPLIPPERY_ROAD 1$/.test(D.sliLog(5).split('\n')[2]), D.sliLog(5).split('\n')[2]);
+            const was2 = Date.now, later2 = Date.now() + 10001;
+            Date.now = () => later2;
+            try { assert.deepStrictEqual(D.data().roadSigns, [], '10 s on: gone'); } finally { Date.now = was2; }
         } finally { D.stop(); }
         /* the app asks the install for it, fitted to the car's catalog (kit/runtime/survey_fit.js) */
-        assert.deepStrictEqual(spec.survey.groups.map((g) => [g.iface, g.events]), [['de.bmw.dass.TrafficSignRecognition', '^TrafficSignRecognition$']]);
+        assert.deepStrictEqual(spec.survey.groups.map((g) => [g.iface, g.events]), [['de.bmw.dass.TrafficSignRecognition', '^TrafficSignRecognition$'],
+            ['de.bmw.environmentalmodel.SignRecognitionFrontCamera', '^TrafficSignRecognitionFrontCamera$']]);
         assert.ok(!spec.signals['de.bmw.dass.TrafficSignRecognition'], 'never in "signals": a car without it would refuse the app');
     });
 

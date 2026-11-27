@@ -31,6 +31,7 @@ const { Diag } = require('./kit/diag');
 const { DidReader } = require('./kit/dids');
 const { startProviders } = require('./providers');
 const { createFuse } = require('./kwfuse');
+const RS = require('./road_signs');
 const Awake = require('./kit/awake');
 const clock = require('./clock');
 
@@ -320,6 +321,20 @@ function startData(ctx, opts) {
             }, log).then(() => { status['speed limit sign'] = 'subscribed'; });
         })
         .catch((e) => { status['speed limit sign'] = 'error: ' + e; });
+    // the warning signs the front camera reads (road_signs.js; KO 1's and KO 2's, layout_common.warnPieces): its one
+    // event, once a sign; declared at install only where the car's catalog has it (app.json "survey", like the sign)
+    const roadTracker = RS.makeTracker(RS.SHOW_MS, 4);
+    ctx.signals.watch(RS.CAM_IFACE, '1', {}, log)
+        .then((sub) => {
+            if (!sub || sub.error || !sub.proxy || !ctx.signals.on) { status['warning signs'] = 'not in this car' + (sub && sub.error ? ' (' + sub.error + ')' : ''); return null; }
+            return ctx.signals.on(sub.proxy, RS.CAM_EVENT, (v) => {
+                const list = RS.parseSigns(v), t = Date.now();
+                x.cam = list; x.at.cam = t;
+                list.forEach((ty) => { if (!x.camSeen) x.camSeen = {}; if (!x.camSeen[ty]) log.info('warning signs: the camera read ' + ty + (RS.wanted(ty) ? ' (' + RS.artOf(ty) + ')' : ' (not drawn: the car shows it)')); x.camSeen[ty] = (x.camSeen[ty] || 0) + 1; });
+                roadTracker.add(list, t);
+            }, log).then(() => { status['warning signs'] = 'subscribed'; });
+        })
+        .catch((e) => { status['warning signs'] = 'error: ' + e; });
     // the driving experience switch and, on a plug-in hybrid, the eDrive mode
     // (each signal's raw value is kept for the Signals screen; only its first 20 distinct values go to the log,
     // since the boost pressure in it changes all the time while driving)
@@ -800,6 +815,9 @@ function startData(ctx, opts) {
             if (!d.demo && tsrOn) o.speedLimit = x.tsrShown;
             else if (!d.demo && x.sli && Date.now() - (x.at.sli || 0) <= 10000) o.speedLimit = x.sliShown;
             o.sliSource = tsrOn ? 'sign' : x.sli ? 'head-up display' : 'none';
+            // the warning signs shown now (each 10 s after the camera last read it), as the pictures' names, oldest first
+            // (the warning signs only, the yellow triangles: give way, stop and the bans are the HUD's - AK Cluster Info)
+            if (!d.demo) o.roadSigns = roadTracker.current(Date.now()).filter((t) => /^DS_/.test(t)).map(RS.artOf);
             if (x.tsr) o.sliSign = one(x.tsr, 'presentClassLimitSpeed');
             if (x.sli) Object.assign(o, { sliRaw: x.sli.value, sliSymbol: x.sli.symbol, sliDist: x.sli.dist, sliTakeover: x.sli.takeover, sliAgeS: Math.round((Date.now() - x.at.sli) / 100) / 10 });
             if (!d.demo && Date.now() - (x.at.cruiseSet || 0) < 10000) o.cruise = { on: x.cruiseSet > 0 && x.cruiseSet < 250, set: x.cruiseSet > 0 && x.cruiseSet < 250 ? x.cruiseSet : undefined };
@@ -818,8 +836,10 @@ function startData(ctx, opts) {
             const now = Date.now(), age = x.sli ? Math.round((now - x.at.sli) / 100) / 10 : null;
             const shown = x.sli && now - x.at.sli <= 10000 ? x.sliShown : undefined;
             const tsrAge = x.tsr ? Math.round((now - x.at.tsr) / 100) / 10 : null;
+            const camAge = x.cam ? Math.round((now - x.at.cam) / 100) / 10 : null;
             return ['sign (TrafficSignRecognition): ' + (tsrAge === null ? 'none yet' : 'presentClassLimitSpeed ' + one(x.tsr, 'presentClassLimitSpeed') + ', ' + tsrAge + ' s ago, shown ' + (x.tsrShown || '--')),
-                'head-up display data: ' + sliTimes.filter((t) => now - t <= 60000).length + ' in the last 60 s, ' + (age === null ? 'none yet' : 'the last ' + age + ' s ago') + '; shown: ' + (shown || '--')]
+                'head-up display data: ' + sliTimes.filter((t) => now - t <= 60000).length + ' in the last 60 s, ' + (age === null ? 'none yet' : 'the last ' + age + ' s ago') + '; shown: ' + (shown || '--'),
+                'warning signs (front camera): ' + (camAge === null ? 'none yet' : (x.cam.join(', ') || 'no type') + ', ' + camAge + ' s ago') + (x.camSeen ? '; seen ' + Object.keys(x.camSeen).map((k) => k + ' ' + x.camSeen[k]).join(', ') : '')]
                 .concat(sliChanges.slice(-(last || 20)).map((c) => new Date(c.at).toISOString() + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h  shown ' + (c.shown || '--') + '  ' + JSON.stringify(c.raw))).join('\n');
         },
         /** fn() on each new reading (the car's speed and rpm samples, every changed reading). */

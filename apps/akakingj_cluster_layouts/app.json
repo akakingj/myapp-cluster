@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.68.2",
+  "version": "0.69.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -97,9 +97,11 @@
   },
   "survey": {
     "comment": "Settings > Speed limit sign (0.68.0, shared/data.js tsrStep): the speed limit sign itself, de.bmw.dass.TrafficSignRecognition's TrafficSignRecognition event (AK Cluster Info's signal survey, 27 Nov 2026). Declared when the app is built or installed on a car only if that car's catalog has it, with its eventId (kit/runtime/survey_fit.js): written into \"signals\" a car without it would refuse the whole app. Without it the sign comes from the head-up display's data as before.",
-    "max": 1,
+    "comment2": "KO 1's and KO 2's warning signs (0.69.0, shared/road_signs.js, layout_common.warnPieces): the front camera's TrafficSignRecognitionFrontCamera event, once a sign (the same survey), declared the same way.",
+    "max": 2,
     "groups": [
-      { "id": "sign", "iface": "de.bmw.dass.TrafficSignRecognition", "events": "^TrafficSignRecognition$", "sign": true }
+      { "id": "sign", "iface": "de.bmw.dass.TrafficSignRecognition", "events": "^TrafficSignRecognition$", "sign": true },
+      { "id": "camsign", "iface": "de.bmw.environmentalmodel.SignRecognitionFrontCamera", "events": "^TrafficSignRecognitionFrontCamera$", "sign": true }
     ]
   },
   "screens": [

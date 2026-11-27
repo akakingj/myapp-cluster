@@ -7,6 +7,7 @@
  *   node tools/preview.js [--layout analog_sport] [--look comfort|sport|efficient] [--centre info|stock] [--kmh]
  *                         [--black] [--speed 62] [--rpm 3200] [--gear 4] [--stage D] [--mode S] [--oil 96] [--coolant 90]
  *                         [--celsius] [--mcar] [--strip] [--dap] [--hotOil 125] [--hotCoolant 112] [--hotGearbox 120] [--tempGauge scale]
+ *                         [--warn wild_animal,slippery] (the warning signs shown, KO 1 and KO 2, with --sliSign on)
  *                         [--gtrail 1] [--speedMax 330] [--boostMax 30] [--pressUnit bar] [--bottomExtra on|off] [--out preview.png]
  * --gtrail: the G over the last 3.2 s through a bend (JDM 2's trail)
  * --mcar: the M KOMBI's two dark boxes drawn over the layout (as it left them over the full-screen form, gone in 0.34.0:
@@ -134,7 +135,7 @@ if (require.main === module) {
         // shift light, --shiftAt the shift warning)
         redline: a.redline, rpmMax: a.rpmMax, yellowFrom: a.yellow, shiftBefore: a.shiftAt !== undefined && a.redline !== undefined ? a.redline - a.shiftAt : undefined },
         data: { speed: a.speed * (a.kmh ? 1 : 1.609344), rpm: a.rpm, gear: a.gear, stage: a.stage, mode: a.mode, driveMode: a.drive, pedal: a.pedal, oil: a.oil, coolant: a.coolant, outside: a.outside, soc: a.soc, kw: a.kw, erange: a.erange, frange: a.frange,
-            gearbox: a.gearbox, iat: a.iat, battTemp: a.batt, boostActual: a.boost, torque: 312, timing: 14.5, hpfp: 205, boostTarget: 0.9, engineOn: a.rpm > 300, tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } }, fuelPct: a.fuel, speedLimit: a.speedLimit, gLat: a.glat, gLong: a.glong, pdDrive: 62, pdClimate: 24, pdSeats: 14, avgCons: 11.7, avgConsUnit: 'kml', tripKm: a.tripKm !== undefined ? a.tripKm : 126, tripMin: a.tripMin !== undefined ? a.tripMin : 150, dap: a.dap ? require('../apps/akakingj_cluster_layouts/dap').DEMO : null } });
+            gearbox: a.gearbox, iat: a.iat, battTemp: a.batt, boostActual: a.boost, torque: 312, timing: 14.5, hpfp: 205, boostTarget: 0.9, engineOn: a.rpm > 300, tyres: { p: { FL: 2.48, FR: 2.50, RL: 2.62, RR: 2.60 }, t: { FL: 24, FR: 25, RL: 27, RR: 26 } }, fuelPct: a.fuel, speedLimit: a.speedLimit, roadSigns: a.warn ? String(a.warn).split(',') : undefined, gLat: a.glat, gLong: a.glong, pdDrive: 62, pdClimate: 24, pdSeats: 14, avgCons: 11.7, avgConsUnit: 'kml', tripKm: a.tripKm !== undefined ? a.tripKm : 126, tripMin: a.tripMin !== undefined ? a.tripMin : 150, dap: a.dap ? require('../apps/akakingj_cluster_layouts/dap').DEMO : null } });
     // let the needles ease to their readings
     // two minutes first, on a made-up clock, so trend lines have a past
     const base = Object.assign({}, s.data()), now = Date.now;
