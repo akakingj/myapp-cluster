@@ -3,10 +3,24 @@
 
     python3 tools/decode_logs.py photo1.jpg photo2.jpg ... [-o logs.txt]
 
-Each code reads "CLG1 <bundle id> <n>/<count> <base64>"; the slices of the newest bundle are joined in order and
+Each code reads "CLG2 <bundle id> <n>/<count> <base45>." (alphanumeric mode; the last '.' not the data's) or, from
+older apps, "CLG1 <bundle id> <n>/<count> <base64>"; the slices of the newest bundle are joined in order, decoded and
 inflated (zlib). Needs OpenCV (cv2): its Aruco-based QR detector reads several codes in one photo.
 """
 import base64, sys, zlib, argparse
+
+B45 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:'
+
+def b45decode(s):
+    """base45 (RFC 9285) back to bytes: three characters for two bytes, two for a last odd one."""
+    out = bytearray()
+    for i in range(0, len(s), 3):
+        c = [B45.index(ch) for ch in s[i:i + 3]]
+        if len(c) == 3:
+            n = c[0] + c[1] * 45 + c[2] * 2025
+            out += bytes((n >> 8, n & 255))
+        else: out.append(c[0] + c[1] * 45)
+    return bytes(out)
 import cv2, numpy as np
 
 def views(gray):
@@ -48,15 +62,17 @@ def main():
         if img is None: print('cannot read', p); continue
         for t in codes_in(img):
             f = t.split(' ', 3)
-            if len(f) == 4 and f[0] == 'CLG1':
+            if len(f) == 4 and f[0] in ('CLG1', 'CLG2'):
                 n, count = map(int, f[2].split('/'))
-                parts.setdefault(f[1], {'count': count, 'slices': {}})['slices'][n] = f[3]
+                data = f[3][:-1] if f[0] == 'CLG2' and f[3].endswith('.') else f[3]
+                parts.setdefault(f[1], {'count': count, 'kind': f[0], 'slices': {}})['slices'][n] = data
     if not parts: sys.exit('no codes found')
     bid = max(parts, key=lambda k: len(parts[k]['slices']))
     b = parts[bid]
     missing = [i for i in range(1, b['count'] + 1) if i not in b['slices']]
     if missing: sys.exit('bundle %s: missing codes %s of %d' % (bid, missing, b['count']))
-    text = zlib.decompress(base64.b64decode(''.join(b['slices'][i] for i in range(1, b['count'] + 1)))).decode('utf8')
+    joined = ''.join(b['slices'][i] for i in range(1, b['count'] + 1))
+    text = zlib.decompress(b45decode(joined) if b['kind'] == 'CLG2' else base64.b64decode(joined)).decode('utf8')
     if a.out: open(a.out, 'w').write(text); print('wrote', a.out, len(text), 'chars')
     else: print(text)
 

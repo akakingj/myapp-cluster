@@ -348,6 +348,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Info 1.11.1, Layouts 0.67.2, Centre 0.16.5 (Nov 27 2026): the Logs' QR codes about 30 % fewer - "CLG2 <id> <n>/<count>
+  <base45>." in alphanumeric mode (shared/qr.js encode alnum, shared/logs.js base45; Info's log of 16:35: 21 codes ->
+  15), tools/decode_logs.py reads CLG1 and CLG2. Info's signal survey: one button, Start survey / Stop survey (조사 시작 /
+  조사 중지; Start also sets the check to Signal survey), started driving too (no "stop the car first"), no asking again
+  under 3 min; its record fitted to 15 codes (was 30). The translation changed: all three apps up.
 - Layouts 0.67.1, Centre 0.16.4 (Nov 27 2026): a curve's speed is no limit. Info's log of 16:35 (cruise control on at
   102, then 112): vSLISymbol LDM_VZA_VSLI_COURSE with 10 (50) at 500 m ... OFF on a 100 road, then the 10 left with
   NO_SYMBOL till the next 100 sign; 0.67.0 would have shown 50 for ~20 s. Now the curve's figure is skipped, and the same

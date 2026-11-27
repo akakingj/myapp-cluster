@@ -1,10 +1,12 @@
 'use strict';
 /**
- * qr.js - QR codes (ISO/IEC 18004, byte mode), for getting logs off the head unit by photographing its screen:
+ * qr.js - QR codes (ISO/IEC 18004, byte or alphanumeric mode), for getting logs off the head unit by photographing its screen:
  * the apps can't reach a phone over the network (the unit's firewall lets nothing connect in, and an app's
  * traffic out only through the uids the uplink allows), but a camera can read a QR code.
  *
  *   encode(bytes, { ecl: 'L' | 'M' | 'Q' | 'H', minVersion, maxVersion }) -> { size, version, get(x, y) }
+ *   encode(text, { alnum: true, ... }): a text of ALNUM's 45 characters only, 11 bits for two (byte mode: 16) - logs.js
+ *   sends its slices in it, base45 (RFC 9285), about 40 % more to a code than base64 in byte mode
  *
  * Written for this repo after the method in Project Nayuki's QR Code generator (MIT): Reed-Solomon over
  * GF(2^8), block interleaving, the function patterns, the eight masks and the standard penalty.
@@ -38,6 +40,14 @@ const dataCodewords = (ver, e) => Math.floor(rawModules(ver) / 8) - ECC_PER_BLOC
 function capacity(ver, ecl) {
     const bits = dataCodewords(ver, ECL[ecl].ord) * 8 - 4 - (ver <= 9 ? 8 : 16);
     return Math.floor(bits / 8);
+}
+/* the alphanumeric mode's characters, in their order (a character's index is its value) */
+const ALNUM = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
+const alnumCountBits = (ver) => (ver <= 9 ? 9 : ver <= 26 ? 11 : 13);
+/** The most characters a version holds in alphanumeric mode at an error correction level. */
+function capacityAlnum(ver, ecl) {
+    const bits = dataCodewords(ver, ECL[ecl].ord) * 8 - 4 - alnumCountBits(ver);
+    return Math.floor(bits / 11) * 2 + (bits % 11 >= 6 ? 1 : 0);
 }
 
 /* ---- GF(2^8) and Reed-Solomon ---- */
@@ -77,19 +87,28 @@ function rsRemainder(data, div) {
  * Returns { version, size, get(x, y) -> true for a dark module }.
  */
 function encode(bytes, opts) {
-    const o = opts || {}, ecl = ECL[o.ecl || 'M'];
-    const minV = o.minVersion || 1, maxV = o.maxVersion || 40;
+    const o = opts || {}, ecl = ECL[o.ecl || 'M'], alnum = !!o.alnum;
+    if (alnum) for (const c of String(bytes)) if (ALNUM.indexOf(c) < 0) throw new Error('qr: ' + JSON.stringify(c) + ' is not alphanumeric');
+    const minV = o.minVersion || 1, maxV = o.maxVersion || 40, cap = alnum ? capacityAlnum : capacity;
     let ver = minV;
-    for (; ver <= maxV; ver++) if (bytes.length <= capacity(ver, o.ecl || 'M')) break;
-    if (ver > maxV) throw new Error('qr: ' + bytes.length + ' bytes do not fit version ' + maxV);
+    for (; ver <= maxV; ver++) if (bytes.length <= cap(ver, o.ecl || 'M')) break;
+    if (ver > maxV) throw new Error('qr: ' + bytes.length + (alnum ? ' characters' : ' bytes') + ' do not fit version ' + maxV);
     const e = ecl.ord, size = ver * 4 + 17;
 
-    /* the data codewords: mode, count, bytes, terminator, padding */
+    /* the data codewords: mode, count, the data, terminator, padding */
     const bits = [];
     const put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >>> i) & 1); };
-    put(4, 4);
-    put(bytes.length, ver <= 9 ? 8 : 16);
-    for (const b of bytes) put(b, 8);
+    if (alnum) {
+        const t = String(bytes);
+        put(2, 4);
+        put(t.length, alnumCountBits(ver));
+        for (let i = 0; i + 1 < t.length; i += 2) put(ALNUM.indexOf(t[i]) * 45 + ALNUM.indexOf(t[i + 1]), 11);
+        if (t.length % 2) put(ALNUM.indexOf(t[t.length - 1]), 6);
+    } else {
+        put(4, 4);
+        put(bytes.length, ver <= 9 ? 8 : 16);
+        for (const b of bytes) put(b, 8);
+    }
     const capBits = dataCodewords(ver, e) * 8;
     put(0, Math.min(4, capBits - bits.length));
     put(0, (8 - bits.length % 8) % 8);
@@ -201,4 +220,4 @@ function encode(bytes, opts) {
     return { version: ver, size, get: (x, y) => x >= 0 && y >= 0 && x < size && y < size && mods[y][x] };
 }
 
-module.exports = { encode, capacity };
+module.exports = { encode, capacity, capacityAlnum, ALNUM };

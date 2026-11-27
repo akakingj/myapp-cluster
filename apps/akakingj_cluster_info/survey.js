@@ -8,7 +8,7 @@
  * kit/runtime/survey_fit.js): only what this car's catalog has, read only, at most 60 members; kit/survey-signals.json
  * says what was declared and what was left out. Nothing is asked of the car until the survey is started:
  *
- *   - start (the car standing): every declared service subscribed in turn, each given 20 s so a slow one holds up no
+ *   - start (driving or standing, 1.11.1): every declared service subscribed in turn, each given 20 s so a slow one holds up no
  *     other; the speed limit sign's candidates (groups marked sign) the whole survey long - a sign comes only as the
  *     car passes one; the driving assistant's settings (readOnce) read once; the fast ones (fast: the car ahead, the
  *     camera's objects, the lanes) their first 5 values each, then let go, how often they came measured
@@ -146,12 +146,12 @@ function startSurvey(ctx, log, opts) {
         });
     }
 
-    /** Starts the survey; returns null, or why it did not (the car moving, already on, nothing declared). */
+    /** Starts the survey; returns null, or why it did not (already on, nothing declared). Driving or standing
+     *  (1.11.1): the speed at the start is in the record. */
     function start() {
         if (run) return 'already running';
         if (!declared.length) return reportError || 'nothing declared for this car';
         const h = hudNow(hud());
-        if (typeof h.kmh === 'number' && h.kmh > 3) return 'stop the car first';
         const t = now();
         run = { at: t, items: declared.map(itemOf), subs: [], changes: [], settings: [], catalog: [], kmhAtStart: h.kmh };
         say('started: ' + declared.length + ' members');
@@ -270,12 +270,15 @@ function startSurvey(ctx, log, opts) {
         return sections(rec, level).map(([t, b]) => '--- ' + t + ' ---\n' + b).join('\n\n') + '\n';
     }
 
-    /** The last record's sections at the shortest level whose bundle (with other) fits in maxCodes QR codes. */
-    function fitted(other, maxCodes, chunk) {
+    /** The last record's sections at the shortest level whose bundle (with other) fits in maxCodes QR codes;
+     *  count(text): the codes a text takes (logs.codeCount), or a number: base64 characters a code. */
+    function fitted(other, maxCodes, count) {
         if (!last) return [];
+        const codesOf = typeof count === 'function' ? count
+            : (all) => Math.ceil(zlib.deflateSync(Buffer.from(all, 'utf8'), { level: 9 }).toString('base64').length / (count || 380));
         for (let l = 0; l < LEVELS.length; l++) {
             const s = sections(last, l), all = other.concat(s).map(([t, b]) => '--- ' + t + ' ---\n' + b).join('\n');
-            const n = Math.ceil(zlib.deflateSync(Buffer.from(all, 'utf8'), { level: 9 }).toString('base64').length / (chunk || 380));
+            const n = codesOf(all);
             if (n <= maxCodes || l === LEVELS.length - 1) return s;
         }
         return [];

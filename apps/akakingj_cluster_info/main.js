@@ -255,32 +255,28 @@ mgu.run({
         try { adas = startAdasProbe(ctx, log, { want: () => adasMode() !== 'off' }); } catch (e) { log.warn('driving assistant check: ' + e); }
         /* ---------- Settings > Driving assistant check > Signal survey (survey.js, read only, 1.11.0) ----------
          * what the car's catalog had of the speed limit sign's candidates when the app was installed, subscribed from
-         * [Start survey] (the car standing) to [End survey] or 30 min; the HUD data (above) gives each change its speed
-         * and Speed Limit Assist's figures. Keeps going with the page closed. */
-        let survey = null, endArmed = 0, surveyNote = '';
+         * [Start survey] (driving or standing, 1.11.1) to [Stop survey] or 30 min; the HUD data (above) gives each change its
+         * speed and Speed Limit Assist's figures. Keeps going with the page closed. One button: Start survey (it also turns
+         * Driving assistant check to Signal survey), Stop survey while it runs (1.11.1; till 1.11.0 three steps: Signal
+         * survey, Start survey, End survey asking again under 3 min). */
+        let survey = null, surveyNote = '';
         try { survey = startSurvey(ctx, log, { hud: () => (adas ? adas.hudValue() : null), dir: ctx.dataDir || '.' }); } catch (e) { log.warn('signal survey: ' + e); }
         const KO = /^ko/.test((() => { try { return require('./kit/i18n').getLanguage(); } catch (e) { return 'en'; } })());
         let shownLabel = null;
         const surveyLabel = () => {
-            const lab = adasMode() !== 'survey' ? 'Signal survey' : survey && survey.running() ? 'End survey' : 'Start survey';
+            const lab = survey && survey.running() ? 'Stop survey' : 'Start survey';
             if (lab === shownLabel) return Promise.resolve();
             shownLabel = lab;
             return ui.text('BTN_SURVEY', lab);
         };
         ui.onClick('BTN_SURVEY', () => {
             surveyNote = '';
-            if (adasMode() !== 'survey') settings.set('adasCheck', 'survey');
-            else if (!survey) surveyNote = KO ? '신호 조사를 시작할 수 없습니다' : 'The signal survey could not start';
-            else if (survey.running()) {
-                const st = survey.status();
-                // (under 3 min: said once; pressed again within 10 s, it ends)
-                if (st.elapsedS < 180 && Date.now() - endArmed > 10000) {
-                    endArmed = Date.now();
-                    surveyNote = KO ? '3분 이상 필요합니다. 그래도 끝내려면 10초 안에 다시 누르세요' : 'At least 3 minutes are needed: press again within 10 s to end anyway';
-                } else { endArmed = 0; survey.end('button'); }
-            } else {
+            if (!survey) surveyNote = KO ? '신호 조사를 시작할 수 없습니다' : 'The signal survey could not start';
+            else if (survey.running()) survey.end('button');
+            else {
+                if (adasMode() !== 'survey') settings.set('adasCheck', 'survey');
                 const why = survey.start();
-                if (why) surveyNote = (KO ? '시작하지 못함: ' : 'Not started: ') + ({ 'stop the car first': KO ? '정차한 뒤 누르세요' : 'stop the car first' }[why] || why);
+                if (why) surveyNote = (KO ? '시작하지 못함: ' : 'Not started: ') + why;
             }
             surveyLabel();
             return render();
@@ -344,14 +340,14 @@ mgu.run({
                 ['this app\'s log', logs.tail(path.join(dataDir, 'akakingj_cluster_info.log'), n(40, 600))],
             ];
             if (full) sections.push(['cluster-render log', logs.tail(logs.RENDER_LOG, 1500)]);
-            // the survey's record: whole in the file, as much as fits in about 25 codes (at most 30) in the QR codes:
+            // the survey's record: whole in the file, as much as fits in 15 codes (1.11.1; 30 before CLG2) in the QR codes:
             // the first values and the changes' values cut shorter until it does
             // (1.11.0) with a signal survey's record: its sections after the settings; in the codes only they, the page
             // and the HUD's speed limit changes (the rest is in the file)
             if (rec) {
                 if (!full) sections.splice(1, sections.length - 1, ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
                     ['speed limit (HUD data), last changes', st ? st.sli.changes.map((c) => new Date(c.at).toISOString().slice(11, 19) + ' ' + c.line).join('\n') : '']);
-                const mine = full ? survey.sections(0) : survey.fitted(sections, 30, logs.CHUNK);
+                const mine = full ? survey.sections(0) : survey.fitted(sections, 15, logs.codeCount);
                 sections.splice(1, 0, ...mine);
             }
             return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Info') + ' ' + ((ctx.spec && ctx.spec.version) || ''), sections);
@@ -454,10 +450,10 @@ mgu.run({
                 L((KO ? '값 온 것: ' : 'With values: ') + (st.withValues.length ? st.withValues.join('  ·  ') : (KO ? '아직 없음' : 'none yet')).slice(0, 170), y, 15, st.withValues.length ? t.text : t.dim);
                 st.recent.forEach((c, i) => L(new Date(c.at).toTimeString().slice(0, 8) + '  ' + (typeof c.kmh === 'number' ? c.kmh + ' km/h  ' : '') + c.what.split('.').slice(-2).join('.') + ' = ' + String(c.value).slice(0, 120), y + 22 + i * 19, 14, t.text));
                 y += 22 + 3 * 19 + 6;
-                L(KO ? '끝내려면 아래 [조사 끝내기]' : 'To end: [End survey] below', y, 16, t.dim);
+                L(KO ? '끝내려면 아래 [조사 중지]' : 'To end: [Stop survey] below', y, 16, t.dim);
             } else {
-                L(KO ? '정차한 상태에서 아래 [조사 시작]을 누르고 출발하세요. 크루즈 끄고 5분 (표지판 2개 이상), 크루즈 켜고 5분, 정차 후 [조사 끝내기] → [로그]'
-                    : 'Standing, press [Start survey] below, then drive: 5 min with the cruise control off (2 signs or more), 5 min with it on; standing, [End survey], then [Logs]', y, 16, t.text);
+                L(KO ? '아래 [조사 시작]을 누르세요 (주행 중에도 됨). 크루즈 끄고 5분 (표지판 2개 이상), 크루즈 켜고 5분, [조사 중지] → [로그]'
+                    : 'Press [Start survey] below (driving is fine): 5 min with the cruise control off (2 signs or more), 5 min with it on; [Stop survey], then [Logs]', y, 16, t.text);
                 y += 28;
                 const ls = st.last;
                 if (ls) L((KO ? '지난 조사: ' + new Date(ls.at).toTimeString().slice(0, 5) + ', ' + Math.round((ls.endedAt - ls.at) / 60000) + '분, 값 온 항목 ' + ls.valued + '/' + ls.items + ', 표지판 변화 ' + ls.changes + '번 → [로그]에 있음'

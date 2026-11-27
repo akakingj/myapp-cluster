@@ -3,7 +3,7 @@
  * test_cluster_info_survey.js - Cluster Info 1.11.0's signal survey (survey.js): started only with the car standing;
  * every declared service subscribed (fields and events, on the instance the install found); a sign candidate's every
  * change written with the time, the speed and the HUD data's own figures; the settings read once; the fast ones let go
- * after 5 values, how often they came measured; [End survey] and the 30 min both making the record - each member's
+ * after 5 values, how often they came measured; [Stop survey] and the 30 min both making the record - each member's
  * state, the catalog's lines - saved to exports/ and fitted into about 25 QR codes; never a method call or a write.
  *   node kit/tools/test_cluster_info_survey.js
  */
@@ -71,12 +71,11 @@ const settle = () => new Promise((r) => setTimeout(r, 5));
         assert(inf.missing > 0 && inf.catalog === true && inf.error === null);
         assert.strictEqual(sv.running(), false);
     });
-    await check('started only with the car standing; then every service subscribed on its instance, events too', async () => {
+    await check('started driving too (1.11.1); then every service subscribed on its instance, events too', async () => {
+        assert.strictEqual(watched.length, 0, 'nothing asked of the car before the start');
         hudV.speed.kmH = 40;
-        assert.strictEqual(sv.start(), 'stop the car first');
-        assert.strictEqual(watched.length, 0, 'nothing asked of the car');
+        assert.strictEqual(sv.start(), null, 'at 40 km/h: started');
         hudV.speed.kmH = 0;
-        assert.strictEqual(sv.start(), null);
         for (let i = 0; i < 20; i++) await settle();
         assert.deepStrictEqual(watched.sort(), ['de.bmw.dass.GapVehicleAhead@1', 'de.bmw.dass.TrafficSignRecognition@1', 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl@1',
             'de.bmw.dass.settingsdriverassistancefunctions.SettingsDriverAssistanceFunctions@1', 'de.bmw.environmentalmodel.SignRecognitionFrontCameraLegacy@Main_Instance']);
@@ -106,7 +105,7 @@ const settle = () => new Promise((r) => setTimeout(r, 5));
         assert(shut.indexOf('de.bmw.dass.GapVehicleAhead') >= 0, 'the fast one let go');
         assert(shut.indexOf('de.bmw.environmentalmodel.SignRecognitionFrontCameraLegacy') < 0, 'the sign candidates kept');
     });
-    await check('[End survey]: everything let go, each member\'s state, the record saved and kept', async () => {
+    await check('[Stop survey]: everything let go, each member\'s state, the record saved and kept', async () => {
         t += 4 * 60 * 1000;
         const rec = sv.end('button');
         await settle();
@@ -154,9 +153,13 @@ const settle = () => new Promise((r) => setTimeout(r, 5));
     await check('the page: Settings > Driving assistant check > Signal survey, its button, its Korean', async () => {
         const item = INFO.settings.find((x) => x.key === 'adasCheck');
         assert(item.options.some((o) => o[0] === 'survey'));
-        assert(INFO.screens[0].buttons.some((b) => b[0] === 'BTN_SURVEY'));
+        assert(INFO.screens[0].buttons.some((b) => b[0] === 'BTN_SURVEY' && b[1] === 'Start survey'), 'one button, Start survey');
         const ko = JSON.parse(fs.readFileSync(path.join(ROOT, 'kit', 'runtime', 'locales', 'ko.json'), 'utf8'));
-        ['Signal survey', 'Start survey', 'End survey', 'Signal survey: the speed limit sign'].forEach((k) => assert(ko[k], k));
+        ['Signal survey', 'Start survey', 'Stop survey', 'Signal survey: the speed limit sign'].forEach((k) => assert(ko[k], k));
+        assert.deepStrictEqual([ko['Start survey'], ko['Stop survey']], ['조사 시작', '조사 중지']);
+        const main = fs.readFileSync(path.join(APP, 'main.js'), 'utf8');
+        assert(/survey\.running\(\) \? 'Stop survey' : 'Start survey'/.test(main), 'the label: Stop survey while it runs');
+        assert(main.indexOf('survey.fitted(sections, 15, logs.codeCount)') > 0, 'the record fitted to 15 codes');
     });
     console.log(n + ' passed');
     process.exit(0);

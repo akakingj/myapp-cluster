@@ -7,12 +7,14 @@
  *   - a file on any USB stick plugged into the car (/media/<label>, as the unit mounts sticks) and in the app's
  *     data folder.
  *
- * A code's text: "CLG1 <bundle id> <n>/<count> <base64 of a slice of the zlib-deflated bundle>".
+ * A code's text (1.11.1 / Layouts 0.67.2 / Centre 0.16.5): "CLG2 <bundle id> <n>/<count> <a slice of the zlib-deflated
+ * bundle in base45 (RFC 9285)>." - alphanumeric mode (qr.js), the last '.' not the data's (a reader may drop a last
+ * space). About 30 % fewer codes than CLG1's base64 in byte mode (Info's log of 27 Nov 16:35: 21 codes, now 15). tools/decode_logs.py reads both.
  */
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-const { encode } = require('./qr');
+const { encode, capacityAlnum, ALNUM } = require('./qr');
 /* the screen's two lines in the app's language (the Store builds the apps in Korean); English without the kit */
 let lang = 'en';
 try { lang = require('./kit/i18n').getLanguage(); } catch (e) { /* tools and tests: English */ }
@@ -21,8 +23,20 @@ const KO = /^ko/.test(lang);
 const RENDER_LOG = '/var/opt/cluster-render/log/cluster-render.log';
 /* where the unit mounts USB sticks (udisks: /media/<label>); nothing else is written to */
 const MEDIA_ROOTS = ['/media', '/run/media'];
-/* per code: version 15 at level M holds 412 bytes; the header takes ~20 */
-const CHUNK = 380;
+/* per code: version 15 at level M holds 600 alphanumeric characters; the header ('CLG2 ABCDE 99/99 ') 17, the end '.' 1 */
+const CHUNK = capacityAlnum(15, 'M') - 18;
+
+/** Bytes as base45 (RFC 9285): two bytes in three characters, a last odd byte in two. */
+function base45(buf) {
+    let out = '';
+    for (let i = 0; i < buf.length; i += 2) {
+        if (i + 1 < buf.length) {
+            const n = buf[i] * 256 + buf[i + 1];
+            out += ALNUM[n % 45] + ALNUM[Math.floor(n / 45) % 45] + ALNUM[Math.floor(n / 2025)];
+        } else out += ALNUM[buf[i] % 45] + ALNUM[Math.floor(buf[i] / 45)];
+    }
+    return out;
+}
 
 /** The last `lines` lines of a file (and its rotated .1 when the file is short), or why not. */
 function tail(file, lines) {
@@ -87,13 +101,16 @@ function save(text, dataDir, name) {
 }
 
 /** The QR codes for a text: { id, codes: [{ size, get(x, y) }] }. */
+const packed = (text) => base45(zlib.deflateSync(Buffer.from(text, 'utf8'), { level: 9 }));
+/** How many codes a text takes. */
+function codeCount(text) { return Math.max(1, Math.ceil(packed(text).length / CHUNK)); }
 function codes(text) {
-    const z = zlib.deflateSync(Buffer.from(text, 'utf8'), { level: 9 }).toString('base64');
-    const id = Date.now().toString(36).slice(-5), n = Math.max(1, Math.ceil(z.length / CHUNK));
+    const z = packed(text);
+    const id = Date.now().toString(36).slice(-5).toUpperCase(), n = Math.max(1, Math.ceil(z.length / CHUNK));
     const list = [];
     for (let i = 0; i < n; i++) {
-        const payload = 'CLG1 ' + id + ' ' + (i + 1) + '/' + n + ' ' + z.slice(i * CHUNK, (i + 1) * CHUNK);
-        list.push(encode(Buffer.from(payload, 'ascii'), { ecl: 'M', maxVersion: 15 }));
+        const payload = 'CLG2 ' + id + ' ' + (i + 1) + '/' + n + ' ' + z.slice(i * CHUNK, (i + 1) * CHUNK) + '.';
+        list.push(encode(payload, { ecl: 'M', maxVersion: 15, alnum: true }));
     }
     return { id, codes: list, bytes: z.length };
 }
@@ -160,4 +177,4 @@ function pager(bundleOf, dataDir, log, tag) {
     };
 }
 
-module.exports = { tail, siblingLog, bundle, save, savedNote, codes, draw, pager, RENDER_LOG, CHUNK };
+module.exports = { tail, siblingLog, bundle, save, savedNote, codes, codeCount, base45, draw, pager, RENDER_LOG, CHUNK };
