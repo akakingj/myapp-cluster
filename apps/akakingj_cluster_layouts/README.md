@@ -414,7 +414,8 @@ own sign: the last limit recognised, kept until another one is (60 shown until a
 control on or off - the head-up display's DisplayDataServer xSpeedLimitAssist.vSLISpeedValue in steps of 5 (16 is 80).
 A new limit is first announced, vSLISymbol LDM_VZA_VSLI_SPEED_LIMIT with vSLIDistance counting down, and shown once it
 is reached (AK Cluster Info's log of 27 November 2026). 0 or nothing keeps the one shown; up to 140 km/h; `--` before
-the first and 10 s after the head-up display's data stops.
+the first and 10 s after the head-up display's data stops. A curve's or junction's speed (vSLISymbol
+LDM_VZA_VSLI_COURSE, 0.67.1) is no limit and is not shown.
 A layout may name its own
 starting point and the pieces whose boxes are mostly empty (sliHome, sliSkip): JDM 1's sign stands just above TACH,
 inside the tach's curve (its foot is full); KO 1's and KO 2's arc dials count as their circles, not their squares.

@@ -348,6 +348,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.67.1, Centre 0.16.4 (Nov 27 2026): a curve's speed is no limit. Info's log of 16:35 (cruise control on at
+  102, then 112): vSLISymbol LDM_VZA_VSLI_COURSE with 10 (50) at 500 m ... OFF on a 100 road, then the 10 left with
+  NO_SYMBOL till the next 100 sign; 0.67.0 would have shown 50 for ~20 s. Now the curve's figure is skipped, and the same
+  figure after it with no symbol, till another figure or a limit sign (sliStep mem.course). The cruise control's speed
+  never came in vSLISpeedValue (20 all along at 102 and 112).
 - Layouts 0.67.0, Centre 0.16.3 (Nov 27 2026): the speed limit sign as the car's own - the last limit recognised, kept
   till another, cruise control or not (shared/data.js sliStep). Info's log of 27 Nov (a drive, the cruise control off):
   vSLISpeedValue x 5 is the limit the car knows (16: 80, 20: 100); a new one announced with vSLISymbol SPEED_LIMIT and

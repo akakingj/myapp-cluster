@@ -188,6 +188,10 @@ function one(v, key, depth) {
  * (vSLIDistance OFF, or the symbol gone). 0 or nothing: the one shown kept. Up to 140 km/h (28): a 30 (150) seen once on
  * a motorway (Nov 24) is no road's. '--' till the first one, and 10 s after the head-up display's data stops. (0.64.1 -
  * 0.66.2 showed it only with the limiter or the cruise control on and ldmAdditionalSign TAKEOVER_SET: '--' otherwise.)
+ * A curve's or junction's speed (vSLISymbol LDM_VZA_VSLI_COURSE, the log of 16:35, Nov 27: a 10 = 50 at 500 m ... OFF on a
+ * 100 road, the cruise control at 102) is no limit: not shown, nor the same figure left after it with no symbol, till
+ * another figure or a limit sign comes (mem.course). The cruise control's own speed never comes in it (102, then 112:
+ * vSLISpeedValue 20 all along).
  * AK Cluster ID8's vehicle.js sliStep is the same rule.
  */
 function sliRawOf(v) {
@@ -200,9 +204,15 @@ function sliRawOf(v) {
 const SLI_MAX = 28;
 /** Whether the head-up display's data announces the NEXT limit (a sign ahead, its distance counting down). */
 const sliAhead = (r) => r.symbol === 'LDM_VZA_VSLI_SPEED_LIMIT' && !!r.dist && !/_OFF$/.test(String(r.dist));
-/** The limit shown after this data (km/h, the car's own figures), from the one shown before it (prev; undefined: none). */
-function sliStep(prev, r) {
-    if (!r || !isNum(r.value) || r.value < 1 || r.value > SLI_MAX || sliAhead(r)) return prev;
+const SLI_COURSE = 'LDM_VZA_VSLI_COURSE', SLI_LIMIT = 'LDM_VZA_VSLI_SPEED_LIMIT';
+/** The limit shown after this data (km/h, the car's own figures), from the one shown before it (prev; undefined: none);
+ *  mem (an object kept with it) remembers a curve's speed. */
+function sliStep(prev, r, mem) {
+    if (!r || !isNum(r.value) || r.value < 1 || r.value > SLI_MAX) return prev;
+    if (r.symbol === SLI_COURSE) { if (mem) mem.course = r.value; return prev; }
+    if (sliAhead(r)) return prev;
+    if (mem && mem.course === r.value && r.symbol !== SLI_LIMIT) return prev;
+    if (mem) mem.course = undefined;
     return r.value * 5;
 }
 
@@ -285,7 +295,7 @@ function startData(ctx, opts) {
             if (c !== null) { x.cruiseSet = c; x.at.cruiseSet = Date.now(); }
             /* what the head-up display has of Speed Limit Assist (sliRawOf), and the limit shown after it (sliStep) */
             const r = sliRawOf(v);
-            if (r) { x.sli = r; x.at.sli = Date.now(); x.sliShown = sliStep(x.sliShown, r); sliSeen(r); }
+            if (r) { x.sli = r; x.at.sli = Date.now(); x.sliShown = sliStep(x.sliShown, r, x.sliMem || (x.sliMem = {})); sliSeen(r); }
         },
     }, 'cruise control and speed limit (head-up display)', { pollMs: 2000 });
     // the driving experience switch and, on a plug-in hybrid, the eDrive mode

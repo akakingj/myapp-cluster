@@ -118,6 +118,16 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             assert.strictEqual(D.data().speedLimit, 100, '0: the one shown kept');
             handlers.functionalLibraryData(row(30, NO, 'LDM_VSLI_DIST_OFF'));
             assert.strictEqual(D.data().speedLimit, 100, '30 (150, Nov 24): no road\'s, kept 100');
+            /* a curve's speed (16:35, Nov 27): 50 at 500 m on a 100 road, the cruise control at 102 - no limit */
+            const CO = 'LDM_VZA_VSLI_COURSE';
+            handlers.functionalLibraryData(row(10, CO, 'LDM_VSLI_DIST_500_M', 'TAKEOVER_SET'));
+            assert.strictEqual(D.data().speedLimit, 100, 'a curve\'s speed: not a limit');
+            handlers.functionalLibraryData(row(10, CO, 'LDM_VSLI_DIST_OFF', 'TAKEOVER_SET'));
+            assert.strictEqual(D.data().speedLimit, 100, 'the curve reached: still not a limit');
+            handlers.functionalLibraryData(row(10, NO, 'LDM_VSLI_DIST_OFF', 'TAKEOVER_SET'));
+            assert.strictEqual(D.data().speedLimit, 100, 'the curve\'s figure left with no symbol: kept 100');
+            handlers.functionalLibraryData(row(20, SL, 'LDM_VSLI_DIST_OFF', 'TAKEOVER_SET'));
+            assert.strictEqual(D.data().speedLimit, 100, 'the 100 sign after it: 100');
             handlers.functionalLibraryData(row(12, NO, 'LDM_VSLI_DIST_OFF'));
             assert.strictEqual(D.data().speedLimit, 60, 'a new one with no announcement (the camera\'s): 60');
             const was = Date.now, later = Date.now() + 10001;
