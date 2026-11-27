@@ -184,8 +184,9 @@ function one(v, key, depth) {
  * the cruise control, not the sign the camera reads. AK Cluster Info's logs (Nov 24 and 27 2026): vSLISpeedValue has a
  * value only while the limiter (statusLimiter STATUS_ACTIVE) or the cruise control is on and ldmAdditionalSign is
  * TAKEOVER_SET; with the limiter off it is 0, at 60 km/h too, and between two signs taken it keeps the last one (30 at
- * 106 km/h on a motorway). In steps of 5 (12: 60, 10: 50). Anything else: none, '--'. AK Cluster ID8's vehicle.js sliOf
- * is the same rule.
+ * 106 km/h on a motorway). In steps of 5 (12: 60, 10: 50). Anything else: none, '--'. TAKEOVER_OCCURED, the moment one is
+ * taken (Info's log of Nov 27, 04:16:44: SET -> OCCURED -> SET), counts too: no '--' blink (0.66.1). AK Cluster ID8's
+ * vehicle.js sliOf is the same rule.
  */
 function sliRawOf(v) {
     const x = one(v, 'xSpeedLimitAssist'), acc = one(v, 'activeCruiseControl');
@@ -198,7 +199,8 @@ function sliRawOf(v) {
 const sliAssistOn = (r) => r.limiter === 'STATUS_ACTIVE' || (typeof r.acc === 'string' && !!r.acc && !/OFF|STANDBY/.test(r.acc))
     || (typeof r.cruise === 'number' && r.cruise > 0 && r.cruise !== 65535);
 /** The limit taken (the car's own figures, in steps of 5), or undefined. */
-const sliOf = (r) => (r && r.takeover === 'TAKEOVER_SET' && sliAssistOn(r) && isNum(r.value) && r.value >= 1 && r.value <= 30 ? r.value * 5 : undefined);
+const SLI_TAKEN = /^TAKEOVER_(SET|OCCURED|OCCURRED)$/;
+const sliOf = (r) => (r && SLI_TAKEN.test(String(r.takeover)) && sliAssistOn(r) && isNum(r.value) && r.value >= 1 && r.value <= 30 ? r.value * 5 : undefined);
 
 function startData(ctx, opts) {
     const { log } = ctx;

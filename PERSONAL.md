@@ -348,6 +348,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.66.1, Centre 0.16.1 (Nov 27 2026): TAKEOVER_OCCURED counts as taken (shared/data.js sliOf): Info's log
+  (04:16:44) has ldmAdditionalSign SET -> OCCURED -> SET the moment a limit is taken; the sign blinked '--' there.
 - Layouts 0.66.0, Centre 0.16.0, Info 1.10.27 (Nov 27 2026): the fuel % is the engine unit's own (OBD tank level)
   only, its last answer held, '--' till it answers; the car's litres over a tank size, Settings > Fuel tank size and
   Fuel % from gone (the size meant nothing; the Car profile 1.15.0 no longer sets them). 0.65.0's Yellow light at Off

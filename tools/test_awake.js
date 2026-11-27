@@ -108,6 +108,9 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             assert.strictEqual(D.data().speedLimit, undefined, 'the limiter off, a value left: -- (not 30 on a motorway)');
             handlers.functionalLibraryData(row(14, 'TAKEOVER_SET', 'STATUS_INACTIVE', { activeCruiseControl: { symbolACC: 'LDM_CAR_NORMAL' } }));
             assert.strictEqual(D.data().speedLimit, 70, 'the cruise control on: its limit');
+            handlers.functionalLibraryData(row(16, 'TAKEOVER_OCCURED', 'STATUS_ACTIVE'));
+            assert.strictEqual(D.data().speedLimit, 80, 'TAKEOVER_OCCURED (the moment taken, Info\'s log of Nov 27 04:16:44): no -- blink');
+            handlers.functionalLibraryData(row(14, 'TAKEOVER_SET', 'STATUS_INACTIVE', { activeCruiseControl: { symbolACC: 'LDM_CAR_NORMAL' } }));
             const was = Date.now, later = Date.now() + 10001;
             Date.now = () => later;
             try { assert.strictEqual(D.data().speedLimit, undefined, 'no head-up display data for 10 s: --'); } finally { Date.now = was; }
