@@ -348,6 +348,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Layouts 0.63.0, Centre 0.15.4 (Nov 27 2026): the speed limit sign shows the car's limit (shared/data.js:
+  DisplayDataServer.functionalLibraryData xSpeedLimitAssist.vSLISpeedValue x 5). Info's QR log of Nov 27 2026: 14 at
+  64 km/h, 10 at 23 - 24, 12 at 38 - 45, 8 at 35 (roads of 70, 50, 60, 40), and 16 with the cruise control at 82 on Nov
+  18; vSLISymbol LDM_VZA_VSLI_SPEED_LIMIT only for a few seconds at each new limit (the HUD's pop-up), the value kept
+  after it. countryCode LDM_CCODE_ECE; statusVZA STATUS_INACTIVE throughout. Centre: the same shared data.js.
 - Layouts 0.62.2, Centre 0.15.3, Info 1.10.23 (Nov 26 2026): a setting the Car profile sets looks it in Settings (the
   owner: with the Car profile starting AK Cluster ID8, Layouts' Start on the cluster with the car looked changeable):
   its row dimmed, its value with "· Car profile", no arrow (kit sheet.js rows: held; it was already not opened).

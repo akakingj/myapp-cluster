@@ -92,6 +92,15 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             assert.deepStrictEqual(D.data().cruise, { on: true, set: 70 });
             handlers.functionalLibraryData({ cruiseCtrlSpeedHUD: 0 });
             assert.deepStrictEqual(D.data().cruise, { on: false, set: undefined });
+            // the speed limit as the head-up display gets it, in steps of 5 (the car's log: 14 on a 70 road); kept
+            // while the symbol goes back to none, none at an invalid value
+            assert.strictEqual(D.data().speedLimit, undefined, 'no limit read yet');
+            handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISymbol: 'LDM_VZA_VSLI_SPEED_LIMIT', vSLISpeedValue: 14 }, cruiseCtrlSpeedHUD: 65535 });
+            assert.strictEqual(D.data().speedLimit, 70);
+            handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', vSLISpeedValue: 8 } });
+            assert.strictEqual(D.data().speedLimit, 40, 'the value, also without the symbol');
+            handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISpeedValue: 0 } });
+            assert.strictEqual(D.data().speedLimit, undefined, '0: none');
         } finally { D.stop(); }
     });
 

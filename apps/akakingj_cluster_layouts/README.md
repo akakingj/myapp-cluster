@@ -409,8 +409,9 @@ limit in figures) in room the layout leaves. BMW's own speed limit sign is drawn
 under any layout. Its place is the nearest to BMW's own (over the clock, x 528, y 590 above the car's strip) where it
 stays 14 px clear of everything the layout draws then (a round dial as its circle), of the KOMBI's lights over us, the
 map's window, the glass's corners and the strip; worked out again with each change of layout or setting
-(layout_common.sliPlace, tools/test_sli.js: every layout, centre, car and strip). For now it shows `--`: the car's
-value comes once AK Cluster Info's Driving assistant check (Signals) has shown which value is the sign's. A layout may name its own
+(layout_common.sliPlace, tools/test_sli.js: every layout, centre, car and strip). Its figures (0.63.0) are the limit
+the car has read, as the head-up display gets it (DisplayDataServer xSpeedLimitAssist.vSLISpeedValue, in steps of 5: 14
+is 70); `--` until the car has sent one, and again 10 s after it stops. A layout may name its own
 starting point and the pieces whose boxes are mostly empty (sliHome, sliSkip): JDM 1's sign stands just above TACH,
 inside the tach's curve (its foot is full); KO 1's and KO 2's arc dials count as their circles, not their squares.
 

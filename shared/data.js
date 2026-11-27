@@ -326,8 +326,13 @@ function startData(ctx, opts) {
             fes('functionalLibraryData')(v);
             const c = numAt(v, 'cruiseCtrlSpeedHUD');
             if (c !== null) { x.cruiseSet = c; x.at.cruiseSet = Date.now(); }
+            /* the speed limit the car has read (xSpeedLimitAssist.vSLISpeedValue, as the head-up display gets it): in
+             * steps of 5 - the car's log of Nov 27 2026 had 8, 10, 12 and 14 on roads of 40, 50, 60 and 70 km/h. Kept
+             * while vSLISymbol goes back to no symbol (the HUD shows the sign only for a while; the value stays) */
+            const l = numAt(v, 'vSLISpeedValue');
+            if (l !== null) { x.sliRaw = l; x.at.sliRaw = Date.now(); }
         },
-    }, 'cruise control (head-up display)', { pollMs: 2000 });
+    }, 'cruise control and speed limit (head-up display)', { pollMs: 2000 });
     /* the car's ranges (KombiIF.statusRangeTankStatus, as installed apps declare it): the fields' names
      * differ by car, so numbers are picked by their names - range / Reichweite, electric (elec, ev, hv, bev)
      * or fuel (fuel, tank, kraftstoff, combustion), and the tank's level; kilometres, invalid at 0xFFFF and up */
@@ -720,6 +725,7 @@ function startData(ctx, opts) {
             if (o.engineOn === undefined && Date.now() - (x.at.engineState || 0) < 60000) o.engineOn = x.engineState === 'on';
             if (x.startWhy) o.startWhy = x.startWhy;
             // the cruise control: on with a set speed (the head-up display's), off at 0
+            if (!d.demo && Date.now() - (x.at.sliRaw || 0) < 10000 && x.sliRaw >= 1 && x.sliRaw <= 30) o.speedLimit = x.sliRaw * 5;
             if (!d.demo && Date.now() - (x.at.cruiseSet || 0) < 10000) o.cruise = { on: x.cruiseSet > 0 && x.cruiseSet < 250, set: x.cruiseSet > 0 && x.cruiseSet < 250 ? x.cruiseSet : undefined };
             gZeroed(o, tNow);
             return o;
