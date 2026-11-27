@@ -422,8 +422,10 @@ figure the limiter took. Up to 140 km/h; `--` before the first.
 reads (`de.bmw.environmentalmodel.SignRecognitionFrontCamera`'s TrafficSignRecognitionFrontCamera event, once a sign;
 declared the same way, only where the car's catalog has it) as South Korea's own yellow triangles (the government's
 designs, `sign_atlas.js` from `tools/make_sign_art.py`, 76 px high), each 10 s after the camera last read it, up to
-two (one on most roads): the first just above the speed limit sign, the second mirrored on the right of the centre
-panel. Each kept 12 px clear along its triangle of the layout, the sign, the KOMBI's lights and the driver camera's cowl
+two (one on most roads): the first where the speed limit sign stood (right of the speedometer, by the centre
+display), the second mirrored by the tach. KO 1's and KO 2's speed limit sign itself is in the speedometer's open foot,
+between its unit and its foot's reading (the owner's place; the needle never sweeps there), the smaller sign (76);
+beside the map, where the dials are smaller, where the other layouts put it. Each kept 12 px clear along its triangle of the layout, the sign, the KOMBI's lights and the driver camera's cowl
 over the top middle (layout_common.warnPlace; tools/test_sli.js). Give way, stop and the bans are AK Cluster Info's,
 on the head-up display; the speed limit and no passing the car's own. Shared with Info: `shared/road_signs.js`.
 A layout may name its own

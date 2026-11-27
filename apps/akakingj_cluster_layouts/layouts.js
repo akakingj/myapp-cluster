@@ -129,10 +129,12 @@ function withSign(L, o, list) {
     if (!signOn(o)) return list;
     const mapForm = o.centre === 'map' || (stripOn(o) && o.centre === 'stock');
     const where = { map: mapForm ? (L.mapWindow || C0.MAP_VIEW) : null, home: typeof L.sliHome === 'function' ? L.sliHome(o) : L.sliHome, skip: L.sliSkip };
-    const at = C0.sliPlace(list, where);
+    // (a layout's own place for it, sliAt: KO 1's and KO 2's inside the speedometer; else the free one nearest home)
+    const own = typeof L.sliAt === 'function' ? L.sliAt(list, o) : null;
+    const at = own || C0.sliPlace(list, where);
     const out = at ? list.concat(C0.sliPieces(at).map((p) => (p.key === 'sliNum' ? C0.sliFit(p, L.font || 'bold') : p))) : list;
     // the warning signs the camera reads beside it (KO 1, KO 2: warnSigns; with the speed limit sign, its setting)
-    return L.warnSigns ? out.concat(C0.warnPieces(C0.warnPlace(out, where))) : out;
+    return L.warnSigns ? out.concat(C0.warnPieces(C0.warnPlace(out, Object.assign({ warnHome: L.warnHome }, where)))) : out;
 }
 LAYOUTS.forEach((L) => {
     const own = L.pieces;

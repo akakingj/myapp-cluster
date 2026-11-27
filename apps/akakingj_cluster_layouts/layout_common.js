@@ -866,7 +866,9 @@ function sliObstacles(list, map, skip) {
     SIDE_LIGHTS.concat(TURN_ARROWS).forEach((q) => out.push({ r: [q.x, q.y, q.w, q.h] }));
     // (the driver camera's cowl over the top middle: nothing under it is seen - the owner, 2026-11-28)
     out.push({ r: [NOTCH.x, NOTCH.y, NOTCH.w, NOTCH.h] });
-    if (map) out.push({ r: [map.x, map.y, map.w, map.h] });
+    // (with the map: its window, and the KOMBI's own speed readout at its left, STOCK_SPEED - KO 1's warning signs
+    // stood over it, 0.69.0)
+    if (map) out.push({ r: [map.x, map.y, map.w, map.h] }, { r: [STOCK_SPEED.x, STOCK_SPEED.y, STOCK_SPEED.w, STOCK_SPEED.h] });
     return out;
 }
 function sliFree(x, y, r, obs) {
@@ -888,6 +890,16 @@ function sliPlace(list, opts) {
         for (let i = 0; i < pts.length; i++) if (sliFree(pts[i].x, pts[i].y, r, obs)) return { x: pts[i].x, y: pts[i].y, r };
     }
     return null;
+}
+/** The speed limit sign in a speedometer's open foot (KO 1's and KO 2's sliAt, the owner's place): between the dial's
+ * unit (speedUnit) and its foot's reading (speedSubNum), in the dial's middle, the smaller sign, where they leave it
+ * room (SLI_GAP / 2 each side); null where they don't (the smaller dials beside the map: the sign as elsewhere). */
+function sliInFoot(list) {
+    const u = list.find((p) => p.key === 'speedUnit'), f = list.find((p) => p.key === 'speedSubNum');
+    if (!u || !f) return null;
+    const r = SLI_R[SLI_R.length - 1], top = u.y + u.h, room = f.y - top;
+    if (room < 2 * r + SLI_GAP) return null;
+    return { x: Math.round(u.x + u.w / 2), y: Math.round(top + room / 2), r };
 }
 /** The sign's figures piece made to hold three wide figures ('888') in the layout's glyph family (fitText's way): JDM 1's
  * wide face ran over the ring. */
@@ -941,11 +953,11 @@ function warnFree(x, y, obs) {
     });
 }
 /** Where the warning signs go among the pieces in list (the speed limit sign's among them, or none): up to WARN.max
- * centres [{ x, y }], beside the limit sign (or home where there is none). */
+ * centres [{ x, y }], nearest opts.warnHome (a layout's own), else beside the limit sign (or home where there is none). */
 function warnPlace(list, opts) {
     opts = opts || {};
     const sign = list.find((p) => p.key === 'sliDisc');
-    const home = sign ? { x: sign.x + sign.w / 2, y: sign.y + sign.h / 2 } : (opts.home || SLI_HOME);
+    const home = opts.warnHome || (sign ? { x: sign.x + sign.w / 2, y: sign.y + sign.h / 2 } : (opts.home || SLI_HOME));
     const obs = sliObstacles(list, opts.map, opts.skip);
     const nearest = (h, extra) => {
         let best = null;
@@ -989,6 +1001,6 @@ function warnPieces(spots) {
 module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, powerTop, torqueTop, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
-    SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliPieces, sliFit, sliText, sliObstacles, sliFree,
+    SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliInFoot, sliPieces, sliFit, sliText, sliObstacles, sliFree,
     WARN, WARN_W, warnPlace, warnPieces, warnFree, signAtlas,
 };

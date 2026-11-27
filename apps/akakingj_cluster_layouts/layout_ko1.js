@@ -219,6 +219,13 @@ module.exports = {
     id: 'ko1',
     // the warning signs the camera reads, beside the speed limit sign (layout_common.warnPlace, 0.69.0)
     warnSigns: true,
+    // the speed limit sign in the speedometer's open foot, between its unit and its foot's reading (the owner's place,
+    // 0.69.0): the needle never sweeps there (its scale 225 - 135 degrees); beside the map, where the dial is smaller
+    // and leaves no room, where the other layouts put it
+    sliAt: (list) => C.sliInFoot(list),
+    // and the warning signs where the limit sign stood before, right of the speedometer by the centre display (the
+    // second mirrored by the tach)
+    warnHome: { x: 702, y: 590 },
     title: 'KO 1',
     font: 'light',
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,

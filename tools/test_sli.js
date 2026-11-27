@@ -36,7 +36,18 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['ice', 'phe
     const mapForm = centre === 'map' || centre === 'stock';
     const others = ps.filter((p) => !/^(sli|warn\d)/.test(p.key));
     const obs = C.sliObstacles(others, mapForm ? (L.mapWindow || C.MAP_VIEW) : null, L.sliSkip);
-    assert(C.sliFree(x, y, r, obs), what + ': clear of the layout at ' + x + ',' + y);
+    const own = L.sliAt ? L.sliAt(others, o) : null;
+    if (L.sliAt && centre === 'info') assert(own, what + ': in the speedometer (the full-size dials)');
+    if (!own) assert(C.sliFree(x, y, r, obs), what + ': clear of the layout at ' + x + ',' + y);
+    else {
+        // (a layout's own place, KO 1's and KO 2's in the speedometer's open foot: clear of every text and the foot's
+        // arc and icon, 4 px round its box)
+        assert.deepStrictEqual([x, y, r], [own.x, own.y, own.r], what + ': at its own place');
+        others.filter((p) => p.kind === 'text' || p.kind === 'icon' || /Foot/.test(p.key)).forEach((p) => {
+            if (p.kind === 'band') { const g = p.params.u_geo; assert(Math.hypot(x - (p.x + g[0]), y - (p.y + g[1])) + r + 4 <= g[2] - g[3] / 2 || y + r + 4 <= p.y, what + ': clear of ' + p.key); return; }
+            assert(x + r + 4 <= p.x || x - r - 4 >= p.x + p.w || y + r + 4 <= p.y || y - r - 4 >= p.y + p.h, what + ': clear of ' + p.key + ' ' + [p.x, p.y, p.w, p.h]);
+        });
+    }
     assert(d.z > 20 && num[0].z > d.z, what + ': over everything');
     // the warning signs the camera reads (0.69.0): KO 1's and KO 2's alone, two beside the sign, each clear of the
     // layout, the sign, the lights and the camera's cowl (along its triangle), the two apart
@@ -50,8 +61,10 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['ice', 'phe
             assert(C.warnFree(w.x + w.w / 2, w.y + w.h / 2, wobs.concat(i ? [{ r: [warn[0].x, warn[0].y, warn[0].w, warn[0].h] }] : [])), what + ': warn' + i + ' clear at ' + w.x + ',' + w.y);
             assert(w.x + w.w <= N.x || w.x >= N.x + N.w || w.y >= N.y + N.h, what + ': warn' + i + ' clear of the camera\'s cowl');
         });
-        const near = Math.hypot(warn[0].x + warn[0].w / 2 - x, warn[0].y + warn[0].h / 2 - y);
-        assert(near < 160, what + ': the first beside the speed limit sign (' + Math.round(near) + ' px)');
+        const home = L.warnHome || { x, y };
+        const near = Math.hypot(warn[0].x + warn[0].w / 2 - home.x, warn[0].y + warn[0].h / 2 - home.y);
+        // (beside the map's window the nearest free place, wherever it is)
+        if (!mapForm) assert(near < 160, what + ': the first beside ' + (L.warnHome ? 'its place' : 'the speed limit sign') + ' (' + Math.round(near) + ' px)');
         // shown only while the camera has one: the i-th the i-th sign's picture, else hidden
         assert.strictEqual(warn[1].visible({ roadSigns: ['wild_animal'] }), false);
         assert.strictEqual(warn[0].visible({ roadSigns: ['wild_animal'] }), true);

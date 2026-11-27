@@ -349,8 +349,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
 - Layouts 0.69.0, Centre 0.16.9, Info 1.12.2 (Nov 28 2026): KO 1's and KO 2's warning signs (the owner's ask): the
-  camera's warnings (DS_ types) as Korean triangles 76 high, up to two, the first just above the speed limit sign, the
-  second mirrored right of the centre panel, with Settings > Speed limit sign On (a GPU piece "sign" sampling
+  camera's warnings (DS_ types) as Korean triangles 76 high, up to two, the first where the speed limit sign stood
+  (right of the speedometer), the second mirrored by the tach; KO 1's and KO 2's speed limit sign moved into the
+  speedometer's open foot (the owner's place, layout_common.sliInFoot; beside the map as before), with Settings > Speed limit sign On (a GPU piece "sign" sampling
   sign_atlas.js; layout_common.warnPlace/warnPieces; data.js d.roadSigns, the camera's event declared by the survey
   fit). The top middle is the driver camera's cowl (the owner reminded): NOTCH now kept clear by the speed limit sign
   too. shared/road_signs.js now holds the camera logic for Info and Layouts (Info takes it by name).
