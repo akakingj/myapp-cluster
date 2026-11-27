@@ -958,12 +958,14 @@ function warnPlace(list, opts) {
     opts = opts || {};
     const sign = list.find((p) => p.key === 'sliDisc');
     const home = opts.warnHome || (sign ? { x: sign.x + sign.w / 2, y: sign.y + sign.h / 2 } : (opts.home || SLI_HOME));
-    const obs = sliObstacles(list, opts.map, opts.skip);
-    const nearest = (h, extra) => {
+    // (a layout's sliSkip aside: a sign is filled, over a tach's fine lines too - JDM 1's)
+    const obs = sliObstacles(list, opts.map, null);
+    const nearest = (h, extra, row) => {
         let best = null;
         // (within 480 px of it: a sign further off is beside nothing)
         for (let y = Math.max(WARN.h / 2 + 4, h.y - 480); y <= Math.min(STRIP_Y - 4 - WARN.h / 2, h.y + 480); y += 4) {
             for (let x = Math.max(WARN_W / 2 + 4, h.x - 480); x <= Math.min(1916 - WARN_W / 2, h.x + 480); x += 4) {
+                if (row && Math.abs(y - h.y) > 8) continue;
                 const d = (x - h.x) * (x - h.x) + (y - h.y) * (y - h.y);
                 if ((!best || d < best.d) && warnFree(x, y, obs.concat(extra || []))) best = { x, y, d };
             }
@@ -974,7 +976,8 @@ function warnPlace(list, opts) {
     if (!first) return [];
     const box = (s) => ({ r: [s.x - WARN_W / 2, s.y - WARN.h / 2, WARN_W, WARN.h] });
     const mirror = { x: 1920 - first.x, y: first.y };
-    const second = warnFree(mirror.x, mirror.y, obs.concat([box(first)])) ? mirror : nearest(first, [box(first)]);
+    // (the second: mirrored across the middle, else beside the first in its row, else the nearest free place)
+    const second = warnFree(mirror.x, mirror.y, obs.concat([box(first)])) ? mirror : nearest(first, [box(first)], true) || nearest(first, [box(first)]);
     return [{ x: first.x, y: first.y }].concat(second ? [{ x: second.x, y: second.y }] : []).slice(0, WARN.max);
 }
 let atlasImg = null;

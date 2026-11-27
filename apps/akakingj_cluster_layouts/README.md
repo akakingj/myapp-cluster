@@ -418,12 +418,14 @@ display's data as 0.67 had it - the last limit recognised (DisplayDataServer xSp
 announced one counted once reached, a curve's speed (LDM_VZA_VSLI_COURSE) never), which with the limiter on is the
 figure the limiter took. Up to 140 km/h; `--` before the first.
 
-**Warning signs on KO 1 and KO 2** (0.69.0, with Settings > Speed limit sign On): the warning signs the front camera
+**Warning signs** (0.69.0, every layout, with Settings > Speed limit sign On; first tried on KO 1 and KO 2): the warning signs the front camera
 reads (`de.bmw.environmentalmodel.SignRecognitionFrontCamera`'s TrafficSignRecognitionFrontCamera event, once a sign;
 declared the same way, only where the car's catalog has it) as South Korea's own yellow triangles (the government's
 designs, `sign_atlas.js` from `tools/make_sign_art.py`, 76 px high), each 10 s after the camera last read it, up to
-two (one on most roads): the first where the speed limit sign stood (right of the speedometer, by the centre
-display), the second mirrored by the tach. KO 1's and KO 2's speed limit sign itself is in the speedometer's open foot,
+two (one on most roads): the first in the free place nearest the speed limit sign (KO 1 and KO 2: where it stood
+before, right of the speedometer; JDM 1: top right over the coolant and oil boxes; JDM 2: right of the tach's foot),
+the second mirrored across the middle, else beside the first in its row. Beside the map there may be no room (none
+then). KO 1's and KO 2's speed limit sign itself is in the speedometer's open foot,
 between its unit and its foot's reading (the owner's place; the needle never sweeps there), the smaller sign (76);
 beside the map, where the dials are smaller, where the other layouts put it. Each kept 12 px clear along its triangle of the layout, the sign, the KOMBI's lights and the driver camera's cowl
 over the top middle (layout_common.warnPlace; tools/test_sli.js). Give way, stop and the bans are AK Cluster Info's,

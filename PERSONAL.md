@@ -348,7 +348,8 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
-- Layouts 0.69.0, Centre 0.16.9, Info 1.12.2 (Nov 28 2026): KO 1's and KO 2's warning signs (the owner's ask): the
+- Layouts 0.69.0, Centre 0.16.9, Info 1.12.2 (Nov 28 2026): warning signs on every layout (the owner's ask, first KO 1 and KO 2;
+  then all, places chosen by layout_common.warnPlace, JDM 1 and JDM 2 their own warnHome): the
   camera's warnings (DS_ types) as Korean triangles 76 high, up to two, the first where the speed limit sign stood
   (right of the speedometer), the second mirrored by the tach; KO 1's and KO 2's speed limit sign moved into the
   speedometer's open foot (the owner's place, layout_common.sliInFoot; beside the map as before), with Settings > Speed limit sign On (a GPU piece "sign" sampling

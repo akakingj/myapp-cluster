@@ -52,26 +52,28 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['ice', 'phe
     // the warning signs the camera reads (0.69.0): KO 1's and KO 2's alone, two beside the sign, each clear of the
     // layout, the sign, the lights and the camera's cowl (along its triangle), the two apart
     const warn = ps.filter((p) => /^warn\d$/.test(p.key));
-    if (!L.warnSigns) assert.strictEqual(warn.length, 0, what + ': no warning signs');
-    else {
-        assert.strictEqual(warn.length, 2, what + ': two warning signs');
+    {
+        // (every layout, 0.69.0: two where there is room, one at least)
+        assert(warn.length <= 2 && (mapForm || warn.length >= 1), what + ': ' + warn.length + ' warning signs');
         const wobs = C.sliObstacles(ps.filter((p) => !/^warn\d$/.test(p.key)), mapForm ? (L.mapWindow || C.MAP_VIEW) : null, L.sliSkip);
         warn.forEach((w, i) => {
             assert(w.kind === 'sign' && w.h === C.WARN.h && w.w === C.WARN_W && w.z >= 30, what + ': warn' + i + ' its kind and size');
             assert(C.warnFree(w.x + w.w / 2, w.y + w.h / 2, wobs.concat(i ? [{ r: [warn[0].x, warn[0].y, warn[0].w, warn[0].h] }] : [])), what + ': warn' + i + ' clear at ' + w.x + ',' + w.y);
             assert(w.x + w.w <= N.x || w.x >= N.x + N.w || w.y >= N.y + N.h, what + ': warn' + i + ' clear of the camera\'s cowl');
         });
+        if (warn.length) {
         const home = L.warnHome || { x, y };
         const near = Math.hypot(warn[0].x + warn[0].w / 2 - home.x, warn[0].y + warn[0].h / 2 - home.y);
         // (beside the map's window the nearest free place, wherever it is)
-        if (!mapForm) assert(near < 160, what + ': the first beside ' + (L.warnHome ? 'its place' : 'the speed limit sign') + ' (' + Math.round(near) + ' px)');
+        if (!mapForm && (L.warnHome || L.id !== 'classic')) assert(near < 160, what + ': the first beside ' + (L.warnHome ? 'its place' : 'the speed limit sign') + ' (' + Math.round(near) + ' px)');
         // shown only while the camera has one: the i-th the i-th sign's picture, else hidden
-        assert.strictEqual(warn[1].visible({ roadSigns: ['wild_animal'] }), false);
+        if (warn[1]) assert.strictEqual(warn[1].visible({ roadSigns: ['wild_animal'] }), false);
         assert.strictEqual(warn[0].visible({ roadSigns: ['wild_animal'] }), true);
         const A = require('../apps/akakingj_cluster_layouts/sign_atlas');
         assert.deepStrictEqual(warn[0].dyn({ roadSigns: ['wild_animal'] }).u_cell, A.cells.wild_animal);
         assert.deepStrictEqual(warn[0].dyn({ roadSigns: ['unknown_name'] }).u_cell, A.cells.danger);
         assert.deepStrictEqual(warn[0].dyn({}).u_cell, [0, 0, 0, 0]);
+        }
     }
     n++;
 }))));

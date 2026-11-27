@@ -134,7 +134,7 @@ function withSign(L, o, list) {
     const at = own || C0.sliPlace(list, where);
     const out = at ? list.concat(C0.sliPieces(at).map((p) => (p.key === 'sliNum' ? C0.sliFit(p, L.font || 'bold') : p))) : list;
     // the warning signs the camera reads beside it (KO 1, KO 2: warnSigns; with the speed limit sign, its setting)
-    return L.warnSigns ? out.concat(C0.warnPieces(C0.warnPlace(out, Object.assign({ warnHome: L.warnHome }, where)))) : out;
+    return L.warnSigns !== false ? out.concat(C0.warnPieces(C0.warnPlace(out, Object.assign({ warnHome: L.warnHome }, where)))) : out;
 }
 LAYOUTS.forEach((L) => {
     const own = L.pieces;

@@ -286,6 +286,8 @@ function scaled(list) {
 
 module.exports = {
     id: 'arc_tach',
+    // the warning signs the camera reads (layout_common.warnPlace, 0.69.0): top right, over the coolant and oil boxes (the tach's arc and the speed box leave nothing beside the sign)
+    warnHome: { x: 1530, y: 150 },
     title: 'JDM 1',
     // Settings > Speed limit sign: with the readings in the centre, just above TACH, inside the tach's curve (the owner,
     // 2026-11-26) - the tach's pieces' boxes take in all of that hollow (sliSkip: it keeps clear of the bar and the
