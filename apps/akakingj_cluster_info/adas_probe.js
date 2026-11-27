@@ -239,6 +239,8 @@ function startAdasProbe(ctx, log, opts) {
     return {
         start,
         started: () => started,
+        /** The HUD data as it last came (the signal survey's speed and Speed Limit Assist figures), or null. */
+        hudValue: () => hud.last,
         stop() { if (timer) clearInterval(timer); },
         status: () => ({ started, sources: started ? sources() : [], hud: hudMembers(30), sli: { now: sli.now, changes: sli.changes },
             catalog: catalog || { list: [], brakes: [], signs: [], signServices: [], total: 0, error: null } }),

@@ -13,7 +13,7 @@ The RHMI layout (application.xml + uiDescription.json) is GENERATED from the
 "screens" + "settings" in app.json, using only widget templates that BMW's own
 apps use on this firmware (see reference/rhmi-widget-cells.md).
 """
-import json, os, re, shutil, sys, tarfile, tempfile, uuid
+import json, os, re, shutil, subprocess, sys, tarfile, tempfile, uuid
 from xml.sax.saxutils import escape
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pack_data  # noqa: E402
@@ -486,6 +486,17 @@ def build(app_id, language='en'):
             body = file.read()
         with open(entry, 'wb') as file:
             file.write(credit.encode('utf-8') + body)
+    # app.json "survey" (a signal survey: kit/runtime/survey_fit.js): what to look for in the car's interface catalog
+    # goes along as kit/survey-request.json, and is fitted to the catalog where there is one - the Store builds the app
+    # on the head unit, beside it - adding to manifest.json only what this car has (installed elsewhere, from a .mgu,
+    # oapgen/gen.js does the same with the car's catalog). Nothing else in the manifest is touched.
+    if spec.get('survey'):
+        kit_dir = os.path.join(src, 'javascript', 'kit')
+        json.dump(spec['survey'], open(os.path.join(kit_dir, 'survey-request.json'), 'w', encoding='utf-8', newline='\n'), indent=1)
+        catalog = os.environ.get('MGU_SOMEIP_CATALOG', '/etc/oap/someip/someip-interfaces.json')
+        rc = subprocess.call(['node', os.path.join(kit_dir, 'survey_fit.js'), catalog, os.path.join(src, 'manifest.json'), kit_dir])
+        if rc != 0:
+            print('  signal survey: not fitted (node %s): built without it' % rc)
     rt_spec = {k: spec.get(k) for k in ('id', 'title', 'version', 'screens', 'settings', 'config', 'startWidget')}
     rt_spec['stateIds'] = state_ids
     json.dump(rt_spec, open(os.path.join(src, 'javascript', 'kit', 'app-spec.json'), 'w', encoding='utf-8', newline='\n'), indent=1)

@@ -23,6 +23,7 @@ const { startBlindSpot } = require('./blindspot');
 const { startHvSoc } = require('./hvsoc');
 const { ReadOnlyDiag } = require('./kit/readonly-diag');
 const { startAdasProbe, catalogLine, brakeLine } = require('./adas_probe');
+const { startSurvey } = require('./survey');
 const logs = require('./logs');
 
 const W = 1600, H = 520;
@@ -249,9 +250,43 @@ mgu.run({
         /* ---------- Settings > Driving assistant check (adas_probe.js, read only, 1.10.5) ----------
          * whether the head unit gets what the cluster's assisted driving view is drawn from: subscribed from the
          * first time it is turned on; the page shows it instead of the sources' states. */
-        const adasMode = () => (settings.get('adasCheck') === 'live' || settings.get('adasCheck') === 'catalog' ? settings.get('adasCheck') : 'off');
+        const adasMode = () => (['live', 'catalog', 'survey'].indexOf(settings.get('adasCheck')) >= 0 ? settings.get('adasCheck') : 'off');
         let adas = null;
         try { adas = startAdasProbe(ctx, log, { want: () => adasMode() !== 'off' }); } catch (e) { log.warn('driving assistant check: ' + e); }
+        /* ---------- Settings > Driving assistant check > Signal survey (survey.js, read only, 1.11.0) ----------
+         * what the car's catalog had of the speed limit sign's candidates when the app was installed, subscribed from
+         * [Start survey] (the car standing) to [End survey] or 30 min; the HUD data (above) gives each change its speed
+         * and Speed Limit Assist's figures. Keeps going with the page closed. */
+        let survey = null, endArmed = 0, surveyNote = '';
+        try { survey = startSurvey(ctx, log, { hud: () => (adas ? adas.hudValue() : null), dir: ctx.dataDir || '.' }); } catch (e) { log.warn('signal survey: ' + e); }
+        const KO = /^ko/.test((() => { try { return require('./kit/i18n').getLanguage(); } catch (e) { return 'en'; } })());
+        let shownLabel = null;
+        const surveyLabel = () => {
+            const lab = adasMode() !== 'survey' ? 'Signal survey' : survey && survey.running() ? 'End survey' : 'Start survey';
+            if (lab === shownLabel) return Promise.resolve();
+            shownLabel = lab;
+            return ui.text('BTN_SURVEY', lab);
+        };
+        ui.onClick('BTN_SURVEY', () => {
+            surveyNote = '';
+            if (adasMode() !== 'survey') settings.set('adasCheck', 'survey');
+            else if (!survey) surveyNote = KO ? '신호 조사를 시작할 수 없습니다' : 'The signal survey could not start';
+            else if (survey.running()) {
+                const st = survey.status();
+                // (under 3 min: said once; pressed again within 10 s, it ends)
+                if (st.elapsedS < 180 && Date.now() - endArmed > 10000) {
+                    endArmed = Date.now();
+                    surveyNote = KO ? '3분 이상 필요합니다. 그래도 끝내려면 10초 안에 다시 누르세요' : 'At least 3 minutes are needed: press again within 10 s to end anyway';
+                } else { endArmed = 0; survey.end('button'); }
+            } else {
+                const why = survey.start();
+                if (why) surveyNote = (KO ? '시작하지 못함: ' : 'Not started: ') + ({ 'stop the car first': KO ? '정차한 뒤 누르세요' : 'stop the car first' }[why] || why);
+            }
+            surveyLabel();
+            return render();
+        });
+        settings.onChange((k) => { if (k === 'adasCheck') { if (adasMode() !== 'survey') surveyNote = ''; surveyLabel(); } });
+        surveyLabel();
         /* ---------- directions on the HUD (Settings > Directions on the HUD), as Redline's (nav.js, navlog.js) ----------
          * BMW's guidance service, read only: the next turn, its distance, the street and the lanes, the same way for
          * CarPlay, Android Auto and BMW's navigation (only apps that hand the car their turns: Waze over CarPlay doesn't).
@@ -296,6 +331,7 @@ mgu.run({
             const sets = {};
             (settings.schema || []).forEach((x) => { sets[x.key] = settings.get(x.key); });
             const st = adas ? adas.status() : null;
+            const rec = survey && survey.last();
             const sections = [
                 ['settings', JSON.stringify(sets)],
                 ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
@@ -308,6 +344,16 @@ mgu.run({
                 ['this app\'s log', logs.tail(path.join(dataDir, 'akakingj_cluster_info.log'), n(40, 600))],
             ];
             if (full) sections.push(['cluster-render log', logs.tail(logs.RENDER_LOG, 1500)]);
+            // the survey's record: whole in the file, as much as fits in about 25 codes (at most 30) in the QR codes:
+            // the first values and the changes' values cut shorter until it does
+            // (1.11.0) with a signal survey's record: its sections after the settings; in the codes only they, the page
+            // and the HUD's speed limit changes (the rest is in the file)
+            if (rec) {
+                if (!full) sections.splice(1, sections.length - 1, ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
+                    ['speed limit (HUD data), last changes', st ? st.sli.changes.map((c) => new Date(c.at).toISOString().slice(11, 19) + ' ' + c.line).join('\n') : '']);
+                const mine = full ? survey.sections(0) : survey.fitted(sections, 30, logs.CHUNK);
+                sections.splice(1, 0, ...mine);
+            }
             return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Info') + ' ' + ((ctx.spec && ctx.spec.version) || ''), sections);
         }
         const logPages = logs.pager(logBundle, dataDir, log, 'info');
@@ -353,6 +399,7 @@ mgu.run({
          *  driving assistant members, or the catalog's services (Settings > Driving assistant check). */
         function drawAdas(cv, t) {
             const st = adas.status(), L = (str, y, size, col, bold, x) => cv.text(String(str), x || 48, y, size, col, { font: bold ? 'bold' : 'label', literal: true });
+            if (adasMode() === 'survey') { drawSurvey(cv, t, L); return; }
             const head = 'Driving assistant check (read only)   ·   log: cluster-info-adas.log in the app\'s data folder';
             L(head, 280, 18, t.dim, true);
             if (!st.started) { L('Starting…', 310, 18, t.text); return; }
@@ -388,6 +435,36 @@ mgu.run({
             const short = (str) => str.replace(/xSpeedLimitAssist\.|pia\./g, '');      // (in full in the log)
             L('Speed limit (HUD data): ' + (st.sli.now.length ? short(st.sli.now.join('  ')).slice(0, 160) : 'none yet'), sy, 15, st.sli.now.length ? GO : t.dim);
             st.sli.changes.slice(0, 2).forEach((c, i) => L(clock(c.at) + '  ' + short(c.line).slice(0, 170), sy + 19 + i * 17, 14, t.dim));
+        }
+        /** Settings > Driving assistant check > Signal survey on the page (from y 280): what was declared at install,
+         *  the survey under way or the last one's result, and the button's next step. */
+        function drawSurvey(cv, t, L) {
+            surveyLabel();
+            L(KO ? '신호 조사 (읽기만)   ·   진짜 제한속도 표지판 값을 찾습니다' : 'Signal survey (read only)   ·   looking for the speed limit sign itself', 280, 18, t.dim, true);
+            if (!survey) { L(KO ? '신호 조사를 시작할 수 없습니다' : 'The signal survey could not start', 310, 18, t.text, true); return; }
+            const inf = survey.info(), st = survey.status();
+            L((KO ? '설치 때 선언됨 ' + inf.declared + '개 / 이 차에 없어 빠짐 ' + inf.missing + '개' : 'Declared at install ' + inf.declared + ' / not in this car, left out ' + inf.missing)
+                + (inf.over ? (KO ? ' / 60개 넘어 빠짐 ' : ' / over the 60 limit ') + inf.over : '') + (inf.error ? '   ·   ' + inf.error : ''), 310, 18, inf.declared ? t.text : t.warn, true);
+            let y = 340;
+            if (st.running) {
+                const m = Math.floor(st.elapsedS / 60);
+                L(KO ? '조사 중 ' + m + '분 · 값 온 항목 ' + st.valued + '개 · 표지판 변화 ' + st.changes + '번   (30분이면 저절로 끝남, 앱을 닫아도 계속)'
+                    : 'Surveying ' + m + ' min · members with values ' + st.valued + ' · sign changes ' + st.changes + '   (ends by itself at 30 min; goes on with the app closed)', y, 18, GO, true);
+                y += 28;
+                L((KO ? '값 온 것: ' : 'With values: ') + (st.withValues.length ? st.withValues.join('  ·  ') : (KO ? '아직 없음' : 'none yet')).slice(0, 170), y, 15, st.withValues.length ? t.text : t.dim);
+                st.recent.forEach((c, i) => L(new Date(c.at).toTimeString().slice(0, 8) + '  ' + (typeof c.kmh === 'number' ? c.kmh + ' km/h  ' : '') + c.what.split('.').slice(-2).join('.') + ' = ' + String(c.value).slice(0, 120), y + 22 + i * 19, 14, t.text));
+                y += 22 + 3 * 19 + 6;
+                L(KO ? '끝내려면 아래 [조사 끝내기]' : 'To end: [End survey] below', y, 16, t.dim);
+            } else {
+                L(KO ? '정차한 상태에서 아래 [조사 시작]을 누르고 출발하세요. 크루즈 끄고 5분 (표지판 2개 이상), 크루즈 켜고 5분, 정차 후 [조사 끝내기] → [로그]'
+                    : 'Standing, press [Start survey] below, then drive: 5 min with the cruise control off (2 signs or more), 5 min with it on; standing, [End survey], then [Logs]', y, 16, t.text);
+                y += 28;
+                const ls = st.last;
+                if (ls) L((KO ? '지난 조사: ' + new Date(ls.at).toTimeString().slice(0, 5) + ', ' + Math.round((ls.endedAt - ls.at) / 60000) + '분, 값 온 항목 ' + ls.valued + '/' + ls.items + ', 표지판 변화 ' + ls.changes + '번 → [로그]에 있음'
+                    : 'Last survey: ' + new Date(ls.at).toTimeString().slice(0, 5) + ', ' + Math.round((ls.endedAt - ls.at) / 60000) + ' min, ' + ls.valued + ' of ' + ls.items + ' with values, ' + ls.changes + ' sign changes: in the Logs')
+                    + (ls.saved ? '   ·   ' + ls.saved : ''), y, 15, t.text);
+            }
+            if (surveyNote) L(surveyNote, 488, 17, t.warn, true);
         }
         ctx.loop('MAIN', 2, render);
         Promise.resolve().then(render).then(() => log.info('first frame done')).catch((e) => log.warn('first render: ' + e));

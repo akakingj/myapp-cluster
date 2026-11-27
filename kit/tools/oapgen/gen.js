@@ -46,6 +46,14 @@ function main(argv) {
         process.exit(2);
     }
     const [dbPath, manifestPath, userId, outDir] = argv;
+    // an app with a signal survey (app.json "survey", kit/runtime/survey_fit.js): what it looks for, fitted to this
+    // car's catalog first - only what the catalog has is added to its manifest, with the accesses it has; nothing it
+    // declares itself is touched. A failure leaves the manifest as it was.
+    const kitDir = path.join(path.dirname(manifestPath), 'javascript', 'kit');
+    if (fs.existsSync(path.join(kitDir, 'survey-request.json')) && fs.existsSync(path.join(kitDir, 'survey_fit.js'))) {
+        try { require(path.join(kitDir, 'survey_fit.js')).fitFiles(dbPath, manifestPath, kitDir, (m) => console.log(m)); }
+        catch (e) { console.log('signal survey: not fitted (' + e.message + ')'); }
+    }
     const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8').replace(/\${userId}/g, String(userId)));
     const ifs = load('IFConfigGenerator').generate(db, manifest);

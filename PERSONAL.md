@@ -348,6 +348,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Info 1.11.0, Layouts 0.66.2, Centre 0.16.2 (Nov 27 2026): Signal survey (Settings > Driving assistant check), to
+  find the speed limit sign itself in one drive: app.json "survey" says what to look for, kit/runtime/survey_fit.js
+  declares in the manifest only what the car's own catalog has (build.py on the car, as the Store builds; oapgen/gen.js
+  for a .mgu install), read only, at most 60; survey.js subscribes them from [Start survey] to [End survey] / 30 min,
+  each sign candidate's change with the HUD's speed and vSLI, and the record into Logs and exports/. Layouts and Centre
+  have no survey: their manifests as before (test_survey_fit.js). Korean for the button and option: every app 0.0.1.
 - Layouts 0.66.1, Centre 0.16.1 (Nov 27 2026): TAKEOVER_OCCURED counts as taken (shared/data.js sliOf): Info's log
   (04:16:44) has ldmAdditionalSign SET -> OCCURED -> SET the moment a limit is taken; the sign blinked '--' there.
 - Layouts 0.66.0, Centre 0.16.0, Info 1.10.27 (Nov 27 2026): the fuel % is the engine unit's own (OBD tank level)

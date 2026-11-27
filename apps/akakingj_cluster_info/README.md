@@ -58,6 +58,22 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   time it is turned on; everything also goes to `cluster-info-adas.log` in the app's data folder (the catalog once,
   each source's first three values and one a minute; at most 2 x 256 KiB). The cluster's picture itself is drawn in
   the cluster and never reaches the head unit, so only its data can be looked for.
+- **Signal survey** (1.11.0, Settings > Driving assistant check > Signal survey; `survey.js`, read only): one drive
+  to find whether the speed limit sign itself reaches an app (the HUD data's `vSLISpeedValue` is only the limit Speed
+  Limit Assist has taken for the cruise control). What it reads is declared when the app is built or installed on the
+  car (app.json `"survey"`, `kit/runtime/survey_fit.js`): the candidates - TrafficSignDisplayControl's fields, the
+  front camera's sign events (SignRecognitionFrontCamera and its Legacy), TrafficSignRecognition, FASuS's next speed
+  limit, the driving assistant's speed limit settings (read once, never written), anything else in the catalog named
+  for a speed limit or a traffic sign, and the car ahead, the camera's objects and the lanes - only as far as THIS
+  car's catalog has them (a getter: read, a notifier: subscribed, an event: with its id), at most 60, so no car
+  refuses the install; never a method. The page says how many were declared and how many this car hasn't. **Start
+  survey** (the car standing) subscribes them all (20 s each at most), and it goes on with the page closed: the sign
+  candidates the whole time, the settings read once, the fast ones their first 5 values; each change of a candidate is
+  written with the time, the speed and Speed Limit Assist's own figures. **End survey** (under 3 minutes it asks
+  again), or 30 minutes, makes the record: each member's state (values came / subscribed, no value / nothing
+  provides it / refused / not in this car), how many and how often, the first value; the changes (the last 150); the
+  settings; the catalog's sign and assistant services, one line each. It goes into Logs (about 25 codes; the values
+  cut shorter to fit 30) and whole into `exports/survey-<time>.txt` in the app's data folder.
 - **Its page** shows the panel as it is now, larger, and whether each source works (turn signals, day / night,
   driver profile, the apps providing, the cluster renderer, the Waze map, the directions).
 - **Logs** on its page shows this app's logs as QR codes, three to a page (press Logs for the next):

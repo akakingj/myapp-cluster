@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_info",
   "title": "AK Cluster Info",
   "description": "A small panel of up to three live values (battery power from eDrive Live, battery charge, battery, oil and coolant temperature) over the Waze map in the cluster or on the HUD, and turn signal arrows on the HUD",
-  "version": "1.10.27",
+  "version": "1.11.0",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCI",
@@ -102,12 +102,84 @@
       ]
     }
   },
+  "survey": {
+    "comment": "Settings > Driving assistant check > Signal survey (1.11.0, survey.js): what is looked for in the car's own interface catalog when the app is built or installed on it (kit/runtime/survey_fit.js); only what that catalog has is declared, read only, at most max members, the groups' order deciding",
+    "max": 60,
+    "groups": [
+      {
+        "id": "display",
+        "iface": "de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl",
+        "fields": "*",
+        "events": "*",
+        "sign": true
+      },
+      {
+        "id": "cameraLegacy",
+        "iface": "de.bmw.environmentalmodel.SignRecognitionFrontCameraLegacy",
+        "events": "*",
+        "sign": true
+      },
+      {
+        "id": "camera",
+        "iface": "de.bmw.environmentalmodel.SignRecognitionFrontCamera",
+        "events": "*",
+        "sign": true
+      },
+      {
+        "id": "tsr",
+        "iface": "de.bmw.dass.TrafficSignRecognition",
+        "events": "*",
+        "sign": true
+      },
+      {
+        "id": "fasus",
+        "iface": "de.bmw.infotainment.fasus.FASuS",
+        "fields": "^statusNextSpeedLimitRecognition$|limit|sign",
+        "events": "limit|sign",
+        "sign": true
+      },
+      {
+        "id": "settings",
+        "iface": "de.bmw.dass.settingsdriverassistancefunctions.SettingsDriverAssistanceFunctions",
+        "fields": "^settingSpeedLimit|^displayStatusSpeedLimitAssist",
+        "readOnce": true
+      },
+      {
+        "id": "named",
+        "match": "speed_?limit|traffic_?sign|sign_?recognition|vsli|vza|(^|[^a-z])sli|tsr\\b",
+        "sign": true
+      },
+      {
+        "id": "gap",
+        "iface": "de.bmw.dass.GapVehicleAhead",
+        "fields": "^(GapVehicleDrivingAhead|DataFrontVehicle|DataFrontVehicleExtended)$",
+        "fast": true
+      },
+      {
+        "id": "objects",
+        "iface": "de.bmw.environmentalmodel.ObjectRecognitionFrontCamera2",
+        "events": "^(ObjectRecognition|ObjectPosition)$",
+        "fast": true
+      },
+      {
+        "id": "lanes",
+        "ifaceMatch": "LaneBoundar",
+        "fields": "*",
+        "events": "*",
+        "fast": true
+      }
+    ]
+  },
   "screens": [
     {
       "name": "MAIN",
       "kind": "canvas",
       "title": "AK Cluster Info",
       "buttons": [
+        [
+          "BTN_SURVEY",
+          "Signal survey"
+        ],
         [
           "BTN_LOGS",
           "Logs"
@@ -660,6 +732,10 @@
         [
           "catalog",
           "Catalog: the services this car has"
+        ],
+        [
+          "survey",
+          "Signal survey: the speed limit sign"
         ]
       ],
       "section": "Screen"
