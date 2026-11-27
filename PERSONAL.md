@@ -348,6 +348,14 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   made a little smaller: 90's and 20's dials 576 (600), Old M 576, ID6 M radius 288 (300), JDM 2's tach radius 240
   (248), Retro M's big dials 0.92 at x 590 / 1330, y 380 (the small dials at x 208 / 1712, y 480). With the map or
   the stock centre the side dials still lie under the side lights (the owner: the map's top is shaded anyway).
+- Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -
+  the camera's event (SignRecognitionFrontCamera.TrafficSignRecognitionFrontCamera, once a sign; the survey of Nov 26
+  read GIVE_WAY, DS_TRAFFIC_JAM, DS_SPLIPPERY_ROAD, DS_RIGHT_DOWNWARDS, DS_ANIMAL_CROSSING besides the limit and no
+  passing) as Korean signs right of BMW's "km/h", in its row (x 384, middle y 388, 62 wide, up to four), 10 s each;
+  not the limit or no passing (the HUD shows those: the limit sign moves up for no passing, owner's photo). Place
+  measured on the owner's HUD photo with the panel's text and the lane change sign as yardstick. Settings > Road signs
+  on the HUD (on / sample / off). The survey reads the camera through the same subscription. ko.tsv: 4 lines, so all
+  three apps up. test_cluster_info_signs.
 - Layouts 0.68.0, Centre 0.16.6 (Nov 27 2026): the speed limit sign from the sign itself - Info 1.11.1's survey (17:35,
   21 min in town): de.bmw.dass.TrafficSignRecognition event TrafficSignRecognition, presentClassLimitSpeed x 5 (8/18/22 =
   40/90/110 as the camera read them), ~2 Hz; the HUD's vSLISpeedValue sat at 20 (100, the limiter's) all along. Layouts'

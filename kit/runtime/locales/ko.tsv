@@ -2836,3 +2836,7 @@ Signal survey	신호 조사
 Start survey	조사 시작
 Stop survey	조사 중지
 Signal survey: the speed limit sign	신호 조사: 제한속도 표지판
+Road signs on the HUD	HUD에 도로 표지판
+On: the camera's signs, right of the speed	켜기: 카메라가 읽은 표지판, 속도 오른쪽
+Sample signs (to check the place)	예시 표지판 (위치 확인용)
+Road signs	도로 표지판

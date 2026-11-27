@@ -24,7 +24,7 @@ G20 and a plug-in hybrid. **They are free: if you paid for one, ask for a refund
 |---|---|
 | **[AK Cluster Layouts](apps/akakingj_cluster_layouts/README.md)** | your own layout on the whole instrument cluster, drawn by the cluster itself: fifteen layouts, each in three colour sets and with three centres (readings, Waze in the layout's window, stock), the car's own bottom strip kept; every reading the car gives in any place; a speed limit sign of its own that works as the car's |
 | **[AK Cluster Centre](apps/akakingj_cluster_centre/README.md)** | the factory cluster kept, its centre taken over by pages of live data (temperatures, fuel and boost, warm-up, turbo cool-down, eDrive, a 0-60 timer, custom pages) |
-| **[AK Cluster Info](apps/akakingj_cluster_info/README.md)** | a small panel of live values over the Waze map in the cluster or on the HUD; turn signal arrows, the lane change warning and the next turn on the HUD; the driving assistant check and the signal survey (what this car's head unit gets of the speed limit sign) |
+| **[AK Cluster Info](apps/akakingj_cluster_info/README.md)** | a small panel of live values over the Waze map in the cluster or on the HUD; turn signal arrows, the lane change warning, the next turn and the camera's road signs on the HUD; the driving assistant check and the signal survey (what this car's head unit gets of the speed limit sign) |
 
 ![AK Cluster Layouts: 20's](docs/analog_sport.png)
 
@@ -59,8 +59,8 @@ cluster or HUD.
 ## AK Cluster Info
 
 A small panel of up to three live values over the Waze map in the instrument cluster or on the HUD, and on the HUD
-turn signal arrows, the lane change warning (the door mirrors' lamps) and the next turn (directions from BMW's
-guidance service, for CarPlay, Android Auto and BMW's navigation). It works with
+turn signal arrows, the lane change warning (the door mirrors' lamps), the next turn (directions from BMW's
+guidance service, for CarPlay, Android Auto and BMW's navigation) and the road signs the front camera reads. It works with
 [Waze on cluster](https://github.com/robertnisipeanu/idrive-apps), which puts the map there. Its settings also hold
 two read-only checks: the **driving assistant check** (what the cluster's assisted driving view is drawn from, and the
 HUD data's speed limit figures) and the **signal survey** (one drive, *Start survey* to *Stop survey*, driving or
@@ -103,7 +103,7 @@ codes); the tool reads the older `CLG1` too. Needs OpenCV (`pip install opencv-p
 |---|---|
 | `apps/akakingj_cluster_layouts/` | AK Cluster Layouts: `layout_<id>.js` (one file a layout), `layout_common.js` (the glass's keep-out areas, readouts, gauges, helpers), `layouts.js` (the list and the page's places), `main.js` (its page) |
 | `apps/akakingj_cluster_centre/` | AK Cluster Centre and its pages |
-| `apps/akakingj_cluster_info/` | AK Cluster Info: `main.js` (its page), `overlay.js` (the panel over the map), `providers.js` (values from other apps), `indicators.js` (turn signals and day / night), `blindspot.js` (the lane change warning), `nav*.js`, `lane_draw.js` (directions on the HUD), `adas_probe.js` (the driving assistant check), `survey.js` (the signal survey), `logs.js`, `qr.js` |
+| `apps/akakingj_cluster_info/` | AK Cluster Info: `main.js` (its page), `overlay.js` (the panel over the map), `providers.js` (values from other apps), `indicators.js` (turn signals and day / night), `blindspot.js` (the lane change warning), `nav*.js`, `lane_draw.js` (directions on the HUD), `adas_probe.js` (the driving assistant check), `survey.js` (the signal survey), `signs.js` (road signs on the HUD), `logs.js`, `qr.js` |
 | `shared/` | the code the apps share (the cluster engine and shaders, car data, fonts, the clock, logs and QR codes, the signed credit); `node tools/sync_shared.js` copies it into each app, which holds its own copy |
 | `tools/` | the tests, the cluster previews (`preview.js`, `make_previews.py`, `preview_centre.js`), the keep-out check (`clearance.js`), the log decoder (`decode_logs.py`), the font baker and the credit signer |
 | `kit/runtime/` | the app kit's runtime the build bundles into each app (canvas, fonts, gauges, themes, settings, translations, the controller and renderer clients, `survey_fit.js`) |

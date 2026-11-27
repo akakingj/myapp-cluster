@@ -24,6 +24,7 @@ const { startHvSoc } = require('./hvsoc');
 const { ReadOnlyDiag } = require('./kit/readonly-diag');
 const { startAdasProbe, catalogLine, brakeLine } = require('./adas_probe');
 const { startSurvey } = require('./survey');
+const { startSigns, SAMPLE: SIGN_SAMPLE } = require('./signs');
 const logs = require('./logs');
 
 const W = 1600, H = 520;
@@ -259,8 +260,15 @@ mgu.run({
          * speed and Speed Limit Assist's figures. Keeps going with the page closed. One button: Start survey (it also turns
          * Driving assistant check to Signal survey), Stop survey while it runs (1.11.1; till 1.11.0 three steps: Signal
          * survey, Start survey, End survey asking again under 3 min). */
+        /* ---------- the road signs the camera reads, on the HUD (signs.js, 1.12.0) ----------
+         * the camera's sign event, declared as the survey's (only where the car's catalog has it), subscribed from the
+         * start: it comes once a sign, not at a rate. Settings > HUD > Road signs: on, sample (three signs, to see the
+         * place), off. The survey reads the same event through this subscription. */
+        let signs = null;
+        try { signs = startSigns(ctx, log); } catch (e) { log.warn('road signs: ' + e); }
+        src.roadSigns = () => (settings.get('roadSigns') === 'sample' ? SIGN_SAMPLE.slice() : signs ? signs.current() : []);
         let survey = null, surveyNote = '';
-        try { survey = startSurvey(ctx, log, { hud: () => (adas ? adas.hudValue() : null), dir: ctx.dataDir || '.' }); } catch (e) { log.warn('signal survey: ' + e); }
+        try { survey = startSurvey(ctx, log, { hud: () => (adas ? adas.hudValue() : null), dir: ctx.dataDir || '.', signals: signs ? signs.signalsFor(ctx.signals) : undefined }); } catch (e) { log.warn('signal survey: ' + e); }
         const KO = /^ko/.test((() => { try { return require('./kit/i18n').getLanguage(); } catch (e) { return 'en'; } })());
         let shownLabel = null;
         const surveyLabel = () => {
@@ -314,6 +322,9 @@ mgu.run({
                 ['Lane change warning', settings.get('blindSpot') === 'off' ? 'off (settings)' : (() => { const b = bs.status();
                     return (b.refused ? 'the BDC has no D347 (' + b.refused + ')' : b.left !== null ? 'mirror lamps: left ' + b.left + ', right ' + b.right : b.reading ? 'no answer yet' : 'not read now (panel off or parked)')
                         + '   ·   BDC 22 D347: ' + b.good + ' of ' + b.reads + ' answered   ·   link ' + b.link; })()],
+                ['Road signs', settings.get('roadSigns') === 'off' ? 'off (settings)' : (() => { const g = signs ? signs.status() : null, o = overlay && overlay.roadSigns ? overlay.roadSigns() : null;
+                    return (g ? 'camera: ' + g.state + '   ·   ' + g.seen + ' read' + (Object.keys(g.types).length ? ' (' + Object.keys(g.types).map((k) => k + ' ' + g.types[k]).join(', ') + ')' : '') : 'not started')
+                        + (settings.get('roadSigns') === 'sample' ? '   ·   showing the sample' : '') + (o && o.shown ? '   ·   on the HUD: ' + o.types.join(', ') : ''); })()],
                 ['Turn signals', st('turn signals') + (live.indicator !== 'off' ? ' (now ' + live.indicator + ')' : '')
                     + '   ·   Day / night: ' + (live.night === null ? st('day / night') + ', none received' : live.night ? 'night' : 'day')
                     + '   ·   Driver profile: ' + (live.profile || (st('driver profile') === 'subscribed' ? 'none read yet' : st('driver profile')))],

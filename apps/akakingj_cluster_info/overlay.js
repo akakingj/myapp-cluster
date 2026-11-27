@@ -25,6 +25,7 @@ const G = require('./kit/gauges');
 const PLEX = require('./plex_font');
 // the directions picture, Cluster Redline's design (nav_view.js)
 const NV = require('./nav_view');
+const SG = require('./signs');
 require('./kit/fonts').register(PLEX.family, PLEX);
 
 const STATUS = process.env.WOC_STATUS || '/run/waze-on-cluster/status.json';   // (the variable: tests)
@@ -75,6 +76,14 @@ const BLINK_ON_MS = 335, BLINK_OFF_MS = 303, BLINK_LEAD_MS = 40;
 // the directions on the HUD (nav_view.js, 173 x 132 on the glass, 149 x 114 over a Waze map there): see navRect
 const NAV_RIGHT = 672, NAV_BOTTOM = 356, NAV_GAP = 4;
 const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit sign at the bottom left (Redline's hud.js)
+// the road signs the camera reads (signs.js, 1.12.0): right of BMW's own speed readout, in its row, about the size of
+// its limit sign, in a row to the right. Measured on the owner's G20 HUD photo (2026-11-27) with this app's panel
+// (RPM, KGM, BOOST: its text x 474..651, y 306..339) and lane change sign (x 200..234, y 104..148) as the yardstick
+// (0.85 scene px a photo px): BMW's "km/h" ends at x ~373, its digits' row is y ~359..411 (middle ~388), its limit
+// sign ~60 across. (Below HUD_SEEN's 356: BMW's own speed is drawn there, so a G20 shows it.)
+const SIGNS = { x: 384, cy: 388, size: 62, gap: 8 };
+const SIGNS_W = SG.MAX_SIGNS * (SIGNS.size + SIGNS.gap) - SIGNS.gap, SIGNS_H = SG.signBox(SIGNS.size).h + 2;
+const SIGNS_MS = 250;
 const NAV_MS = 200;               // the directions looked at this often (a turn's distance counts down every second)
 const ARROW_TICK_MS = 25;        // (the flash edges within 25 ms of the cluster's)
 
@@ -730,14 +739,58 @@ function startOverlay(ctx, lv, opts) {
     }
     const lcwTimer = si(lcwTick, ARROW_TICK_MS);
 
-    process.on('exit', () => { hideArrows(); hideNav(); });
+    /* ---------- the road signs the camera reads (lv.roadSigns(): ['GIVE_WAY', ...], signs.js) ----------
+     * One layer, the row's width; drawn again only when the signs change. Signs that would reach the panel or the
+     * directions (a wide Waze map puts the panel low) are left off the row's end. */
+    let signRef = 0, signKey = '', signShown = false, signOp = 1, signCv = null;
+    const signsOn = () => settings.get('roadSigns') !== 'off' && typeof lv.roadSigns === 'function' && !hudTaken();
+    /** How many signs fit before the panel or the directions. */
+    function signsRoom(n) {
+        const keep = [];
+        if (visible && hudBadge) keep.push(hudBadge);
+        if (navShown && navAt && navCv) { const [x, y] = navAt.split(',').map(Number); keep.push({ x, y, w: navCv.w, h: navCv.h }); }
+        const top = SIGNS.cy - Math.round(SIGNS_H / 2);
+        let k = 0;
+        for (; k < n; k++) {
+            const r = { x: SIGNS.x + k * (SIGNS.size + SIGNS.gap), y: top, w: SIGNS.size, h: SIGNS_H };
+            if (keep.some((b) => r.x < b.x + b.w + 4 && r.x + r.w + 4 > b.x && r.y < b.y + b.h + 4 && r.y + r.h + 4 > b.y)) break;
+        }
+        return k;
+    }
+    function hideSigns() {
+        if (cr && signRef && signShown) cr.set(signRef, { visible: false, opacity: 0 });
+        signShown = false;
+    }
+    function signsTick() {
+        let list = signsOn() ? (lv.roadSigns() || []) : [];
+        list = list.slice(0, signsRoom(list.length));
+        if (!list.length) { hideSigns(); return; }
+        if (!client()) return;
+        if (!signRef) {
+            signRef = cr.image({ target: 'hud', klass: 'overlay', z: 12, x: SIGNS.x, y: SIGNS.cy - Math.round(SIGNS_H / 2), w: SIGNS_W, h: SIGNS_H,
+                iw: SIGNS_W, ih: SIGNS_H, visible: false, opacity: 0 }) || 0;
+            if (!signRef) { warnOnce('the renderer refused the road signs layer'); return; }
+            signCv = new Canvas(SIGNS_W, SIGNS_H); signKey = '';
+        }
+        const key = list.join(',');
+        if (key !== signKey) {
+            SG.drawSigns(signCv, list, SIGNS.size, SIGNS.gap);
+            cr.pixels(signRef, null, Buffer.from(signCv.d.buffer, signCv.d.byteOffset, signCv.d.length));
+            signKey = key;
+        }
+        const op = hudOpacity();
+        if (!signShown || op !== signOp) { cr.set(signRef, { visible: true, opacity: op }); signShown = true; signOp = op; }
+    }
+    const signsTimer = si(signsTick, SIGNS_MS);
+
+    process.on('exit', () => { hideArrows(); hideNav(); hideSigns(); });
 
     return {
         /** Whether the badge is on the map now. */
         shown: () => visible,
         /** The Waze map as status.json says: { showing, target, pct }. */
         map: () => Object.assign({}, map),
-        stop() { ci(poll); ci(draw); ci(arrowTimer); ci(lcwTimer); ci(navTimer); if (watcher) watcher.close(); hide(); hideArrows(); hideNav(); ['left', 'right'].forEach((d) => lcwSet(d, false)); if (cr) cr.close(); },
+        stop() { ci(poll); ci(draw); ci(arrowTimer); ci(lcwTimer); ci(navTimer); ci(signsTimer); hideSigns(); if (watcher) watcher.close(); hide(); hideArrows(); hideNav(); ['left', 'right'].forEach((d) => lcwSet(d, false)); if (cr) cr.close(); },
         /** For the diagnostics: the renderer link and the Waze map as status.json says. */
         status: () => ({
             renderer: cr ? (cr.ready ? 'connected' : 'connecting') : 'not needed yet',
@@ -752,10 +805,13 @@ function startOverlay(ctx, lv, opts) {
         nav: () => ({ shown: navShown, at: navAt }),
         /** Whether directions can show now: the panel on the HUD, the HUD not another app's (main.js asks for turns only then). */
         navCan: () => !!(visible && hudBadge && !hudTaken()),
+        /** The road signs on the HUD now: { shown, types }. */
+        roadSigns: () => ({ shown: signShown, types: signShown ? signKey.split(',') : [] }),
+        _signsTick: signsTick,
         _navTick: navTick,
         _arrowTick: arrowTick, _lcwTick: lcwTick, lcw: () => ({ shown: Object.assign({}, lcwShown), refs: Object.assign({}, lcwRefs) }),
         _tick: tick, _read: readStatus,
     };
 }
 
-module.exports = { G21_GLASS, HUD_SEEN, startOverlay, mapRect, badgeRect, navRect, drawBadge, drawArrow, drawLaneSign, changed, parseStatus, underStrip, ARROW, LCW };
+module.exports = { SIGNS, G21_GLASS, HUD_SEEN, startOverlay, mapRect, badgeRect, navRect, drawBadge, drawArrow, drawLaneSign, changed, parseStatus, underStrip, ARROW, LCW };
