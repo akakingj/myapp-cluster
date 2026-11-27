@@ -78,21 +78,25 @@ check('pictures: South Korea\'s own signs - the types the camera read get theirs
     assert.strictEqual(S.artOf('NO_STOPPING'), 'no_stopping');
     assert.strictEqual(S.artOf('ONE_WAY_STREET'), 'one_way');
     assert(S.wanted('NO_LEFT_TURN') && S.wanted('STOP') && !S.wanted('END_OF_NO_PASSING') && !S.wanted('SPEED_LIMIT_END') && !S.wanted('NONE'));
-    // every name it can give has a picture, as wide as the HUD's signs (made for overlay.js SIGNS.size)
+    // every name it can give has a picture, as high as BMW's limit sign (made for overlay.js SIGNS: h, wmax)
     const art = require(path.join(APP, 'sign_art.js'));
-    assert.strictEqual(art.size, SIGNS.size, 'sign_art.js made for this size: tools/make_sign_art.py');
+    assert.strictEqual(art.h, SIGNS.h, 'sign_art.js made for this size: tools/make_sign_art.py');
+    assert.strictEqual(art.wmax, SIGNS.wmax);
+    assert.strictEqual(art.art.slippery.h, SIGNS.h, 'a triangle as tall as the limit sign');
+    assert(art.art.slippery.w >= 66 && art.art.slippery.w <= SIGNS.wmax, 'and wider: ' + art.art.slippery.w);
+    assert(Math.abs(art.art.no_entry.w - SIGNS.h) <= 1 && art.art.no_entry.h === SIGNS.h, 'a round sign as big as the limit sign');
     const src = fs.readFileSync(path.join(APP, 'signs.js'), 'utf8');
     const block = src.slice(src.indexOf('const ART_OF'), src.indexOf('function artOf'));
     const names = new Set((block.match(/'([a-z_]+)'/g) || []).map((q) => q.slice(1, -1)));
     names.add('danger');
     assert(names.size > 20);
-    names.forEach((n) => { const a = art.art[n]; assert(a, 'no picture ' + n); assert.strictEqual(a.w, SIGNS.size, n); });
+    names.forEach((n) => { const a = art.art[n]; assert(a, 'no picture ' + n); assert(a.h <= SIGNS.h && a.w <= SIGNS.wmax, n); });
 });
 
 const px = (cv, x, y) => { const i = (Math.round(y) * cv.w + Math.round(x)) * 4; return [cv.d[i], cv.d[i + 1], cv.d[i + 2], cv.d[i + 3]]; };
 check('drawn: the sign\'s own colours, the ground around it clear (light on the HUD), each in its place in the row', () => {
-    const size = SIGNS.size, gap = 8, box = S.signBox(size), cv = new Canvas(2 * size + gap, box.h + 2);
-    S.drawSigns(cv, ['DS_ANIMAL_CROSSING', 'GIVE_WAY'], size, gap);
+    const size = S.signWidth('DS_ANIMAL_CROSSING'), gap = 8, box = { h: SIGNS.h }, cv = new Canvas(size + gap + S.signWidth('GIVE_WAY'), SIGNS.h + 2);
+    S.drawSigns(cv, ['DS_ANIMAL_CROSSING', 'GIVE_WAY'], gap);
     const cnt = (x0, x1, f) => { let n = 0; for (let y = 0; y < cv.h; y++) for (let x = x0; x < x1; x++) if (f(px(cv, x, y))) n++; return n; };
     const red = (p) => p[3] > 200 && p[0] > 170 && p[1] < 70 && p[2] < 70, yellow = (p) => p[3] > 200 && p[0] > 200 && p[1] > 140 && p[2] < 80;
     const white = (p) => p[3] > 200 && p[0] > 220 && p[1] > 220 && p[2] > 220;
@@ -101,7 +105,7 @@ check('drawn: the sign\'s own colours, the ground around it clear (light on the 
     assert.strictEqual(px(cv, 1, 1)[3], 0); assert.strictEqual(px(cv, size - 2, 1)[3], 0);
     for (let y = 0; y < cv.h; y++) for (let x = size + 1; x < size + gap - 1; x++) assert.strictEqual(px(cv, x, y)[3], 0, 'gap');
     assert.strictEqual(cnt(0, size, white), 0, 'no white rim on the warning sign (a light outline on the HUD)');
-    const one = (t) => { const c = new Canvas(size, box.h + 2); S.drawSigns(c, [t], size, 0); return Buffer.from(c.d).toString('base64'); };
+    const one = (t) => { const c = new Canvas(SIGNS.wmax, box.h + 2); S.drawSigns(c, [t], 0); return Buffer.from(c.d).toString('base64'); };
     const all = ['DS_SPLIPPERY_ROAD', 'DS_TRAFFIC_JAM', 'DS_ANIMAL_CROSSING', 'DS_RIGHT_DOWNWARDS', 'DS_ROAD_WORKS', 'DS_NEW'].map(one);
     assert.strictEqual(new Set(all).size, all.length);
 });
@@ -238,11 +242,15 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(l && l.visible && l.opacity > 0, JSON.stringify(l));
         assert(l.x >= 373 + 6, 'clear of "km/h" (x ~373)');
         assert(l.y < 388 && l.y + l.h > 388, 'in the speed\'s row (middle y ~388)');
-        assert(l.x + l.w <= HUD_SEEN.x + HUD_SEEN.w, 'four fit on the glass');
+        assert(l.x + l.w <= HUD_SEEN.x + HUD_SEEN.w, 'the row ends on the glass');
         assert.strictEqual(l.px, 1);
         ov._signsTick(); assert.strictEqual(l.px, 1);
         list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick(); assert.strictEqual(l.px, 2);
         assert.deepStrictEqual(ov.roadSigns(), { shown: true, types: ['DS_ANIMAL_CROSSING', 'GIVE_WAY'] });
+        // as many as fit on the glass: three triangles at the limit sign's size
+        list = ['DS_A', 'DS_B', 'DS_C', 'DS_D']; ov._signsTick();
+        assert.deepStrictEqual(ov.roadSigns().types, ['DS_A', 'DS_B', 'DS_C']);
+        list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick();
     });
     check('gone, off in the settings, or the HUD another app\'s: hidden', () => {
         list = []; ov._signsTick(); assert.strictEqual(layer().visible, false);
@@ -266,7 +274,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(o.types.length < 4, JSON.stringify(o));
         settings.v.show = 'off'; fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'hud' })); ov._read(); await wait(50); ov._tick && ov._tick();
         t += 10; ov._signsTick();
-        assert.strictEqual(ov.roadSigns().types.length, 4, 'all four with the panel gone');
+        assert.strictEqual(ov.roadSigns().types.length, 3, 'all that fit on the glass with the panel gone');
     });
 
     ov.stop();

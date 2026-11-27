@@ -7,7 +7,7 @@ as public works under Article 24-2 of the Korean Copyright Act), as the owner do
 designs as Wikipedia's "Road signs in South Korea"), kept here 240 px wide in tools/sign_art/<name>.png.
 
 Each is cut out along the outside of its thick red edge (the thin outer line and the white rim dropped: on the HUD
-white is light, the ground around a sign must be clear), shrunk to the HUD's size (overlay.js SIGNS.size wide) and
+white is light, the ground around a sign must be clear), shrunk to the HUD's size (overlay.js SIGNS: h high, as BMW's limit sign; at most wmax wide) and
 written as raw RGBA, deflated and in base64, to sign_art.js. "danger" (140, "!") is made from another warning sign:
 its picture painted out and a "!" drawn in.
 
@@ -26,7 +26,6 @@ from PIL import Image, ImageDraw
 from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parent.parent
-HMAX = 64        # the row's height: round and octagonal signs at full width; taller ones narrower
 SRC = ROOT / 'tools' / 'sign_art'
 OUT = ROOT / 'apps' / 'akakingj_cluster_info' / 'sign_art.js'
 OVERLAY = ROOT / 'apps' / 'akakingj_cluster_info' / 'overlay.js'
@@ -42,11 +41,14 @@ NAMES = ['slippery', 'traffic_jam', 'wild_animal', 'downhill', 'uphill', 'curve_
          'keep_distance_50m', 'one_way', 'unprotected_left']
 
 
-def size_from_overlay():
-    m = re.search(r'const SIGNS = \{[^}]*size:\s*(\d+)', OVERLAY.read_text(encoding='utf-8'))
+def box_from_overlay():
+    """overlay.js SIGNS: h (every sign this high, as BMW's own limit sign) and wmax (the widest, a triangle)."""
+    t = OVERLAY.read_text(encoding='utf-8')
+    m = re.search(r'const SIGNS = \{([^}]*)\}', t)
     if not m:
-        raise SystemExit('overlay.js: no SIGNS size')
-    return int(m.group(1))
+        raise SystemExit('overlay.js: no SIGNS')
+    v = dict(re.findall(r'(\w+):\s*(\d+)', m.group(1)))
+    return int(v['h']), int(v['wmax'])
 
 
 def import_dir(d):
@@ -109,22 +111,16 @@ def danger(base):
     return im
 
 
-def shrink(im, w, hmax):
-    """size wide, or narrower to be at most hmax high (a tall sign), centred in a size-wide picture."""
-    k = min(w / im.width, hmax / im.height)
-    sw, sh = max(1, round(im.width * k)), max(1, round(im.height * k))
-    s = im.resize((sw, sh), Image.LANCZOS)      # (Pillow resizes RGBA premultiplied: no dark fringe)
-    if sw == w:
-        return s
-    out = Image.new('RGBA', (w, sh), (0, 0, 0, 0))
-    out.paste(s, ((w - sw) // 2, 0))
-    return out
+def shrink(im, h, wmax):
+    """h high (as BMW's limit sign: a round sign h across, a triangle h tall), or narrower if wider than wmax."""
+    k = min(h / im.height, wmax / im.width)
+    return im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)   # (premultiplied: no fringe)
 
 
 def main():
     if len(sys.argv) > 2 and sys.argv[1] == '--import':
         import_dir(sys.argv[2])
-    size = size_from_overlay()
+    h, wmax = box_from_overlay()
     art = {}
     cuts = {}
     for n in NAMES:
@@ -134,7 +130,7 @@ def main():
         cuts[n] = cut(Image.open(f))
     cuts['danger'] = danger(cuts['speed_hump'])
     for n, im in cuts.items():
-        s = shrink(im, size, HMAX)
+        s = shrink(im, h, wmax)
         raw = s.tobytes()
         art[n] = {'w': s.width, 'h': s.height, 'z': base64.b64encode(zlib.compress(raw, 9)).decode()}
     body = ',\n'.join('    %s: %s' % (json.dumps(n), json.dumps(v, separators=(',', ':'))) for n, v in sorted(art.items()))
@@ -142,21 +138,22 @@ def main():
 /**
  * sign_art.js - made by tools/make_sign_art.py; don't edit. South Korea's road signs (Government of the Republic of
  * Korea, 도로교통법 시行규칙 별표 6; free to use as public works, Article 24-2 of the Korean Copyright Act), cut out
- * along their red edge, %d px wide: raw RGBA, deflated, base64.
+ * along their red edge, %d px high (a triangle at most %d wide): raw RGBA, deflated, base64.
  */
 module.exports = {
-    size: %d,
+    h: %d,
+    wmax: %d,
     art: {
 %s,
     },
 };
-""".replace('시行', '시행') % (size, size, body), encoding='utf-8')
-    print('%s: %d signs, %d px wide, %d bytes' % (OUT.relative_to(ROOT), len(art), size, OUT.stat().st_size))
+""".replace('시行', '시행') % (h, wmax, h, wmax, body), encoding='utf-8')
+    print('%s: %d signs, %d px high, %d bytes' % (OUT.relative_to(ROOT), len(art), h, OUT.stat().st_size))
     # a contact sheet to look at
-    sheet = Image.new('RGBA', (len(cuts) * (size + 6), size + 6), (40, 44, 50, 255))
+    sheet = Image.new('RGBA', (len(cuts) * (wmax + 6), h + 6), (40, 44, 50, 255))
     for i, n in enumerate(sorted(art)):
         im = Image.frombytes('RGBA', (art[n]['w'], art[n]['h']), zlib.decompress(base64.b64decode(art[n]['z'])))
-        sheet.alpha_composite(im, (i * (size + 6) + 3, 3))
+        sheet.alpha_composite(im, (i * (wmax + 6) + 3, 3))
     sheet.save('/tmp/sign_art_sheet.png')
 
 

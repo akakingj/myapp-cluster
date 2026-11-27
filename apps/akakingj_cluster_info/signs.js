@@ -21,7 +21,7 @@
  *   const sg = startSigns(ctx, log)
  *   sg.current() -> ['DS_ANIMAL_CROSSING', ...]     sg.status() -> { state, seen, types }
  *   sg.signalsFor(ctx.signals) -> signals for the survey
- *   drawSigns(cv, types, size, gap)    signSize() etc. for the overlay
+ *   drawSigns(cv, types, gap)    signWidth(type)    for the overlay
  */
 const fs = require('fs');
 const path = require('path');
@@ -115,19 +115,20 @@ function artOf(t) {
     return 'danger';
 }
 
-/** A row's room: each sign size wide (the pictures' width), as tall as the tallest. */
-const signBox = (size) => ({ w: size, h: Object.keys(ART.art).reduce((m, k) => Math.max(m, ART.art[k].h), 0) });
+/** A sign's width on the HUD (all are ART.h high: a triangle wider than a round sign). */
+function signWidth(t) { const p = pic(artOf(t)) || pic('danger'); return p ? p.w : ART.wmax; }
 
-/** One sign at x, its middle at y. */
+/** One sign, its left at x, its middle at cy. */
 function drawSign(cv, t, x, cy) {
     const p = pic(artOf(t)) || pic('danger');
     if (p) cv.blit(p, x, Math.round(cy - p.h / 2));
 }
 
-/** A row of signs from the left of cv, each size wide, gap apart, their middles on the row's; cv cleared first. */
-function drawSigns(cv, types, size, gap) {
+/** A row of signs from the left of cv, gap apart, their middles on the row's; cv cleared first. */
+function drawSigns(cv, types, gap) {
     cv.clear([0, 0, 0, 0]);
-    types.forEach((t, i) => drawSign(cv, t, i * (size + gap) + Math.round((size - ART.size) / 2), cv.h / 2));
+    let x = 0;
+    types.forEach((t) => { drawSign(cv, t, x, cv.h / 2); x += signWidth(t) + gap; });
 }
 
 /* ---------- the car's own list of the camera's sign types ----------
@@ -259,4 +260,4 @@ function startSigns(ctx, log, opts) {
 /** Samples for checking the place (Settings: Road signs on the HUD: sample). */
 const SAMPLE = ['GIVE_WAY', 'DS_SPLIPPERY_ROAD', 'DS_ANIMAL_CROSSING'];
 
-module.exports = { startSigns, parseSigns, wanted, typeNames, chunk, makeTracker, drawSign, drawSigns, signBox, artOf, ART_SIZE: ART.size, SAMPLE, CAM_IFACE, CAM_EVENT, SHOW_MS, MAX_SIGNS };
+module.exports = { startSigns, parseSigns, wanted, typeNames, chunk, makeTracker, drawSign, drawSigns, signWidth, artOf, ART_H: ART.h, ART_WMAX: ART.wmax, SAMPLE, CAM_IFACE, CAM_EVENT, SHOW_MS, MAX_SIGNS };
