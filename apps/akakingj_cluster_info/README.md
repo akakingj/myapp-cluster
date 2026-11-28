@@ -32,12 +32,15 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   BDC answers D347 shows on the app's page (Lane change warning: mirror lamps, or the BDC has no D347).
 - **Road signs on the HUD** (1.12.0, Settings > Road signs on the HUD: on, sample signs, off; on by default): the signs
   the front camera reads, other than the speed limit and no passing (the HUD shows those itself), right of BMW's
-  speed, all of it on the glass a G20 shows, the lowest ending where this app's panel does, y 352 (1.13.0: a
+  speed, the lowest on the line of BMW's own speed limit sign, ending at y 380 (1.13.3, the owner; 1.13.0: a
   triangle in the speed's row, to y 419, had its bottom cut off on the HUD); a sign that would reach the panel or the directions goes above the first, at x 380, as high as just under
   the turn signal arrows (with the panel to the glass: two signs one above the other left of it), as South Korea's own signs (the government's designs, cut out
-  along their red or blue edge: `sign_art.js`, `tools/make_sign_art.py`; 39 of them - slippery road, traffic
-  queues, wild animals, steep hills, bends, road works, crossings, bumps, ..., give way, stop, no entry, the turn
-  and parking bans, one way; a warning with none of its own gets 위험, "!"). The car's own list of the camera's sign
+  along their red or blue edge: `sign_art.js`, `tools/make_sign_art.py`; 27 of them, the ones the 79 sign types of the car's catalog use
+  (1.13.3, `tools/known_sign_types.json`, the owner's table) - slippery road, traffic queues, wild animals, steep
+  hills, bends, road works, crossings, speed humps, bumps, ..., give way, stop, no entry, no cars, no stopping; a
+  warning with none of its own gets 위험, "!": for now the narrowing roads, the junctions, two-way traffic and low
+  flying aircraft, whose Korean signs are still to be drawn; the blue instruction signs and Germany's zone signs are
+  not shown). The car's own list of the camera's sign
   types (read from the app's interface config for the camera, made at install from the car's catalog) is logged
   once, whole, and counted on the app's page (types, drawn, as "!"): which pictures this car can ever show. As high as BMW's own limit sign (a round sign as big, a triangle as tall). Shown when the camera reads it, for 10 s; a
   sign read after it takes its place (1.12.3: the owner's; one event's several together, in a row), at most three (1.13.0, the owner's), as many as fit on the glass. Once, at the start, every name in the definitions of the sign services this install has (TrafficSignRecognition, the camera's, TrafficSignDisplayControl, and of the head-up display's data the names about signs, passing and lanes: `sign definitions:` lines; and the car's whole catalog's services and members named for no passing or the map's look ahead: `catalog no passing` lines, 1.12.4; all of them in the Test log, sign definitions, parked - what tells no passing's end, 1.12.3); signs that would reach

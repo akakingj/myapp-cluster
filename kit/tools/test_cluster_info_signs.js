@@ -151,12 +151,41 @@ check('pictures: South Korea\'s own signs - the types the camera read get theirs
     assert.strictEqual(art.art.slippery.h, SIGNS.h, 'a triangle as tall as the limit sign');
     assert(art.art.slippery.w >= 66 && art.art.slippery.w <= SIGNS.wmax, 'and wider: ' + art.art.slippery.w);
     assert(Math.abs(art.art.no_entry.w - SIGNS.h) <= 1 && art.art.no_entry.h === SIGNS.h, 'a round sign as big as the limit sign');
-    const src = fs.readFileSync(path.join(APP, 'road_signs.js'), 'utf8');
-    const block = src.slice(src.indexOf('const ART_OF'), src.indexOf('function artOf'));
-    const names = new Set((block.match(/'([a-z_]+)'/g) || []).map((q) => q.slice(1, -1)));
-    names.add('danger');
-    assert(names.size > 20);
-    names.forEach((n) => { const a = art.art[n]; assert(a, 'no picture ' + n); assert(a.h <= SIGNS.h && a.w <= SIGNS.wmax, n); });
+    Object.keys(art.art).forEach((n) => { const a = art.art[n]; assert(a.h <= SIGNS.h && a.w <= SIGNS.wmax, n); });
+    // a name the rules give that has no picture here (another firmware's type) draws 위험 ("!"), never nothing
+    const cv = new Canvas(SIGNS.wmax, SIGNS.h + 2), one = new Canvas(SIGNS.wmax, SIGNS.h + 2);
+    S.drawSigns(cv, ['NO_LEFT_TURN'], 0); S.drawSigns(one, ['DS_GENERAL'], 0);
+    assert.strictEqual(Buffer.from(cv.d).toString('base64'), Buffer.from(one.d).toString('base64'));
+});
+
+check('the car\'s 79 sign types (tools/known_sign_types.json, 1.13.3): each shown as the owner\'s table says, with its picture; the rest hidden', () => {
+    const RS = require('../../shared/road_signs.js');
+    const table = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'tools', 'known_sign_types.json'), 'utf8'));
+    const art = require(path.join(APP, 'sign_art.js')).art, atlas = require(path.join(__dirname, '..', '..', 'apps', 'akakingj_cluster_layouts', 'sign_atlas.js')).cells;
+    assert.strictEqual(Object.keys(table).length, 79);
+    assert.deepStrictEqual(Object.keys(RS.KNOWN).sort(), Object.keys(table).sort(), 'every type in KNOWN');
+    const later = ['narrow_both', 'narrow_left', 'narrow_right', 'crossroad', 'priority_road', 'junction_left', 'junction_right', 'two_way', 'aircraft', 'no_through'];
+    Object.keys(table).forEach((n) => {
+        const row = table[n], want = row.art.split(' ')[0], shown = row.show.startsWith('표시');
+        if (n === 'ALL_VEHICLES_PROHIBITED') { assert(!RS.wanted(n), n + ': hidden till its picture'); return; }
+        assert.strictEqual(RS.wanted(n), shown, n + ' shown: ' + row.show);
+        if (!shown) return;
+        const a = RS.artOf(n);
+        if (later.includes(want)) assert.strictEqual(a, 'danger', n + ': "!" till ' + want + '\'s picture');
+        else assert.strictEqual(a, want, n);
+        assert(art[a], n + ': Info has the picture ' + a);
+        if (/^DS_/.test(n)) assert(atlas[a], n + ': Layouts\' atlas has the picture ' + a);
+    });
+    // the ones the owner's table changed (1.13.3)
+    assert.deepStrictEqual(['VEHICLES_PROHIBITED', 'DS_ONE_BUMP', 'DS_CONCAVE', 'DS_GIVE_WAY_ROUNDABOUT'].map(RS.artOf), ['no_cars', 'speed_hump', 'bumpy_road', 'roundabout']);
+    // no passing's start and end, the empty places: as before
+    assert(RS.npStart('NO_PASSING_SIGN') && RS.npEnd('WITHDRAWAL_NO_PASSING_SIGN') && RS.npEnd('GENERAL_WITHDRAWAL'));
+    assert(!RS.npStart('MANDATORY_PASSING_LEFT') && !RS.npEnd('MANDATORY_PASSING_LEFT'));
+    assert.deepStrictEqual(RS.parseSigns({ trafficSign: [{ type: 'GIVE_WAY' }].concat(Array(19).fill({ type: 'SIGNAL_UNFILLED' })) }), ['GIVE_WAY']);
+    // every picture in the two atlases is one a type uses
+    const used = new Set(Object.keys(table).map(RS.artOf).concat(['danger']));
+    Object.keys(art).forEach((n) => assert(used.has(n), 'Info: an unused picture ' + n));
+    Object.keys(atlas).forEach((n) => assert(used.has(n), 'Layouts: an unused picture ' + n));
 });
 
 const px = (cv, x, y) => { const i = (Math.round(y) * cv.w + Math.round(x)) * 4; return [cv.d[i], cv.d[i + 1], cv.d[i + 2], cv.d[i + 3]]; };
@@ -336,10 +365,10 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(l.x + l.w <= HUD_SEEN.x + HUD_SEEN.w, 'the row ends on the glass');
         // 1.13.0: all of it on the glass a G20 shows (HUD_SEEN, to y 356: a triangle in BMW's speed row, y 357..419,
         // showed only its top part on a HUD photo, 2026-11-28); the lowest on the panel's line, right of BMW's speed
-        assert(l.y + l.h <= HUD_SEEN.y + HUD_SEEN.h, 'the layer ends at y ' + (l.y + l.h) + ', past the glass: its bottom cut on the HUD');
+        assert(l.y + l.h <= 382, 'the layer ends at y ' + (l.y + l.h) + ', past 382: its bottom cut on the HUD (a tester\'s cut at ~390)');
         assert(l.y >= HUD_SEEN.y, 'and starts on the glass');
         const a = ov.roadSigns().at[0];
-        assert(a.y + a.h <= HUD_SEEN.y + HUD_SEEN.h && a.y + a.h >= 350, 'the first at the glass\'s bottom: ' + JSON.stringify(a));
+        assert(a.y + a.h <= 382 && a.y + a.h >= 376, 'the first on BMW\'s speed limit sign\'s line (1.13.3): ' + JSON.stringify(a));
         assert.strictEqual(l.px, 1);
         ov._signsTick(); assert.strictEqual(l.px, 1);
         list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick(); assert.strictEqual(l.px, 2);
@@ -374,7 +403,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         const o = ov.roadSigns(), b = ov._hudBadge();
         assert(o.types.length >= 2, 'two signs shown, with the panel up: ' + JSON.stringify(o));
         assert.deepStrictEqual(o.types, ['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E'].slice(0, o.types.length), 'the first of the list first');
-        o.at.forEach((r) => assert(r.y >= HUD_SEEN.y && r.y + r.h <= HUD_SEEN.y + HUD_SEEN.h && r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w, JSON.stringify(r)));
+        o.at.forEach((r) => assert(r.y >= HUD_SEEN.y && r.y + r.h <= 382 && r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w, JSON.stringify(r)));
         assert(o.at.some((r) => r.y < o.at[0].y), 'what reaches the panel goes in the row above: ' + JSON.stringify(o.at));
         assert(b, 'the panel on the HUD'); o.at.forEach((r) => assert(!(r.x < b.x + b.w && r.x + r.w > b.x && r.y < b.y + b.h && r.y + r.h > b.y), 'over the panel: ' + JSON.stringify([r, b])));
         settings.v.show = 'off'; fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'hud' })); ov._read(); await wait(50); ov._tick && ov._tick();
@@ -402,7 +431,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
                 assert(!over(r, b), 'on the panel: ' + JSON.stringify([r, b]));
                 assert(!over(r, n), 'on the directions: ' + JSON.stringify([r, n]));
                 assert(!lamps.some((k) => over(r, k)), 'on the turn signals: ' + JSON.stringify(r));
-                assert(r.y + r.h <= HUD_SEEN.y + HUD_SEEN.h && r.y >= HUD_SEEN.y, JSON.stringify(r));
+                assert(r.y + r.h <= 382 && r.y >= HUD_SEEN.y, JSON.stringify(r));
             });
             o.at.forEach((r, i) => o.at.slice(i + 1).forEach((q) => assert(!over(r, q), 'one on another: ' + JSON.stringify([r, q]))));
         }

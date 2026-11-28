@@ -2785,8 +2785,8 @@ Average fuel economy (the car's trip computer)	평균 연비 (차량 트립 컴�
 Trip distance (the car's trip computer)	트립 주행 거리 (차량 트립 컴퓨터)
 Driving time (the car's trip computer)	주행 시간 (차량 트립 컴퓨터)
 Odometer (the car's total distance)	총 주행거리 (차량 누적 거리)
-Trip distance past 65,535 km (the car's own-reset or since-delivery trip)	65,535 km를 넘은 트립 거리 보정 (개별 설정 후·출고 후 트립)
-x 65,536 km	× 65,536 km
+Trip distance fix: times the trip passed 65,535 km (usually 0)	트립 거리 보정: 65,535 km를 넘은 횟수 (보통 0)
+times	번
 Centre display: bottom	가운데 표시창: 아래
 Clock (the time of day)	시계 (현재 시각)
 Trip computer: line 1	트립 창: 첫째 줄

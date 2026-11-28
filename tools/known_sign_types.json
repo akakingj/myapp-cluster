@@ -1,0 +1,476 @@
+{
+ "NO_PASSING_SIGN": {
+  "value": 1,
+  "kr": "규제 217 앞지르기금지",
+  "art": "no_passing",
+  "show": "HUD 숨김·계기판 표시(현행)"
+ },
+ "WITHDRAWAL_NO_PASSING_SIGN": {
+  "value": 2,
+  "kr": "없음 (해제 표지 없음)",
+  "art": "-",
+  "show": "숨김"
+ },
+ "WITHDRAWAL_SPEED_LIMIT": {
+  "value": 3,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "GENERAL_WITHDRAWAL": {
+  "value": 4,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "SPEED_LIMIT": {
+  "value": 5,
+  "kr": "규제 224 최고속도제한",
+  "art": "-",
+  "show": "숨김"
+ },
+ "WITHDRAWAL_SPEED_LIMIT_2_DIGITS": {
+  "value": 6,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "WITHDRAWAL_SPEED_LIMIT_3_DIGITS": {
+  "value": 7,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MANDATORY_PASSING_LEFT": {
+  "value": 8,
+  "kr": "지시 314 좌측면통행",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MANDATORY_PASSING_RIGHT": {
+  "value": 9,
+  "kr": "지시 313 우측면통행",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MANDATORY_PASSING_STRAIGHT": {
+  "value": 10,
+  "kr": "지시 305 직진",
+  "art": "-",
+  "show": "숨김"
+ },
+ "ROUNDABOUT_SIGN": {
+  "value": 11,
+  "kr": "지시 304 회전교차로",
+  "art": "roundabout",
+  "show": "표시"
+ },
+ "NO_ENTRY": {
+  "value": 12,
+  "kr": "규제 211 진입금지",
+  "art": "no_entry",
+  "show": "표시"
+ },
+ "VEHICLES_PROHIBITED": {
+  "value": 13,
+  "kr": "규제 202 자동차통행금지",
+  "art": "no_cars",
+  "show": "표시"
+ },
+ "MOTORWAY_START_OF": {
+  "value": 14,
+  "kr": "없음 (고속도로는 안내표지)",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MOTORWAY_END_OF": {
+  "value": 15,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "EXPRESSWAY_START_OF": {
+  "value": 16,
+  "kr": "지시 301 자동차전용도로",
+  "art": "-",
+  "show": "숨김"
+ },
+ "EXPRESSWAY_END_OF": {
+  "value": 17,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "TRAFFIC_CALMING_ZONE_START_OF": {
+  "value": 18,
+  "kr": "없음 (독일 교통진정구역)",
+  "art": "-",
+  "show": "숨김"
+ },
+ "TRAFFIC_CALMING_ZONE_END_OF": {
+  "value": 19,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "STOP_SIGN": {
+  "value": 20,
+  "kr": "규제 227 일시정지",
+  "art": "stop",
+  "show": "표시"
+ },
+ "GIVE_WAY": {
+  "value": 21,
+  "kr": "규제 228 양보",
+  "art": "give_way",
+  "show": "표시"
+ },
+ "PRIORITY_ROAD_START_OF": {
+  "value": 22,
+  "kr": "주의 106 우선도로",
+  "art": "-",
+  "show": "숨김"
+ },
+ "PRIORITY_ROAD_END_OF": {
+  "value": 23,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "DS_BEND_LEFT": {
+  "value": 24,
+  "kr": "주의 112 좌로굽은도로",
+  "art": "curve_left",
+  "show": "표시"
+ },
+ "DS_BEND_RIGHT": {
+  "value": 25,
+  "kr": "주의 111 우로굽은도로",
+  "art": "curve_right",
+  "show": "표시"
+ },
+ "DS_DOUBLE_BEND_LEFT_FIRST": {
+  "value": 26,
+  "kr": "주의 114 좌우로이중굽은도로",
+  "art": "double_bend_left",
+  "show": "표시"
+ },
+ "DS_DOUBLE_BEND_RIGHT_FIRST": {
+  "value": 27,
+  "kr": "주의 113 우좌로이중굽은도로",
+  "art": "double_bend_right",
+  "show": "표시"
+ },
+ "DS_ROAD_NARROW_BOTH_SIDES": {
+  "value": 28,
+  "kr": "주의 118 도로폭이좁아짐",
+  "art": "narrow_both (새로)",
+  "show": "표시"
+ },
+ "DS_ROAD_NARROW_LEFT_SIDE": {
+  "value": 29,
+  "kr": "주의 120 좌측차로없어짐",
+  "art": "narrow_left (새로)",
+  "show": "표시"
+ },
+ "DS_ROAD_NARROW_RIGHT_SIDE": {
+  "value": 30,
+  "kr": "주의 119 우측차로없어짐",
+  "art": "narrow_right (새로)",
+  "show": "표시"
+ },
+ "DS_CROSS_ROAD": {
+  "value": 31,
+  "kr": "주의 101 十자형교차로",
+  "art": "crossroad (새로)",
+  "show": "표시"
+ },
+ "DS_CROSS_ROAD_SMALL_ROAD": {
+  "value": 32,
+  "kr": "주의 106 우선도로 (추정)",
+  "art": "priority_road (새로)",
+  "show": "표시"
+ },
+ "DS_ROAD_FROM_LEFT__DEGREE": {
+  "value": 33,
+  "kr": "주의 105 ㅓ자형교차로 (추정)",
+  "art": "junction_left (새로)",
+  "show": "표시"
+ },
+ "DS_ROAD_FROM_RIGHT__DEGREE": {
+  "value": 34,
+  "kr": "주의 104 ㅏ자형교차로 (추정)",
+  "art": "junction_right (새로)",
+  "show": "표시"
+ },
+ "DS_ONE_BUMP": {
+  "value": 35,
+  "kr": "주의 129 과속방지턱 (추정)",
+  "art": "speed_hump",
+  "show": "표시"
+ },
+ "DS_TWO_BUMP": {
+  "value": 36,
+  "kr": "주의 128 노면고르지못함",
+  "art": "bumpy_road",
+  "show": "표시"
+ },
+ "DS_CONCAVE": {
+  "value": 37,
+  "kr": "주의 128 노면고르지못함 (추정)",
+  "art": "bumpy_road",
+  "show": "표시"
+ },
+ "DS_TRAFFIC_JAM": {
+  "value": 38,
+  "kr": "주의 141 상습정체구간",
+  "art": "traffic_jam",
+  "show": "표시"
+ },
+ "DS_ROAD_WORKS": {
+  "value": 39,
+  "kr": "주의 135 도로공사중",
+  "art": "road_works",
+  "show": "표시"
+ },
+ "DS_RIGHT_DOWNWARDS": {
+  "value": 40,
+  "kr": "주의 117 내리막경사",
+  "art": "downhill",
+  "show": "표시"
+ },
+ "DS_RIGHT_UPWARDS": {
+  "value": 41,
+  "kr": "주의 116 오르막경사",
+  "art": "uphill",
+  "show": "표시"
+ },
+ "DS_TRAFFIC_LIGHT": {
+  "value": 42,
+  "kr": "주의 125 신호기",
+  "art": "traffic_lights",
+  "show": "표시"
+ },
+ "DS_ANIMAL_CROSSING": {
+  "value": 43,
+  "kr": "주의 139 야생동물보호",
+  "art": "wild_animal",
+  "show": "표시"
+ },
+ "DS_CHILDREN": {
+  "value": 44,
+  "kr": "주의 133 어린이보호",
+  "art": "children",
+  "show": "표시"
+ },
+ "DS_SNOW": {
+  "value": 45,
+  "kr": "없음",
+  "art": "danger",
+  "show": "표시"
+ },
+ "DS_SPLIPPERY_ROAD": {
+  "value": 46,
+  "kr": "주의 126 미끄러운도로",
+  "art": "slippery",
+  "show": "표시"
+ },
+ "DS_GIVE_WAY_ROUNDABOUT": {
+  "value": 47,
+  "kr": "주의 109 회전형교차로",
+  "art": "roundabout",
+  "show": "표시"
+ },
+ "DS_WIND_FROM_SIDE": {
+  "value": 48,
+  "kr": "주의 137 횡풍",
+  "art": "crosswind",
+  "show": "표시"
+ },
+ "DS_PEDESTRIAN_CROSSING": {
+  "value": 49,
+  "kr": "주의 132 횡단보도",
+  "art": "crosswalk",
+  "show": "표시"
+ },
+ "DS_BYCICLE_CROSSING": {
+  "value": 50,
+  "kr": "주의 134 자전거",
+  "art": "bicycle",
+  "show": "표시"
+ },
+ "DS_TRAIN_CROSS_WITHOUT_BARRIER": {
+  "value": 51,
+  "kr": "주의 110 철길건널목",
+  "art": "railway",
+  "show": "표시"
+ },
+ "DS_TRAIN_CROSS_WITH_BARRIER": {
+  "value": 52,
+  "kr": "주의 110 철길건널목",
+  "art": "railway",
+  "show": "표시"
+ },
+ "DS_GRAVEL": {
+  "value": 53,
+  "kr": "없음",
+  "art": "danger",
+  "show": "표시"
+ },
+ "DS_TWO_WAY_TRAFFIC": {
+  "value": 54,
+  "kr": "주의 115 2방향통행",
+  "art": "two_way (새로)",
+  "show": "표시"
+ },
+ "CITY_LIMIT_START_OF": {
+  "value": 55,
+  "kr": "지시 334 도시부 (추정)",
+  "art": "-",
+  "show": "숨김"
+ },
+ "CITY_LIMIT_END_OF": {
+  "value": 56,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "CITY_LIMIT_START_END_OF": {
+  "value": 57,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "ENVIRONMENTAL_ZONE_START_OF": {
+  "value": 58,
+  "kr": "없음 (독일 환경구역)",
+  "art": "-",
+  "show": "숨김"
+ },
+ "ENVIRONMENTAL_ZONE_END_OF": {
+  "value": 59,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "UNKNOWN": {
+  "value": 60,
+  "kr": "-",
+  "art": "-",
+  "show": "숨김 (무시)"
+ },
+ "ALL_VEHICLES_PROHIBITED": {
+  "value": 61,
+  "kr": "규제 201 통행금지",
+  "art": "no_through (새로)",
+  "show": "표시"
+ },
+ "MANDATORY_PASSING_HERE_LEFT": {
+  "value": 62,
+  "kr": "지시 307 좌회전",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MANDATORY_PASSING_HERE_RIGHT": {
+  "value": 63,
+  "kr": "지시 306 우회전",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MANDATORY_PASSING_LEFT_ALONG": {
+  "value": 64,
+  "kr": "지시 307 좌회전 (추정)",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MANDATORY_PASSING_RIGHT_ALONG": {
+  "value": 65,
+  "kr": "지시 306 우회전 (추정)",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MANDATORY_PASSING_STRAIGHT_LEFT": {
+  "value": 66,
+  "kr": "지시 309 직진및좌회전",
+  "art": "-",
+  "show": "숨김"
+ },
+ "MANDATORY_PASSING_STRAIGHT_RIGHT": {
+  "value": 67,
+  "kr": "지시 308 직진및우회전",
+  "art": "-",
+  "show": "숨김"
+ },
+ "DS_PEDESTRIAN": {
+  "value": 68,
+  "kr": "주의 132 횡단보도 (근사)",
+  "art": "crosswalk",
+  "show": "표시"
+ },
+ "DS_DOMESTIC_ANIMAL_CROSSING": {
+  "value": 69,
+  "kr": "주의 139 야생동물보호 (근사)",
+  "art": "wild_animal",
+  "show": "표시"
+ },
+ "DS_GENERAL": {
+  "value": 70,
+  "kr": "주의 140 위험",
+  "art": "danger",
+  "show": "표시"
+ },
+ "DS_DRAW_BRIDGE": {
+  "value": 71,
+  "kr": "주의 138의2 교량 (근사)",
+  "art": "bridge",
+  "show": "표시"
+ },
+ "DS_LOW_FLYING_AIRCRAFT": {
+  "value": 72,
+  "kr": "주의 136 비행기",
+  "art": "aircraft (새로)",
+  "show": "표시"
+ },
+ "DS_RIVER_BANK": {
+  "value": 73,
+  "kr": "주의 127 강변도로",
+  "art": "riverside",
+  "show": "표시"
+ },
+ "DS_TRAIN_CROSS": {
+  "value": 74,
+  "kr": "주의 110 철길건널목",
+  "art": "railway",
+  "show": "표시"
+ },
+ "STOPPING_RESTRICTION": {
+  "value": 75,
+  "kr": "규제 218 정차·주차금지",
+  "art": "no_stopping",
+  "show": "표시"
+ },
+ "NO_STANDING_ANYTIME": {
+  "value": 76,
+  "kr": "규제 218 정차·주차금지",
+  "art": "no_stopping",
+  "show": "표시"
+ },
+ "DRIVING_EMERGANCY_LANE_ALLOWED": {
+  "value": 77,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "DRIVING_EMERGANCY_LANE_CANCELLATION": {
+  "value": 78,
+  "kr": "없음",
+  "art": "-",
+  "show": "숨김"
+ },
+ "SIGNAL_UNFILLED": {
+  "value": 255,
+  "kr": "- (빈 칸)",
+  "art": "-",
+  "show": "숨김 (무시)"
+ }
+}

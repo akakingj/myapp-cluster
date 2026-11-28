@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.69.4",
+  "version": "0.69.5",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -1927,9 +1927,9 @@
     },
     {
       "key": "tripWraps",
-      "label": "Trip distance past 65,535 km (the car's own-reset or since-delivery trip)",
+      "label": "Trip distance fix: times the trip passed 65,535 km (usually 0)",
       "type": "number",
-      "unit": "x 65,536 km",
+      "unit": "times",
       "default": 0,
       "steps": [
         0,

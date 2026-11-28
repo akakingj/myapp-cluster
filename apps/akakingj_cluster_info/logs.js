@@ -164,16 +164,21 @@ function pager(bundleOf, dataDir, log, tag, btn) {
             saved.forEach((r) => log && log.info('logs: ' + (r.file ? 'saved ' + r.file : r.dir + ': ' + r.error)));
             view = { codes: codes(bundleOf(false)).codes, page: 0, saved };
         },
-        draw(cv, t) {
+        draw(cv, t, extra) {
+            // (1.13.3: below the page's top, which the head unit's title bar covers - the first line was cut in half
+            // there - and the file's path on a line of its own, its folder shortened, so it ends on the screen)
             const n = view.codes.length, pages = Math.ceil(n / PER), first = view.page * PER;
-            const note = savedNote(view.saved), last = Math.min(n, first + PER);
+            const note = savedNote(view.saved), last = Math.min(n, first + PER), H = cv.h || 520;
             cv.text(KO ? btn.ko + ': 코드를 하나씩 사진으로 찍으세요 (' + pages + '쪽 중 ' + (view.page + 1) + '쪽, 코드 ' + (first + 1) + '-' + last + ' / ' + n + '). 다음 쪽은 ' + btn.ko + ' 버튼'
-                : btn.en + ': photograph each code (page ' + (view.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + last + ' of ' + n + '), then press ' + btn.en + ' for the next', 40, 34, 20, t.text, { font: 'bold', literal: true });
-            cv.text((KO ? note.ko : note.en) + note.file, 40, 62, 16, t.dim, { font: 'label', literal: true });
+                : btn.en + ': photograph each code (page ' + (view.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + last + ' of ' + n + '), then press ' + btn.en + ' for the next', 40, 58, 20, t.text, { font: 'bold', literal: true });
+            cv.text(KO ? note.ko : note.en, 40, 82, 16, t.dim, { font: 'label', literal: true });
+            const file = note.file ? note.file.replace(/^.*[\\/](oap_\d+[\\/])/, '…/$1') : '';
+            if (file || extra) cv.text(extra || file, 40, 102, 14, extra ? t.warn : t.dim, { font: 'label', literal: true });
+            const top = 112;
             view.codes.slice(first, first + PER).forEach((q, i) => {
-                const px = Math.max(3, Math.floor(420 / (q.size + 8)));
-                draw(cv, q, 40 + i * 520, 84, px);
-                cv.text(String(first + i + 1) + ' / ' + n, 40 + i * 520 + 180, 84 + (q.size + 8) * px + 22, 18, t.text, { font: 'bold', literal: true });
+                const px = Math.max(3, Math.floor(Math.min(420, H - top - 23) / (q.size + 8)));
+                draw(cv, q, 40 + i * 520, top, px);
+                cv.text(String(first + i + 1) + ' / ' + n, 40 + i * 520 + Math.round((q.size + 8) * px / 2) - 20, top + (q.size + 8) * px + 22, 18, t.text, { font: 'bold', literal: true });
             });
         },
     };

@@ -384,7 +384,7 @@ mgu.run({
             const cv = ctx.canvas(W, H).clear(t.bg);
             testLabel();
             if (logPages.active()) { logPages.draw(cv, t); return ui.image('MAIN_GFX', cv); }
-            if (testPages.active()) { testPages.draw(cv, t); if (testNote) cv.text(testNote, 40, 8, 14, t.warn, { font: 'label', literal: true }); return ui.image('MAIN_GFX', cv); }
+            if (testPages.active()) { testPages.draw(cv, t, testNote); return ui.image('MAIN_GFX', cv); }
             G.panel(cv, t, 24, 44, 1552, 468, ((ctx.spec && ctx.spec.title) || 'Cluster Info'));
             const pw = src.power(t), ex = src.extras(t).filter((e) => e.text !== '--');
             if (pw || ex.length) {

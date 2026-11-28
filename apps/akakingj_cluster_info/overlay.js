@@ -88,7 +88,9 @@ const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit 
 // panel, the directions, the glass's end) the lowest free place at x 380 above, as high as just under the turn
 // signal arrows and lane change signs. With the panel to the glass (RPM, KGM, BOOST: x 464..672) two signs stand
 // one above the other left of it; a wider panel (the kW too, from x 405) puts them above the panel.
-const SIGNS = { x: 380, bottom: HUD_SEEN.y + HUD_SEEN.h - 4, h: 60, wmax: 70, gap: 6 };
+// 1.13.3: 28 lower, the lowest's bottom at 380 (the owner, on the road: "down a little, on BMW's own speed limit
+// sign's line"; still above where the tester's HUD cut a triangle, ~390)
+const SIGNS = { x: 380, bottom: 380, h: 60, wmax: 70, gap: 6 };
 const SIGNS_W = HUD_SEEN.x + HUD_SEEN.w - SIGNS.x, SIGNS_H = SIGNS.h + 2;
 const SIGNS_TOP = LCW.y + LCW.h + 4, SIGNS_LH = SIGNS.bottom - SIGNS_TOP;   // the layer: under the lamps to the bottom
 const SIGNS_MS = 250;

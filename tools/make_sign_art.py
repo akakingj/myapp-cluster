@@ -36,15 +36,15 @@ COMMON = ROOT / 'apps' / 'akakingj_cluster_layouts' / 'layout_common.js'
 # the signs used (the camera's types map to these in signs.js)
 NAMES = ['slippery', 'traffic_jam', 'wild_animal', 'downhill', 'uphill', 'curve_right', 'curve_left',
          'double_bend_right', 'double_bend_left', 'road_works', 'crosswalk', 'children', 'bicycle', 'speed_hump',
-         'bumpy_road', 'falling_rocks', 'crosswind', 'tunnel', 'bridge', 'railway', 'traffic_lights', 'roundabout',
-         'merge_right', 'merge_left', 'riverside', 'give_way', 'stop', 'no_entry',
-         # the regulatory and instruction signs (the camera's names for them not known yet: kept till the car's own
-         # list of types says which it has - signs.js logs it)
-         'slow', 'no_u_turn', 'no_left_turn', 'no_right_turn', 'no_straight', 'no_cars', 'no_parking', 'no_stopping',
-         'keep_distance_50m', 'one_way', 'unprotected_left',
+         'bumpy_road', 'crosswind', 'bridge', 'railway', 'traffic_lights', 'roundabout', 'riverside',
+         'give_way', 'stop', 'no_entry', 'no_cars', 'no_stopping',
          # no passing: the car's head-up display shows it itself, but on the cluster AK Cluster Layouts covers BMW's own
          # signs - so Layouts' atlas has it (the owner, 2026-11-28)
          'no_passing']
+# (Nov 28 2026) only the pictures one of the 79 types of the car's catalog uses (tools/known_sign_types.json, shared/
+# road_signs.js KNOWN): falling_rocks, tunnel, merge_left / merge_right, slow, no_u_turn, no_left_turn, no_right_turn,
+# no_straight, no_parking, keep_distance_50m, one_way and unprotected_left are left out (their PNGs stay in
+# tools/sign_art/: put back here if another firmware's camera names one); a type with no picture draws 위험 ("!")
 
 
 def box_from_overlay():
