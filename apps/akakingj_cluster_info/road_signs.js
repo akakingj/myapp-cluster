@@ -43,9 +43,15 @@ function parseSignsAt(v) {
     return list.filter((s) => s && typeof s === 'object' && typeof s.type === 'string' && s.type)
         .map((s) => {
             const l = s.location && typeof s.location === 'object' ? s.location : {}, p = s.position && typeof s.position === 'object' ? s.position : {};
+            const str = (v) => (typeof v === 'string' ? v : null);
             return { type: s.type.toUpperCase(), value: s.value, x: num(l.x), y: num(l.y), valid: l.locationInvalidFlags === 0 && num(l.y) !== null,
                 pos: p.overhead === true ? 'overhead' : p.left === true ? 'left' : p.right === true ? 'right' : null,
-                sup: typeof s.firstSupplementalType === 'string' ? s.firstSupplementalType : null };
+                sup: str(s.firstSupplementalType),
+                // (for the Test log, their meaning not yet known: the height, every position flag - l r o, several can be
+                // true -, the second supplemental sign, the sign's form, its additional info, variable)
+                z: num(l.z), flags: ['left', 'right', 'overhead'].filter((k) => p[k] === true).map((k) => k[0]).join(''),
+                sup2: str(s.secondSupplementalType), form: str(s.trafficSignForm), info: str(s.additionalInfo),
+                variable: typeof s.variable === 'boolean' ? s.variable : null };
         })
         // (the event's 20 places: an empty one is SIGNAL_UNFILLED, the car's catalog; never a sign)
         .filter((s) => !/^(SIGNAL_UNFILLED|UNKNOWN|INITIALIZATION_STATUS_UNKNOWN)$/.test(s.type));

@@ -152,11 +152,16 @@ check('the Test log\'s recorder (research.js, 1.13.0): the sign services\' every
     assert.ok(!/SignRecognitionFrontCamera\./.test(sec[2][1]), '(1.14.5) the camera\'s events not here: a line each in the camera signs');
     // (1.14.1) the camera's every event, the whole test (the 100 above, each its own line), where each sign stands
     assert.strictEqual(sec[1][1].split('\n').length, 100);
-    assert.strictEqual(sec[1][1].split('\n')[0], '04:01:03 60 km/h | DS_ROAD_WORKS 0 - - - -');
+    assert.strictEqual(sec[1][1].split('\n')[0], '04:01:03 60 km/h | DS_ROAD_WORKS 0 - - - - [z=- flags=- sup2=- form=- info=- var=-]');
     const { signsLine, KEEP_SIGNS } = require(path.join(APP, 'research.js'));
     const loc = (type, x, y, f, pos) => ({ type, value: type === 'SPEED_LIMIT' ? 50 : 0, firstSupplementalType: 'NONE', location: { x, y, z: 2, locationInvalidFlags: f || 0 }, position: { left: pos === 'left', right: pos === 'right', overhead: pos === 'overhead' } });
     assert.strictEqual(signsLine({ trafficSignRecognition: { numberSigns: 3 }, trafficSign: [loc('NO_ENTRY', 58.04, -28.1, 0, 'right'), loc('SPEED_LIMIT', 40, -7.6, 0, 'overhead'), loc('GIVE_WAY', 20, -2.94, 2, 'right')] }),
-        'side road: NO_ENTRY x=58 y=-28; SPEED_LIMIT 50 overhead 40 -7.6 NONE; GIVE_WAY 0 right - - NONE');
+        'side road: NO_ENTRY x=58 y=-28 0 NONE [z=2 flags=r sup2=- form=- info=- var=-]; SPEED_LIMIT 50 overhead 40 -7.6 NONE [z=2 flags=o sup2=- form=- info=- var=-]; GIVE_WAY 0 right - - NONE [z=2 flags=r sup2=- form=- info=- var=-]');
+    // (1.14.6) every field the camera gives for a sign, its meaning known or not
+    assert.strictEqual(signsLine({ trafficSignRecognition: { numberSigns: 1 }, trafficSign: [{ type: 'SPEED_LIMIT', value: 50, location: { x: 40, y: -7.6, z: 6.39, locationInvalidFlags: 0 },
+        position: { left: false, right: true, overhead: true }, firstSupplementalType: 'GENERIC_SUPPLEMENTAL', secondSupplementalType: 'SIGNAL_UNFILLED', trafficSignForm: 'ROUND',
+        additionalInfo: 'NO_ADDITIONAL_RESTRICTION', variable: false }] }),
+        'SPEED_LIMIT 50 overhead 40 -7.6 GENERIC_SUPPLEMENTAL [z=6.4 flags=ro sup2=SIGNAL_UNFILLED form=ROUND info=NO_ADDITIONAL_RESTRICTION var=false]');
     for (let i = 0; i < 400; i++) r.onValue('de.bmw.environmentalmodel.SignRecognitionFrontCamera', 'TrafficSignRecognitionFrontCamera', { trafficSign: [{ type: 'DS_CHILDREN' }] }, at(20));
     assert.strictEqual(r.sections()[1][1].split('\n').length, KEEP_SIGNS, 'at most KEEP_SIGNS: the first kept');
     assert.ok(/DS_ROAD_WORKS/.test(r.sections()[1][1].split('\n')[0]));

@@ -17,7 +17,8 @@
  *
  * (1.14.1) And every event of the camera's signs, the whole test (at most KEEP_SIGNS lines), one line each:
  *   HH:MM:SS 50 km/h | NO_STANDING_ANYTIME 0 right 23.1 -6.2 NONE; SPEED_LIMIT 50 overhead 40.0 -1.5 -
- * (type, value, where it stands - left / right / overhead -, metres ahead and aside, the first supplemental sign); one
+ * (type, value, where it stands - left / right / overhead -, metres ahead and aside, the first supplemental sign) and,
+ * since 1.14.6, every other field of the sign as it came: [z=height flags=l r o set sup2= form= info= var=]; one
  * a side road's (road_signs.js sideRoad: more than SIDE_M aside, left off the HUD and the cluster) as
  * "side road: NO_ENTRY x=58 y=-28". The changes above kept only the last 30, so a drive's first signs were lost.
  *
@@ -50,8 +51,10 @@ const f1 = (n) => (n === null ? '-' : String(Math.round(n * 10) / 10));
 function signsLine(v) {
     const all = RS.parseSignsAt(v);
     if (!all.length) return '(no sign)';
-    return all.map((s) => (RS.sideRoad(s) ? 'side road: ' + RS.sideLine(s)
-        : s.type + ' ' + (s.value === undefined ? '-' : s.value) + ' ' + (s.pos || '-') + ' ' + (s.valid ? f1(s.x) + ' ' + f1(s.y) : '- -') + ' ' + (s.sup || '-'))).join('; ');
+    const rest = (s) => ' [z=' + f1(s.z) + ' flags=' + (s.flags || '-') + ' sup2=' + (s.sup2 || '-') + ' form=' + (s.form || '-') + ' info=' + (s.info || '-')
+        + ' var=' + (s.variable === null || s.variable === undefined ? '-' : s.variable) + ']';
+    return all.map((s) => (RS.sideRoad(s) ? 'side road: ' + RS.sideLine(s) + ' ' + (s.value === undefined ? '-' : s.value) + ' ' + (s.sup || '-') + rest(s)
+        : s.type + ' ' + (s.value === undefined ? '-' : s.value) + ' ' + (s.pos || '-') + ' ' + (s.valid ? f1(s.x) + ' ' + f1(s.y) : '- -') + ' ' + (s.sup || '-') + rest(s))).join('; ');
 }
 
 function startResearch(opts) {

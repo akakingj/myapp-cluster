@@ -401,6 +401,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.6, Layouts 0.70.3, Centre 0.16.18 (Nov 28 2026; Layouts and Centre: shared/road_signs.js parseSignsAt's
+  new fields only, nothing they show): the camera signs' lines keep every field the camera gives for a sign, its meaning
+  known or not - with 1.14.5 the camera's events left "every field", so the height (location.z), every position flag
+  (l r o: several came true), the second supplemental sign, trafficSignForm, additionalInfo and variable are now on each
+  sign's line ([z= flags= sup2= form= info= var=]); only what the catalog already told was dropped.
 - Info 1.14.5 (Nov 28 2026): the Test log without what the car's catalog already told (the owner: 53 codes, the catalog
   checked): no sign definitions (the camera's types, the sign services' definitions, the catalog's no passing services:
   signs.js reads only the camera's own config, to count its types; the catalog file not read at all), no survey
