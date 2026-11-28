@@ -871,8 +871,8 @@ function sliObstacles(list, map, skip) {
     if (map) out.push({ r: [map.x, map.y, map.w, map.h] }, { r: [STOCK_SPEED.x, STOCK_SPEED.y, STOCK_SPEED.w, STOCK_SPEED.h] });
     return out;
 }
-function sliFree(x, y, r, obs) {
-    const R = r + SLI_GAP;
+function sliFree(x, y, r, obs, gap) {
+    const R = r + (gap == null ? SLI_GAP : gap);
     const inC = (c) => { const dx = x - c[0], dy = y - c[1], q = R + c[2]; return dx * dx + dy * dy < q * q; };
     const inR = (b) => { const dx = Math.max(b[0] - x, 0, x - (b[0] + b[2])), dy = Math.max(b[1] - y, 0, y - (b[1] + b[3])); return dx * dx + dy * dy < R * R; };
     for (let i = 0; i < obs.length; i++) {
@@ -962,7 +962,8 @@ function warnRow(list, obs) {
     if (!sign) return [];
     const cx = sign.x + sign.w / 2, cy = sign.y + sign.h / 2, r = sign.w / 2, g = WARN.gap;
     let best = [];
-    [[1, 0], [-1, 0], [0, -1], [0, 1]].forEach(([dx, dy]) => {
+    // (across, only to its right: in a row the speed limit sign is the leftmost, the owner)
+    [[1, 0], [0, -1], [0, 1]].forEach(([dx, dy]) => {
         const out = [];
         for (let i = 0; i < WARN.max; i++) {
             const at = dx ? { x: Math.round(cx + dx * (r + g + WARN_W / 2 + i * (WARN_W + g))), y: Math.round(cy) }
@@ -1019,7 +1020,7 @@ function warnPlace(list, opts) {
 /*
  * The speed limit sign and the warning signs lined up as one (the owner, 2026-11-28: in a row or a column with the
  * sign): of the places nearest home (a layout's signHome, else its sign's home), the first where the sign and two
- * warning signs fit in a row - right of it, left of it, one each side - or a column - below, above, one each side
+ * warning signs fit in a row - right of it, the sign leftmost - or a column - below, above, one each side
  * (a layout's signDirs: 'h', 'v' or both), each clear as it would be alone. { sli: { x, y, r }, warns: [{ x, y }] }
  * (the first warning sign next to the limit sign), or null where none fits (then each on its own, as before).
  */
@@ -1038,7 +1039,8 @@ function groupAt(list, opts, gap) {
         const dx1 = Math.ceil(r + gap + LINE_GAP + WARN_W / 2), dx2 = dx1 + WARN_W + gap + LINE_GAP;
         const dy1 = Math.ceil(r + gap + LINE_GAP + WARN.h / 2), dy2 = dy1 + WARN.h + gap + LINE_GAP;
         const ways = [];
-        if (dirs.indexOf('h') >= 0) ways.push([[dx1, 0], [dx2, 0]], [[-dx1, 0], [-dx2, 0]], [[dx1, 0], [-dx1, 0]]);
+        // (a row: the speed limit sign leftmost, the warning signs right of it - the owner, 2026-11-28)
+        if (dirs.indexOf('h') >= 0) ways.push([[dx1, 0], [dx2, 0]]);
         if (dirs.indexOf('v') >= 0) ways.push([[0, dy1], [0, dy2]], [[0, -dy1], [0, -dy2]], [[0, -dy1], [0, dy1]]);
         for (let i = 0; i < pts.length; i++) {
             const p = pts[i];
@@ -1054,6 +1056,24 @@ function groupAt(list, opts, gap) {
         }
     }
     return null;
+}
+
+/** On with Settings > Speed limit sign (layouts.js signOn's test): a layout makes room for the signs only then. */
+const signsOn = (o) => !!o && (o.sliSign === 'on' || o.sliSign === true);
+/** A layout's own places for the signs (its signAt, the owner's, 2026-11-28): the speed limit sign (the smaller one)
+ * at sli { x, y }, the warning signs at warns [{ x, y }], as signGroup gives them, where each is clear (half
+ * WARN.gap) of the layout, the glass's edges and the others; else null (then signGroup's search). */
+function fixedGroup(list, where, sli, warns) {
+    where = where || {};
+    const obs = sliObstacles(list, where.map, where.skip), r = SLI_R[SLI_R.length - 1], g = Math.round(WARN.gap / 2);
+    if (sli.y - r < 8 || sli.y + r > STRIP_Y - 6 || sli.x - r < 8 || sli.x + r > 1912 || !sliFree(sli.x, sli.y, r, obs, g)) return null;
+    const taken = obs.concat([{ c: [sli.x, sli.y, r] }]);
+    for (let i = 0; i < warns.length; i++) {
+        const w = warns[i];
+        if (!warnFree(w.x, w.y, taken, g)) return null;
+        taken.push({ r: [w.x - WARN_W / 2, w.y - WARN.h / 2, WARN_W, WARN.h] });
+    }
+    return { sli: { x: sli.x, y: sli.y, r }, warns: warns.map((w) => ({ x: w.x, y: w.y })) };
 }
 
 let atlasImg = null;
@@ -1081,5 +1101,5 @@ module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, powerTop, torqueTop, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
     SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliInFoot, sliPieces, sliFit, sliText, sliObstacles, sliFree,
-    WARN, WARN_W, warnPlace, warnRow, warnPieces, warnFree, signAtlas, signGroup,
+    WARN, WARN_W, warnPlace, warnRow, warnPieces, warnFree, signAtlas, signGroup, signsOn, fixedGroup,
 };

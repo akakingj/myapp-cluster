@@ -38,7 +38,8 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['ice', 'phe
     const obs = C.sliObstacles(others, mapForm ? (L.mapWindow || C.MAP_VIEW) : null, L.sliSkip);
     const own = L.sliAt ? L.sliAt(others, o) : null;
     if (L.sliAt && centre === 'info') assert(own, what + ': in the speedometer (the full-size dials)');
-    if (!own) assert(C.sliFree(x, y, r, obs), what + ': clear of the layout at ' + x + ',' + y);
+    // (a layout's own places for the signs, signAt: half WARN.gap clear, as the warning signs)
+    if (!own) assert(C.sliFree(x, y, r, obs, L.signAt ? Math.round(C.WARN.gap / 2) : undefined), what + ': clear of the layout at ' + x + ',' + y);
     else {
         // (a layout's own place, KO 1's and KO 2's in the speedometer's open foot: clear of every text and the foot's
         // arc and icon, 4 px round its box)
@@ -64,16 +65,22 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['ice', 'phe
             assert(w.x + w.w <= N.x || w.x >= N.x + N.w || w.y >= N.y + N.h, what + ': warn' + i + ' clear of the camera\'s cowl');
         });
         // in one line with the speed limit sign, a row or a column (the owner, 2026-11-28): every layout with the full-size
-        // pieces but KO 1's and KO 2's (the sign in the speedometer) and ID6 M's (no room: the middle panel's other foot)
+        // pieces but KO 1's and KO 2's (the sign in the speedometer)
         if (!mapForm && !L.sliAt && !L.warnHome) {
             assert(warn.length === 2, what + ': two in line');
             const cs = warn.map((w) => [w.x + w.w / 2, w.y + w.h / 2]).concat([[x, y]]);
             assert(cs.every((c) => Math.abs(c[0] - x) <= 2) || cs.every((c) => Math.abs(c[1] - y) <= 2), what + ': in line with the sign ' + JSON.stringify(cs));
         }
-        if (L.id === 'retro_m' && centre === 'info') {
-            // (Retro M: the limit sign over the gear window, the warning signs either side, just above it)
-            const g = others.find((p) => p.key === 'gearWin');
-            assert(x === g.x + g.w / 2 && y + r < g.y && g.y - (y + r) < 80, what + ': over the gear');
+        if (!mapForm && !L.sliAt && !L.warnHome && warn.length === 2) {
+            // a row: the speed limit sign leftmost (the owner, 2026-11-28)
+            if (warn.every((w) => Math.abs(w.y + w.h / 2 - y) <= 2)) assert(warn.every((w) => w.x + w.w / 2 > x), what + ': the speed limit sign leftmost');
+        }
+        if (L.signAt && centre === 'info' && bottomExtra === 'off') {
+            // (a layout's own places, the owner's: taken as they are)
+            const own2 = L.signAt(others, Object.assign({ sliSign: 'on' }, o), { map: null, skip: L.sliSkip });
+            assert(own2, what + ': its own places clear');
+            const got = [x, y].concat(...warn.map((w) => [w.x + w.w / 2, w.y + w.h / 2])), want = [own2.sli.x, own2.sli.y].concat(...own2.warns.map((w) => [w.x, w.y]));
+            assert(got.length === want.length && got.every((v, i) => Math.abs(v - want[i]) <= 1), what + ': at its own places ' + got + ' / ' + want);
         }
         if (warn.length) {
         const home = L.warnHome || { x, y };

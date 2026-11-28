@@ -32,6 +32,9 @@ const rpmNum = (d) => (d.engineOn === false ? 'OFF' : C.isNum(d.rpm) ? String(C.
 // the three figures on one baseline (a digit's foot sits 0.785 of its box down, measured off the atlas as drawn),
 // the units' line under it, the rule, the trip computer's names and figures
 const BASE = 370, FOOT = 0.785, UNITS_Y = 392, RULE_Y = 442, TRIP_Y = 458;
+// the speed limit sign and the warning signs in a row under the speed (the owner's places, 0.69.0), the speed limit
+// sign leftmost; the middle trip line then under them
+const SIGN_Y = 490, MID_Y = 546;
 const COLS = [[260, 400], [690, 540], [1260, 400]];   // x, w: the engine speed, the speed, the gear
 const FIG_H = 115, SPEED_H = 250;
 const topFor = (h) => Math.round(BASE - FOOT * h);
@@ -41,6 +44,7 @@ module.exports = {
     stripGear: true,   // (the gear on the right: kept over the car's own strip)
     speedGauge: false,  // (the speed in figures only)
     title: 'Simple',
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 856, y: SIGN_Y }, [{ x: 960, y: SIGN_Y }, { x: 1064, y: SIGN_Y }])),
     // its own places, set on the page (layouts.js placesFor): the trip row's three lines
     places: C.tripPlaces(3, (o) => o.centre !== 'map' && o.centre !== 'stock'),
     palette: P.palette,
@@ -53,8 +57,10 @@ module.exports = {
         // gives fitted)
         const cell = (i) => {
             const r = C.placeReadout(o, C.placeOf(o, 'tripRow' + (i + 1)) || C.TRIP_OWN[3][i]), [x, w] = COLS[i];
-            const v = C.fitText(C.text('tripRow' + (i + 1), x + 40, TRIP_Y + 26, w - 80, 44, r.value, txt), 'bold', 0.95);
-            return [C.text('tripLbl' + (i + 1), x, TRIP_Y, w, 20, r.short, lbl, { tracking: 0.25 }), Object.assign(v, r.tone ? { tone: r.tone } : {})];
+            // (the middle one under the signs' row while the speed limit sign is on: SIGN_Y)
+            const y = i === 1 && C.signsOn(o) ? MID_Y : TRIP_Y;
+            const v = C.fitText(C.text('tripRow' + (i + 1), x + 40, y + 26, w - 80, 44, r.value, txt), 'bold', 0.95);
+            return [C.text('tripLbl' + (i + 1), x, y, w, 20, r.short, lbl, { tracking: 0.25 }), Object.assign(v, r.tone ? { tone: r.tone } : {})];
         };
         return [bg('bg', 0, 0, 1920, 720),
             C.text('rpmDigits', R[0], topFor(FIG_H), R[1], FIG_H, rpmNum, rpmC(o)),

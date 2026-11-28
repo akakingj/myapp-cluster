@@ -109,9 +109,9 @@ function small(o, which, cx, cy, R) {
 
 module.exports = {
     id: 'id6m',
-    // (no room for the speed limit sign and the warning signs in one line, its dials, middle panel, side lights and
-    // small dials filling the glass: the warning signs at the middle panel's other foot, mirroring the limit sign's)
-    warnHome: { x: 1218, y: 590 },
+    // the speed limit sign and the warning signs in a row under the middle panel (the owner's places, 0.69.0), as Old
+    // M's (the speed limit sign leftmost): the panel 18 px higher and 40 shorter for them
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 859, y: 602 }, [{ x: 953, y: 602 }, { x: 1054, y: 602 }])),
     title: 'ID6 M',
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,
@@ -145,7 +145,7 @@ module.exports = {
         // the rims clear of the KOMBI's turn arrows (layout_common TURN_ARROWS)
         return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(speedo(o, 470, 330, 288), tach(o, 1450, 330, 288, true),
             small(o, 'speed', 140, 562, 80), small(o, 'rpm', 1780, 562, 80), [
-            ], centreDisplay(o, 812, 168, 296, 446));
+            ], C.signsOn(o) ? centreDisplay(o, 812, 150, 296, 406) : centreDisplay(o, 812, 168, 296, 446));
     },
 };
 
@@ -155,7 +155,7 @@ module.exports = {
  * lights (tools/clearance.js).
  */
 function centreDisplay(o, X, Y, W, H) {
-    const sy = H / 470;
+    const sy = H / 470, k = Math.min(1, H / 446);   // (k: the figures smaller in the shorter panel)
     return [
         { key: 'lcd', kind: 'panel', x: X, y: Y, w: W, h: H, params: { u_box: [20, 2, 0.5, 1] }, colors: (t) => ({ top: t.lcdTop, bottom: t.lcdBottom, border: t.lcdEdge }) },
         C.text('clock', X + 16, Y + 18, (W - 38) / 2, 30, C.clock, white, { align: 0 }),
@@ -165,11 +165,11 @@ function centreDisplay(o, X, Y, W, H) {
         // (Settings > Centre display: Trip computer, 0.46.0: its three lines in the speed's place)
         ? C.tripRows(o, X + 14, Y + Math.round(80 * sy), W - 28, Math.round(220 * sy), 3, lbl, white, 'bold')
         : [
-            C.text('speedDigits', X, Y + Math.round(104 * sy), W, 140, (d) => C.speedText(o, d), white),
-            C.text('speedDigitsUnit', X, Y + Math.round(254 * sy), W, 22, C.speedUnit(o), lbl, { tracking: 0.12 }),
+            C.text('speedDigits', X, Y + Math.round(104 * sy), W, Math.round(140 * k), (d) => C.speedText(o, d), white),
+            C.text('speedDigitsUnit', X, Y + Math.round(254 * sy), W, Math.round(22 * k), C.speedUnit(o), lbl, { tracking: 0.12 }),
         ], [
         C.flat('rule2', X + 24, Y + Math.round(312 * sy), W - 48, 2, 'lcdEdge'),
         C.text('kwNowLbl', X, Y + Math.round(338 * sy), W, 18, C.focus.powerLabel(o, true), lbl, { tracking: 0.1 }),
-        C.text('kwNow', X, Y + Math.round(400 * sy) - 36, W, 54, C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
+        C.text('kwNow', X, Y + Math.round(400 * sy) - Math.round(36 * k), W, Math.round(54 * k), C.focus.power(o), (t, d) => (C.engineFocus(o) ? white(t) : powerTxt(t, d))),
     ]);
 }

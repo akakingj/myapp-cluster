@@ -251,6 +251,9 @@ module.exports = {
      * tach's top, the dark box right of the gear's disc (the small gauges below it), the eDrive box over the column,
      * the warning lights under the tach. Nothing of it in the M car's boxes but the tach (layouts.M_ON_DIAL).
      */
+    // the speed limit sign and the warning signs in a column between the tach and the disc and coolant gauge (the
+    // owner's places, 0.69.0): the speed limit sign at the foot, the warning signs over it
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 1022, y: 503 }, [{ x: 1022, y: 413 }, { x: 1022, y: 323 }])),
     pieces(o) {
         if (o.centre === 'map') {
             // the tach left of the map; the disc and the small gauges right of it; the time and outside temperature
@@ -276,7 +279,10 @@ module.exports = {
         // (the tach's rim and the disc's top 30 px or more under the KOMBI's turn arrows: on the car the arrows stand
         // lower and further in than C.TURN_ARROWS by about 10 - 15 px, and sat on the tach's rim and the disc at
         // 393 / 240 and 262 / 100, a photo of the car, 2026-11-26)
-        return [back(o, 'bg', 0, 0, 1920, 720)].concat(leftDial(o, 335, 385, 215), tach(o, 790, 413, 225),
+        // (with the speed limit sign on, the G meter and the tach a little smaller and the tach 30 px to the left: the
+        // signs' column between it and the disc and coolant, the owner's places, 0.69.0)
+        const signs = C.signsOn(o);
+        return [back(o, 'bg', 0, 0, 1920, 720)].concat(signs ? leftDial(o, 330, 385, 205) : leftDial(o, 335, 385, 215), signs ? tach(o, 760, 413, 210) : tach(o, 790, 413, 225),
             gearDisc(o, 1177, 290, 92), small(o, 'rpm', 1187, 526, 112), small(o, 'speed', 1390, 404, 110), [wakaba(1514, 224, 300)]);
     },
 };

@@ -139,6 +139,9 @@ function display(o, X, Y, W, H, gear) {
 module.exports = {
     id: 'classic',
     title: 'Old M',
+    // the speed limit sign and the warning signs in a row under the amber display (the owner's places, 0.69.0): the
+    // speed limit sign leftmost (as in every row), the first warning sign in the middle, the second right of it
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 859, y: 602 }, [{ x: 953, y: 602 }, { x: 1054, y: 602 }])),
     stripFuel: false,   // (its own fuel gauge, in the speedometer)
     ownStripGauges: true,   // (the charge in its amber display: none of the strip's bars)
     // its own places, set on the page: the trip computer's three lines (with Settings > Centre display: Trip computer)
@@ -152,6 +155,9 @@ module.exports = {
             return C.aroundMap().map((r, i) => C.flat('bg' + i, r.x, r.y, r.w, r.h, 'bg')).concat(dial(o, 'speed', 208, 360, 404), dial(o, 'rpm', 1712, 360, 404));
         }
         // the car's own bottom strip (the default): the two dials either side of the amber display, above the strip
-        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dial(o, 'speed', 468, 326, 576), dial(o, 'rpm', 1452, 326, 576), display(o, 796, 236, 328, 380, false));   // (the rims clear of the KOMBI's turn arrows: layout_common TURN_ARROWS)
+        // (with the speed limit sign on, the display 40 px higher and 24 shorter: the signs in a row under it, the
+        // owner's places, 0.69.0)
+        const up = C.signsOn(o);
+        return [C.flat('bg', 0, 0, 1920, 720, 'bg')].concat(dial(o, 'speed', 468, 326, 576), dial(o, 'rpm', 1452, 326, 576), display(o, 796, up ? 196 : 236, 328, up ? 356 : 380, false));   // (the rims clear of the KOMBI's turn arrows: layout_common TURN_ARROWS)
     },
 };

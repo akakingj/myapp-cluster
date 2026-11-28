@@ -91,6 +91,9 @@ module.exports = {
     palette: pal,
     gearText: C.gearText,
 
+    // the speed limit sign and the warning signs in a column left of the speed, between it and the KOMBI's lights
+    // (the owner's places, 0.69.0): the speed limit sign at the foot, the warning signs over it
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 175, y: 456 }, [{ x: 175, y: 370 }, { x: 175, y: 284 }])),
     pieces(o) {
         const engine = C.engineFocus(o);
         const boostLbl = engine ? C.focus.chargeLabel(o) : 'BOOST ' + C.pressLabel(o).toUpperCase(), powerLbl = engine ? 'TORQUE ' + C.torqueUnit(o).toUpperCase() : 'POWER KW';
@@ -154,17 +157,20 @@ module.exports = {
                 if (r.tone) c[2] = Object.assign({}, c[2], { tone: r.tone });
                 return c;
             };
+            const signs = C.signsOn(o), sx = signs ? 228 : 200, sw = signs ? 330 : 350, cy = signs ? 510 : 486;
             return [C.flat('bg', 0, 0, 1920, 720, 'bg'), shiftLights(o, X0, 172, X1 - X0, 40, 15), rpmBar(o, X0, 218, X1 - X0, 26)].concat(
                 [
                     { key: 'gearCard', kind: 'panel', x: GX, y: 262, w: GW, h: 290, params: { u_box: [14, 2, 0.4, 1] }, colors: (t) => ({ top: t.tileTop, bottom: t.tileBottom, border: t.accent }) },
                     C.text('gear', GX, 272, GW, 200, C.gearText, gearC),
                     C.text('rpm', GX, 478, GW, 40, rpmText, acc),
                     C.text('rpmLbl', GX, 522, GW, 18, 'RPM', lbl, { tracking: 0.2 }),
-                    // (the speed clear of the KOMBI's warning lights on the glass's left: C.SIDE_LIGHTS)
-                    C.text('speedDigits', 200, 216, 350, 190, (d) => C.speedText(o, d), white),
-                    C.text('speedUnit', 200, 410, 350, 28, C.speedUnit(o), lbl, { tracking: 0.12 }),
-                    C.text('clock', 90, 486, 200, 36, C.clock, white, { align: 0 }),
-                    C.text('outside', 290, 486, 200, 36, (d) => C.outsideText(o, d.outside), lbl, { align: 1 }),
+                    // (the speed clear of the KOMBI's warning lights on the glass's left: C.SIDE_LIGHTS; with the speed
+                    // limit sign on, narrower and the time and temperature 24 px lower: the signs' column left of it,
+                    // between it and the lights, the owner's places, 0.69.0)
+                    C.text('speedDigits', sx, 216, sw, 190, (d) => C.speedText(o, d), white),
+                    C.text('speedUnit', sx, 410, sw, 28, C.speedUnit(o), lbl, { tracking: 0.12 }),
+                    C.text('clock', 90, cy, 200, 36, C.clock, white, { align: 0 }),
+                    C.text('outside', 290, cy, 200, 36, (d) => C.outsideText(o, d.outside), lbl, { align: 1 }),
                 ],
                 // (the two right tiles clear of the KOMBI's Auto Hold and parking brake lights: C.SIDE_LIGHTS)
                 tp('tile5', 'zero', 1360, 262, 200, 200, zeroLabel(o), zeroText(o), acc, 96, [C.text('zeroBest', 1374, 418, 172, 24, bestText(o), lbl, { align: 0, tracking: 0.06 })]),
