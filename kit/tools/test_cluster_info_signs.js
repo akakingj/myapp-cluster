@@ -188,6 +188,13 @@ check('the Test log\'s traffic lights (1.14.2): the camera\'s every change, the 
     assert.deepStrictEqual(sec.slice(1), ['09:00:00 30 km/h | 3 1 1 15 15 40 2 5 7', '09:00:02 30 km/h | 3 2 1 15 15 38 2 5 7',
         '09:00:03 30 km/h | hud: xSpeedLimitAssist.vSLISign=TRAFFIC_LIGHT_RED', '09:00:05 30 km/h | hud: (none)']);
     assert.strictEqual(lightLine({}), '- - - - - - - - -');
+    // (1.14.9) the light's place alone, ~24 a second: a line every 2 s at most (the 300 were full in 23 s on Nov 28)
+    const r2 = startResearch({ kmh: () => 30 });
+    for (let i = 0; i < 100; i++) r2.onValue(TL, 'RecognitionTrafficLightCamera', ev(2, 252 - i), at(10) + i * 40);
+    r2.onValue(TL, 'RecognitionTrafficLightCamera', ev(1, 150), at(14) + 100);
+    const l2 = r2.sections().find((x) => x[0] === 'traffic lights')[1].split('\n');
+    assert.ok(/101 values came/.test(l2[0]), l2[0]);
+    assert.deepStrictEqual(l2.slice(1).map((x) => x.split('| ')[1].split(' ').slice(0, 6).join(' ')), ['3 2 1 15 15 252', '3 2 1 15 15 202', '3 1 1 15 15 150']);
     assert.ok(!/TrafficLight/.test(r.sections().find((x) => /every field/.test(x[0]))[1]), 'not among the sign services');
     r.reset();
     assert.ok(/\(none yet\)$/.test(r.sections().find((x) => x[0] === 'traffic lights')[1]));

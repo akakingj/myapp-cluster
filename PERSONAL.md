@@ -401,6 +401,14 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.9 (Nov 28 2026), from the owner's Test log of 20:30 (7 min, BMW's map and CarPlay's shown in turn, no
+  destination; mark 1 the map opened, mark 2 a speed camera passed, on BMW's map; the steering assist on a moment):
+  MapApiLinksSD, MapApiLinksSDLow and RICServiceGuidance "nothing provides it" - no map look ahead, no RIC guidance
+  for an app without BMW's route (the cruise control was not on: one drive with it on is left to try). The camera's
+  traffic lights came, ~24 a second (5966 values; colour 2 on every light seen so far): the 300 lines were full in 23
+  s, so now a line when the light, its colour, state, arrow or direction change, its place alone every 2 s at most,
+  and the count of values in the header. The camera's signs: SS_DISTANCE_IN seen as a supplemental sign, and
+  DS_TRAFFIC_LIGHT.
 - Info 1.14.8, Layouts 0.70.5, Centre 0.16.20 (Nov 28 2026; Layouts and Centre: the Korean catalog only): [Mark] (구간
   표시) in the left column, under Test log - while the checks run, "=== mark N ===" with the time and the speed in the
   camera signs, the traffic lights and the map and guidance, to line a moment up with the log (BMW's map opened, the

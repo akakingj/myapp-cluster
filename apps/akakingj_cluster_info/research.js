@@ -54,7 +54,7 @@ const SIGN_IFACE = /TrafficSignRecognition|SignRecognitionFrontCamera|TrafficSig
 const HUD2 = /DisplayDataServer2/;
 const KEEP = 30, KEEP_NP = 80, KEEP_SIGNS = 300;
 const CAM = /SignRecognitionFrontCamera$/;
-const TL = /TrafficLightRecognitionFrontCamera/;
+const TL = /TrafficLightRecognitionFrontCamera/, LIGHT_MS = 2000;
 const MAPSD = /navigation\.foresight\.MapApiLinksSD(Low)?$/, RIC = /remoteinstrumentcluster\.RICServiceGuidance/;
 const WARN_NAMES = { 85: 'SPEED_CAMERA', 86: 'TRAFFIC_ENFORCEMENT_CAMERA' };
 const camWarn = (t) => t === 85 || t === 86 || /CAMERA|ENFORCE/i.test(String(t));
@@ -117,7 +117,7 @@ function startResearch(opts) {
     const mapN = {}, mapLast = {};
     let mapLines = [], carAt = null, posAt = -Infinity, posKey = '', assistLast = null, marks = 0;
     const mapPush = (t, text) => { if (mapLines.length >= KEEP_SIGNS) return; const k = kmh(); mapLines.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + text); };
-    let last = {}, hudNpLast = null, sign = {}, hud = [], np = [], npLast = {}, cam = [], lights = [], lightLast = null, hudLightLast = null;
+    let last = {}, hudNpLast = null, sign = {}, hud = [], np = [], npLast = {}, cam = [], lights = [], lightLast = null, hudLightLast = null, lightFull = null, lightAt = -Infinity, lightN = 0;
     const lightPush = (t, text) => { if (lights.length >= KEEP_SIGNS) return; const k = kmh(); lights.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + text); };
     const stamp = (t) => new Date(t).toISOString().slice(11, 19);
     const linesOf = (list) => list.reduce((out, c) => out.concat(RS.chunk(c.f.split(' '), 150)
@@ -144,8 +144,11 @@ function startResearch(opts) {
                 return;
             }
             if (TL.test(iface)) {
-                const l = lightLine(v);
-                if (l !== lightLast) { lightLast = l; lightPush(t, l); }
+                // (1.14.9) a line when the light, its colour, state, arrow or direction change; its place alone (it moves at
+                // each of its ~24 a second: the 300 lines were full in 23 s on Nov 28) at most every LIGHT_MS
+                const l = lightLine(v), key = l.split(' ').slice(0, 5).join(' '), now = t || Date.now();
+                lightN++;
+                if (key !== lightLast || (l !== lightFull && now - lightAt >= LIGHT_MS)) { lightLast = key; lightFull = l; lightAt = now; lightPush(t, l); }
                 return;
             }
             const hud2 = HUD2.test(iface);
@@ -199,7 +202,7 @@ function startResearch(opts) {
         },
         marks: () => marks,
         reset() { marks = 0; assistLast = null; mapLines = []; Object.keys(mapN).forEach((k) => delete mapN[k]); Object.keys(mapLast).forEach((k) => delete mapLast[k]); carAt = null; posAt = -Infinity; posKey = '';
-            last = {}; hudNpLast = null; sign = {}; hud = []; np = []; npLast = {}; cam = []; lights = []; lightLast = null; hudLightLast = null; },
+            last = {}; hudNpLast = null; sign = {}; hud = []; np = []; npLast = {}; cam = []; lights = []; lightLast = null; lightFull = null; lightAt = -Infinity; lightN = 0; hudLightLast = null; },
         sections: () => [
             ['no passing fields as they changed (TrafficSignDisplayControl, TrafficSignRecognition, the camera, DisplayDataServer2; the last ' + KEEP_NP + ')',
                 np.length ? linesOf(np).join('\n') : '(none yet)'],
@@ -210,7 +213,7 @@ function startResearch(opts) {
             ['head-up display data, its no passing fields as they changed (the last ' + KEEP + ')', hud.length ? linesOf(hud).join('\n') : '(none yet)'],
             ['map and guidance (speed cameras without BMW\'s route)', 'came: ' + (Object.keys(mapN).map((k) => k + ' ' + mapN[k]).join(', ') || 'nothing (MapApiLinksSD, MapApiLinksSDLow, RICServiceGuidance)')
                 + (carAt ? '; map matching ' + carAt.status : '') + '\n' + (mapLines.length ? mapLines.join('\n') : '(none yet)')],
-            ['traffic lights', '(id color status arrow dir x y z q, each change; hud: the head-up display\'s symbol; the whole test, at most ' + KEEP_SIGNS + ')\n'
+            ['traffic lights', '(id color status arrow dir x y z q: a change of the first five, the place alone every ' + LIGHT_MS / 1000 + ' s at most; hud: the head-up display\'s symbol; the whole test, at most ' + KEEP_SIGNS + '; ' + lightN + ' values came)\n'
                 + (lights.length ? lights.join('\n') : '(none yet)')],
         ],
     };
