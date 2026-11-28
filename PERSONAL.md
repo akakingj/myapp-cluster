@@ -381,6 +381,13 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   [Start survey] gone. Each app's Logs keep its own working; the research lines left Layouts' and ID8's Logs. A link to
   download the logs as Waze on cluster's does needs a root service opening the hotspot's port: not for these apps (the
   owner chose the codes).
+- Layouts 0.69.4, Centre 0.16.13, Info 1.13.1, ID8 0.29.5 (Nov 28 2026): the car's catalog (someip-interfaces.json,
+  689 interfaces) names the camera's end of no passing WITHDRAWAL_NO_PASSING_SIGN (and GENERAL_WITHDRAWAL, the end of
+  every restriction): no passing ends on them (before, the first was taken for a no passing sign and started the zone
+  again). The same catalog has BMW's own no passing state: TrafficSignDisplayControl
+  .displaySpeedLimitAndNoPassingRestriction.displayNoPassingRestriction (0 none, 1/3/5/7/8 no passing, 2/4/6 its repeal)
+  with displayRemainingDistanceNoPassingRestriction, and DisplayDataServer2.functionalLibraryData.npiData (npiState,
+  npiLabel KOREA / NPI_REPEAL_*) with vnpiDistance; not read yet (the Test log on a drive shows whether they come).
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
   가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -

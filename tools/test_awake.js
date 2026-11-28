@@ -205,6 +205,11 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             assert.deepStrictEqual(D.data().roadSigns, ['no_passing', 'wild_animal']);
             cam(signs('NO_PASSING_END'));
             assert.deepStrictEqual(D.data().roadSigns, ['wild_animal'], 'its end sign: gone');
+            /* the camera's own end sign (the car's catalog: WITHDRAWAL_NO_PASSING_SIGN) ends it, never starts it */
+            cam(signs('NO_PASSING_SIGN'));
+            assert.deepStrictEqual(D.data().roadSigns.slice(0, 1), ['no_passing']);
+            cam(signs('WITHDRAWAL_NO_PASSING_SIGN'));
+            assert.ok(!D.data().roadSigns.includes('no_passing'), 'WITHDRAWAL_NO_PASSING_SIGN: gone');
             /* (the sign services' every field: AK Cluster Info's Test log's, 1.13.0 - not in this app's Logs) */
             assert.ok(!/TrafficSignRecognition changes|head-up display fields/.test(D.sliLog(5)));
             assert.ok(RS.NP_FIELD.test('xNoPassingInfo.vNPIDistance') && RS.NP_FIELD.test('overtakingProhibition') && !RS.NP_FIELD.test('vSLISpeedValue'));
