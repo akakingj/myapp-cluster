@@ -422,8 +422,11 @@ figure the limiter took. Up to 140 km/h; `--` before the first.
 reads (`de.bmw.environmentalmodel.SignRecognitionFrontCamera`'s TrafficSignRecognitionFrontCamera event, once a sign;
 declared the same way, only where the car's catalog has it) as South Korea's own yellow triangles, and no passing as
 its red-ringed sign (the government's designs, `sign_atlas.js` from `tools/make_sign_art.py`, 76 px high; the
-head-up display has its own no passing, the cluster the owner's picture; its end not), each 10 s after the camera
-last read it, up to two (one on most roads). They and the speed limit sign stand in one line, a row (the speed
+head-up display has its own no passing, the cluster the owner's picture; its end not). A warning shows when the
+camera reads it, for 10 s; a warning read after it takes its place (one event's two together). No passing stays,
+first, until its zone ends: an end sign read by the camera, or 3 km driven since its sign was last read (the end's
+signal not known yet: the Logs' --- sli --- keeps every field of the TrafficSignRecognition event as it changes, to
+find it). Up to two (0.69.1, the owner's). They and the speed limit sign stand in one line, a row (the speed
 limit sign leftmost) or a column (the speed limit sign at the foot), the owner's ask. Where the owner chose the
 places (a layout's signAt, layout_common.fixedGroup, each 6 px clear, else the search): Retro M a row under the M
 stripes below the gear; ID7 M a row across the middle under the speed; JDM 1 a row just over its left box, its right edge between the second and third sign (its cup of

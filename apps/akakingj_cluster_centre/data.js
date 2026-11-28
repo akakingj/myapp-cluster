@@ -312,19 +312,29 @@ function startData(ctx, opts) {
             if (r) { x.sli = r; x.at.sli = Date.now(); x.sliShown = sliStep(x.sliShown, r, x.sliMem || (x.sliMem = {})); sliSeen(r); }
         },
     }, 'cruise control and speed limit (head-up display)', { pollMs: 2000 });
+    let tsrLast = '';
+    const tsrChanges = [];
     // the speed limit sign itself (tsrStep): only where the install declared it; a car without it says so in the status
     ctx.signals.watch('de.bmw.dass.TrafficSignRecognition', '1', {}, log)
         .then((sub) => {
             if (!sub || sub.error || !sub.proxy || !ctx.signals.on) { status['speed limit sign'] = 'not in this car' + (sub && sub.error ? ' (' + sub.error + ')' : ''); return null; }
             return ctx.signals.on(sub.proxy, 'TrafficSignRecognition', (v) => {
                 x.tsr = v; x.at.tsr = Date.now(); x.tsrShown = tsrStep(x.tsrShown, v);
+                // (each change of its fields, the last 12, for the Logs: where the no passing zone's end may be)
+                const f = RS.fields(v).join(' ');
+                if (f !== tsrLast) {
+                    tsrLast = f;
+                    const sp = car.data ? car.data().speed : null;
+                    tsrChanges.push({ at: x.at.tsr, speed: isNum(sp) ? Math.round(sp) : null, f });
+                    if (tsrChanges.length > 12) tsrChanges.shift();
+                }
             }, log).then(() => { status['speed limit sign'] = 'subscribed'; });
         })
         .catch((e) => { status['speed limit sign'] = 'error: ' + e; });
     // the warning signs the front camera reads (road_signs.js; KO 1's and KO 2's, layout_common.warnPieces): its one
     // event, once a sign; declared at install only where the car's catalog has it (app.json "survey", like the sign)
-    const cluster = (t) => /^DS_/.test(t) || (/NO_PASSING|OVERTAK/.test(t) && !/(^|_)END(_|$)/.test(t));
-    const roadTracker = RS.makeTracker(RS.SHOW_MS, 4, cluster);
+    // (the warnings, DS_ types: each read shown 10 s, a new one in its place; no passing: till its zone ends, npZone)
+    const roadTracker = RS.makeTracker(RS.SHOW_MS, 2, (t) => /^DS_/.test(t)), npZone = RS.makeZone(RS.NP_KM);
     ctx.signals.watch(RS.CAM_IFACE, '1', {}, log)
         .then((sub) => {
             if (!sub || sub.error || !sub.proxy || !ctx.signals.on) { status['warning signs'] = 'not in this car' + (sub && sub.error ? ' (' + sub.error + ')' : ''); return null; }
@@ -332,7 +342,7 @@ function startData(ctx, opts) {
                 const list = RS.parseSigns(v), t = Date.now();
                 x.cam = list; x.at.cam = t;
                 list.forEach((ty) => { if (!x.camSeen) x.camSeen = {}; if (!x.camSeen[ty]) log.info('warning signs: the camera read ' + ty + (RS.wanted(ty) ? ' (' + RS.artOf(ty) + ')' : ' (not drawn: the car shows it)')); x.camSeen[ty] = (x.camSeen[ty] || 0) + 1; });
-                roadTracker.add(list, t);
+                roadTracker.add(list, t); npZone.add(list, t);
             }, log).then(() => { status['warning signs'] = 'subscribed'; });
         })
         .catch((e) => { status['warning signs'] = 'error: ' + e; });
@@ -820,7 +830,10 @@ function startData(ctx, opts) {
             // (the warning signs, the yellow triangles, and no passing: the head-up display shows that one itself, but on
             // the cluster the layouts cover BMW's own signs - the owner, 2026-11-28; give way, stop and the bans are the
             // HUD's, AK Cluster Info's)
-            if (!d.demo) o.roadSigns = roadTracker.current(Date.now()).map(RS.artOf);
+            if (!d.demo) {
+                npZone.step(Date.now(), d.speed);
+                o.roadSigns = (npZone.on() ? ['no_passing'] : []).concat(roadTracker.current(Date.now()).map(RS.artOf)).slice(0, 2);
+            }
             if (x.tsr) o.sliSign = one(x.tsr, 'presentClassLimitSpeed');
             if (x.sli) Object.assign(o, { sliRaw: x.sli.value, sliSymbol: x.sli.symbol, sliDist: x.sli.dist, sliTakeover: x.sli.takeover, sliAgeS: Math.round((Date.now() - x.at.sli) / 100) / 10 });
             if (!d.demo && Date.now() - (x.at.cruiseSet || 0) < 10000) o.cruise = { on: x.cruiseSet > 0 && x.cruiseSet < 250, set: x.cruiseSet > 0 && x.cruiseSet < 250 ? x.cruiseSet : undefined };
@@ -842,7 +855,12 @@ function startData(ctx, opts) {
             const camAge = x.cam ? Math.round((now - x.at.cam) / 100) / 10 : null;
             return ['sign (TrafficSignRecognition): ' + (tsrAge === null ? 'none yet' : 'presentClassLimitSpeed ' + one(x.tsr, 'presentClassLimitSpeed') + ', ' + tsrAge + ' s ago, shown ' + (x.tsrShown || '--')),
                 'head-up display data: ' + sliTimes.filter((t) => now - t <= 60000).length + ' in the last 60 s, ' + (age === null ? 'none yet' : 'the last ' + age + ' s ago') + '; shown: ' + (shown || '--'),
-                'warning signs (front camera): ' + (camAge === null ? 'none yet' : (x.cam.join(', ') || 'no type') + ', ' + camAge + ' s ago') + (x.camSeen ? '; seen ' + Object.keys(x.camSeen).map((k) => k + ' ' + x.camSeen[k]).join(', ') : '')]
+                'warning signs (front camera): ' + (camAge === null ? 'none yet' : (x.cam.join(', ') || 'no type') + ', ' + camAge + ' s ago') + (x.camSeen ? '; seen ' + Object.keys(x.camSeen).map((k) => k + ' ' + x.camSeen[k]).join(', ') : '') +
+                    '; no passing ' + (npZone.on() ? 'on, ' + npZone.km().toFixed(2) + ' km since its sign' : 'off'),
+                // (every field the sign's event carries, as it changed: where the no passing zone's end may be, 2026-11-28;
+                // in lines the Logs' codes keep whole)
+                'TrafficSignRecognition changes: ' + (tsrChanges.length ? tsrChanges.length : 'none yet')]
+                .concat(...tsrChanges.map((c) => RS.chunk(c.f.split(' '), 150).map((l, i) => (i ? '  ' : new Date(c.at).toISOString().slice(11, 19) + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h: ') + l)))
                 .concat(sliChanges.slice(-(last || 20)).map((c) => new Date(c.at).toISOString() + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h  shown ' + (c.shown || '--') + '  ' + JSON.stringify(c.raw))).join('\n');
         },
         /** fn() on each new reading (the car's speed and rpm samples, every changed reading). */

@@ -364,6 +364,11 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   cup of water moved over the right box, the coolant and oil, the owner's call), Old M and ID6 M a row under the middle display (moved up for it), Track a column left of the speed,
   Simple a row under the speed (TIME moved under it), JDM 2 a column right of the tach (G meter and tach smaller,
   tach 30 px left); these moves only with Settings > Speed limit sign On.
+- Layouts 0.69.1, Centre 0.16.10, Info 1.12.3 (Nov 28 2026, the owner's): a warning sign shows when the camera reads
+  it, for 10 s, and a sign read after it takes its place (one event's several together) - shared/road_signs.js
+  makeTracker; Info's HUD the same. No passing on the cluster stays, first, till its zone ends: an end sign
+  (road_signs.npEnd), or 3 km driven since its sign (makeZone; the end's signal not known yet). The Logs' --- sli ---
+  keeps every field of TrafficSignRecognition as it changes (the last 12), to find where the zone's end is.
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
   가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -

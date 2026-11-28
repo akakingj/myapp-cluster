@@ -12,7 +12,8 @@
  * (the limit sign moves up and the no passing sign takes its place, photo 2026-11-27), so those are left out; the
  * danger signs (DS_...), give way, stop and no entry show as South Korea's own signs (sign_art.js: the government's
  * designs, cut out along their red edge; tools/make_sign_art.py). A warning with no sign of its own gets 위험 ("!").
- * Each shows for SHOW_MS after it was last seen, in a row in the order they came, at most MAX_SIGNS.
+ * Shown when the camera reads them, for SHOW_MS; another read takes their place (one event's several together, in a
+ * row, at most MAX_SIGNS) - the owner, 2026-11-28 (1.12.3; before, each stayed 10 s after it was last read).
  *
  * Declared only where this car's catalog has it: app.json "survey" (group camera) and kit/runtime/survey_fit.js, as
  * the survey's members; this reads the list the fit wrote (kit/survey-signals.json). Read only: one event, no method,

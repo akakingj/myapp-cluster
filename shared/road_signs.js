@@ -37,24 +37,68 @@ function parseSigns(v) {
 const shownByHud = (t) => /SPEED_LIMIT|NO_PASSING|OVERTAK|(^|_)END(_|$)/.test(t);
 const wanted = (t) => !shownByHud(t) && (/^DS_/.test(t) || artOf(t) !== 'danger');
 
-/** The signs seen lately: add(types, t), current(t) -> the types to show, oldest first; keep (wanted: the head-up
- * display's) which types it takes. */
+/** The signs to show (the owner, 2026-11-28: on when the camera reads one, off a while after; a new one read takes
+ * its place): add(types, t) - the types keep (wanted: the head-up display's) takes from one of the camera's events
+ * become the ones shown, in place of those before (one event may carry two); current(t) -> them, at most max, while
+ * showMs has not passed since. */
 function makeTracker(showMs, max, keep) {
     showMs = showMs || SHOW_MS; max = max || 4; keep = keep || wanted;
-    const seen = new Map();      // type -> { first, last }
+    let cur = [], at = -Infinity;
     return {
         add(types, t) {
-            types.filter(keep).forEach((ty) => {
-                const s = seen.get(ty);
-                if (s && t - s.last < showMs) s.last = t; else seen.set(ty, { first: t, last: t });
-            });
+            const f = Array.from(new Set(types.filter(keep)));
+            if (f.length) { cur = f; at = t; }
         },
         current(t) {
-            const out = [];
-            seen.forEach((s, ty) => { if (t - s.last < showMs) out.push([s.first, ty]); else seen.delete(ty); });
-            return out.sort((a, b) => a[0] - b[0]).slice(-max).map((e) => e[1]);
+            if (t - at >= showMs) { cur = []; return []; }
+            return cur.slice(0, max);
         },
     };
+}
+
+/*
+ * No passing on the cluster (AK Cluster Layouts, AK Cluster ID8; the head-up display has its own): on from the
+ * camera's no passing sign until the zone ends (the owner, 2026-11-28: no distance as BMW's own shows, but gone when the
+ * zone ends) - an end sign (NP_END) read by the camera; or, while what tells the end is not known (the camera sent no
+ * end sign on the drives logged so far; the TrafficSignRecognition event may carry it: the Logs keep its every field
+ * now), NP_KM driven since the sign was last read.
+ */
+const NP_KM = 3;
+const NP_END = /(NO_PASSING|OVERTAK|PASSING).*(END|CANCEL|LIFT|RELEASE)|(END|CANCEL|LIFT)_.*(NO_PASSING|OVERTAK|PASSING)|END_OF_ALL|ALL_RESTRICTIONS?_END|DERESTRICT/;
+const npEnd = (t) => NP_END.test(t);
+const npStart = (t) => /NO_PASSING|OVERTAK/.test(t) && !npEnd(t) && !/(^|_)END(_|$)/.test(t);
+/** add(types, t): a no passing sign starts (or keeps on) the zone, an end sign ends it; step(t, kmh): the distance
+ * driven (gaps over 2 s counted as 2 s); on() -> whether no passing is shown; km() -> driven since its sign. */
+function makeZone(maxKm) {
+    maxKm = maxKm || NP_KM;
+    let on = false, km = 0, last = null;
+    return {
+        add(types) {
+            if (types.some(npEnd)) on = false;
+            else if (types.some(npStart)) { on = true; km = 0; }
+        },
+        step(t, kmh) {
+            if (last !== null && on && typeof kmh === 'number' && kmh > 0) km += kmh * Math.min(2000, Math.max(0, t - last)) / 3600000;
+            last = t;
+            if (km >= maxKm) on = false;
+        },
+        on: () => on,
+        km: () => km,
+    };
+}
+/** Every field of a value as ['a.b=v', ...] (arrays: each element; a counter's or a time's left out: they change with
+ * every event), for the Logs (what TrafficSignRecognition carries). */
+function fields(v) {
+    const out = [];
+    const walk = (o, p, d) => {
+        if (/time|stamp|counter|crc|alive|sequence/i.test(p.split('.').pop() || '')) return;
+        if (o === null || typeof o !== 'object') { out.push(p + '=' + (typeof o === 'string' ? o : String(o))); return; }
+        if (d > 5) return;
+        Object.keys(o).forEach((k) => walk(o[k], p ? p + '.' + k : k, d + 1));
+    };
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return [v]; } }
+    walk(v, '', 0);
+    return out;
 }
 
 const side = (l, r) => (t) => (/LEFT/.test(t) ? l : r);
@@ -118,4 +162,4 @@ function chunk(list, n) {
     return out;
 }
 
-module.exports = { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, makeTracker, artOf, ART_OF, typeNames, chunk };
+module.exports = { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, artOf, ART_OF, typeNames, chunk };

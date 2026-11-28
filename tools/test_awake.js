@@ -181,18 +181,32 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             assert.strictEqual(D.status()['warning signs'], 'subscribed');
             const signs = (...t) => ({ trafficSignRecognition: { numberSigns: t.length }, trafficSign: t.map((type) => ({ type, value: 0 })) });
             assert.deepStrictEqual(D.data().roadSigns, []);
+            /* (the owner, 2026-11-28) a warning on when read, a new one in its place; one event's two both */
             cam(signs('DS_ANIMAL_CROSSING', 'SPEED_LIMIT'));
+            assert.deepStrictEqual(D.data().roadSigns, ['wild_animal'], 'the warning; the limit not');
             cam(signs('GIVE_WAY'));
+            assert.deepStrictEqual(D.data().roadSigns, ['wild_animal'], 'give way: not the cluster\'s, nothing changed');
             cam(signs('DS_SPLIPPERY_ROAD'));
-            assert.deepStrictEqual(D.data().roadSigns, ['wild_animal', 'slippery'], 'the warnings, oldest first; give way and the limit not');
-            assert.ok(/^warning signs \(front camera\): DS_SPLIPPERY_ROAD, [\d.]+ s ago; seen DS_ANIMAL_CROSSING 1, SPEED_LIMIT 1, GIVE_WAY 1, DS_SPLIPPERY_ROAD 1$/.test(D.sliLog(5).split('\n')[2]), D.sliLog(5).split('\n')[2]);
+            assert.deepStrictEqual(D.data().roadSigns, ['slippery'], 'a new one in its place');
+            cam(signs('DS_TRAFFIC_JAM', 'DS_ANIMAL_CROSSING'));
+            assert.deepStrictEqual(D.data().roadSigns, ['traffic_jam', 'wild_animal'], 'one event\'s two');
+            assert.ok(/^warning signs \(front camera\): DS_TRAFFIC_JAM, DS_ANIMAL_CROSSING, [\d.]+ s ago; seen DS_ANIMAL_CROSSING 2, SPEED_LIMIT 1, GIVE_WAY 1, DS_SPLIPPERY_ROAD 1, DS_TRAFFIC_JAM 1; no passing off$/.test(D.sliLog(5).split('\n')[2]), D.sliLog(5).split('\n')[2]);
             const was2 = Date.now, later2 = Date.now() + 10001;
             Date.now = () => later2;
             try { assert.deepStrictEqual(D.data().roadSigns, [], '10 s on: gone'); } finally { Date.now = was2; }
-            /* no passing too (the head-up display has its own; the layouts the owner's picture), its end not */
+            /* no passing: till its zone ends (an end sign; else NP_KM driven), first; a warning beside it */
             cam(signs('NO_PASSING_SIGN'));
+            assert.deepStrictEqual(D.data().roadSigns, ['no_passing']);
+            const was3 = Date.now, later3 = Date.now() + 60000;
+            Date.now = () => later3;
+            try { assert.deepStrictEqual(D.data().roadSigns, ['no_passing'], 'a minute on, parked: still on'); } finally { Date.now = was3; }
+            cam(signs('DS_ANIMAL_CROSSING'));
+            assert.deepStrictEqual(D.data().roadSigns, ['no_passing', 'wild_animal']);
             cam(signs('NO_PASSING_END'));
-            assert.deepStrictEqual(D.data().roadSigns, ['no_passing'], 'no passing; its end not');
+            assert.deepStrictEqual(D.data().roadSigns, ['wild_animal'], 'its end sign: gone');
+            /* the sign's event's every field, as it changed, in the Logs */
+            assert.ok(/^TrafficSignRecognition changes: \d+$/.test(D.sliLog(5).split('\n')[3]), D.sliLog(5).split('\n')[3]);
+            assert.ok(/ km\/h: .*presentClassLimitSpeed=22/.test(D.sliLog(5)), 'its fields');
         } finally { D.stop(); }
         /* the app asks the install for it, fitted to the car's catalog (kit/runtime/survey_fit.js) */
         assert.deepStrictEqual(spec.survey.groups.map((g) => [g.iface, g.events]), [['de.bmw.dass.TrafficSignRecognition', '^TrafficSignRecognition$'],

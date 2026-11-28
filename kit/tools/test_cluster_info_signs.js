@@ -45,18 +45,38 @@ check('drawn: the danger signs and give way; not the speed limit or no passing (
     ['SPEED_LIMIT', 'NO_PASSING_SIGN', 'END_OF_NO_PASSING', 'UNKNOWN'].forEach((t) => assert(!S.wanted(t), t));
 });
 
-check('each shows 10 s after it was last seen, oldest first, at most 4', () => {
+check('on when read, 10 s, a new one read in its place (one event\'s several together, at most 4) (2026-11-28)', () => {
     const tr = S.makeTracker();
     tr.add(['SPEED_LIMIT', 'GIVE_WAY'], 0);
     assert.deepStrictEqual(tr.current(0), ['GIVE_WAY']);
-    tr.add(['DS_TRAFFIC_JAM'], 3000);
-    assert.deepStrictEqual(tr.current(5000), ['GIVE_WAY', 'DS_TRAFFIC_JAM']);
-    assert.deepStrictEqual(tr.current(10000), ['DS_TRAFFIC_JAM']);
-    tr.add(['DS_TRAFFIC_JAM'], 12000);              // seen again: longer, still in its place
+    tr.add(['SPEED_LIMIT'], 1000);                  // none of its own: nothing changes
+    assert.deepStrictEqual(tr.current(2000), ['GIVE_WAY']);
+    tr.add(['DS_TRAFFIC_JAM'], 3000);               // a new one: in its place
+    assert.deepStrictEqual(tr.current(5000), ['DS_TRAFFIC_JAM']);
+    tr.add(['DS_TRAFFIC_JAM'], 12000);              // read again: 10 s from then
     assert.deepStrictEqual(tr.current(21000), ['DS_TRAFFIC_JAM']);
     assert.deepStrictEqual(tr.current(22000), []);
-    tr.add(['DS_A', 'DS_B', 'DS_C'], 30000); tr.add(['DS_D', 'DS_E'], 31000);
-    assert.deepStrictEqual(tr.current(31000), ['DS_B', 'DS_C', 'DS_D', 'DS_E']);
+    tr.add(['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E', 'DS_A'], 30000);
+    assert.deepStrictEqual(tr.current(31000), ['DS_A', 'DS_B', 'DS_C', 'DS_D']);
+});
+
+check('no passing on the cluster: from its sign till its end sign, or 3 km driven since the sign (2026-11-28)', () => {
+    const RS = require('../../shared/road_signs.js');
+    ['NO_PASSING_SIGN', 'NO_OVERTAKING'].forEach((t) => assert(RS.npStart(t) && !RS.npEnd(t), t));
+    ['NO_PASSING_END', 'END_OF_NO_PASSING', 'END_NO_PASSING_SIGN', 'END_OF_ALL_RESTRICTIONS', 'NO_OVERTAKING_CANCEL'].forEach((t) => assert(RS.npEnd(t) && !RS.npStart(t), t));
+    ['SPEED_LIMIT', 'DS_TRAFFIC_JAM', 'GIVE_WAY'].forEach((t) => assert(!RS.npEnd(t) && !RS.npStart(t), t));
+    const z = RS.makeZone(3);
+    z.step(0, 60); assert(!z.on());
+    z.add(['NO_PASSING_SIGN']); assert(z.on());
+    for (let t = 1000; t <= 170000; t += 1000) z.step(t, 60);           // 170 s at 60 km/h: 2.83 km
+    assert(z.on(), z.km());
+    z.add(['NO_PASSING_SIGN']); assert(z.on() && z.km() === 0, 'read again: from there');
+    for (let t = 171000; t <= 400000; t += 1000) z.step(t, 60);
+    assert(!z.on(), '3 km on: gone');
+    z.add(['NO_PASSING_SIGN']); z.step(500000, 0); z.step(900000, 0); assert(z.on(), 'standing: still on');
+    z.step(1000000, 120); z.step(1010000, 120); assert(z.on() && Math.abs(z.km() - 2 * 120 * 2 / 3600) < 1e-9, 'a gap counts as 2 s');
+    z.add(['DS_TRAFFIC_JAM']); assert(z.on());
+    z.add(['END_OF_NO_PASSING']); assert(!z.on(), 'its end sign');
 });
 
 check('pictures: South Korea\'s own signs - the types the camera read get theirs; another warning 위험 ("!")', () => {
@@ -178,7 +198,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(!proxy.down, 'the shared proxy stays');
         proxy.subs[S.CAM_EVENT](value('DS_TRAFFIC_JAM'));
         assert.strictEqual(got.length, 1, 'the survey hears no more');
-        assert.deepStrictEqual(sg.current(), ['GIVE_WAY', 'DS_TRAFFIC_JAM'], 'the signs still do');
+        assert.deepStrictEqual(sg.current(), ['DS_TRAFFIC_JAM'], 'the signs still do (the new one in its place)');
         // any other service: as it was
         await sv.watch('de.bmw.dass.TrafficSignRecognition', '1', {}, log);
         assert.strictEqual(sig.watches.length, 2);
