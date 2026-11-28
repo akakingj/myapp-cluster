@@ -360,7 +360,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   (layout_common.signGroup, 12 px then 6 px clear; a row always with the speed limit sign leftmost), and no passing
   on the cluster as the owner's picture (tools/sign_art/no_passing.png; data.js keeps DS_ types and no passing, not
   its end). The owner's own places (signAt, layout_common.fixedGroup, from his marked-up sheets): Retro M a row
-  over the gear, Old M and ID6 M a row under the middle display (moved up for it), Track a column left of the speed,
+  under the M stripes below the gear, ID7 M a row centred under the speed, JDM 1 a row where its cup stood (the
+  cluster's cup of water removed with Settings > JDM 1: cup of water, CUP_FS and its Korean; the head unit's Water
+  cup view stays), Old M and ID6 M a row under the middle display (moved up for it), Track a column left of the speed,
   Simple a row under the speed (TIME moved under it), JDM 2 a column right of the tach (G meter and tach smaller,
   tach 30 px left); these moves only with Settings > Speed limit sign On.
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was

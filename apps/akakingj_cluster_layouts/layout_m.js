@@ -132,6 +132,9 @@ function gauge(T, key, x, y, w, g) {
 
 module.exports = {
     id: 'm',
+    // the speed limit sign and the warning signs in a row across the middle under the speed (the owner's places,
+    // 0.69.0), the speed limit sign leftmost
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 856, y: 590 }, [{ x: 953, y: 590 }, { x: 1058, y: 590 }])),
     title: 'ID7 M',
     font: 'orb',
     stripGear: true,    // (the gear is its centre: kept over the car's own strip)

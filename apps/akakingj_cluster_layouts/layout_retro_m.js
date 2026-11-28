@@ -155,10 +155,10 @@ const back = (key, x, y, w, h) => ({ key, kind: 'rmbg', x, y, w, h, params: { u_
 
 module.exports = {
     id: 'retro_m',
-    // the speed limit sign and the warning signs in a row just above the gear window (the owner's places, 0.69.0), the
-    // speed limit sign leftmost (as in every row), 6 px apart and the dials' rings 6 - 7 px off them (the search's
-    // 12 px gap keeps them 140 px higher). With the map: as elsewhere.
-    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 858, y: 262 }, [{ x: 948, y: 262 }, { x: 1046, y: 262 }])),
+    // the speed limit sign and the warning signs in a row under the M stripes, below the gear window (the owner's
+    // places, 0.69.0), the speed limit sign leftmost (as in every row), the row's middle under the gear. With the
+    // map: as elsewhere.
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 857, y: 540 }, [{ x: 953, y: 540 }, { x: 1056, y: 540 }])),
     title: 'Retro M',
     palette: () => Object.assign({}, PAL),
     gearText: C.gearText,
