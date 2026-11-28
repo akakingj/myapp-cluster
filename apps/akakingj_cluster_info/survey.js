@@ -103,6 +103,8 @@ function startSurvey(ctx, log, opts) {
         return (v) => {
             if (!run || (it.fast && it.n >= FAST_N)) return;
             const t = now();
+            // (every value to the test log's recorder too: research.js, 1.13.0 - the sign services' every field)
+            if (opts.onValue) { try { opts.onValue(it.iface, it.member, v, t); } catch (e) { /* not the survey's */ } }
             it.n++; it.lastAt = t;
             if (!it.firstAt) { it.firstAt = t; it.first = valueText(v, 200); }
             if (it.times.length < FAST_N) it.times.push(t);

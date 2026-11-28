@@ -150,15 +150,13 @@ const settle = () => new Promise((r) => setTimeout(r, 5));
         const src = fs.readFileSync(path.join(APP, 'survey.js'), 'utf8');
         assert(!/\.(call|set|callMethod|setValue)\(/.test(src.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')), 'no method call or write in survey.js');
     });
-    await check('the page: Settings > Driving assistant check > Signal survey, its button, its Korean', async () => {
-        const item = INFO.settings.find((x) => x.key === 'adasCheck');
-        assert(item.options.some((o) => o[0] === 'survey'));
-        assert(INFO.screens[0].buttons.some((b) => b[0] === 'BTN_SURVEY' && b[1] === 'Start survey'), 'one button, Start survey');
+    await check('the page: [Test log] starts it, ends it and shows its codes; its Korean (1.13.0)', async () => {
+        assert(!INFO.settings.find((x) => x.key === 'adasCheck'), 'no Driving assistant check setting any more');
+        assert(INFO.screens[0].buttons.some((b) => b[0] === 'BTN_TEST' && b[1] === 'Test log'), 'its button, Test log');
         const ko = JSON.parse(fs.readFileSync(path.join(ROOT, 'kit', 'runtime', 'locales', 'ko.json'), 'utf8'));
-        ['Signal survey', 'Start survey', 'Stop survey', 'Signal survey: the speed limit sign'].forEach((k) => assert(ko[k], k));
-        assert.deepStrictEqual([ko['Start survey'], ko['Stop survey']], ['조사 시작', '조사 중지']);
+        assert.deepStrictEqual([ko['Test log'], ko['Test log: end and show'], ko.Logs], ['테스트 로그', '테스트 끝내고 보기', '로그']);
         const main = fs.readFileSync(path.join(APP, 'main.js'), 'utf8');
-        assert(/survey\.running\(\) \? 'Stop survey' : 'Start survey'/.test(main), 'the label: Stop survey while it runs');
+        assert(/testOn\(\) \? 'Test log: end and show' : 'Test log'/.test(main), 'the label while it runs');
         assert(main.indexOf('survey.fitted(sections, 15, logs.codeCount)') > 0, 'the record fitted to 15 codes');
     });
     console.log(n + ' passed');

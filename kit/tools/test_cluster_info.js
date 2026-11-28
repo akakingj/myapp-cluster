@@ -96,40 +96,31 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     await sleep(400);
     await loops.MAIN();
     check('the page draws without errors', () => assert(!warns.some((w) => /TypeError|ReferenceError|is not a function/.test(w)), warns.join(' | ')));
-    // (1.10.5) Settings > Driving assistant check: the page shows each source's state, or the catalog's services
-    check('the driving assistant check off by default: the page as before', () => assert(!drawn.some((d) => /Driving assistant check/.test(d))));
-    S.adasCheck = 'live';
-    await sleep(1200);
-    drawn.length = 0; await loops.MAIN();
-    check('the driving assistant check on: each source\'s state on the page', () => {
-        assert(drawn.some((d) => /^Driving assistant check/.test(d)), drawn.join(' | '));
-        assert(drawn.indexOf('cars around (object list)') >= 0 && drawn.some((d) => /^HUD data, its driving assistant members/.test(d)));
-        assert(drawn.some((d) => /^Speed limit \(HUD data\): /.test(d)), 'the speed limit line');
-    });
+    // (1.13.0) two logs: Logs (how the app works) and Test log (the checks: started by its button, its codes when pressed again)
+    check('no checks running by default: the page as before', () => assert(!drawn.some((d) => /^Test log: checking/.test(d))));
     if (handlers.functionalLibraryData) handlers.functionalLibraryData({ speed: { kmH: 64 }, pia: { piaSliNpi: 8, piaHUDSliNpi: 0 },
         xSpeedLimitAssist: { vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', statusVZA: 'STATUS_INACTIVE', ldmAdditionalSign: 'TAKEOVER_SET', vSLISpeedValue: 16 } });
-    placed.length = 0; drawn.length = 0; await loops.MAIN();
-    if (process.env.SHOT_ADAS && lastCanvas) {     // (SHOT_ADAS=file.png: the page as a picture)
-        const { Canvas: Real } = require(path.join(KIT, 'canvas')), { play } = require(path.join(KIT, 'record'));
-        const cv = new Real(lastCanvas.w, lastCanvas.h); play(lastCanvas.words(), cv); fs.writeFileSync(process.env.SHOT_ADAS, cv.png());
-    }
-    check('the driving assistant check: every line of it on the page (the speed limit\'s under the rest)', () => {
-        const lim = placed.filter((p) => /^Speed limit \(HUD data\)|^\d\d:\d\d:\d\d {2}/.test(p.str));
-        assert(lim.length >= 1, drawn.join(' | '));
+    drawn.length = 0; await clicks.BTN_TEST();
+    check('Test log: the checks start, or (none declared here) its codes at once with why', () => {
+        const running = drawn.some((d) => /^Test log: checking the car's signals/.test(d)), codes = drawn.some((d) => /^Test log: photograph each code \(page 1 of/.test(d));
+        assert(running || codes, drawn.join(' | '));
+        if (codes) {
+            const f = fs.readdirSync(path.join(tmp, 'exports')).filter((x) => /^cluster-logs-info-test-/.test(x));
+            assert.strictEqual(f.length, 1);
+            const txt = fs.readFileSync(path.join(tmp, 'exports', f[0]), 'utf8');
+            assert(/--- sign definitions ---/.test(txt) && /--- driving assistant check ---/.test(txt) && /--- head-up display data, its fields ---/.test(txt), txt.slice(0, 400));
+        }
         placed.forEach((p) => assert(p.y + p.size <= p.h, p.str.slice(0, 40) + ' at ' + p.y + ' + ' + p.size + ' of ' + p.h));
     });
-    S.adasCheck = 'catalog';
-    drawn.length = 0; await loops.MAIN();
-    check('the driving assistant check, catalog: why it is not read when it isn\'t there', () => assert(drawn.some((d) => /^catalog not readable/.test(d)), drawn.join(' | ')));
-    S.adasCheck = 'off';
     // (1.10.6) Logs: this app's own logs as codes on its page and a file in its data folder (not in Cluster Layouts')
     drawn.length = 0; await clicks.BTN_LOGS();
-    check('Logs: the codes on the page, the full logs in a file with the check, the directions and the app\'s log', () => {
+    check('Logs: the codes on the page, the full logs in a file - how the app works; the checks are the Test log\'s (1.13.0)', () => {
         assert(drawn.some((d) => /^Logs: photograph each code \(page 1 of/.test(d)), drawn.join(' | '));
-        const f = fs.readdirSync(path.join(tmp, 'exports')).filter((x) => /^cluster-logs-info-/.test(x));
+        const f = fs.readdirSync(path.join(tmp, 'exports')).filter((x) => /^cluster-logs-info-\d/.test(x));
         assert.strictEqual(f.length, 1);
         const txt = fs.readFileSync(path.join(tmp, 'exports', f[0]), 'utf8');
-        ['--- page ---', '--- driving assistant check ---', '--- driving assistant log ---', '--- directions log ---', '--- this app\'s log ---'].forEach((h) => assert(txt.indexOf(h) >= 0, h));
+        ['--- page ---', '--- directions log ---', '--- this app\'s log ---'].forEach((h) => assert(txt.indexOf(h) >= 0, h));
+        ['--- driving assistant check ---', '--- sign definitions ---'].forEach((h) => assert(txt.indexOf(h) < 0, h));
     });
     for (let i = 0; i < 20 && drawn.some((d) => /^Logs: photograph/.test(d)); i++) { drawn.length = 0; await clicks.BTN_LOGS(); }
     check('Logs pressed past the last page: the page as before', () => assert(!drawn.some((d) => /^Logs: photograph/.test(d)) && drawn.length > 0));

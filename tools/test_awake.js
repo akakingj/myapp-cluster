@@ -205,12 +205,8 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             assert.deepStrictEqual(D.data().roadSigns, ['no_passing', 'wild_animal']);
             cam(signs('NO_PASSING_END'));
             assert.deepStrictEqual(D.data().roadSigns, ['wild_animal'], 'its end sign: gone');
-            /* the sign's event's every field, as it changed, in the Logs */
-            assert.ok(/^TrafficSignRecognition changes: \d+$/.test(D.sliLog(5).split('\n')[3]), D.sliLog(5).split('\n')[3]);
-            assert.ok(/ km\/h: .*presentClassLimitSpeed=22/.test(D.sliLog(5)), 'its fields');
-            /* the head-up display's data: its fields' names, its no passing ones' changes */
-            assert.ok(/\nhead-up display fields: \d+\n  .*xSpeedLimitAssist\.vSLISpeedValue/.test(D.sliLog(5)), 'the head-up display\'s fields');
-            assert.ok(/\nhead-up display no passing changes: \d+\n/.test(D.sliLog(5)));
+            /* (the sign services' every field: AK Cluster Info's Test log's, 1.13.0 - not in this app's Logs) */
+            assert.ok(!/TrafficSignRecognition changes|head-up display fields/.test(D.sliLog(5)));
             assert.ok(RS.NP_FIELD.test('xNoPassingInfo.vNPIDistance') && RS.NP_FIELD.test('overtakingProhibition') && !RS.NP_FIELD.test('vSLISpeedValue'));
         } finally { D.stop(); }
         /* the app asks the install for it, fitted to the car's catalog (kit/runtime/survey_fit.js) */

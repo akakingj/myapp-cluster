@@ -2791,9 +2791,6 @@
   "Highway entry": "고속도로 진입",
   "Highway exit": "고속도로 진출",
   "Toll gate": "톨게이트",
-  "Driving assistant check": "반자율주행 신호 확인",
-  "Signals: what comes in": "신호: 들어오는 값",
-  "Catalog: the services this car has": "카탈로그: 이 차의 서비스 목록",
   "0-100 km/h (0-60 mph) time": "0-100 km/h (0-60 mph) 기록",
   "Battery voltage (12 V)": "배터리 전압 (12 V)",
   "Boost target": "목표 부스트",
@@ -2817,12 +2814,10 @@
   "Petrol, M car": "M",
   "Plug-in hybrid (petrol)": "플러그인 하이브리드 (가솔린)",
   "Torque gauge up to": "토크 게이지 최댓값",
-  "Signal survey": "신호 조사",
-  "Start survey": "조사 시작",
-  "Stop survey": "조사 중지",
-  "Signal survey: the speed limit sign": "신호 조사: 제한속도 표지판",
   "Road signs on the HUD": "HUD에 도로 표지판",
   "On: the camera's signs, right of the speed": "켜기: 카메라가 읽은 표지판, 속도 오른쪽",
   "Sample signs (to check the place)": "예시 표지판 (위치 확인용)",
-  "Road signs": "도로 표지판"
+  "Road signs": "도로 표지판",
+  "Test log": "테스트 로그",
+  "Test log: end and show": "테스트 끝내고 보기"
 }

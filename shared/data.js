@@ -310,35 +310,14 @@ function startData(ctx, opts) {
             /* what the head-up display has of Speed Limit Assist (sliRawOf), and the limit shown after it (sliStep) */
             const r = sliRawOf(v);
             if (r) { x.sli = r; x.at.sli = Date.now(); x.sliShown = sliStep(x.sliShown, r, x.sliMem || (x.sliMem = {})); sliSeen(r); }
-            /* (for the Logs: its fields' names, and each change of those that may be about no passing - the head-up
-               display shows BMW's own, with its distance from the car's map, 2026-11-28) */
-            const all = RS.fields(v);
-            hudKeys = Array.from(new Set(all.map((f) => f.split('=')[0].split('.').slice(0, 2).join('.'))));
-            const np = all.filter((f) => RS.NP_FIELD.test(f.split('=')[0])).join(' ');
-            if (np !== hudNpLast) {
-                hudNpLast = np;
-                const sp = car.data ? car.data().speed : null;
-                hudNpChanges.push({ at: Date.now(), speed: isNum(sp) ? Math.round(sp) : null, f: np || '(none)' });
-                if (hudNpChanges.length > 12) hudNpChanges.shift();
-            }
         },
     }, 'cruise control and speed limit (head-up display)', { pollMs: 2000 });
-    let tsrLast = '', hudNpLast = null, hudKeys = [];
-    const tsrChanges = [], hudNpChanges = [];
     // the speed limit sign itself (tsrStep): only where the install declared it; a car without it says so in the status
     ctx.signals.watch('de.bmw.dass.TrafficSignRecognition', '1', {}, log)
         .then((sub) => {
             if (!sub || sub.error || !sub.proxy || !ctx.signals.on) { status['speed limit sign'] = 'not in this car' + (sub && sub.error ? ' (' + sub.error + ')' : ''); return null; }
             return ctx.signals.on(sub.proxy, 'TrafficSignRecognition', (v) => {
                 x.tsr = v; x.at.tsr = Date.now(); x.tsrShown = tsrStep(x.tsrShown, v);
-                // (each change of its fields, the last 12, for the Logs: where the no passing zone's end may be)
-                const f = RS.fields(v).join(' ');
-                if (f !== tsrLast) {
-                    tsrLast = f;
-                    const sp = car.data ? car.data().speed : null;
-                    tsrChanges.push({ at: x.at.tsr, speed: isNum(sp) ? Math.round(sp) : null, f });
-                    if (tsrChanges.length > 12) tsrChanges.shift();
-                }
             }, log).then(() => { status['speed limit sign'] = 'subscribed'; });
         })
         .catch((e) => { status['speed limit sign'] = 'error: ' + e; });
@@ -867,16 +846,8 @@ function startData(ctx, opts) {
             return ['sign (TrafficSignRecognition): ' + (tsrAge === null ? 'none yet' : 'presentClassLimitSpeed ' + one(x.tsr, 'presentClassLimitSpeed') + ', ' + tsrAge + ' s ago, shown ' + (x.tsrShown || '--')),
                 'head-up display data: ' + sliTimes.filter((t) => now - t <= 60000).length + ' in the last 60 s, ' + (age === null ? 'none yet' : 'the last ' + age + ' s ago') + '; shown: ' + (shown || '--'),
                 'warning signs (front camera): ' + (camAge === null ? 'none yet' : (x.cam.join(', ') || 'no type') + ', ' + camAge + ' s ago') + (x.camSeen ? '; seen ' + Object.keys(x.camSeen).map((k) => k + ' ' + x.camSeen[k]).join(', ') : '') +
-                    '; no passing ' + (npZone.on() ? 'on, ' + npZone.km().toFixed(2) + ' km since its sign' : 'off'),
-                // (every field the sign's event carries, as it changed: where the no passing zone's end may be, 2026-11-28;
-                // in lines the Logs' codes keep whole)
-                'TrafficSignRecognition changes: ' + (tsrChanges.length ? tsrChanges.length : 'none yet')]
-                .concat(...tsrChanges.map((c) => RS.chunk(c.f.split(' '), 150).map((l, i) => (i ? '  ' : new Date(c.at).toISOString().slice(11, 19) + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h: ') + l)))
-                // (the head-up display's data: its fields' names, and each change of those about passing, tunnels, lane
-                // changes, restrictions)
-                .concat(['head-up display fields: ' + (hudKeys.length || 'none yet')], RS.chunk(hudKeys, 150).map((l) => '  ' + l),
-                    ['head-up display no passing changes: ' + (hudNpChanges.length || 'none yet')])
-                .concat(...hudNpChanges.map((c) => RS.chunk(c.f.split(' '), 150).map((l, i) => (i ? '  ' : new Date(c.at).toISOString().slice(11, 19) + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h: ') + l)))
+                    // (what the cluster shows of no passing; the sign services' fields are AK Cluster Info's Test log's, 1.13.0)
+                    '; no passing ' + (npZone.on() ? 'on, ' + npZone.km().toFixed(2) + ' km since its sign' : 'off')]
                 .concat(sliChanges.slice(-(last || 20)).map((c) => new Date(c.at).toISOString() + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h  shown ' + (c.shown || '--') + '  ' + JSON.stringify(c.raw))).join('\n');
         },
         /** fn() on each new reading (the car's speed and rpm samples, every changed reading). */

@@ -79,6 +79,27 @@ check('no passing on the cluster: from its sign till its end sign, or 3 km drive
     z.add(['END_OF_NO_PASSING']); assert(!z.on(), 'its end sign');
 });
 
+check('the Test log\'s recorder (research.js, 1.13.0): the sign services\' every field as it changed (a time\'s change no change), the HUD data\'s no passing fields', () => {
+    const { startResearch } = require(path.join(APP, 'research.js'));
+    let kmh = 50;
+    const r = startResearch({ kmh: () => kmh });
+    r.onValue('de.bmw.dass.TrafficSignRecognition', 'TrafficSignRecognition', { presentClassLimitSpeed: 16, timeStamp: 1 }, Date.UTC(2026, 10, 28, 4, 0, 0));
+    r.onValue('de.bmw.dass.TrafficSignRecognition', 'TrafficSignRecognition', { presentClassLimitSpeed: 16, timeStamp: 2 }, Date.UTC(2026, 10, 28, 4, 0, 1));
+    kmh = 60;
+    r.onValue('de.bmw.dass.TrafficSignRecognition', 'TrafficSignRecognition', { presentClassLimitSpeed: 18, timeStamp: 3 }, Date.UTC(2026, 10, 28, 4, 0, 2));
+    r.onValue('de.bmw.infotainment.vehicle.CDS', 'statusSpeed', { v: 1 }, Date.now());           // not a sign service: not kept
+    r.onHud({ xSpeedLimitAssist: { vSLISpeedValue: 16 }, xNoPassing: { vNPIDistance: 500 } }, Date.UTC(2026, 10, 28, 4, 0, 3));
+    r.onHud({ xSpeedLimitAssist: { vSLISpeedValue: 18 }, xNoPassing: { vNPIDistance: 500 } }, Date.UTC(2026, 10, 28, 4, 0, 5));
+    r.onHud({ xSpeedLimitAssist: { vSLISpeedValue: 18 }, xNoPassing: { vNPIDistance: 0 } }, Date.UTC(2026, 10, 28, 4, 0, 7));
+    const sec = r.sections();
+    assert.deepStrictEqual(sec[0][1].split('\n'), ['04:00:00 50 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=16',
+        '04:00:02 60 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=18']);
+    assert.strictEqual(sec[1][1], 'xSpeedLimitAssist.vSLISpeedValue, xNoPassing.vNPIDistance');
+    assert.deepStrictEqual(sec[2][1].split('\n'), ['04:00:03 60 km/h xNoPassing.vNPIDistance=500', '04:00:07 60 km/h xNoPassing.vNPIDistance=0']);
+    r.reset();
+    assert.strictEqual(r.sections()[0][1], '(none yet)');
+});
+
 check('pictures: South Korea\'s own signs - the types the camera read get theirs; another warning 위험 ("!")', () => {
     assert.strictEqual(S.artOf('DS_SPLIPPERY_ROAD'), 'slippery');
     assert.strictEqual(S.artOf('DS_TRAFFIC_JAM'), 'traffic_jam');

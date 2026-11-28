@@ -30,7 +30,7 @@
  * Everything goes to cluster-info-adas.log in the app's data folder too (the catalog once, each source's first three
  * values and one a minute, every change of state; at most 2 x 256 KiB).
  *
- *   const pr = startAdasProbe(ctx, log, { want: () => settings.get('adasCheck') !== 'off' });
+ *   const pr = startAdasProbe(ctx, log, { want: () => testOn(), onHud: (v, t) => ... });   (main.js: the Test log, 1.13.0)
  *   pr.status()   -> { sources: [...], hud: {...}, catalog: {...} }
  */
 const fs = require('fs');
@@ -157,6 +157,8 @@ function startAdasProbe(ctx, log, opts) {
             const t = now();
             s.count++; s.last = v; s.lastAt = t;
             if (s === hud) onSli(v, t);
+            // (the HUD's data to the test log's recorder too: research.js, 1.13.0)
+            if (s === hud && opts.onHud) { try { opts.onHud(v, t); } catch (e) { /* not the probe's */ } }
             if (s.logged < 3 || t - s.loggedAt > 60000) {
                 s.logged++; s.loggedAt = t;
                 write(s.short + ' value ' + s.count + ': ' + JSON.stringify(v).slice(0, 4000));

@@ -22,8 +22,9 @@ const IND = require('./indicators');
 const { startBlindSpot } = require('./blindspot');
 const { startHvSoc } = require('./hvsoc');
 const { ReadOnlyDiag } = require('./kit/readonly-diag');
-const { startAdasProbe, catalogLine, brakeLine } = require('./adas_probe');
-const { startSurvey } = require('./survey');
+const { startAdasProbe, brakeLine } = require('./adas_probe');
+const { startSurvey, hudNow } = require('./survey');
+const { startResearch } = require('./research');
 const { startSigns, SAMPLE: SIGN_SAMPLE } = require('./signs');
 const logs = require('./logs');
 
@@ -248,18 +249,18 @@ mgu.run({
         const bs = startBlindSpot(ctx, log, { link, want: () => settings.get('blindSpot') !== 'off' && settings.get('show') !== 'off' && !awake.parked()
             && !(overlay && overlay.lcwWanted && !overlay.lcwWanted()) });
         src.blindSpot = () => bs.state();
-        /* ---------- Settings > Driving assistant check (adas_probe.js, read only, 1.10.5) ----------
-         * whether the head unit gets what the cluster's assisted driving view is drawn from: subscribed from the
-         * first time it is turned on; the page shows it instead of the sources' states. */
-        const adasMode = () => (['live', 'catalog', 'survey'].indexOf(settings.get('adasCheck')) >= 0 ? settings.get('adasCheck') : 'off');
+        /* ---------- the Test log (1.13.0, the owner's: two logs - Logs for how the app works, Test log for development and
+         * checks): [Test log] starts the checks (read only) - the driving assistant check (adas_probe.js: the assisted
+         * driving view's sources, the HUD's data, the catalog), the signal survey (survey.js: what the car's catalog had of
+         * the sign services when the app was installed, to 30 min) and the recorder of the sign services' every field
+         * (research.js); pressed again, they end and its codes show. The sign services' definitions are read once at the
+         * start (signs.js). Till 1.12.x: Settings > Driving assistant check (Signals, Catalog, Signal survey) and
+         * [Start survey]. */
+        let survey = null, testNote = '', testShown = 0;
+        const testOn = () => !!(survey && survey.running());
+        const research = startResearch({ kmh: () => (adas ? hudNow(adas.hudValue()).kmh : null) });
         let adas = null;
-        try { adas = startAdasProbe(ctx, log, { want: () => adasMode() !== 'off' }); } catch (e) { log.warn('driving assistant check: ' + e); }
-        /* ---------- Settings > Driving assistant check > Signal survey (survey.js, read only, 1.11.0) ----------
-         * what the car's catalog had of the speed limit sign's candidates when the app was installed, subscribed from
-         * [Start survey] (driving or standing, 1.11.1) to [Stop survey] or 30 min; the HUD data (above) gives each change its
-         * speed and Speed Limit Assist's figures. Keeps going with the page closed. One button: Start survey (it also turns
-         * Driving assistant check to Signal survey), Stop survey while it runs (1.11.1; till 1.11.0 three steps: Signal
-         * survey, Start survey, End survey asking again under 3 min). */
+        try { adas = startAdasProbe(ctx, log, { want: () => testOn(), onHud: (v, t) => { if (testOn()) research.onHud(v, t); } }); } catch (e) { log.warn('driving assistant check: ' + e); }
         /* ---------- the road signs the camera reads, on the HUD (signs.js, 1.12.0) ----------
          * the camera's sign event, declared as the survey's (only where the car's catalog has it), subscribed from the
          * start: it comes once a sign, not at a rate. Settings > HUD > Road signs: on, sample (three signs, to see the
@@ -267,30 +268,19 @@ mgu.run({
         let signs = null;
         try { signs = startSigns(ctx, log); } catch (e) { log.warn('road signs: ' + e); }
         src.roadSigns = () => (settings.get('roadSigns') === 'sample' ? SIGN_SAMPLE.slice() : signs ? signs.current() : []);
-        let survey = null, surveyNote = '';
-        try { survey = startSurvey(ctx, log, { hud: () => (adas ? adas.hudValue() : null), dir: ctx.dataDir || '.', signals: signs ? signs.signalsFor(ctx.signals) : undefined }); } catch (e) { log.warn('signal survey: ' + e); }
+        try {
+            survey = startSurvey(ctx, log, { hud: () => (adas ? adas.hudValue() : null), dir: ctx.dataDir || '.', signals: signs ? signs.signalsFor(ctx.signals) : undefined,
+                onValue: (iface, member, v, t) => research.onValue(iface, member, v, t) });
+        } catch (e) { log.warn('signal survey: ' + e); }
         const KO = /^ko/.test((() => { try { return require('./kit/i18n').getLanguage(); } catch (e) { return 'en'; } })());
         let shownLabel = null;
-        const surveyLabel = () => {
-            const lab = survey && survey.running() ? 'Stop survey' : 'Start survey';
+        const testLabel = () => {
+            const lab = testOn() ? 'Test log: end and show' : 'Test log';
             if (lab === shownLabel) return Promise.resolve();
             shownLabel = lab;
-            return ui.text('BTN_SURVEY', lab);
+            return ui.text('BTN_TEST', lab);
         };
-        ui.onClick('BTN_SURVEY', () => {
-            surveyNote = '';
-            if (!survey) surveyNote = KO ? '신호 조사를 시작할 수 없습니다' : 'The signal survey could not start';
-            else if (survey.running()) survey.end('button');
-            else {
-                if (adasMode() !== 'survey') settings.set('adasCheck', 'survey');
-                const why = survey.start();
-                if (why) surveyNote = (KO ? '시작하지 못함: ' : 'Not started: ') + why;
-            }
-            surveyLabel();
-            return render();
-        });
-        settings.onChange((k) => { if (k === 'adasCheck') { if (adasMode() !== 'survey') surveyNote = ''; surveyLabel(); } });
-        surveyLabel();
+        testLabel();
         /* ---------- directions on the HUD (Settings > Directions on the HUD), as Redline's (nav.js, navlog.js) ----------
          * BMW's guidance service, read only: the next turn, its distance, the street and the lanes, the same way for
          * CarPlay, Android Auto and BMW's navigation (only apps that hand the car their turns: Waze over CarPlay doesn't).
@@ -333,47 +323,68 @@ mgu.run({
 
         /* ---------- Logs: this app's own, as QR codes to photograph and a file on a USB stick (logs.js) ---------- */
         const dataDir = ctx.dataDir || '.';
+        /* [Logs]: how this app works - its settings, its page, the panel's state, the turn signals' raw values, the
+           directions' log and its own log (1.13.0: the checks' records are the Test log's) */
         function logBundle(full) {
             const n = (short, long) => (full ? long : short), ov = overlay && overlay.status ? overlay.status() : null;
             const sets = {};
             (settings.schema || []).forEach((x) => { sets[x.key] = settings.get(x.key); });
-            const st = adas ? adas.status() : null;
-            const rec = survey && survey.last();
             const sections = [
                 ['settings', JSON.stringify(sets)],
                 ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
                 ['overlay', JSON.stringify(ov)],
                 ['turn signals and day / night (raw)', JSON.stringify(live.raw)],
-                ['driving assistant check', st ? JSON.stringify(full ? st : { sources: st.sources, hud: st.hud, catalog: st.catalog && { total: st.catalog.total, found: (st.catalog.list || []).length, error: st.catalog.error,
-                    signServices: st.catalog.signServices, signs: (st.catalog.signs || []).slice(0, 30).map(brakeLine), signsTotal: (st.catalog.signs || []).length } }) : 'not started'],
-                ['driving assistant log', logs.tail(path.join(dataDir, 'cluster-info-adas.log'), n(40, 3000))],
                 ['directions log', logs.tail(path.join(dataDir, 'cluster-info-nav.log'), n(15, 1500))],
                 ['this app\'s log', logs.tail(path.join(dataDir, 'akakingj_cluster_info.log'), n(40, 600))],
             ];
             if (full) sections.push(['cluster-render log', logs.tail(logs.RENDER_LOG, 1500)]);
-            // the survey's record: whole in the file, as much as fits in 15 codes (1.11.1; 30 before CLG2) in the QR codes:
-            // the first values and the changes' values cut shorter until it does
-            // (1.11.0) with a signal survey's record: its sections after the settings; in the codes only they, the page
-            // and the HUD's speed limit changes (the rest is in the file)
-            if (rec) {
-                if (!full) sections.splice(1, sections.length - 1, ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
-                    ['speed limit (HUD data), last changes', st ? st.sli.changes.map((c) => new Date(c.at).toISOString().slice(11, 19) + ' ' + c.line).join('\n') : '']);
-                const mine = full ? survey.sections(0) : survey.fitted(sections, 15, logs.codeCount);
-                sections.splice(1, 0, ...mine);
-            }
-            // (the sign services' definitions, the car's sign types and the catalog's no passing services, read once at the
-            // start: in the codes whatever else they hold - the app's log there is only its last lines, 1.12.4)
-            sections.push(['sign definitions', signs && signs.defLines ? (signs.defLines().join('\n') || '(none yet: the camera\'s signs not subscribed)') : 'road signs not started']);
             return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Info') + ' ' + ((ctx.spec && ctx.spec.version) || ''), sections);
         }
+        /* [Test log]: the checks - the sign services' definitions, types and the catalog's no passing services (read at
+           the start), the sign services' every field and the HUD data's no passing fields as they changed, the signal
+           survey's record (as much as fits in 15 codes, the rest in the file), the driving assistant check */
+        function testBundle(full) {
+            const n = (short, long) => (full ? long : short), st = adas ? adas.status() : null, rec = survey && survey.last();
+            const sections = [
+                ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
+                ['sign definitions', signs && signs.defLines ? (signs.defLines().join('\n') || '(none yet: the camera\'s signs not subscribed)') : 'road signs not started'],
+            ].concat(research.sections(), [
+                ['speed limit (HUD data), last changes', st ? st.sli.changes.map((c) => new Date(c.at).toISOString().slice(11, 19) + ' ' + c.line).join('\n') : ''],
+                ['driving assistant check', st ? JSON.stringify(full ? st : { sources: st.sources, hud: st.hud, catalog: st.catalog && { total: st.catalog.total, found: (st.catalog.list || []).length, error: st.catalog.error,
+                    signServices: st.catalog.signServices, signs: (st.catalog.signs || []).slice(0, 30).map(brakeLine), signsTotal: (st.catalog.signs || []).length } }) : 'not started'],
+                ['driving assistant log', logs.tail(path.join(dataDir, 'cluster-info-adas.log'), n(20, 3000))],
+            ]);
+            if (rec) sections.splice(2, 0, ...(full ? survey.sections(0) : survey.fitted(sections, 15, logs.codeCount)));
+            return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Info') + ' ' + ((ctx.spec && ctx.spec.version) || '') + ' test', sections);
+        }
         const logPages = logs.pager(logBundle, dataDir, log, 'info');
-        ui.onClick('BTN_LOGS', () => { logPages.press(); return render(); });
+        const testPages = logs.pager(testBundle, dataDir, log, 'info-test', { en: 'Test log', ko: '테스트 로그' });
+        ui.onClick('BTN_LOGS', () => { testPages.close(); logPages.press(); return render(); });
+        /* [Test log]: start the checks; pressed while they run (or after they ended by themselves, 30 min): they end and
+           the codes show, a page a press */
+        ui.onClick('BTN_TEST', () => {
+            logPages.close();
+            testNote = '';
+            const last = survey && survey.last();
+            if (testPages.active()) testPages.press();
+            else if (testOn()) { survey.end('button'); testShown = (survey.last() || {}).endedAt || 1; testPages.press(); }
+            else if (last && last.endedAt && last.endedAt !== testShown) { testShown = last.endedAt; testPages.press(); }
+            else {
+                const why = survey ? survey.start() : (KO ? '신호 조사를 시작할 수 없습니다' : 'the signal survey could not start');
+                if (why) { testNote = (KO ? '조사를 시작하지 못해 지금까지의 기록만 보여줍니다: ' : 'The checks did not start, so this is what there is: ') + why; testPages.press(); }
+                else research.reset();
+            }
+            testLabel();
+            return render();
+        });
 
         /* ---------- this app's page: the panel as it is now, larger, and every source's state ---------- */
         function render() {
             const t = ctx.theme();
             const cv = ctx.canvas(W, H).clear(t.bg);
+            testLabel();
             if (logPages.active()) { logPages.draw(cv, t); return ui.image('MAIN_GFX', cv); }
+            if (testPages.active()) { testPages.draw(cv, t); if (testNote) cv.text(testNote, 40, 8, 14, t.warn, { font: 'label', literal: true }); return ui.image('MAIN_GFX', cv); }
             G.panel(cv, t, 24, 44, 1552, 468, ((ctx.spec && ctx.spec.title) || 'Cluster Info'));
             const pw = src.power(t), ex = src.extras(t).filter((e) => e.text !== '--');
             if (pw || ex.length) {
@@ -394,7 +405,7 @@ mgu.run({
             } else {
                 cv.text('Nothing to show now: no power from an app, and no value chosen has a reading', 800, 150, 24, t.dim, { align: 'center' });
             }
-            if (adas && adasMode() !== 'off') { drawAdas(cv, t); G.frame(cv, t, [((ctx.spec && ctx.spec.title) || 'Cluster Info')], 0, []); return ui.image('MAIN_GFX', cv); }
+            if (testOn()) { drawTest(cv, t); G.frame(cv, t, [((ctx.spec && ctx.spec.title) || 'Cluster Info')], 0, []); return ui.image('MAIN_GFX', cv); }
             const lines = statusLines(), step = lines.length > 5 ? 31 : 36;
             lines.forEach(([k, v], i) => {
                 cv.text(k, 48, 296 + i * step, 20, t.dim, { font: 'bold' });
@@ -405,76 +416,21 @@ mgu.run({
             G.frame(cv, t, [((ctx.spec && ctx.spec.title) || 'Cluster Info')], 0, []);
             return ui.image('MAIN_GFX', cv);
         }
-        /** The driving assistant check on the page (from y 280): each source's state and last value, the HUD data's
-         *  driving assistant members, or the catalog's services (Settings > Driving assistant check). */
-        function drawAdas(cv, t) {
-            const st = adas.status(), L = (str, y, size, col, bold, x) => cv.text(String(str), x || 48, y, size, col, { font: bold ? 'bold' : 'label', literal: true });
-            if (adasMode() === 'survey') { drawSurvey(cv, t, L); return; }
-            const head = 'Driving assistant check (read only)   ·   log: cluster-info-adas.log in the app\'s data folder';
-            L(head, 280, 18, t.dim, true);
-            if (!st.started) { L('Starting…', 310, 18, t.text); return; }
-            if (adasMode() === 'catalog') {
-                const c = st.catalog, brakes = c.brakes || [];
-                if (c.error) { L(c.error, 306, 18, t.text, true); return; }
-                // (each list's lines cut at 170 letters, the rest in the log)
-                const wrap = (lines) => { const rows = []; lines.forEach((r) => { for (let i = 0; i < r.length; i += 170) rows.push((i ? '      ' : '') + r.slice(i, i + 170)); }); return rows; };
-                const block = (title, lines, y, room) => {
-                    L(title, y, 17, t.text, true);
-                    const rows = wrap(lines.length ? lines : ['(none)']);
-                    rows.slice(0, room).forEach((r, i) => L(r, y + 22 + i * 18, 14, t.text));
-                    if (rows.length > room) L('… ' + (rows.length - room) + ' more lines in the log', y + 22 + room * 18, 14, t.dim);
-                };
-                // (1.10.25) the speed limit sign's candidates first: the services looked for by name, then every member
-                // named for a speed limit or a traffic sign; then the brakes' (Auto Hold) and the driving assistant's
-                const signs = c.signs || [], sv = (c.signServices || []).map((v) => v.name + ': ' + (v.found.length ? v.found.join(', ') : 'not in this car\'s catalog'));
-                block('Speed limit and traffic signs: ' + signs.length + ' members in the catalog of ' + c.total + ' services', sv.concat(signs.map(brakeLine)), 306, 3);
-                block('Brakes, parking brake, Auto Hold: ' + brakes.length + ' members', brakes.map(brakeLine), 406, 1);
-                block('Driving assistant or HUD: ' + c.list.length + ' services', c.list.map(catalogLine), 470, 1);
-                return;
-            }
-            const age = (ms) => (ms === null ? '' : ms < 1000 ? 'now' : Math.round(ms / 1000) + ' s ago');
-            st.sources.forEach((s, i) => {
-                const y = 306 + i * 26, ok = s.count > 0;
-                L(s.short, y, 17, ok ? GO : t.dim, true);
-                L((s.what + (s.count ? '   ·   ' + s.count + ' values, last ' + age(s.age) : '') + (s.sample ? '   ·   ' + s.sample : '')).slice(0, 140), y, 15, ok ? t.text : t.dim, false, 330);
-            });
-            const hy = 306 + st.sources.length * 26 + 4;
-            L('HUD data, its driving assistant members: ' + (st.hud.length ? st.hud.join('  ').slice(0, 150) : 'none yet'), hy, 15, st.hud.length ? t.text : t.dim);
-            // the speed limit in the HUD's data, and its last changes (each also in the log)
-            const sy = hy + 24, clock = (ms) => { const d = new Date(ms); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2); };
-            const short = (str) => str.replace(/xSpeedLimitAssist\.|pia\./g, '');      // (in full in the log)
-            L('Speed limit (HUD data): ' + (st.sli.now.length ? short(st.sli.now.join('  ')).slice(0, 160) : 'none yet'), sy, 15, st.sli.now.length ? GO : t.dim);
-            st.sli.changes.slice(0, 2).forEach((c, i) => L(clock(c.at) + '  ' + short(c.line).slice(0, 170), sy + 19 + i * 17, 14, t.dim));
-        }
-        /** Settings > Driving assistant check > Signal survey on the page (from y 280): what was declared at install,
-         *  the survey under way or the last one's result, and the button's next step. */
-        function drawSurvey(cv, t, L) {
-            surveyLabel();
-            L(KO ? '신호 조사 (읽기만)   ·   진짜 제한속도 표지판 값을 찾습니다' : 'Signal survey (read only)   ·   looking for the speed limit sign itself', 280, 18, t.dim, true);
-            if (!survey) { L(KO ? '신호 조사를 시작할 수 없습니다' : 'The signal survey could not start', 310, 18, t.text, true); return; }
-            const inf = survey.info(), st = survey.status();
+        /** The Test log's checks under way, on the page (from y 280): the survey's time and what came, the speed limit in
+         *  the HUD's data, and the button's next step. */
+        function drawTest(cv, t) {
+            const L = (str, y, size, col, bold, x) => cv.text(String(str), x || 48, y, size, col, { font: bold ? 'bold' : 'label', literal: true });
+            const inf = survey.info(), st = survey.status(), m = Math.floor(st.elapsedS / 60);
+            L(KO ? '테스트 로그: 차 신호 조사 중 (읽기만)' : 'Test log: checking the car\'s signals (read only)', 280, 18, t.dim, true);
             L((KO ? '설치 때 선언됨 ' + inf.declared + '개 / 이 차에 없어 빠짐 ' + inf.missing + '개' : 'Declared at install ' + inf.declared + ' / not in this car, left out ' + inf.missing)
                 + (inf.over ? (KO ? ' / 60개 넘어 빠짐 ' : ' / over the 60 limit ') + inf.over : '') + (inf.error ? '   ·   ' + inf.error : ''), 310, 18, inf.declared ? t.text : t.warn, true);
-            let y = 340;
-            if (st.running) {
-                const m = Math.floor(st.elapsedS / 60);
-                L(KO ? '조사 중 ' + m + '분 · 값 온 항목 ' + st.valued + '개 · 표지판 변화 ' + st.changes + '번   (30분이면 저절로 끝남, 앱을 닫아도 계속)'
-                    : 'Surveying ' + m + ' min · members with values ' + st.valued + ' · sign changes ' + st.changes + '   (ends by itself at 30 min; goes on with the app closed)', y, 18, GO, true);
-                y += 28;
-                L((KO ? '값 온 것: ' : 'With values: ') + (st.withValues.length ? st.withValues.join('  ·  ') : (KO ? '아직 없음' : 'none yet')).slice(0, 170), y, 15, st.withValues.length ? t.text : t.dim);
-                st.recent.forEach((c, i) => L(new Date(c.at).toTimeString().slice(0, 8) + '  ' + (typeof c.kmh === 'number' ? c.kmh + ' km/h  ' : '') + c.what.split('.').slice(-2).join('.') + ' = ' + String(c.value).slice(0, 120), y + 22 + i * 19, 14, t.text));
-                y += 22 + 3 * 19 + 6;
-                L(KO ? '끝내려면 아래 [조사 중지]' : 'To end: [Stop survey] below', y, 16, t.dim);
-            } else {
-                L(KO ? '아래 [조사 시작]을 누르세요 (주행 중에도 됨). 크루즈 끄고 5분 (표지판 2개 이상), 크루즈 켜고 5분, [조사 중지] → [로그]'
-                    : 'Press [Start survey] below (driving is fine): 5 min with the cruise control off (2 signs or more), 5 min with it on; [Stop survey], then [Logs]', y, 16, t.text);
-                y += 28;
-                const ls = st.last;
-                if (ls) L((KO ? '지난 조사: ' + new Date(ls.at).toTimeString().slice(0, 5) + ', ' + Math.round((ls.endedAt - ls.at) / 60000) + '분, 값 온 항목 ' + ls.valued + '/' + ls.items + ', 표지판 변화 ' + ls.changes + '번 → [로그]에 있음'
-                    : 'Last survey: ' + new Date(ls.at).toTimeString().slice(0, 5) + ', ' + Math.round((ls.endedAt - ls.at) / 60000) + ' min, ' + ls.valued + ' of ' + ls.items + ' with values, ' + ls.changes + ' sign changes: in the Logs')
-                    + (ls.saved ? '   ·   ' + ls.saved : ''), y, 15, t.text);
-            }
-            if (surveyNote) L(surveyNote, 488, 17, t.warn, true);
+            L(KO ? m + '분째 · 값 온 항목 ' + st.valued + '개 · 표지판 변화 ' + st.changes + '번   (30분이면 저절로 끝남, 앱을 닫아도 계속)'
+                : m + ' min · members with values ' + st.valued + ' · sign changes ' + st.changes + '   (ends by itself at 30 min; goes on with the app closed)', 340, 18, GO, true);
+            L((KO ? '값 온 것: ' : 'With values: ') + (st.withValues.length ? st.withValues.join('  ·  ') : (KO ? '아직 없음' : 'none yet')).slice(0, 170), 368, 15, st.withValues.length ? t.text : t.dim);
+            st.recent.forEach((c, i) => L(new Date(c.at).toTimeString().slice(0, 8) + '  ' + (typeof c.kmh === 'number' ? c.kmh + ' km/h  ' : '') + c.what.split('.').slice(-2).join('.') + ' = ' + String(c.value).slice(0, 120), 390 + i * 19, 14, t.text));
+            const sli = adas ? adas.status().sli : null;
+            if (sli) L((KO ? 'HUD 데이터의 제한속도: ' : 'Speed limit (HUD data): ') + (sli.now.length ? sli.now.join('  ').replace(/xSpeedLimitAssist\.|pia\./g, '').slice(0, 150) : (KO ? '아직 없음' : 'none yet')), 456, 15, sli.now.length ? GO : t.dim);
+            L(KO ? '끝내고 QR로 보려면 [테스트 끝내고 보기]' : 'To end and see its codes: [Test log: end and show]', 488, 16, t.dim);
         }
         ctx.loop('MAIN', 2, render);
         Promise.resolve().then(render).then(() => log.info('first frame done')).catch((e) => log.warn('first render: ' + e));

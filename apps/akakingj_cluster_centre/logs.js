@@ -149,8 +149,10 @@ function savedNote(saved, again) {
 
 /** An app's Logs button: press() saves the full bundle (bundleOf(true)) to the data folder and the USB sticks as
  * cluster-logs-<tag>-<time>.txt and shows the short one's (bundleOf(false)) codes, three a page; each press the next
- * page, after the last none. draw(cv, t, W) draws the page shown. */
-function pager(bundleOf, dataDir, log, tag) {
+ * page, after the last none. draw(cv, t, W) draws the page shown. btn: the button's name on the page ({ en, ko };
+ * Logs: AK Cluster Info's Test log has its own, 1.13.0). */
+function pager(bundleOf, dataDir, log, tag, btn) {
+    btn = btn || { en: 'Logs', ko: '로그' };
     const PER = 3;
     let view = null;
     return {
@@ -165,8 +167,8 @@ function pager(bundleOf, dataDir, log, tag) {
         draw(cv, t) {
             const n = view.codes.length, pages = Math.ceil(n / PER), first = view.page * PER;
             const note = savedNote(view.saved), last = Math.min(n, first + PER);
-            cv.text(KO ? '로그: 코드를 하나씩 사진으로 찍으세요 (' + pages + '쪽 중 ' + (view.page + 1) + '쪽, 코드 ' + (first + 1) + '-' + last + ' / ' + n + '). 다음 쪽은 로그 버튼'
-                : 'Logs: photograph each code (page ' + (view.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + last + ' of ' + n + '), then press Logs for the next', 40, 34, 20, t.text, { font: 'bold', literal: true });
+            cv.text(KO ? btn.ko + ': 코드를 하나씩 사진으로 찍으세요 (' + pages + '쪽 중 ' + (view.page + 1) + '쪽, 코드 ' + (first + 1) + '-' + last + ' / ' + n + '). 다음 쪽은 ' + btn.ko + ' 버튼'
+                : btn.en + ': photograph each code (page ' + (view.page + 1) + ' of ' + pages + ', codes ' + (first + 1) + '-' + last + ' of ' + n + '), then press ' + btn.en + ' for the next', 40, 34, 20, t.text, { font: 'bold', literal: true });
             cv.text((KO ? note.ko : note.en) + note.file, 40, 62, 16, t.dim, { font: 'label', literal: true });
             view.codes.slice(first, first + PER).forEach((q, i) => {
                 const px = Math.max(3, Math.floor(420 / (q.size + 8)));

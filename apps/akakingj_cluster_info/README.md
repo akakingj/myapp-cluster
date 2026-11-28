@@ -38,7 +38,7 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   and parking bans, one way; a warning with none of its own gets 위험, "!"). The car's own list of the camera's sign
   types (read from the app's interface config for the camera, made at install from the car's catalog) is logged
   once, whole, and counted on the app's page (types, drawn, as "!"): which pictures this car can ever show. As high as BMW's own limit sign (a round sign as big, a triangle as tall). Shown when the camera reads it, for 10 s; a
-  sign read after it takes its place (1.12.3: the owner's; one event's several together, in a row), as many as fit on the glass (four triangles). Once, at the start, every name in the definitions of the sign services this install has (TrafficSignRecognition, the camera's, TrafficSignDisplayControl, and of the head-up display's data the names about signs, passing and lanes: `sign definitions:` lines; and the car's whole catalog's services and members named for no passing or the map's look ahead: `catalog no passing` lines, 1.12.4; all of them also in the Logs' codes as their own section, sign definitions, 1.12.5 - the app's log there is only its last lines, parked - what tells no passing's end, 1.12.3); signs that would reach
+  sign read after it takes its place (1.12.3: the owner's; one event's several together, in a row), as many as fit on the glass (four triangles). Once, at the start, every name in the definitions of the sign services this install has (TrafficSignRecognition, the camera's, TrafficSignDisplayControl, and of the head-up display's data the names about signs, passing and lanes: `sign definitions:` lines; and the car's whole catalog's services and members named for no passing or the map's look ahead: `catalog no passing` lines, 1.12.4; all of them in the Test log, sign definitions, parked - what tells no passing's end, 1.12.3); signs that would reach
   the panel (a wide Waze map puts it low) are left off. From the camera's sign event
   (de.bmw.environmentalmodel.SignRecognitionFrontCamera, TrafficSignRecognitionFrontCamera: once a sign, found by the
   signal survey), declared only where the car's catalog has it, read only; the survey reads it through the same
@@ -56,42 +56,33 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   the car their turns (Apple Maps, TMAP; Waze over CarPlay doesn't). With the panel off the HUD BMW's own turn card shows them; while Redline
   holds the HUD, its own. A turn older than 3 s isn't shown. `cluster-info-nav.log` in the app's data folder (at most
   2 x 256 KiB, written only while directions show) records what the car sends, street names as their length only.
-- **Driving assistant check** (1.10.5, Settings > Driving assistant check, off by default; `adas_probe.js`, read
-  only): whether this car's head unit gets what the cluster's assisted driving view is drawn from. **Signals** shows,
-  for the four services that view is built from on a G05 (`de.bmw.dass.*`: the cruise control, the steering assist,
-  the lane warnings, the cars around) and for the HUD's own data (DisplayDataServer.functionalLibraryData, with its
-  members that look like the driving assistant's): not in this car's catalog, in the catalog but nothing provides
-  it, or values coming (how many, the last one), and the speed limit in the HUD's data (`xSpeedLimitAssist`:
-  `vSLISpeedValue`, `vSLISymbol`, `statusVZA` ..., with `pia.piaSliNpi` / `piaHUDSliNpi`, the driver's choice of
-  showing it): each change written to the log at once with the car's speed, the last two on the page, to match the
-  figures to the sign the cluster shows. **Catalog** lists every service in the head unit's catalog whose
-  name looks like the driving assistant's or the HUD's, with its fields and broadcasts, and before them every
-  member of any service whose name looks like the brakes', the parking brake's or Auto Hold's (the cluster draws
-  its AUTO H light under the apps' layers, so an app would draw it itself if the head unit gets its state). Subscribed from the first
-  time it is turned on; everything also goes to `cluster-info-adas.log` in the app's data folder (the catalog once,
-  each source's first three values and one a minute; at most 2 x 256 KiB). The cluster's picture itself is drawn in
-  the cluster and never reaches the head unit, so only its data can be looked for.
-- **Signal survey** (1.11.0, Settings > Driving assistant check > Signal survey; `survey.js`, read only): one drive
-  to find whether the speed limit sign itself reaches an app (the HUD data's `vSLISpeedValue` is only the limit Speed
-  Limit Assist has taken for the cruise control). What it reads is declared when the app is built or installed on the
-  car (app.json `"survey"`, `kit/runtime/survey_fit.js`): the candidates - TrafficSignDisplayControl's fields, the
-  front camera's sign events (SignRecognitionFrontCamera and its Legacy), TrafficSignRecognition, FASuS's next speed
-  limit, the driving assistant's speed limit settings (read once, never written), anything else in the catalog named
-  for a speed limit or a traffic sign, and the car ahead, the camera's objects and the lanes - only as far as THIS
-  car's catalog has them (a getter: read, a notifier: subscribed, an event: with its id), at most 60, so no car
-  refuses the install; never a method. The page says how many were declared and how many this car hasn't. One
-  button (1.11.1): **Start survey** (driving or standing; it also sets Driving assistant check to Signal survey)
-  subscribes them all (20 s each at most), and it goes on with the page closed: the sign candidates the whole time, the
-  settings read once, the fast ones their first 5 values; each change of a candidate is written with the time, the
-  speed and Speed Limit Assist's own figures. **Stop survey**, or 30 minutes, makes the record: each member's state (values came / subscribed, no value / nothing
-  provides it / refused / not in this car), how many and how often, the first value; the changes (the last 150); the
-  settings; the catalog's sign and assistant services, one line each. It goes into Logs (the values cut shorter to fit
-  15 codes) and whole into `exports/survey-<time>.txt` in the app's data folder.
+- **Test log** (1.13.0, the owner's: two logs - **Logs** for how the app works, **Test log** for development and
+  checks; till 1.12.x Settings > Driving assistant check, with Signals, Catalog and Signal survey, and Start survey).
+  **Test log** starts the checks, read only, and goes on with the page closed; pressed again (or after 30 minutes,
+  when they end by themselves) they end and its codes show, a page a press:
+  - the driving assistant check (`adas_probe.js`): whether the head unit gets what the cluster's assisted driving
+    view is drawn from - the four services that view is built from on a G05 (`de.bmw.dass.*`: the cruise control, the
+    steering assist, the lane warnings, the cars around) and the HUD's own data (DisplayDataServer.functionalLibraryData)
+    with its speed limit members (`xSpeedLimitAssist`, `pia.piaSliNpi`), each change with the car's speed; the head
+    unit's catalog's driving assistant, HUD, brakes' and sign services (`cluster-info-adas.log` in the data folder);
+  - the signal survey (`survey.js`): what is declared when the app is built or installed on the car (app.json
+    `"survey"`, `kit/runtime/survey_fit.js`) - TrafficSignDisplayControl, the front camera's sign events,
+    TrafficSignRecognition, FASuS's next speed limit, the driving assistant's speed limit settings (read once), anything
+    else named for a speed limit or a traffic sign, the car ahead, the camera's objects and the lanes - only as far as
+    THIS car's catalog has them, at most 60, never a method; each member's state, how many and how often, its first
+    value; the sign candidates' changes (the last 150) with the speed and Speed Limit Assist's figures; whole in
+    `exports/survey-<time>.txt`;
+  - the sign services' every field as it changed (`research.js`: a time's or a counter's change is no change) and the
+    HUD data's field names and its fields about passing, tunnels, lane changes and restrictions as they changed (BMW's
+    own no passing sign shows there with its distance from the car's map) - to find what ends a no passing zone;
+  - the sign definitions read once at the start (`signs.js`): the camera's sign types, the sign services' definitions
+    and the catalog's services and members named for no passing or the map's look ahead.
+  The page shows the checks under way: the time, what came, the HUD data's speed limit.
 - **Its page** shows the panel as it is now, larger, and whether each source works (turn signals, day / night,
   driver profile, the apps providing, the cluster renderer, the Waze map, the directions).
-- **Logs** on its page shows this app's logs as QR codes, three to a page (press Logs for the next):
-  its page's rows, the overlay's state, the raw turn signals, the driving assistant check with its log, the
-  directions' log and the app's own log. `python3 tools/decode_logs.py photo*.jpg -o logs.txt` puts the text
+- **Logs** on its page shows this app's logs as QR codes, three to a page (press Logs for the next): how the app
+  works - its settings, its page's rows, the overlay's state, the raw turn signals, the directions' log and the app's
+  own log (1.13.0: the checks are the Test log's). `python3 tools/decode_logs.py photo*.jpg -o logs.txt` puts the text
   back together; the full logs (with the renderer's) go to `cluster-logs/cluster-logs-info-<time>.txt` on a USB
   stick plugged into the car and to the app's data folder.
 

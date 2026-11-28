@@ -140,7 +140,8 @@ const tick = () => new Promise((r) => setTimeout(r, 10));
             assert.deepStrictEqual(spec.signals[s.iface]._broadcasts, [s.name]);
         });
         assert(spec.signals[P.HUD.iface]._optional);
-        assert.strictEqual(spec.settings.find((x) => x.key === 'adasCheck').default, 'off');
+        // (1.13.0: started by [Test log], no setting)
+        assert(!spec.settings.find((x) => x.key === 'adasCheck') && spec.screens[0].buttons.some((b) => b[0] === 'BTN_TEST'));
     });
     console.log(n + ' passed');
 })().catch((e) => { console.error(e); process.exit(1); });
