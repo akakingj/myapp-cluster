@@ -140,7 +140,7 @@ follows the mode (blue, red in sport, teal in ECO PRO).
   in the speedometer and the tach), only those that show on this car with these settings (`layouts.js` SLOTS, which
   `tools/test_slots.js` checks against what each layout draws). A tap lists the values: the one picked is that
   layout's alone (Settings > slotsBy, a bar on its left); unpicked, a readout is Auto (the gauges the layout's own).
-  The readouts, the small gauges, Centre display and JDM 2's left dial are set here only, not on the
+  The readouts, the small gauges, Centre display, JDM 1's cup and JDM 2's left dial are set here only, not on the
   Settings tab.
 - **Every other place (0.35.0):** each layout's places that had a fixed reading - 90's gauge between the dials (also an
   analog clock, 0.35.1, on the car's own time), 20's
@@ -153,8 +153,8 @@ follows the mode (blue, red in sport, teal in ECO PRO).
   the speed's framed LCD with the main readout and a box of two bar gauges (Small gauge in the speedometer and in the
   tach: Auto the boost or the charge, and the fuel).
 - **JDM 1's water cup, large (0.43.0):** JDM 1's page has a **Water cup view** button: the cup of water on the
-  head unit's screen, as the Water Cup app draws it (no other app needed), sloshing with the car's G (2.2 times it,
-  higher on the outside of the bend; the cup on the cluster itself is gone since 0.69.0, its place the signs'). **Back** (or Signals, Logs) leaves
+  head unit's screen, as the Water Cup app draws it (no other app needed), sloshing with the same G as the cup on the
+  cluster (2.2 times it, higher on the outside of the bend). **Back** (or Signals, Logs) leaves
   it. Worked out every frame, sent only when the water moved and at most 30 frames a second (`cup_view.js`,
   `tools/test_cup_view.js`).
 - **Status, raw values, the renderer and the signal list** moved behind the **Signals** button (its first page).
@@ -426,8 +426,8 @@ head-up display has its own no passing, the cluster the owner's picture; its end
 last read it, up to two (one on most roads). They and the speed limit sign stand in one line, a row (the speed
 limit sign leftmost) or a column (the speed limit sign at the foot), the owner's ask. Where the owner chose the
 places (a layout's signAt, layout_common.fixedGroup, each 6 px clear, else the search): Retro M a row under the M
-stripes below the gear; ID7 M a row across the middle under the speed; JDM 1 a row where its cup of water stood
-(the cup gone, with its setting); Old M and ID6 M a row under the middle display (with the sign on, the display a little higher and
+stripes below the gear; ID7 M a row across the middle under the speed; JDM 1 a row just over its left box (its cup of
+water moved over the right box, the coolant and oil); Old M and ID6 M a row under the middle display (with the sign on, the display a little higher and
 shorter); Track a column left of the speed (the speed a little narrower, the time and temperature lower); Simple a
 row under the speed (the middle trip line under it); JDM 2 a column between the tach and the disc and coolant gauge
 (the G meter and the tach a little smaller, the tach 30 px left). Elsewhere layout_common.signGroup: the first place

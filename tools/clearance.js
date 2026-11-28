@@ -61,6 +61,22 @@ function clashesOf(p, o) {
         if (o && o.centre === 'map' && inB(C.MAP)) out.push('over the map');
         return out;
     }
+    // a cup (JDM 1's, CUP_FS): the points of its outline - its rim's and bottom's ellipses and its sides - every 6 degrees
+    if (p.kind === 'cup' && p.params && p.params.u_cup) {
+        const [cx, ry, aR, aB] = p.params.u_cup, [H, e] = p.params.u_cup2, pts = [];
+        for (let a = 0; a < 360; a += 6) {
+            const t = a * Math.PI / 180;
+            pts.push([p.x + cx + (aR + 1) * Math.cos(t), p.y + ry + e * (aR + 1) * Math.sin(t)], [p.x + cx + (aB + 1) * Math.cos(t), p.y + ry + H + e * (aB + 1) * Math.sin(t)]);
+        }
+        const inB = (b) => pts.some(([x, y]) => x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h);
+        if (inB(C.NOTCH)) out.push('under the cowl');
+        if (C.strip(o) && pts.some(([, y]) => y > C.STRIP_Y)) out.push('over the strip');
+        if (inB(C.TELLTALES)) out.push('over the warning lights');
+        if (LIGHTS && C.TURN_ARROWS.some(inB)) out.push('under a turn arrow');
+        if (LIGHTS && C.SIDE_LIGHTS.some(inB)) out.push('under a side warning light');
+        if (pts.some(([x, y]) => C.inCorner(x, y))) out.push('in a corner');
+        return out;
+    }
     const round = p.kind === 'dial' || p.kind === 'e9x' || p.kind === 'aclock' || p.kind === 'rmdial' || (p.kind === 'jdm' && p.params && p.params.u_mode[0] > 0) || (p.kind === 'mround' && p.params && p.params.u_mode[0] < 1.5);
     // (Retro M's dials: round at u_c in their layer, to their outer ring; the panel's plastic round them a background)
     const rm = p.kind === 'rmdial' && p.params && p.params.u_c && p.params.u_rings;

@@ -1174,6 +1174,28 @@
       "section": "Readouts and gauges"
     },
     {
+      "key": "jdmCup",
+      "label": "JDM 1: cup of water",
+      "type": "choice",
+      "default": "clear",
+      "options": [
+        [
+          "clear",
+          "Clear cup"
+        ],
+        [
+          "on",
+          "Paper cup"
+        ],
+        [
+          "off",
+          "Off"
+        ]
+      ],
+      "section": "Readouts and gauges",
+      "hidden": true
+    },
+    {
       "key": "gScale",
       "profile": "gMax",
       "profileMap": {

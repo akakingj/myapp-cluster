@@ -211,7 +211,7 @@ const byId = (id) => LAYOUTS.find((l) => l.id === id) || LAYOUTS[0];
  * or diesel car (or the engine's focus); STRIP: only with Settings > Bottom strip: the cluster's own (the time's and
  * outside's places). tools/test_slots.js checks the table against what each layout draws.
  */
-const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm', 'leftDial', 'centreView'];
+const SLOT_KEYS = ['infoMain', 'infoA', 'infoB', 'infoLow', 'gaugeSpeed', 'gaugeRpm', 'leftDial', 'jdmCup', 'centreView'];
 // (0.36.1: a plug-in hybrid sets them too: Auto, the default, keeps each layout's own eDrive reading there)
 const ALWAYS = () => true, ENGINE = ALWAYS, STRIP = (o) => stripOn(o), ENGINE_STRIP = STRIP;
 const MAPFORM = (o) => o.centre === 'map' || (STRIP(o) && o.centre === 'stock');
@@ -232,7 +232,7 @@ const SLOTS = {
     id6m: Object.assign({ infoMain: (o) => !MAPFORM(o), centreView: (o) => !MAPFORM(o) }, DIALS, STRIP2),
     // (0.40.0: the main readout under the speed, the boxes' first and last bars; with the map, readouts 1 and 2
     // above it over the car's strip)
-    arc_tach: Object.assign({ infoMain: ALWAYS, infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o) }, DIALS),
+    arc_tach: Object.assign({ infoMain: ALWAYS, infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o), jdmCup: (o) => !MAPFORM(o) }, DIALS),
     // (its left dial: the G meter, a speedometer, the tyres or the temperatures; not with the map or the stock centre)
     // (0.37.0: no readouts at the right beside the strip; with the map, readouts 1 and 2 above it over the car's strip)
     jdm2: Object.assign({ infoA: (o) => ENGINE_STRIP(o) && MAPFORM(o), infoB: (o) => ENGINE_STRIP(o) && MAPFORM(o), leftDial: (o) => (o.centre || 'info') === 'info' }, DIALS),
@@ -272,7 +272,7 @@ const SLOT_LABELS = {
     id6m: { infoA: 'Centre display: top left', infoB: 'Centre display: top right', infoMain: 'Centre display: under the speed',
         gaugeSpeed: 'Small gauge by the speedometer', gaugeRpm: 'Small gauge by the tach' },
     classic: { infoMain: 'Centre readout: above the speed', infoLow: 'Centre readout: under the speed' },
-    arc_tach: { infoMain: 'Centre readout: under the speed', gaugeSpeed: 'Left box: first bar', gaugeRpm: 'Right box: second bar' },
+    arc_tach: { infoMain: 'Centre readout: under the speed', gaugeSpeed: 'Left box: first bar', gaugeRpm: 'Right box: second bar', jdmCup: 'Cup of water' },
     jdm2: { gaugeSpeed: 'Small gauge: right', gaugeRpm: 'Small gauge: below' },
     twin_cowl: { infoA: 'Centre display: bottom left', infoB: 'Centre display: bottom right', infoLow: 'Centre display: under the speed',
         gaugeSpeed: 'Small gauge between the dials: right', gaugeRpm: 'Small gauge between the dials: left' },

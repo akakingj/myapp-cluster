@@ -51,7 +51,7 @@ const STALE_MS = 3000;
 const MIN_GAP_MS = 4;        // a reading's update at most this soon after the last
 const EPS = 0.0015;          // a value moving less than this (of its max) is not sent
 const SWEEP_MS = 700;        // up, then as long back down
-const FS = { flat: SH.FLAT_FS, panel: SH.PANEL_FS, dial: SH.DIAL_FS, band: SH.BAND_FS, text: SH.TEXT_FS, bg: SH.BG_FS, icon: SH.ICON_FS, sign: SH.SIGN_FS, spark: SH.SPARK_FS, car: SH.CAR_FS, leds: SH.LEDS_FS, flag: SH.FLAG_FS, eagles: SH.EAGLE_FS, fireworks: SH.FIREWORKS_FS, road: SH.ROAD_FS, mdash: SH.MDASH_FS, mtach: SH.MTACH_FS, licon: SH.LICON_FS, e9x: SH.E9X_FS, mbar: SH.MBAR_FS, jdm: SH.JDM_FS, mround: SH.MROUND_FS, aclock: SH.ACLOCK_FS, ring: SH.RING_FS, rtach: SH.RTACH_FS, rbox: SH.RBOX_FS, rseg: SH.RSEG_FS, wakaba: SH.WAKABA_FS, rmdial: SH.RMDIAL_FS, rmbg: SH.RMBG_FS };
+const FS = { flat: SH.FLAT_FS, panel: SH.PANEL_FS, dial: SH.DIAL_FS, band: SH.BAND_FS, text: SH.TEXT_FS, bg: SH.BG_FS, icon: SH.ICON_FS, sign: SH.SIGN_FS, spark: SH.SPARK_FS, car: SH.CAR_FS, leds: SH.LEDS_FS, flag: SH.FLAG_FS, eagles: SH.EAGLE_FS, fireworks: SH.FIREWORKS_FS, road: SH.ROAD_FS, mdash: SH.MDASH_FS, mtach: SH.MTACH_FS, licon: SH.LICON_FS, e9x: SH.E9X_FS, mbar: SH.MBAR_FS, jdm: SH.JDM_FS, mround: SH.MROUND_FS, aclock: SH.ACLOCK_FS, ring: SH.RING_FS, rtach: SH.RTACH_FS, rbox: SH.RBOX_FS, rseg: SH.RSEG_FS, cup: SH.CUP_FS, wakaba: SH.WAKABA_FS, rmdial: SH.RMDIAL_FS, rmbg: SH.RMBG_FS };
 /* a piece's program: JDM 2's and ID6 M's kinds one program per mode (shaders.js JDM_FS_MODES), u_mode a constant in it */
 const MODES = { jdm: SH.JDM_FS_MODES, mround: SH.MROUND_FS_MODES };
 const modeOf = (s) => (MODES[s.kind] && s.params && s.params.u_mode ? Math.round(s.params.u_mode[0]) : -1);

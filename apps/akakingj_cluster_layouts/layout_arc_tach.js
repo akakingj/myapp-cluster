@@ -23,7 +23,7 @@ const { PALETTES, elecTxt } = require('./pods');
 /* ---------- 0.40.0: the digital dash ---------- */
 /* after an 80s digital dash: white figures and slats, grey lines on black, the speed and the bars in green on dark
  * LCDs (the 0.40.0 draft was all red) */
-const DASH = { ink: '#f1efe8', line: '#6c6f74', slat: '#383b40', lcd: '#5be596', lcdOff: '#13241a', panel: '#0b0e0d', lamp: '#e2302c', hot: '#e2302c', dark: '#000000' };
+const DASH = { cupWall: '#f3f1ec', cupInner: '#d4d6da', cupEdge: '#5e504a', cupGlass: '#e4ecf4', cupWater: '#3f8fd4', cupFoam: '#86c4f2', ink: '#f1efe8', line: '#6c6f74', slat: '#383b40', lcd: '#5be596', lcdOff: '#13241a', panel: '#0b0e0d', lamp: '#e2302c', hot: '#e2302c', dark: '#000000' };
 /* the LCDs' colour by the look (0.40.2): green in Comfort (and Adaptive), red in Sport, ECO PRO's green-blue in the
  * efficient modes; in Sport the gear goes white at the shift point */
 const LCD = { comfort: {}, sport: { lcd: '#ff3a2e', lcdOff: '#2c0c0a', hot: '#fff1e4' }, efficient: { lcd: '#2fd0bb', lcdOff: '#0b2521' } };
@@ -158,8 +158,8 @@ function dash(o) {
     // the boxes: left a reading and the fuel, right the coolant and a reading (each of the four set on the page:
     // Settings > Small gauge in the speedometer / in the tach for the outer two, the layout's places for the inner)
     const [left, fuel, cool, right] = boxBars(o);
-    // (the cup of water over the left box, 0.41.0 - 0.68: gone, the owner's call - its place the signs', signAt)
-    return scaled(list.concat(gaugeBox('boxL', 168, 236, [left, fuel]), gaugeBox('boxR', 1442, 236, [cool, right])));
+    return scaled(list.concat(gaugeBox('boxL', 168, 236, [left, fuel]), gaugeBox('boxR', 1442, 236, [cool, right])))
+        .concat(o.jdmCup === 'off' ? [] : [cup(o, o.jdmCup !== 'on')]);
 }
 
 /*
@@ -224,6 +224,50 @@ function mapDash(o) {
 }
 
 /*
+ * The cup of water (0.41.0; Settings > JDM 1: cup of water, or the layout's page): a clear cup (0.41.9, the default)
+ * or a paper one standing over the right box (0.69.0; the left one's before), its water sloshing with the car's G - wilder than the G alone would tilt it (0.41.8: 2.2 times, the owner's
+ * call), to the rim and down the far wall. Sideways: higher on the outside of the bend, where the driver is pushed
+ * (0.41.6; the side JDM 2's G meter's dot goes, Settings > JDM 2: G meter, swap left / right), at most about 34
+ * degrees. Fore and aft (0.41.4): braking sends it to the far side (its surface seen taller), accelerating to the near
+ * side (flatter). Each on a spring that rings down after a change (about 1.2 a second, little damped: it sloshes back
+ * a few times), worked out every frame here and sent only when it moves (0.004): nothing while the water lies still.
+ * Shader: shaders.js CUP_FS (the water drawn only inside the cup's mouth: never over its rim). In px on the panel
+ * (after scaled()): over the right box, the coolant and the oil, its middle over the box's - 0.41.3 - 0.68 over the left
+ * box's fuel, mirrored: the speed limit and warning signs there, the owner's call, 0.69.0 -, its rim clear of the
+ * panel's rounded corner (tools/clearance.js: the cup's outline).
+ */
+const CUP = { x: 1491, y: 96, w: 160, h: 137, rim: 26, aR: 56, aB: 40, H: 92, e: 0.42, level: 0.72, maxTilt: 0.6, lonMin: -0.22, lonMax: 0.32, gain: 2.2, clearLevel: 0.5 };
+/** A spring towards its target: step(target, dt ms) -> where it is (rounded to 0.004). */
+function spring(lo, hi) {
+    const W = 2 * Math.PI * 1.2, Z = 0.09;
+    let th = 0, v = 0;
+    return (want, dt) => {
+        for (let left = Math.min(250, dt || 0); left > 0; left -= 8) {
+            const h = Math.min(8, left) / 1000;
+            v += (-W * W * (th - want) - 2 * Z * W * v) * h;
+            th = Math.max(lo, Math.min(hi, th + v * h));
+        }
+        return Math.round(Math.round(th / 0.004) * 0.004 * 1000) / 1000;
+    };
+}
+function cup(o, clear) {
+    const sx = 1, lat = spring(-CUP.maxTilt, CUP.maxTilt), lon = spring(CUP.lonMin, CUP.lonMax);
+    // (the clear cup half full: its water seen whole through the glass, room for the slosh; the paper cup's fuller, its
+    // surface seen through its mouth)
+    const level = clear ? CUP.clearLevel : CUP.level;
+    const gOf = (d, k) => (C.isNum(d[k + 'Z']) ? d[k + 'Z'] : C.isNum(d[k]) ? d[k] : 0);
+    return {
+        key: 'cup', kind: 'cup', x: CUP.x, y: CUP.y, w: CUP.w, h: CUP.h, z: 4,
+        params: { u_cup: [CUP.w / 2, CUP.rim, CUP.aR, CUP.aB], u_cup2: [CUP.H, CUP.e, level, 0], u_lon: [0], u_clear: [clear ? 1 : 0] },
+        colors: (t) => ({ wall: t.cupWall, inner: t.cupInner, edge: clear ? t.cupGlass : t.cupEdge, water: t.cupWater, foam: t.cupFoam }),
+        frame: (d, dt) => ({
+            u_cup2: [CUP.H, CUP.e, level, lat(Math.max(-CUP.maxTilt, Math.min(CUP.maxTilt, Math.atan(CUP.gain * sx * gOf(d, 'gLat')))), dt)],
+            // (the car's longitudinal G: > 0 accelerating, kwfuse.js)
+            u_lon: [lon(Math.max(CUP.lonMin, Math.min(CUP.lonMax, -CUP.gain * gOf(d, 'gLong'))), dt)],
+        }),
+    };
+}
+/*
  * The dash is drawn in design px (x 150..1822, y 132..602) and shown K times, its middle at x 960, its bottom line at
  * y 642 just above the car's strip (layout_common.STRIP_Y 646), its top lines just under the camera cowl, its uprights
  * clear of the panel's corners (tools/clearance.js). K 1: its side boxes clear of the KOMBI's warning lights along the
@@ -244,9 +288,10 @@ function scaled(list) {
 module.exports = {
     id: 'arc_tach',
     title: 'JDM 1',
-    // the speed limit sign and the warning signs in a row where the cup of water stood, over the left box (the
-    // owner's places, 0.69.0), the speed limit sign leftmost, clear of the KOMBI's light at the glass's edge
-    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 244, y: 168 }, [{ x: 340, y: 168 }, { x: 443, y: 168 }])),
+    // the speed limit sign and the warning signs in a row over the left box, just above it (the owner's places,
+    // 0.69.0), the speed limit sign leftmost, clear of the KOMBI's light at the glass's edge; the cup of water over
+    // the right box for them (CUP)
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 244, y: 230 }, [{ x: 340, y: 230 }, { x: 443, y: 230 }])),
     // Settings > Speed limit sign: with the readings in the centre, just above TACH, inside the tach's curve (the owner,
     // 2026-11-26) - the tach's pieces' boxes take in all of that hollow (sliSkip: it keeps clear of the bar and the
     // lines as drawn, checked with tools/preview.js); with the map, by BMW's own place as in the other layouts

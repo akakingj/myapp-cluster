@@ -234,7 +234,7 @@ check('settings in sections: the top lists Show, Start with the car, Layout, Col
     assert.strictEqual(sh.sec, 'Readouts and gauges');
     // (the readouts and the small gauges are set on the page alone: not in the section)
     const keys = sh.entries().map((e) => e.key);
-    ['infoA', 'infoB', 'infoMain', 'infoLow', 'centreView', 'leftDial', 'gaugeSpeed', 'gaugeRpm'].forEach((k) => assert(keys.indexOf(k) < 0, k));
+    ['infoA', 'infoB', 'infoMain', 'infoLow', 'centreView', 'leftDial', 'jdmCup', 'gaugeSpeed', 'gaugeRpm'].forEach((k) => assert(keys.indexOf(k) < 0, k));
     assert.strictEqual(keys[0], 'stripBars');
     sh.focus = 0; sh.choose(); assert.strictEqual(sh.open.key, 'stripBars');
     sh.sub = sh.open.options.findIndex((x) => x[0] !== vals.stripBars); const want = sh.open.options[sh.sub][0]; sh.choose();
