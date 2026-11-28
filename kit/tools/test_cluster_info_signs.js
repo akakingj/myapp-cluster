@@ -99,13 +99,30 @@ check('the Test log\'s recorder (research.js, 1.13.0): the sign services\' every
     r.onHud({ xSpeedLimitAssist: { vSLISpeedValue: 16 }, xNoPassing: { vNPIDistance: 500 } }, Date.UTC(2026, 10, 28, 4, 0, 3));
     r.onHud({ xSpeedLimitAssist: { vSLISpeedValue: 18 }, xNoPassing: { vNPIDistance: 500 } }, Date.UTC(2026, 10, 28, 4, 0, 5));
     r.onHud({ xSpeedLimitAssist: { vSLISpeedValue: 18 }, xNoPassing: { vNPIDistance: 0 } }, Date.UTC(2026, 10, 28, 4, 0, 7));
-    const sec = r.sections();
-    assert.deepStrictEqual(sec[0][1].split('\n'), ['04:00:00 50 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=16',
+    let sec = r.sections();
+    assert.deepStrictEqual(sec[1][1].split('\n'), ['04:00:00 50 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=16',
         '04:00:02 60 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=18']);
-    assert.strictEqual(sec[1][1], 'xSpeedLimitAssist.vSLISpeedValue, xNoPassing.vNPIDistance');
-    assert.deepStrictEqual(sec[2][1].split('\n'), ['04:00:03 60 km/h xNoPassing.vNPIDistance=500', '04:00:07 60 km/h xNoPassing.vNPIDistance=0']);
+    assert.strictEqual(sec[2][1], 'xSpeedLimitAssist.vSLISpeedValue, xNoPassing.vNPIDistance');
+    assert.deepStrictEqual(sec[3][1].split('\n'), ['04:00:03 60 km/h xNoPassing.vNPIDistance=500', '04:00:07 60 km/h xNoPassing.vNPIDistance=0']);
+    /* (1.13.2) no passing's fields on their own: BMW's own state (TrafficSignDisplayControl) and the head-up display's
+       NPI (DisplayDataServer2, its no passing fields only), not pushed out by the camera's many events */
+    const TDC = 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl', D2 = 'de.bmw.infotainment.displaydata.DisplayDataServer2';
+    const at = (s) => Date.UTC(2026, 10, 28, 4, 1, s);
+    r.onValue(TDC, 'displaySpeedLimitAndNoPassingRestriction', { displayNoPassingRestriction: 'UEBERHOLVERBOT_PKW', displayRemainingDistanceNoPassingRestriction: 800 }, at(0));
+    r.onValue(D2, 'functionalLibraryData', { npiData: { npiState: 'DISPLAY', npiLabel: 'KOREA' }, vnpiDistance: 'VNPI_DIST_800_M', speedHUD: 80 }, at(1));
+    r.onValue(D2, 'functionalLibraryData', { npiData: { npiState: 'DISPLAY', npiLabel: 'KOREA' }, vnpiDistance: 'VNPI_DIST_800_M', speedHUD: 81 }, at(2));
+    for (let i = 0; i < 100; i++) r.onValue('de.bmw.environmentalmodel.SignRecognitionFrontCamera', 'TrafficSignRecognitionFrontCamera', { trafficSign: [{ type: 'DS_ROAD_WORKS', value: i }] }, at(3));
+    r.onValue(TDC, 'displaySpeedLimitAndNoPassingRestriction', { displayNoPassingRestriction: 'KEIN_UEBERHOLVERBOT_ERKANNT', displayRemainingDistanceNoPassingRestriction: 0 }, at(9));
+    sec = r.sections();
+    assert.deepStrictEqual(sec[0][1].split('\n'), [
+        '04:01:00 60 km/h TrafficSignDisplayControl.displaySpeedLimitAndNoPassingRestriction: displayNoPassingRestriction=UEBERHOLVERBOT_PKW, displayRemainingDistanceNoPassingRestriction=800',
+        '04:01:01 60 km/h DisplayDataServer2.functionalLibraryData: npiData.npiState=DISPLAY, npiData.npiLabel=KOREA, vnpiDistance=VNPI_DIST_800_M',
+        '04:01:09 60 km/h TrafficSignDisplayControl.displaySpeedLimitAndNoPassingRestriction: displayNoPassingRestriction=KEIN_UEBERHOLVERBOT_ERKANNT, displayRemainingDistanceNoPassingRestriction=0']);
+    assert.ok(!/speedHUD|DisplayDataServer2/.test(sec[1][1]), 'the head-up display\'s whole data is not kept');
+    assert.ok(/TrafficSignDisplayControl/.test(sec[1][1]) && /TrafficSignRecognition\.TrafficSignRecognition/.test(sec[1][1]), 'each service\'s changes kept apart: not pushed out by the camera\'s');
     r.reset();
     assert.strictEqual(r.sections()[0][1], '(none yet)');
+    assert.strictEqual(r.sections()[1][1], '(none yet)');
 });
 
 check('pictures: South Korea\'s own signs - the types the camera read get theirs; another warning 위험 ("!")', () => {

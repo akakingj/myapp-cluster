@@ -77,6 +77,11 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   - the sign services' every field as it changed (`research.js`: a time's or a counter's change is no change) and the
     HUD data's field names and its fields about passing, tunnels, lane changes and restrictions as they changed (BMW's
     own no passing sign shows there with its distance from the car's map) - to find what ends a no passing zone;
+    1.13.2: South Korea has no end of no passing sign (the car's map ends it), so the fields the car's catalog has
+    for it are kept on their own, every change (the last 80): TrafficSignDisplayControl's
+    displayNoPassingRestriction and its remaining distance, TrafficSignRecognition's recognitionNoPassing,
+    displayTextMessageNpi and displaySpeedNPIDistance, and DisplayDataServer2's npiData and vnpiDistance (the
+    head-up display's own NPI; read for this alone); each sign service's changes kept apart (the last 30 each);
   - the sign definitions read once at the start (`signs.js`): the camera's sign types, the sign services' definitions
     and the catalog's services and members named for no passing or the map's look ahead.
   The page shows the checks under way: the time, what came, the HUD data's speed limit.

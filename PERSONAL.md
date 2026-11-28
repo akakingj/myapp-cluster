@@ -394,6 +394,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   DS_ROAD_NARROW_*, DS_CROSS_ROAD*, DS_ROAD_FROM_*, DS_CONCAVE, DS_SNOW, DS_GRAVEL, DS_TWO_WAY_TRAFFIC,
   DS_LOW_FLYING_AIRCRAFT. The TrafficSignRecognition event also has recognitionNoPassing, displayTextMessageNpi and
   displaySpeedNPIDistance (raw UInt8s).
+- Info 1.13.2 (Nov 28 2026): South Korea has no end of no passing sign; the navigation's map ends the zone (the owner).
+  So the Test log keeps every change of the no passing fields on their own (the last 80): TrafficSignDisplayControl
+  displayNoPassingRestriction + remaining distance, TrafficSignRecognition recognitionNoPassing / displayTextMessageNpi /
+  displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
+  catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
+  events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
   가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -
