@@ -309,12 +309,12 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(l && l.visible && l.opacity > 0, JSON.stringify(l));
         assert(l.x >= 373 + 6, 'clear of "km/h" (x ~373)');
         assert(l.x + l.w <= HUD_SEEN.x + HUD_SEEN.w, 'the row ends on the glass');
-        // 1.13.0: all of it above y 386, the lowest this app's panel showed whole (a triangle was cut at ~390,
-        // HUD photo 2026-11-28); the first row on that line, its sign by BMW's speed (its digits y ~359..411)
-        assert(l.y + l.h <= 386, 'the layer ends at y ' + (l.y + l.h) + ', past 386: its bottom cut on the HUD');
+        // 1.13.0: all of it on the glass a G20 shows (HUD_SEEN, to y 356: a triangle in BMW's speed row, y 357..419,
+        // showed only its top part on a HUD photo, 2026-11-28); the lowest on the panel's line, right of BMW's speed
+        assert(l.y + l.h <= HUD_SEEN.y + HUD_SEEN.h, 'the layer ends at y ' + (l.y + l.h) + ', past the glass: its bottom cut on the HUD');
         assert(l.y >= HUD_SEEN.y, 'and starts on the glass');
         const a = ov.roadSigns().at[0];
-        assert(a.y + a.h <= 386 && a.y + a.h > 359, 'the first row by BMW\'s speed: ' + JSON.stringify(a));
+        assert(a.y + a.h <= HUD_SEEN.y + HUD_SEEN.h && a.y + a.h >= 350, 'the first at the glass\'s bottom: ' + JSON.stringify(a));
         assert.strictEqual(l.px, 1);
         ov._signsTick(); assert.strictEqual(l.px, 1);
         list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick(); assert.strictEqual(l.px, 2);
@@ -347,7 +347,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         const o = ov.roadSigns(), b = ov._hudBadge();
         assert(o.types.length >= 2, 'two signs shown, with the panel up: ' + JSON.stringify(o));
         assert.deepStrictEqual(o.types, ['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E'].slice(0, o.types.length), 'the first of the list first');
-        o.at.forEach((r) => assert(r.y >= HUD_SEEN.y && r.y + r.h <= 386 && r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w, JSON.stringify(r)));
+        o.at.forEach((r) => assert(r.y >= HUD_SEEN.y && r.y + r.h <= HUD_SEEN.y + HUD_SEEN.h && r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w, JSON.stringify(r)));
         assert(o.at.some((r) => r.y < o.at[0].y), 'what reaches the panel goes in the row above: ' + JSON.stringify(o.at));
         assert(b, 'the panel on the HUD'); o.at.forEach((r) => assert(!(r.x < b.x + b.w && r.x + r.w > b.x && r.y < b.y + b.h && r.y + r.h > b.y), 'over the panel: ' + JSON.stringify([r, b])));
         settings.v.show = 'off'; fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'hud' })); ov._read(); await wait(50); ov._tick && ov._tick();
@@ -375,7 +375,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
                 assert(!over(r, b), 'on the panel: ' + JSON.stringify([r, b]));
                 assert(!over(r, n), 'on the directions: ' + JSON.stringify([r, n]));
                 assert(!lamps.some((k) => over(r, k)), 'on the turn signals: ' + JSON.stringify(r));
-                assert(r.y + r.h <= 386 && r.y >= HUD_SEEN.y, JSON.stringify(r));
+                assert(r.y + r.h <= HUD_SEEN.y + HUD_SEEN.h && r.y >= HUD_SEEN.y, JSON.stringify(r));
             });
             o.at.forEach((r, i) => o.at.slice(i + 1).forEach((q) => assert(!over(r, q), 'one on another: ' + JSON.stringify([r, q]))));
         }

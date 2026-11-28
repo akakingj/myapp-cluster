@@ -82,13 +82,13 @@ const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit 
 // (RPM, KGM, BOOST: its text x 474..651, y 306..339) and lane change sign (x 200..234, y 104..148) as the yardstick
 // (0.85 scene px a photo px): BMW's "km/h" ends at x ~373, its digits' row is y ~359..411 (middle ~388), its limit
 // sign ~60 across. (Below HUD_SEEN's 356: BMW's own speed is drawn there, so a G20 shows it.)
-// 1.13.0: the lowest sign's bottom at y 384, not the speed row's middle 388 (signs from y 357 to 419 then): on a HUD
-// photo (2026-11-28) a triangle showed only its top part, while this app's panel, its bottom at 386 there, showed
-// whole. So the signs end where the panel can, beside it: each sign right of the one before, or where that is
-// taken (the panel, the directions, the glass's end) the lowest free place at x 380 above, as high as just under
-// the turn signal arrows and lane change signs. With the panel to the glass (RPM, KGM, BOOST: x 464..672) two
-// signs stand one above the other left of it; a wider panel (the kW too, from x 405) puts them above the panel.
-const SIGNS = { x: 380, bottom: 384, h: 60, wmax: 70, gap: 6 };
+// 1.13.0: all of every sign on the glass a G20 shows (HUD_SEEN, to y 356), the lowest's bottom at 352 with the
+// panel's (signs from y 357 to 419 before: on a HUD photo, 2026-11-28, a triangle showed only its top part; below
+// 356 only BMW's own speed is known to show). Each sign right of the one before, or where that is taken (the
+// panel, the directions, the glass's end) the lowest free place at x 380 above, as high as just under the turn
+// signal arrows and lane change signs. With the panel to the glass (RPM, KGM, BOOST: x 464..672) two signs stand
+// one above the other left of it; a wider panel (the kW too, from x 405) puts them above the panel.
+const SIGNS = { x: 380, bottom: HUD_SEEN.y + HUD_SEEN.h - 4, h: 60, wmax: 70, gap: 6 };
 const SIGNS_W = HUD_SEEN.x + HUD_SEEN.w - SIGNS.x, SIGNS_H = SIGNS.h + 2;
 const SIGNS_TOP = LCW.y + LCW.h + 4, SIGNS_LH = SIGNS.bottom - SIGNS_TOP;   // the layer: under the lamps to the bottom
 const SIGNS_MS = 250;
