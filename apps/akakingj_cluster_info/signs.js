@@ -38,7 +38,7 @@ const DEF_IFACES = ['de.bmw.dass.TrafficSignRecognition', CAM_IFACE, 'de.bmw.das
     // (the head-up display's data, which shows BMW's own no passing: its names about signs, passing and lanes only - the
     // whole is long)
     ['de.bmw.infotainment.displaydataserver.DisplayDataServer', /pass|overtak|npi|ueberhol|tunnel|lane|restrict|sli|vza|sign|limit/i]];
-const MAX_SIGNS = 4;
+const MAX_SIGNS = 3;              // on the HUD at most (the owner, 2026-11-28: 3, not 4)
 const ART = require('./sign_art');
 const pics = {};
 
@@ -74,7 +74,7 @@ function startSigns(ctx, log, opts) {
     const now = opts.now || Date.now;
     const signals = opts.signals || ctx.signals;
     const kitDir = opts.kitDir || path.join(__dirname, 'kit');
-    const tracker = makeTracker(opts.showMs, opts.max);
+    const tracker = makeTracker(opts.showMs, opts.max || MAX_SIGNS);
     let state = 'not declared', seen = 0;
     const types = {};                // each type seen, how many times (for the page and the log)
     const listeners = {};            // member -> [fn] (this and the survey)

@@ -78,7 +78,7 @@ const NAV_RIGHT = 672, NAV_BOTTOM = 356, NAV_GAP = 4;
 const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit sign at the bottom left (Redline's hud.js)
 // the road signs the camera reads (signs.js, 1.12.0): right of BMW's own speed readout, in its row (1.13.0: raised, below), as high as its
 // limit sign (60: a round sign 60 across, a triangle 60 tall and 69 wide), in a row to the right, as many as fit on
-// the glass: four triangles, 6 apart, from x 380 (7 past "km/h") to 674 (the glass a G20 shows ends at 676). Measured on the owner's G20 HUD photo (2026-11-27) with this app's panel
+// the glass (1.13.0: three at most, signs.js MAX_SIGNS): triangles 6 apart, from x 380 (7 past "km/h") to 674 (the glass a G20 shows ends at 676). Measured on the owner's G20 HUD photo (2026-11-27) with this app's panel
 // (RPM, KGM, BOOST: its text x 474..651, y 306..339) and lane change sign (x 200..234, y 104..148) as the yardstick
 // (0.85 scene px a photo px): BMW's "km/h" ends at x ~373, its digits' row is y ~359..411 (middle ~388), its limit
 // sign ~60 across. (Below HUD_SEEN's 356: BMW's own speed is drawn there, so a G20 shows it.)
@@ -762,7 +762,7 @@ function startOverlay(ctx, lv, opts) {
         const free = (r) => r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w && r.y >= SIGNS_TOP &&
             !keep.some((b) => r.x < b.x + b.w + 4 && r.x + r.w + 4 > b.x && r.y < b.y + b.h + 4 && r.y + r.h + 4 > b.y);
         const out = [];
-        for (const t of list.slice(0, SG.MAX_SIGNS || 4)) {
+        for (const t of list.slice(0, SG.MAX_SIGNS || 3)) {
             const w = SG.signWidth(t), last = out[out.length - 1];
             let r = last ? { x: last.x + last.w + SIGNS.gap, y: last.y, w, h: SIGNS_H } : null;
             if (!r || !free(r)) {

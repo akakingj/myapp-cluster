@@ -320,10 +320,12 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick(); assert.strictEqual(l.px, 2);
         { const o = ov.roadSigns(); assert.deepStrictEqual([o.shown, o.types], [true, ['DS_ANIMAL_CROSSING', 'GIVE_WAY']]);
           assert.strictEqual(o.at[0].y, o.at[1].y, 'in one row, the first left'); assert(o.at[0].x < o.at[1].x); }
-        // as many as fit on the glass: four triangles at the limit sign's size, not five
+        // three at most (the owner, 1.13.0), in a row on the glass
+        assert.strictEqual(S.MAX_SIGNS, 3);
         list = ['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E']; ov._signsTick();
-        assert.deepStrictEqual(ov.roadSigns().types, ['DS_A', 'DS_B', 'DS_C', 'DS_D']);
-        assert(SIGNS.x + 4 * S.signWidth('DS_A') + 3 * SIGNS.gap <= HUD_SEEN.x + HUD_SEEN.w);
+        assert.deepStrictEqual(ov.roadSigns().types, ['DS_A', 'DS_B', 'DS_C']);
+        assert(new Set(ov.roadSigns().at.map((r) => r.y)).size === 1, 'in one row');
+        assert(SIGNS.x + 3 * S.signWidth('DS_A') + 2 * SIGNS.gap <= HUD_SEEN.x + HUD_SEEN.w);
         list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick();
     });
     check('gone, off in the settings, or the HUD another app\'s: hidden', () => {
@@ -352,7 +354,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(b, 'the panel on the HUD'); o.at.forEach((r) => assert(!(r.x < b.x + b.w && r.x + r.w > b.x && r.y < b.y + b.h && r.y + r.h > b.y), 'over the panel: ' + JSON.stringify([r, b])));
         settings.v.show = 'off'; fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'hud' })); ov._read(); await wait(50); ov._tick && ov._tick();
         t += 10; ov._signsTick();
-        assert.strictEqual(ov.roadSigns().types.length, 4, 'all that fit on the glass with the panel gone');
+        assert.strictEqual(ov.roadSigns().types.length, 3, 'three, with the panel gone');
     });
 
     await acheck('no map on the HUD, the panel (three values, with the kW and without) and the directions on: the signs on neither, nor on the turn signals', async () => {
