@@ -369,6 +369,7 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   makeTracker; Info's HUD the same. No passing on the cluster stays, first, till its zone ends: an end sign
   (road_signs.npEnd), or 3 km driven since its sign (makeZone; the end's signal not known yet). The Logs' --- sli ---
   keeps every field of TrafficSignRecognition as it changes (the last 12), to find where the zone's end is.
+  Info 1.12.3 also logs, once at the start, every name in the sign services' definitions (`sign definitions:`).
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
   가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -

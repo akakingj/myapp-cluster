@@ -153,6 +153,20 @@ function typeNames(cfg) {
     walk(cfg, 0);
     return Array.from(new Set(best));
 }
+/** Every name in an interface config, in order, once: its members', its data's fields', its enumerations' values -
+ * what an event can carry (for the Logs: where no passing's end may be, 2026-11-28). */
+function defNames(cfg) {
+    const out = [], seen = new Set(), objs = new Set();
+    const add = (v) => { if (typeof v === 'string' && /^[A-Za-z][A-Za-z0-9_]{1,63}$/.test(v) && !seen.has(v)) { seen.add(v); out.push(v); } };
+    const walk = (o, d) => {
+        if (!o || typeof o !== 'object' || d > 14 || objs.has(o)) return;
+        objs.add(o);
+        if (Array.isArray(o)) o.forEach((e) => { add(e); walk(e, d + 1); });
+        else Object.keys(o).forEach((k) => { add(k); add(o[k]); walk(o[k], d + 1); });
+    };
+    walk(cfg, 0);
+    return out;
+}
 /** Names in lines of at most n letters (the log keeps 200 a line). */
 function chunk(list, n) {
     const out = [];
@@ -162,4 +176,4 @@ function chunk(list, n) {
     return out;
 }
 
-module.exports = { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, artOf, ART_OF, typeNames, chunk };
+module.exports = { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, defNames, artOf, ART_OF, typeNames, chunk };

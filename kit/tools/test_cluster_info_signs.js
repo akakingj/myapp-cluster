@@ -216,7 +216,17 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert.deepStrictEqual(S.typeNames({ a: { GIVE_WAY: 1, DS_Y: 2 } }), ['GIVE_WAY', 'DS_Y']);
         assert.deepStrictEqual(S.typeNames({ units: ['KM_H', 'MPH'] }), []);
         const sig = fakeSignals(), lg = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.push('WARN ' + m); } };
-        const sg = S.startSigns({ signals: sig }, lg, { kitDir: kitWith([CAM]), loadConfig: (i) => { assert.strictEqual(i, S.CAM_IFACE); return cfg; } });
+        // (and the sign services' definitions, once: the camera's and TrafficSignRecognition's; TrafficSignDisplayControl
+        // not in this install)
+        const tsrCfg = { events: { TrafficSignRecognition: { type: 'struct', members: ['presentClassLimitSpeed', 'presentNoPassing'] } },
+            types: { E_NoPassing: { kind: 'enum', values: [{ name: 'NO_PASSING_INACTIVE' }, { name: 'NO_PASSING_ACTIVE' }] } } };
+        const asked = [];
+        const sg = S.startSigns({ signals: sig }, lg, { kitDir: kitWith([CAM]), loadConfig: (i) => {
+            asked.push(i);
+            if (i === S.CAM_IFACE) return cfg;
+            if (i === 'de.bmw.dass.TrafficSignRecognition') return tsrCfg;
+            throw new Error('not declared');
+        } });
         await wait();
         const st = sg.status();
         assert.strictEqual(st.carTypes.length, 46);
@@ -226,6 +236,11 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(typeLines.length > 1 && typeLines.every((l) => l.length <= 200), 'chunked: ' + typeLines.map((l) => l.length));
         const back = typeLines.map((l) => l.replace(/^road signs: types \d+: /, '')).join(', ').split(', ');
         assert.deepStrictEqual(back, st.carTypes, 'the whole list, in order');
+        assert.deepStrictEqual(asked, [S.CAM_IFACE, 'de.bmw.dass.TrafficSignRecognition', S.CAM_IFACE, 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl']);
+        assert(lg.lines.indexOf('sign definitions: TrafficSignRecognition, 15 names') >= 0, lg.lines.filter((l) => /definitions/.test(l)).join(' | '));
+        assert(/presentNoPassing.*NO_PASSING_ACTIVE/.test(lg.lines.filter((l) => /^sign definitions: TrafficSignRecognition \d+: /.test(l)).join(' ')), 'its fields and their values');
+        assert(lg.lines.some((l) => /^sign definitions: TrafficSignDisplayControl not in this install \(not declared\)$/.test(l)));
+        assert(lg.lines.filter((l) => /^sign definitions: /.test(l)).every((l) => l.length <= 200));
         // no config: said once, nothing else
         const sg2 = S.startSigns({ signals: fakeSignals() }, lg, { kitDir: kitWith([CAM]), loadConfig: () => { throw new Error('no SOME/IP config'); } });
         await wait();

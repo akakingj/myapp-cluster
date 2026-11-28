@@ -32,7 +32,9 @@ try { fit = require('./kit/survey_fit'); } catch (e) { /* an older kit */ }
 /* ---------- drawing: South Korea's own signs (sign_art.js, tools/make_sign_art.py) ---------- */
 const zlib = require('zlib');
 const RS = require('./road_signs');
-const { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, wanted, makeTracker, artOf, typeNames, chunk } = RS;
+const { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, wanted, makeTracker, artOf, typeNames, defNames, chunk } = RS;
+/* the services whose definitions go to the log once (1.12.3, parked: where no passing's end may be) */
+const DEF_IFACES = ['de.bmw.dass.TrafficSignRecognition', CAM_IFACE, 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl'];
 const MAX_SIGNS = 4;
 const ART = require('./sign_art');
 const pics = {};
@@ -81,12 +83,29 @@ function startSigns(ctx, log, opts) {
     function readTypes() {
         if (carTypes || !item) return;
         let cfg = null;
-        try { cfg = (opts.loadConfig || signals.loadConfig)(CAM_IFACE); } catch (e) { carTypes = []; log.info('road signs: the car\'s list of sign types not readable (' + e.message + ')'); return; }
+        try { cfg = (opts.loadConfig || signals.loadConfig)(CAM_IFACE); } catch (e) { carTypes = []; log.info('road signs: the car\'s list of sign types not readable (' + e.message + ')'); readDefs(); return; }
         carTypes = typeNames(cfg);
-        if (!carTypes.length) { log.info('road signs: no list of sign types in the camera\'s interface config'); return; }
+        if (!carTypes.length) { log.info('road signs: no list of sign types in the camera\'s interface config'); readDefs(); return; }
         const shown = carTypes.filter(wanted), noArt = shown.filter((t) => artOf(t) === 'danger' && !/^DS_DANGER|GENERAL|OTHER/.test(t));
         log.info('road signs: this car\'s camera knows ' + carTypes.length + ' sign types, ' + shown.length + ' drawn (' + noArt.length + ' as "!")');
         chunk(carTypes, 180).forEach((l, i) => log.info('road signs: types ' + (i + 1) + ': ' + l));
+        readDefs();
+    }
+    /* every name in the definitions of the sign services this install has (their interface configs, made at install from
+       the car's catalog: the survey's), once, in lines the Logs' codes keep whole, at most 40 a service - what the
+       TrafficSignRecognition event can carry besides the limit (no passing's end, 2026-11-28) */
+    let defsRead = false;
+    function readDefs() {
+        if (defsRead) return;
+        defsRead = true;
+        DEF_IFACES.forEach((iface) => {
+            const short = iface.split('.').pop();
+            let cfg = null;
+            try { cfg = (opts.loadConfig || signals.loadConfig)(iface); } catch (e) { log.info('sign definitions: ' + short + ' not in this install (' + e.message + ')'); return; }
+            const names = defNames(cfg), lines = chunk(names, 140);
+            log.info('sign definitions: ' + short + ', ' + names.length + ' names' + (lines.length > 40 ? ' (the first 40 lines)' : ''));
+            lines.slice(0, 40).forEach((l, i) => log.info('sign definitions: ' + short + ' ' + (i + 1) + ': ' + l));
+        });
     }
 
     let item = null;
