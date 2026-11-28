@@ -96,6 +96,8 @@ mgu.run({
          * the time, and a driver seen again gets theirs back; one seen for the first time keeps what is set. */
         const PROFILE_KEYS = ['show', 'place', 'slot1', 'slot2', 'slot3', 'bar', 'turnSignals', 'hudBrightness', 'nightDim'];
         const PROFILE_FILE = path.join(ctx.dataDir, 'profiles.json');
+        // (1.14.3) the panel "Where the Waze map is" is no more: one saved so is on the HUD
+        if (settings.get('show') === 'map') settings.set('show', 'hud');
         let profiles = {}, applying = false;
         try { profiles = JSON.parse(fs.readFileSync(PROFILE_FILE, 'utf8')) || {}; } catch (e) { /* none yet */ }
         const saveProfiles = () => { try { fs.writeFileSync(PROFILE_FILE, JSON.stringify(profiles)); } catch (e) { log.warn('profiles: ' + e); } };
@@ -106,6 +108,7 @@ mgu.run({
             const saved = profiles[id];
             if (saved) {
                 applying = true;
+                if (saved.show === 'map') saved.show = 'hud';      // (1.14.3: no Waze map place any more)
                 PROFILE_KEYS.forEach((k) => { if (saved[k] !== undefined && saved[k] !== settings.get(k)) settings.set(k, saved[k]); });
                 applying = false;
                 log.info('driver profile ' + id + ': their settings');
@@ -277,6 +280,18 @@ mgu.run({
                 onValue: (iface, member, v, t) => research.onValue(iface, member, v, t) });
         } catch (e) { log.warn('signal survey: ' + e); }
         const KO = /^ko/.test((() => { try { return require('./kit/i18n').getLanguage(); } catch (e) { return 'en'; } })());
+        /* [Show on the HUD] (1.14.3, the owner's: the panel on the HUD or off from the page's left column; "Where the Waze
+           map is" gone from Settings > Show the panel - not used: a setting or a driver's saved one of it is the HUD) */
+        let hudShown = null;
+        const hudLabel = () => {
+            const lab = settings.get('show') === 'off' ? 'Show on the HUD: off' : 'Show on the HUD: on';
+            if (lab === hudShown) return Promise.resolve();
+            hudShown = lab;
+            return ui.text('BTN_HUD', lab);
+        };
+        ui.onClick('BTN_HUD', () => { settings.set('show', settings.get('show') === 'off' ? 'hud' : 'off'); hudLabel(); return render(); });
+        settings.onChange((k) => { if (k === 'show') hudLabel(); });
+        hudLabel();
         let shownLabel = null;
         const testLabel = () => {
             const lab = testOn() ? 'Test log: end and show' : 'Test log';
@@ -326,7 +341,7 @@ mgu.run({
             const st = (k) => sigStatus[k] || 'waiting';
             const provs = providers.list(), pnames = Object.keys(provs).map((k) => provs[k]);
             return [
-                ['Shown', settings.display('show') + (settings.get('show') === 'off' ? '' : ', ' + settings.display('place').toLowerCase())
+                ['Shown', settings.display('show')
                     + '   ·   Waze map: ' + (ov ? ov.map : '--') + '   ·   Cluster renderer: ' + (overlayError ? 'error: ' + overlayError : ov ? ov.renderer : 'not started')
                     + '   ·   Directions: ' + (navError ? 'error: ' + navError : navMode() === 'off' ? 'off' : !tracker || !tracker.routing() ? 'no route' : overlay && overlay.nav().shown ? 'on the HUD' : 'route, not shown (panel not on the HUD)')],
                 ['Apps providing', (pnames.length ? pnames.join(', ') : 'none') + (pw ? '   ·   power ' + pw.text + ' kW' : '') + '   (folder ' + DIR + ')'],

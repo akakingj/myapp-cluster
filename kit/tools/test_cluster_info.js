@@ -134,7 +134,19 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
     });
     S.slot1 = 'power';
 
-    // the panel goes: the provider stops and removes its file
+    // (1.14.3) the panel on the HUD by default ("Where the Waze map is" gone); [Show on the HUD] turns it off and on
+    check('Settings > Show the panel: the HUD or off, the HUD at first; Panel position hidden; [Show on the HUD] first in the left column', () => {
+        const sh = SPEC.settings.find((x) => x.key === 'show');
+        assert.deepStrictEqual([sh.default, sh.options.map((o) => o[0])], ['hud', ['hud', 'off']]);
+        assert.strictEqual(SPEC.settings.find((x) => x.key === 'place').hidden, true);
+        assert.strictEqual(SPEC.screens[0].buttons[0][0], 'BTN_HUD');
+    });
+    await clicks.BTN_HUD();
+    check('[Show on the HUD] pressed: off', () => assert.strictEqual(S.show, 'off'));
+    await clicks.BTN_HUD();
+    check('pressed again: on the HUD', () => assert.strictEqual(S.show, 'hud'));
+    // the panel goes (turned off): the provider stops and removes its file
+    S.show = 'off';
     fs.writeFileSync(process.env.WOC_STATUS, JSON.stringify({ state: 'idle', target: 'map', hud_width_pct: 0 }));
     await sleep(4500);
     check('panel down: wanted.json goes stale, so the provider stops and removes its file', () => assert(!wanted() && !fs.existsSync(prov.file)));

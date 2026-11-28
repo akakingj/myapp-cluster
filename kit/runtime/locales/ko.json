@@ -2820,5 +2820,8 @@
   "Road signs": "도로 표지판",
   "Test log": "테스트 로그",
   "Test log: end and show": "테스트 끝내고 보기",
-  "No stopping signs": "주정차 단속 표지"
+  "No stopping signs": "주정차 단속 표지",
+  "Show on the HUD": "HUD에 표시",
+  "Show on the HUD: on": "HUD에 표시: 켜짐",
+  "Show on the HUD: off": "HUD에 표시: 꺼짐"
 }

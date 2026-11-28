@@ -401,6 +401,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.3, Layouts 0.70.2, Centre 0.16.17 (Nov 28 2026; Layouts and Centre: the Korean catalog only): [Show on the HUD] first in the page's left column (Settings > Show the panel: on the HUD
+  or off; the button's label says which, 켜짐 / 꺼짐); "Where the Waze map is" taken out of Show the panel and Panel
+  position hidden (the owner doesn't use them; a saved "map", the app's or a driver profile's, becomes the HUD).
 - Info 1.14.2 (Nov 28 2026): the camera's traffic lights looked for, read only, not shown - the G20's catalog has
   de.bmw.environmentalmodel.TrafficLightRecognitionFrontCameraLegacy (event RecognitionTrafficLightCamera: UInt8s
   trafficLightID 63, PositionX / Y / Z 255, Status, Arrow, IndicateDirection, Color, qualityRecognitionTrafficLight 15 -

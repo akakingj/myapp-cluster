@@ -10,7 +10,9 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   battery temperature. Any app can add values the same way. Optionally (Settings > Thin kW bar along the
   bottom) a slim centre-zero kW bar runs just under the panel, clear of its values, the width of all three
   slots (whether or not one of them is the kW meter): use to the right, recuperation to the left in green.
-- **Where:** where the Waze map is (cluster or HUD), or always on the HUD; at the bottom or top of the map.
+- **Where:** on the HUD, or off - [Show on the HUD] at the top of the page's left column turns it on and off (1.14.3,
+  the owner's: "Where the Waze map is" and the panel's position over the map left out of Settings, not used; one saved
+  so is on the HUD).
   It follows Robert's Waze on cluster (robertnisipeanu/idrive-apps), with the map on the cluster, the HUD or
   both (then on the cluster), and the HUD map's size and position as set there. With no Waze map on the HUD,
   the panel there is sized to the glass instead (up to 58 of the HUD's 480 high, at the bottom right of what a
