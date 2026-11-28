@@ -390,6 +390,7 @@ function scaled(p, f) {
 function gearOf(d) {
     if (d.stage === 'P' || d.stage === 'R' || d.stage === 'N') return d.stage;
     if (d.gear === -1) return 'R';
+    if (d.mode === 'B') return 'B';   // (an electric car's B: alone)
     const g = isNum(d.gear) && d.gear > 0 ? String(d.gear) : '';
     return (d.mode === 'S' || d.mode === 'M' ? d.mode : 'D') + g;
 }

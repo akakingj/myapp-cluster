@@ -4,7 +4,7 @@
  * temperatures °C, pressures bar, torque Nm, power kW.
  *
  *   car signals (kit/car.js): speed, rpm, gear, stage, oil, coolant, torque, g (long / lat)
- *   MDrive.dataDisplayGearbox: the S / M programme
+ *   MDrive.dataDisplayGearbox: the S / M programme (and an electric car's B)
  *   EnvironmentalInformation.ExteriorTemperature: outside
  *   BasicDataSet.basicDataSet: gearbox oil
  *   Efficiencytainment2.statusBatteryTemperature: the battery's temperature (avg / min / max)
@@ -36,7 +36,8 @@ const Awake = require('./kit/awake');
 const clock = require('./clock');
 
 const isNum = (v) => typeof v === 'number' && isFinite(v);
-const PROGRAMS = { S_MINUS_PROGRAMM: 'S', M_MINUS_PROGRAMM: 'M', 1: 'S', 2: 'M' };
+// (B: an electric car's B, B_PROGRAMM, 5 in the car's catalog - shown as B alone, layout_common.gearText)
+const PROGRAMS = { S_MINUS_PROGRAMM: 'S', M_MINUS_PROGRAMM: 'M', B_PROGRAMM: 'B', 1: 'S', 2: 'M', 5: 'B' };
 const DME_KEYS = ['iat', 'hpfp', 'lpfp', 'timing', 'boostCtl', 'oilPress', 'volts', 'egs', 'pedal', 'throttle', 'tank'];
 /* (read twice a round while shown: they move with the right foot) */
 const FAST_KEYS = ['pedal', 'throttle'];

@@ -401,6 +401,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Layouts 0.71.1, Centre 0.16.22 (Nov 29 2026): an electric car's B - MDrive.dataDisplayGearbox's B_PROGRAMM (5 in
+  the car's catalog), the programme its selector shows as B - read as B and shown as B alone where a layout or the
+  Centre's top shows the gear (before: D and the gear's number). Not seen on a car yet.
 - Layouts 0.71.0, Centre 0.16.21, Info 1.14.11 (Nov 28 2026; Centre: the shared renderer, Centre and Info: the Korean
   catalog only): a new layout, **ADAS** (the owner's plan of the night's four logs, 2-D, its first part): the cluster as
   one wide night road after the new cars' driving-assistant views, no gauges - the sky, the horizon's glow, hills, the

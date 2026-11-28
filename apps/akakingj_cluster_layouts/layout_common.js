@@ -112,6 +112,8 @@ const tempFrac = (c) => (isNum(c) ? Math.max(0, Math.min(1, (c - 40) / 100)) : 0
 function gearText(d) {
     if (d.stage === 'P' || d.stage === 'R' || d.stage === 'N') return d.stage;
     if (d.gear === -1) return 'R';
+    // (an electric car's B, its selector's programme: B alone, as its own cluster shows it)
+    if (d.mode === 'B') return 'B';
     const g = isNum(d.gear) && d.gear > 0 ? String(d.gear) : '';
     const mode = d.mode === 'S' || d.mode === 'M' ? d.mode : 'D';
     return d.stage === 'D' || g || d.mode ? mode + g : '-';

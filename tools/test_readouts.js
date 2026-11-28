@@ -19,6 +19,15 @@ const o = (x) => Object.assign({ vehicle: 'ice', speedUnit: 'kmh', tempUnit: 'c'
 const d = { iat: 31, gearbox: 78, oil: 98, coolant: 90, boostActual: 1.0, torque: 300, rpm: 5000, enginePower: 300 * 5000 / 9549.3, pedal: 85.4, throttle: 72.6, timing: 6, engineOn: true };
 const narrow = { w: 120, h: 30 }, wide = { w: 500, h: 34 };
 
+check('the gear: D / S / M with its number, P R N alone, an electric car\'s B alone (0.71.1)', () => {
+    assert.strictEqual(C.gearText({ stage: 'D', gear: 3 }), 'D3');
+    assert.strictEqual(C.gearText({ stage: 'D', gear: 3, mode: 'S' }), 'S3');
+    assert.strictEqual(C.gearText({ stage: 'D', gear: 1, mode: 'B' }), 'B');
+    assert.strictEqual(C.gearText({ stage: 'R', gear: -1, mode: 'B' }), 'R');
+    assert.strictEqual(C.gearText({ stage: 'P', mode: 'B' }), 'P');
+    const src = require('fs').readFileSync(path.join(ROOT, 'shared', 'data.js'), 'utf8');
+    assert(/B_PROGRAMM: 'B'/.test(src) && /5: 'B'/.test(src), 'B_PROGRAMM read as B');
+});
 check('readout 1 and 2: the defaults are intake air and gearbox oil, short where narrow', () => {
     assert.strictEqual(C.stripInfoA(o(), narrow)(d), 'IAT 31°');
     assert.strictEqual(C.stripInfoB(o(), narrow)(d), 'TRANS 78°');
