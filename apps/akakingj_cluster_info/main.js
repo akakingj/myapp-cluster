@@ -397,6 +397,14 @@ mgu.run({
         }
         const logPages = logs.pager(logBundle, dataDir, log, 'info');
         const testPages = logs.pager(testBundle, dataDir, log, 'info-test', { en: 'Test log', ko: '테스트 로그' });
+        /* [Mark] (1.14.8, the owner's: to line a moment of the drive up with the log - BMW's map opened, the driving
+           assistant on or off): a numbered line in the Test log's sections while its checks run; else nothing */
+        let markedAt = 0;
+        ui.onClick('BTN_MARK', () => {
+            if (!testOn() || testPages.active() || logPages.active()) return render();
+            research.mark(Date.now()); markedAt = Date.now();
+            return render();
+        });
         ui.onClick('BTN_LOGS', () => { testPages.close(); logPages.press(); return render(); });
         /* [Test log]: start the checks; pressed while they run (or after they ended by themselves, 30 min): they end and
            the codes show, a page a press */
@@ -468,7 +476,8 @@ mgu.run({
             st.recent.forEach((c, i) => L(new Date(c.at).toTimeString().slice(0, 8) + '  ' + (typeof c.kmh === 'number' ? c.kmh + ' km/h  ' : '') + c.what.split('.').slice(-2).join('.') + ' = ' + String(c.value).slice(0, 120), 390 + i * 19, 14, t.text));
             const sli = adas ? adas.status().sli : null;
             if (sli) L((KO ? 'HUD 데이터의 제한속도: ' : 'Speed limit (HUD data): ') + (sli.now.length ? sli.now.join('  ').replace(/xSpeedLimitAssist\.|pia\./g, '').slice(0, 150) : (KO ? '아직 없음' : 'none yet')), 456, 15, sli.now.length ? GO : t.dim);
-            L(KO ? '끝내고 QR로 보려면 [테스트 끝내고 보기]' : 'To end and see its codes: [Test log: end and show]', 488, 16, t.dim);
+            L(KO ? '끝내고 QR로 보려면 [테스트 끝내고 보기]   ·   [구간 표시] ' + research.marks() + '번' + (Date.now() - markedAt < 3000 ? ' (방금 표시함)' : '')
+                : 'To end and see its codes: [Test log: end and show]   ·   [Mark] ' + research.marks() + (Date.now() - markedAt < 3000 ? ' (just marked)' : ''), 488, 16, Date.now() - markedAt < 3000 ? GO : t.dim);
         }
         ctx.loop('MAIN', 2, render);
         Promise.resolve().then(render).then(() => log.info('first frame done')).catch((e) => log.warn('first render: ' + e));

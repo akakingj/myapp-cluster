@@ -216,7 +216,20 @@ check('the Test log\'s map and guidance (1.14.7): MapApiLinksSD / SDLow\'s warni
         '10:00:04 40 km/h | SDLow position: OFF_ROAD link=111 off=0m fwd p=90 mpp=3 route=0',
         '10:00:05 40 km/h | RIC ric_sendEvent: handle=1 eventID=7 eventType=Event_ManeuverListEvent eventData.maneuverListEvent.x=1']);
     assert.ok(!r.sections().some((x) => /every field/.test(x[0]) && /MapApiLinks|RICService/.test(x[1])), 'the frames not in every field');
+    // (1.14.8) [Mark] and the driving assistant's changes, to line the drive up with the log
+    r.onHud({ activeCruiseControl: { symbolACC: 'LDM_CAR_OFF' }, trafficJamAssist: { steeringWheel: 'LDM_OFF', ldmHandsSymbol: 'LDM_OFF' }, speed: { kmH: 40 } }, at(7));
+    r.onHud({ activeCruiseControl: { symbolACC: 'LDM_CAR_OFF' }, trafficJamAssist: { steeringWheel: 'LDM_OFF', ldmHandsSymbol: 'LDM_OFF' }, speed: { kmH: 41 } }, at(8));
+    assert.strictEqual(r.mark(at(9)), 1);
+    r.onHud({ activeCruiseControl: { symbolACC: 'LDM_CAR_GREEN' }, trafficJamAssist: { steeringWheel: 'LDM_GREEN', ldmHandsSymbol: 'LDM_OFF' } }, at(10));
+    const m = r.sections().find((x) => /^map and guidance/.test(x[0]))[1].split('\n').slice(5);
+    assert.deepStrictEqual(m, ['10:00:07 40 km/h | assist: activeCruiseControl.symbolACC=LDM_CAR_OFF trafficJamAssist.steeringWheel=LDM_OFF trafficJamAssist.ldmHandsSymbol=LDM_OFF',
+        '10:00:09 40 km/h === mark 1 ===',
+        '10:00:10 40 km/h | assist: activeCruiseControl.symbolACC=LDM_CAR_GREEN trafficJamAssist.steeringWheel=LDM_GREEN trafficJamAssist.ldmHandsSymbol=LDM_OFF']);
+    assert.ok(/=== mark 1 ===/.test(r.sections()[1][1]) && /=== mark 1 ===/.test(r.sections().find((x) => x[0] === 'traffic lights')[1]), 'in the camera signs and the traffic lights too');
+    assert.strictEqual(r.marks(), 1);
+    assert.deepStrictEqual(require(path.join(APP, 'app.json')).screens[0].buttons.map((b) => b[0]), ['BTN_HUD', 'BTN_TEST', 'BTN_MARK', 'BTN_LOGS', 'BTN_SETTINGS']);
     r.reset();
+    assert.strictEqual(r.marks(), 0);
     assert.ok(/^came: nothing/.test(r.sections().find((x) => /^map and guidance/.test(x[0]))[1]));
 });
 

@@ -40,6 +40,11 @@
  * Warning 85 SPEED_CAMERA, 86 TRAFFIC_ENFORCEMENT_CAMERA (MapApiLinkTypes.Warning); offsets in cm (LengthInCm) as the
  * catalog says, shown in m - not yet seen on a drive. Only the members named here are read: the frames are large.
  *
+ * (1.14.8) Marks, to line the drive up with the log (the owner: BMW's map opened, the driving assistant on or off):
+ * [Mark] during a test puts "=== mark N ===" with the time and the speed in the camera signs, the traffic lights and the
+ * map and guidance; and the driving assistant's state from the head-up display's data (activeCruiseControl.symbolACC,
+ * trafficJamAssist.steeringWheel / ldmHandsSymbol) goes to the map and guidance by itself at each change ("assist:").
+ *
  *   const r = startResearch({ kmh: () => speed })
  *   r.onValue(iface, member, v, t)   r.onHud(v, t)   r.reset()   r.sections() -> [[title, text], ...]
  */
@@ -110,7 +115,7 @@ function startResearch(opts) {
     const kmh = () => { try { const v = opts.kmh && opts.kmh(); return typeof v === 'number' && isFinite(v) ? Math.round(v) : null; } catch (e) { return null; } };
     // (1.14.7) the map's look ahead and RIC guidance
     const mapN = {}, mapLast = {};
-    let mapLines = [], carAt = null, posAt = -Infinity, posKey = '';
+    let mapLines = [], carAt = null, posAt = -Infinity, posKey = '', assistLast = null, marks = 0;
     const mapPush = (t, text) => { if (mapLines.length >= KEEP_SIGNS) return; const k = kmh(); mapLines.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + text); };
     let last = {}, hudNpLast = null, sign = {}, hud = [], np = [], npLast = {}, cam = [], lights = [], lightLast = null, hudLightLast = null;
     const lightPush = (t, text) => { if (lights.length >= KEEP_SIGNS) return; const k = kmh(); lights.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + text); };
@@ -171,6 +176,9 @@ function startResearch(opts) {
         },
         onHud(v, t) {
             const all = RS.fields(v);
+            // the driving assistant on or off (1.14.8), at each change, to the map and guidance
+            const as = all.filter((f) => /^(activeCruiseControl\.symbolACC|trafficJamAssist\.(steeringWheel|ldmHandsSymbol))=/.test(f)).join(' ');
+            if (as && as !== assistLast) { assistLast = as; mapPush(t, 'assist: ' + as); }
             // the head-up display's traffic light symbols (DisplayDataTypes.VSLISign TRAFFIC_LIGHT_...), to compare
             const tl = all.filter((f) => /=["']?TRAFFIC_LIGHT_/.test(f)).join(' ');
             if (tl !== (hudLightLast || '')) { if (tl || hudLightLast) lightPush(t, 'hud: ' + (tl || '(none)')); hudLightLast = tl; }
@@ -180,7 +188,17 @@ function startResearch(opts) {
             hud.push({ at: t || Date.now(), kmh: kmh(), what: '', f: np });
             if (hud.length > KEEP) hud.shift();
         },
-        reset() { mapLines = []; Object.keys(mapN).forEach((k) => delete mapN[k]); Object.keys(mapLast).forEach((k) => delete mapLast[k]); carAt = null; posAt = -Infinity; posKey = '';
+        /** [Mark] (1.14.8): a numbered line in the camera signs, the traffic lights and the map and guidance. */
+        mark(t) {
+            marks++;
+            const k = kmh(), line = stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h === mark ' + marks + ' ===';
+            if (cam.length < KEEP_SIGNS) cam.push(line);
+            if (lights.length < KEEP_SIGNS) lights.push(line);
+            if (mapLines.length < KEEP_SIGNS) mapLines.push(line);
+            return marks;
+        },
+        marks: () => marks,
+        reset() { marks = 0; assistLast = null; mapLines = []; Object.keys(mapN).forEach((k) => delete mapN[k]); Object.keys(mapLast).forEach((k) => delete mapLast[k]); carAt = null; posAt = -Infinity; posKey = '';
             last = {}; hudNpLast = null; sign = {}; hud = []; np = []; npLast = {}; cam = []; lights = []; lightLast = null; hudLightLast = null; },
         sections: () => [
             ['no passing fields as they changed (TrafficSignDisplayControl, TrafficSignRecognition, the camera, DisplayDataServer2; the last ' + KEEP_NP + ')',

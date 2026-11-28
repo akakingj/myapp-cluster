@@ -401,6 +401,14 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.8, Layouts 0.70.5, Centre 0.16.20 (Nov 28 2026; Layouts and Centre: the Korean catalog only): [Mark] (구간
+  표시) in the left column, under Test log - while the checks run, "=== mark N ===" with the time and the speed in the
+  camera signs, the traffic lights and the map and guidance, to line a moment up with the log (BMW's map opened, the
+  driving assistant on or off: the owner's idea); and the driving assistant's state from the head-up display's data
+  (activeCruiseControl.symbolACC, trafficJamAssist.steeringWheel and ldmHandsSymbol) in the map and guidance at each
+  change ("assist:"), with no button. The test page counts the marks. Starting a test again clears the last one's
+  sections from memory; the codes' file of each shown (exports/cluster-logs-info-test-*.txt, the newest five of the
+  Logs' and the Test log's together) stays.
 - Layouts 0.70.4, Centre 0.16.19 (and Info 1.14.7): the Logs' code pages - a code's number under it was drawn 2 px past
   the screen's bottom when the last code was smaller (a lower QR version, bigger modules): the codes sized so their
   number always fits (shared/logs.js).

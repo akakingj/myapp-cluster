@@ -143,6 +143,8 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
         assert.strictEqual(SPEC.settings.find((x) => x.key === 'place').hidden, true);
         assert.strictEqual(SPEC.screens[0].buttons[0][0], 'BTN_HUD');
     });
+    await clicks.BTN_MARK();
+    check('[Mark] with no checks running: nothing (1.14.8)', () => assert.ok(!warns.some((w) => /mark/i.test(w))));
     await clicks.BTN_HUD();
     check('[Show on the HUD] pressed: off', () => assert.strictEqual(S.show, 'off'));
     await clicks.BTN_HUD();
