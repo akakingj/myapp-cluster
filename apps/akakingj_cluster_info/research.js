@@ -45,6 +45,10 @@
  * map and guidance; and the driving assistant's state from the head-up display's data (activeCruiseControl.symbolACC,
  * trafficJamAssist.steeringWheel / ldmHandsSymbol) goes to the map and guidance by itself at each change ("assist:").
  *
+ * (1.14.10) And the route's events (BMW's GuidanceEventList, which a phone's route over CarPlay fills too: the
+ * directions' own query, asked with speed cameras): "route:" lines in the map and guidance with the kinds of each reply
+ * when they change and the guide (BMW, CAR_PLAY, ...), and every speed camera with its distance and icons.
+ *
  *   const r = startResearch({ kmh: () => speed })
  *   r.onValue(iface, member, v, t)   r.onHud(v, t)   r.reset()   r.sections() -> [[title, text], ...]
  */
@@ -115,6 +119,8 @@ function startResearch(opts) {
     const kmh = () => { try { const v = opts.kmh && opts.kmh(); return typeof v === 'number' && isFinite(v) ? Math.round(v) : null; } catch (e) { return null; } };
     // (1.14.7) the map's look ahead and RIC guidance
     const mapN = {}, mapLast = {};
+    let routeN = 0, routeLast = null, routeGuide = null;
+    const routeFlags = {};
     let mapLines = [], carAt = null, posAt = -Infinity, posKey = '', assistLast = null, marks = 0;
     const mapPush = (t, text) => { if (mapLines.length >= KEEP_SIGNS) return; const k = kmh(); mapLines.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + text); };
     let last = {}, hudNpLast = null, sign = {}, hud = [], np = [], npLast = {}, cam = [], lights = [], lightLast = null, hudLightLast = null, lightFull = null, lightAt = -Infinity, lightN = 0;
@@ -191,6 +197,18 @@ function startResearch(opts) {
             hud.push({ at: t || Date.now(), kmh: kmh(), what: '', f: np });
             if (hud.length > KEEP) hud.shift();
         },
+        /** The directions' values (navlog.js's tap): the guide, and each reply of the route's events (1.14.10). */
+        onRoute(src, name, v) {
+            if (src === 'guidance' && name === 'guidingProvider') { const p = 'route: guide ' + v; if (p !== routeGuide) { routeGuide = p; mapPush(Date.now(), p); } return; }
+            if (name === 'projectedGuidanceActive') { const p = 'route: ' + src + ' guiding ' + v; if (routeFlags[src] !== p) { routeFlags[src] = p; mapPush(Date.now(), p); } return; }
+            if (src !== 'events' || name !== 'reply') return;
+            const NavM = require('./nav'), view = v && Array.isArray(v.viewContent) ? v.viewContent[0] : null, evs = view && Array.isArray(view.eventsInView) ? view.eventsInView : [];
+            const kinds = evs.map((e) => { const m = e && e.maneuver && typeof e.maneuver === 'object' ? e.maneuver : e; const k = m && typeof m === 'object' ? Object.keys(m).filter((x) => m[x] && typeof m[x] === 'object') : []; return k.join('+') || '?'; });
+            const cams = NavM.decodeEvents(v).cameras.map((c) => c.cam + ' ' + (c.m === null ? '?' : c.m + ' m') + (c.inside ? ' inside' : '') + ' icons ' + (c.icons.join(', ') || 'none'));
+            routeN++;
+            const k = kinds.join(',') + '|' + cams.map((c) => c.replace(/ \d+ m/, '')).join(';');
+            if (k !== routeLast) { routeLast = k; mapPush(Date.now(), 'route: ' + (kinds.join(', ') || 'no events') + (cams.length ? '; cameras: ' + cams.join('; ') : '')); }
+        },
         /** [Mark] (1.14.8): a numbered line in the camera signs, the traffic lights and the map and guidance. */
         mark(t) {
             marks++;
@@ -201,7 +219,7 @@ function startResearch(opts) {
             return marks;
         },
         marks: () => marks,
-        reset() { marks = 0; assistLast = null; mapLines = []; Object.keys(mapN).forEach((k) => delete mapN[k]); Object.keys(mapLast).forEach((k) => delete mapLast[k]); carAt = null; posAt = -Infinity; posKey = '';
+        reset() { routeN = 0; routeLast = null; routeGuide = null; Object.keys(routeFlags).forEach((k) => delete routeFlags[k]); marks = 0; assistLast = null; mapLines = []; Object.keys(mapN).forEach((k) => delete mapN[k]); Object.keys(mapLast).forEach((k) => delete mapLast[k]); carAt = null; posAt = -Infinity; posKey = '';
             last = {}; hudNpLast = null; sign = {}; hud = []; np = []; npLast = {}; cam = []; lights = []; lightLast = null; lightFull = null; lightAt = -Infinity; lightN = 0; hudLightLast = null; },
         sections: () => [
             ['no passing fields as they changed (TrafficSignDisplayControl, TrafficSignRecognition, the camera, DisplayDataServer2; the last ' + KEEP_NP + ')',
@@ -212,6 +230,7 @@ function startResearch(opts) {
                 Object.keys(sign).length ? linesOf([].concat(...Object.keys(sign).map((k) => sign[k])).sort((a, b) => a.at - b.at)).join('\n') : '(none yet)'],
             ['head-up display data, its no passing fields as they changed (the last ' + KEEP + ')', hud.length ? linesOf(hud).join('\n') : '(none yet)'],
             ['map and guidance (speed cameras without BMW\'s route)', 'came: ' + (Object.keys(mapN).map((k) => k + ' ' + mapN[k]).join(', ') || 'nothing (MapApiLinksSD, MapApiLinksSDLow, RICServiceGuidance)')
+                + '; the route\'s events: ' + routeN + ' replies'
                 + (carAt ? '; map matching ' + carAt.status : '') + '\n' + (mapLines.length ? mapLines.join('\n') : '(none yet)')],
             ['traffic lights', '(id color status arrow dir x y z q: a change of the first five, the place alone every ' + LIGHT_MS / 1000 + ' s at most; hud: the head-up display\'s symbol; the whole test, at most ' + KEEP_SIGNS + '; ' + lightN + ' values came)\n'
                 + (lights.length ? lights.join('\n') : '(none yet)')],

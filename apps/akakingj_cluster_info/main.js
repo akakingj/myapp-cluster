@@ -312,7 +312,11 @@ mgu.run({
         const camWanted = () => settings.get('roadSigns') !== 'off';
         try {
             const Nav = require('./nav');
-            const probe = require('./navlog').start(ctx, log, (s, f, v, at) => { if (tracker) tracker.tap(s, f, v, at); },
+            const probe = require('./navlog').start(ctx, log, (s, f, v, at) => {
+                if (tracker) tracker.tap(s, f, v, at);
+                // (1.14.10) the route's events to the Test log while it runs: whether a phone's route (CarPlay) brings speed cameras
+                if (testOn()) { try { research.onRoute(s, f, v); } catch (e) { /* the log's own */ } }
+            },
                 { wanted: () => navWanted() || camWanted(), routing: () => !!tracker && tracker.routing(), onGlass: () => !!(overlay && overlay.nav().shown) });
             tracker = Nav.start(ctx, log, probe);
         } catch (e) { navError = String(e); log.warn('directions not started: ' + e); }

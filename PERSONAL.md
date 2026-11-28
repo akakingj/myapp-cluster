@@ -401,6 +401,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.10 (Nov 28 2026): the route's events in the Test log - the directions' own GuidanceEventList replies (a
+  CarPlay route fills it too; asked with speed cameras since 1.14.0): "route:" lines in the map and guidance, the kinds
+  of each reply when they change, every speed camera with its distance and icons, the guide and the phones' guiding
+  flags - to see whether a CarPlay route (TMAP) brings speed cameras. From the 21:10 log (2 min, no route): the traffic
+  lights' colour 0 while standing at a red light, 2 while driving through (so far: 0 red, 2 green, a guess), place x
+  falling as the light nears (252 the most); MapApi / RIC again nothing.
 - Info 1.14.9 (Nov 28 2026), from the owner's Test log of 20:30 (7 min, BMW's map and CarPlay's shown in turn, no
   destination; mark 1 the map opened, mark 2 a speed camera passed, on BMW's map; the steering assist on a moment):
   MapApiLinksSD, MapApiLinksSDLow and RICServiceGuidance "nothing provides it" - no map look ahead, no RIC guidance

@@ -216,7 +216,7 @@ check('the Test log\'s map and guidance (1.14.7): MapApiLinksSD / SDLow\'s warni
     r.onValue(RIC, 'ric_sendEvent', { handle: 1, eventID: 7, eventType: 'Event_ManeuverListEvent', eventData: { maneuverListEvent: { x: 1 } } }, at(5));
     r.onValue(RIC, 'ric_sendEvent', { handle: 1, eventID: 7, eventType: 'Event_ManeuverListEvent', eventData: { maneuverListEvent: { x: 1 } } }, at(6));
     const sec = r.sections().find((x) => /^map and guidance/.test(x[0]))[1].split('\n');
-    assert.strictEqual(sec[0], 'came: SD sdMapMatchedPositionAndMPP 2, SD linksFrame 2, SDLow sdMapMatchedPositionAndMPP 1, RIC ric_sendEvent 2; map matching OFF_ROAD');
+    assert.strictEqual(sec[0], 'came: SD sdMapMatchedPositionAndMPP 2, SD linksFrame 2, SDLow sdMapMatchedPositionAndMPP 1, RIC ric_sendEvent 2; the route\'s events: 0 replies; map matching OFF_ROAD');
     assert.deepStrictEqual(sec.slice(1), [
         '10:00:00 40 km/h | SD position: ON_ROAD link=222 off=10m fwd p=90 mpp=3 route=0',
         '10:00:02 40 km/h | SD links: 2 links, 3 warnings (SLOW_DOWN 1, SPEED_CAMERA 1, VILLAGE_AHEAD 1); cameras: SPEED_CAMERA link#1 id=222 len=300m off=35.2m dir=FORWARD [same link as the car: 20.2m]',
@@ -235,6 +235,17 @@ check('the Test log\'s map and guidance (1.14.7): MapApiLinksSD / SDLow\'s warni
     assert.ok(/=== mark 1 ===/.test(r.sections()[1][1]) && /=== mark 1 ===/.test(r.sections().find((x) => x[0] === 'traffic lights')[1]), 'in the camera signs and the traffic lights too');
     assert.strictEqual(r.marks(), 1);
     assert.deepStrictEqual(require(path.join(APP, 'app.json')).screens[0].buttons.map((b) => b[0]), ['BTN_HUD', 'BTN_TEST', 'BTN_MARK', 'BTN_LOGS', 'BTN_SETTINGS']);
+    // (1.14.10) the route's events (a CarPlay route's too): their kinds on a change, every speed camera; the guide
+    const fd = (d) => ({ distance: d, unit: 'METER' });
+    const rep = (...e) => ({ GuidanceEventListError: 'NO_ERROR', viewContent: [{ eventsInView: e }] });
+    r.onRoute('guidance', 'guidingProvider', 'CAR_PLAY');
+    r.onRoute('carplay', 'projectedGuidanceActive', true);
+    r.onRoute('events', 'reply', rep({ intersection: { direction: 'LEFT', formattedDistance: fd('300') } }));
+    r.onRoute('events', 'reply', rep({ intersection: { direction: 'LEFT', formattedDistance: fd('250') } }));
+    r.onRoute('events', 'reply', rep({ speedCamera: { formattedDistance: fd('400'), speedCameraInfo: { cameraIcon: { id: 'ic_mobile' } } } }, { intersection: { direction: 'LEFT', formattedDistance: fd('200') } }));
+    const rl = r.sections().find((x) => /^map and guidance/.test(x[0]))[1].split('\n').filter((x) => / route: /.test(x)).map((x) => x.split('| ')[1]);
+    assert.deepStrictEqual(rl, ['route: guide CAR_PLAY', 'route: carplay guiding true', 'route: intersection', 'route: speedCamera, intersection; cameras: mobile 400 m icons ic_mobile']);
+    assert.ok(/the route's events: 3 replies/.test(r.sections().find((x) => /^map and guidance/.test(x[0]))[1]));
     r.reset();
     assert.strictEqual(r.marks(), 0);
     assert.ok(/^came: nothing/.test(r.sections().find((x) => /^map and guidance/.test(x[0]))[1]));
