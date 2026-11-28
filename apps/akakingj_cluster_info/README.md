@@ -40,7 +40,11 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   hills, bends, road works, crossings, speed humps, bumps, ..., give way, stop, no entry, no cars, no stopping; a
   warning with none of its own gets 위험, "!": for now the narrowing roads, the junctions, two-way traffic and low
   flying aircraft, whose Korean signs are still to be drawn; the blue instruction signs and Germany's zone signs are
-  not shown). The car's own list of the camera's sign
+  not shown). **Speed cameras** (1.14.0, the owner's): while a route runs, the nearest speed camera BMW's route lists
+  within 1000 m (or the section camera's stretch the car is in) shows first, as 단속중 (fixed), 이동식 단속중 (mobile) or
+  구간 단속 (section) - fixed or mobile by the name of the icon BMW's map uses for it, not yet seen on a drive (the
+  directions' log keeps it: `camera:` lines); shared with AK Cluster Layouts and AK Cluster ID8 (camera.json in
+  /dev/shm/cluster-info). The car's own list of the camera's sign
   types (read from the app's interface config for the camera, made at install from the car's catalog) is logged
   once, whole, and counted on the app's page (types, drawn, as "!"): which pictures this car can ever show. As high as BMW's own limit sign (a round sign as big, a triangle as tall). Shown when the camera reads it, for 10 s; a
   sign read after it takes its place (1.12.3: the owner's; one event's several together, in a row), at most three (1.13.0, the owner's), as many as fit on the glass. Once, at the start, every name in the definitions of the sign services this install has (TrafficSignRecognition, the camera's, TrafficSignDisplayControl, and of the head-up display's data the names about signs, passing and lanes: `sign definitions:` lines; and the car's whole catalog's services and members named for no passing or the map's look ahead: `catalog no passing` lines, 1.12.4; all of them in the Test log, sign definitions, parked - what tells no passing's end, 1.12.3); signs that would reach

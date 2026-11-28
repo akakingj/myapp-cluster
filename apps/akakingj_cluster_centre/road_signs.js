@@ -126,7 +126,31 @@ const KNOWN = {
     SIGNAL_UNFILLED: [null, false],
 };
 const known = (t) => (Object.prototype.hasOwnProperty.call(KNOWN, t) ? KNOWN[t] : null);
-const wanted = (t) => { const k = known(t); return k ? k[1] : !shownByHud(t) && (/^DS_/.test(t) || artOf(t) !== 'danger'); };
+const wanted = (t) => { if (CAMERAS[t]) return true; const k = known(t); return k ? k[1] : !shownByHud(t) && (/^DS_/.test(t) || artOf(t) !== 'danger'); };
+
+/*
+ * Speed cameras (Nov 28 2026, the owner: on the HUD and the cluster, fixed or mobile). Not the front camera's: BMW's
+ * navigation lists them among a route's events (GuidanceEventList, Guidance.conclusiveDart: speedCamera,
+ * speedSectionCamera), so only while a route runs. Cluster Info decodes them (nav.js) and shares the one to show in
+ * /dev/shm/cluster-info (camera.json: { t, app, camera: { type, m } }) for AK Cluster Layouts and AK Cluster ID8.
+ * Fixed or mobile: the car's catalog has no field for it, only the camera's icon (speedCameraInfo.cameraIcon, a
+ * resource id and url) - one whose name says mobile is taken for mobile, any other for fixed (not yet seen on a drive:
+ * the logs keep the icons' ids). A section camera (구간단속) is its own. The pictures: tools/make_sign_art.py.
+ */
+const CAMERAS = { SPEED_CAMERA_FIXED: 'camera_fixed', SPEED_CAMERA_MOBILE: 'camera_mobile', SPEED_CAMERA_SECTION: 'camera_section' };
+const CAM_TYPE = { fixed: 'SPEED_CAMERA_FIXED', mobile: 'SPEED_CAMERA_MOBILE', section: 'SPEED_CAMERA_SECTION' };
+const CAM_M = 1000;               // shown from this far ahead (m) until passed
+const MOBILE_RE = /mobil|movable|portable|temporar|이동/i;
+/** 'fixed' | 'mobile' | 'section' from the union's kind and the icons' ids. */
+function cameraKind(kind, icons) {
+    if (kind === 'speedSectionCamera') return 'section';
+    return (icons || []).some((s) => MOBILE_RE.test(String(s))) ? 'mobile' : 'fixed';
+}
+/** A provider file's camera (camera.json), as a type to show, or null. */
+function cameraType(entry) {
+    const c = entry && entry.camera;
+    return c && typeof c === 'object' && CAMERAS[c.type] ? c.type : null;
+}
 
 /** The signs to show (the owner, 2026-11-28: on when the camera reads one, off a while after; a new one read takes
  * its place): add(types, t) - the types keep (wanted: the head-up display's) takes from one of the camera's events
@@ -218,6 +242,7 @@ const ART_OF = [
 ];
 /** Which sign a type gets: 'danger' (140, "!") for a warning with none of its own. */
 function artOf(t) {
+    if (CAMERAS[t]) return CAMERAS[t];
     const k = known(t);
     if (k && k[0]) return k[0];
     for (const [re, n] of ART_OF) if (re.test(t)) return typeof n === 'function' ? n(t) : n;
@@ -274,4 +299,4 @@ function chunk(list, n) {
     return out;
 }
 
-module.exports = { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, KNOWN, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, NP_FIELD, defNames, artOf, ART_OF, typeNames, chunk };
+module.exports = { CAMERAS, CAM_TYPE, CAM_M, cameraKind, cameraType, CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, KNOWN, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, NP_FIELD, defNames, artOf, ART_OF, typeNames, chunk };

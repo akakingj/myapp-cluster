@@ -183,7 +183,7 @@ check('the car\'s 79 sign types (tools/known_sign_types.json, 1.13.3): each show
     assert(!RS.npStart('MANDATORY_PASSING_LEFT') && !RS.npEnd('MANDATORY_PASSING_LEFT'));
     assert.deepStrictEqual(RS.parseSigns({ trafficSign: [{ type: 'GIVE_WAY' }].concat(Array(19).fill({ type: 'SIGNAL_UNFILLED' })) }), ['GIVE_WAY']);
     // every picture in the two atlases is one a type uses
-    const used = new Set(Object.keys(table).map(RS.artOf).concat(['danger']));
+    const used = new Set(Object.keys(table).map(RS.artOf).concat(['danger'], Object.values(RS.CAMERAS)));
     Object.keys(art).forEach((n) => assert(used.has(n), 'Info: an unused picture ' + n));
     Object.keys(atlas).forEach((n) => assert(used.has(n), 'Layouts: an unused picture ' + n));
 });

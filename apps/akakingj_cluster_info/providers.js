@@ -47,6 +47,7 @@ function startProviders(log, opts) {
         const next = {};
         names.forEach((n) => {
             if (!/\.json$/.test(n) || /^wanted(-[\w.-]+)?\.json$/.test(n)) return;   // (what the apps want: not a provider)
+            if (n === 'camera.json') return;   // (this app's own: the speed camera it shares, main.js)
             try {
                 const j = JSON.parse(fs.readFileSync(path.join(dir, n), 'utf8'));
                 if (j && typeof j.t === 'number' && now() - j.t < STALE_MS) next[n.replace(/\.json$/, '')] = j;

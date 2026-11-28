@@ -22,7 +22,7 @@ import zlib
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -45,6 +45,63 @@ NAMES = ['slippery', 'traffic_jam', 'wild_animal', 'downhill', 'uphill', 'curve_
 # road_signs.js KNOWN): falling_rocks, tunnel, merge_left / merge_right, slow, no_u_turn, no_left_turn, no_right_turn,
 # no_straight, no_parking, keep_distance_50m, one_way and unprotected_left are left out (their PNGs stay in
 # tools/sign_art/: put back here if another firmware's camera names one); a type with no picture draws 위험 ("!")
+
+# speed cameras (Nov 28 2026; shared/road_signs.js CAMERAS): drawn here after South Korea's enforcement signs (단속중,
+# 이동식 단속중; yellow, a camera), without the English line (unreadable 60 px high), kept as tools/sign_art/camera_*.png
+CAMERAS = ['camera_fixed', 'camera_mobile', 'camera_section']
+CJK = '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc'
+YEL, INK = (255, 204, 0, 255), (26, 24, 22, 255)
+
+
+def _camera(d, cx, cy, w):
+    """The camera: its body (two dots), a bar behind, the lens with three bars."""
+    bw, bh = w * 0.62, w * 0.36
+    x0, y0 = cx - w / 2 + w * 0.08, cy - bh / 2
+    d.rounded_rectangle([x0, y0, x0 + bw, y0 + bh], radius=w * 0.05, outline=INK, width=max(3, round(w * 0.07)))
+    r = w * 0.055
+    for k in (0.33, 0.67):
+        d.ellipse([x0 + bw * k - r, cy - r, x0 + bw * k + r, cy + r], fill=INK)
+    d.rectangle([x0 - w * 0.08, y0 + bh * 0.1, x0 - w * 0.035, y0 + bh * 0.9], fill=INK)
+    lx = x0 + bw + w * 0.02
+    d.polygon([(lx, cy - bh * 0.18), (lx + w * 0.12, cy - bh * 0.5), (lx + w * 0.12, cy + bh * 0.5), (lx, cy + bh * 0.18)], fill=INK)
+    for i in range(3):
+        bx = lx + w * 0.15 + i * w * 0.045
+        d.rectangle([bx, cy - bh * 0.5, bx + w * 0.025, cy + bh * 0.5], fill=INK)
+
+
+def _text(d, s, cy, size, W):
+    f = ImageFont.truetype(CJK, size)
+    b = d.textbbox((0, 0), s, font=f)
+    d.text(((W - (b[2] - b[0])) / 2 - b[0], cy - (b[3] - b[1]) / 2 - b[1]), s, font=f, fill=INK)
+
+
+def camera_sign(name):
+    """단속중 (fixed), 이동식 단속중 (mobile), 구간 단속 (section): 180 x 240, the ground around it clear."""
+    W, H = 180, 240
+    im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, W - 1, H - 1], radius=16, fill=YEL)
+    d.rounded_rectangle([7, 7, W - 8, H - 8], radius=11, outline=INK, width=4)
+    if name == 'camera_fixed':
+        _camera(d, W / 2, 80, 150)
+        _text(d, '단속중', 175, 50, W)
+    elif name == 'camera_mobile':
+        _text(d, '이동식', 50, 46, W)
+        _camera(d, W / 2, 118, 140)
+        _text(d, '단속중', 190, 46, W)
+    else:
+        _text(d, '구간', 50, 54, W)
+        _camera(d, W / 2, 118, 140)
+        _text(d, '단속', 190, 54, W)
+    return im
+
+
+def cameras():
+    """The camera signs, drawn again where the font is (else the PNGs kept)."""
+    if Path(CJK).exists():
+        for n in CAMERAS:
+            camera_sign(n).save(SRC / (n + '.png'), optimize=True)
+    return {n: Image.open(SRC / (n + '.png')).convert('RGBA') for n in CAMERAS}
 
 
 def box_from_overlay():
@@ -165,6 +222,7 @@ def main():
             raise SystemExit('missing ' + str(f))
         cuts[n] = cut(Image.open(f))
     cuts['danger'] = danger(cuts['speed_hump'])
+    cuts.update(cameras())          # (drawn: already cut out)
     for n, im in cuts.items():
         s = shrink(im, h, wmax)
         raw = s.tobytes()

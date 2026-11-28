@@ -426,7 +426,9 @@ head-up display has its own no passing, the cluster the owner's picture; its end
 camera reads it, for 10 s; a warning read after it takes its place (one event's two together). No passing stays,
 first, until its zone ends: an end sign read by the camera, or 3 km driven since its sign was last read (the end's
 signal not known yet: the Logs' --- sli --- keeps every field of the TrafficSignRecognition event as it changes, to
-find it). Up to two (0.69.1, the owner's). They and the speed limit sign stand in one line, a row (the speed
+find it). A speed camera ahead comes first (0.70.0, the owner's: 단속중 fixed, 이동식 단속중 mobile, 구간 단속 section): the one
+AK Cluster Info reads from BMW's route and shares (camera.json in /dev/shm/cluster-info), so only with Cluster Info
+running and a route on; fixed or mobile by BMW's icon for it, not yet seen on a drive. Up to two (0.69.1, the owner's). They and the speed limit sign stand in one line, a row (the speed
 limit sign leftmost) or a column (the speed limit sign at the foot), the owner's ask. Where the owner chose the
 places (a layout's signAt, layout_common.fixedGroup, each 6 px clear, else the search): Retro M a row under the M
 stripes below the gear; ID7 M a row across the middle under the speed; JDM 1 a row just over its left box, its right edge between the second and third sign (its cup of

@@ -401,6 +401,20 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.0, Layouts 0.70.0, Centre 0.16.15 (Nov 28 2026): speed cameras (the owner: "if it can see speed cameras,
+  show fixed or mobile, on Info, Layouts and ID8"). Not the front camera's: BMW's navigation lists them among a route's
+  events (GuidanceEventList queryContent, now asked with INCLUDE_SPEED_CAMERA and 8 events; Guidance.conclusiveDart),
+  speedCamera and speedSectionCamera (구간단속), so only while a route runs and only for routes BMW knows the cameras
+  of (its own navigation; a phone's route over CarPlay hands BMW its turns, not its cameras, as far as is known). Info's
+  nav.js decodes them (decodeCamera: the distance, or one from the distances to the destination; inside a section; the
+  icons), shows the nearest within 1000 m (or the section the car is in) first among the HUD's signs, and shares it in
+  /dev/shm/cluster-info/camera.json ({ t, camera: { type } }, removed when none) for Layouts (providers camera, first
+  of its two signs) and ID8. Fixed or mobile: the catalog has no field for it, only the icon BMW's map draws
+  (speedCameraInfo.cameraIcon / endCameraIcon, ResourceID { id, url }) - a name with "mobile" in it is taken for mobile,
+  any other for fixed; a guess till a drive's log shows the ids (the directions' log: `camera:` lines; the app's log:
+  `speed camera:` once per kind and icon). The pictures, drawn after South Korea's enforcement signs (단속중, 이동식
+  단속중, and 구간 단속; yellow, a camera; without the English line): tools/make_sign_art.py camera_sign,
+  tools/sign_art/camera_*.png. Settings > Road signs on the HUD's "On" now says speed cameras too (ko re-translated).
 - Info 1.13.3, Layouts 0.69.5, Centre 0.16.14 (Nov 28 2026): the 79 sign types of the car's catalog decided by the
   owner's table (tools/known_sign_types.json; shared/road_signs.js KNOWN, exact names first, the old rules only for a
   name not in it): VEHICLES_PROHIBITED no cars, DS_ONE_BUMP the speed hump, DS_CONCAVE bumpy road; the narrowing

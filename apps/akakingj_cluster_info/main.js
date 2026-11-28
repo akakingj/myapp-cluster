@@ -18,6 +18,7 @@ const G = require('./kit/gauges');
 const Car = require('./kit/car');
 const { startOverlay, drawBadge, badgeRect, mapRect } = require('./overlay');
 const { startProviders, DIR } = require('./providers');
+const RSG = require('./road_signs');
 const IND = require('./indicators');
 const { startBlindSpot } = require('./blindspot');
 const { startHvSoc } = require('./hvsoc');
@@ -267,7 +268,10 @@ mgu.run({
          * place), off. The survey reads the same event through this subscription. */
         let signs = null;
         try { signs = startSigns(ctx, log); } catch (e) { log.warn('road signs: ' + e); }
-        src.roadSigns = () => (settings.get('roadSigns') === 'sample' ? SIGN_SAMPLE.slice() : signs ? signs.current() : []);
+        /* a speed camera ahead first (camNow, from the route's events below: nav.js camera()) */
+        let camNow = null;
+        src.roadSigns = () => (settings.get('roadSigns') === 'sample' ? SIGN_SAMPLE.slice()
+            : (camNow ? [RSG.CAM_TYPE[camNow.cam]] : []).concat(signs ? signs.current() : []));
         try {
             survey = startSurvey(ctx, log, { hud: () => (adas ? adas.hudValue() : null), dir: ctx.dataDir || '.', signals: signs ? signs.signalsFor(ctx.signals) : undefined,
                 onValue: (iface, member, v, t) => research.onValue(iface, member, v, t) });
@@ -288,13 +292,32 @@ mgu.run({
         let tracker = null, navError = null;
         const navMode = () => (settings.get('hudNav') === 'near' ? 'near' : settings.get('hudNav') === 'off' ? 'off' : 'route');
         const navWanted = () => navMode() !== 'off' && !!(overlay && overlay.navCan());
+        // speed cameras (1.14.0): the route's events asked for them too, while the HUD's signs are on (the cluster's
+        // apps read them from here: camera.json)
+        const camWanted = () => settings.get('roadSigns') !== 'off';
         try {
             const Nav = require('./nav');
             const probe = require('./navlog').start(ctx, log, (s, f, v, at) => { if (tracker) tracker.tap(s, f, v, at); },
-                { wanted: navWanted, routing: () => !!tracker && tracker.routing(), onGlass: () => !!(overlay && overlay.nav().shown) });
+                { wanted: () => navWanted() || camWanted(), routing: () => !!tracker && tracker.routing(), onGlass: () => !!(overlay && overlay.nav().shown) });
             tracker = Nav.start(ctx, log, probe);
         } catch (e) { navError = String(e); log.warn('directions not started: ' + e); }
         src.nav = () => (tracker && navMode() !== 'off' ? tracker.view(navMode()).show : null);
+        /* the speed camera to show, twice a second; shared with AK Cluster Layouts and AK Cluster ID8 in the providers'
+           folder (camera.json, road_signs.js; removed when there's none, so it never outlives the camera) */
+        const CAM_FILE = path.join(DIR, 'camera.json');
+        let camShared = false;
+        const camTimer = setInterval(() => {
+            try {
+                camNow = tracker && camWanted() ? tracker.camera() : null;
+                if (camNow) {
+                    const tmp = CAM_FILE + '.' + process.pid + '.tmp';
+                    fs.writeFileSync(tmp, JSON.stringify({ v: 1, t: Date.now(), app: 'Cluster Info', camera: { type: RSG.CAM_TYPE[camNow.cam], m: camNow.m, inside: camNow.inside } }), { mode: 0o644 });
+                    fs.renameSync(tmp, CAM_FILE);
+                    camShared = true;
+                } else if (camShared) { camShared = false; fs.unlinkSync(CAM_FILE); }
+            } catch (e) { camShared = false; }
+        }, 500);
+        if (camTimer.unref) camTimer.unref();
         try { overlay = startOverlay(ctx, src); } catch (e) { overlayError = String(e); log.warn('overlay: ' + e); }
 
         /** The page's rows, [name, text]: what each source does now (on the page and in the logs). */
@@ -314,7 +337,8 @@ mgu.run({
                         + '   ·   BDC 22 D347: ' + b.good + ' of ' + b.reads + ' answered   ·   link ' + b.link; })()],
                 ['Road signs', settings.get('roadSigns') === 'off' ? 'off (settings)' : (() => { const g = signs ? signs.status() : null, o = overlay && overlay.roadSigns ? overlay.roadSigns() : null;
                     return (g ? 'camera: ' + g.state + (g.carTypes ? '   ·   this car\'s camera knows ' + g.carTypes.length + ' types, ' + g.drawn + ' drawn' + (g.asDanger ? ' (' + g.asDanger + ' as "!")' : '') : '') + '   ·   ' + g.seen + ' read' + (Object.keys(g.types).length ? ' (' + Object.keys(g.types).map((k) => k + ' ' + g.types[k]).join(', ') + ')' : '') : 'not started')
-                        + (settings.get('roadSigns') === 'sample' ? '   ·   showing the sample' : '') + (o && o.shown ? '   ·   on the HUD: ' + o.types.join(', ') : ''); })()],
+                        + (settings.get('roadSigns') === 'sample' ? '   ·   showing the sample' : '') + (o && o.shown ? '   ·   on the HUD: ' + o.types.join(', ') : '')
+                        + '   ·   speed camera: ' + (camNow ? camNow.cam + (camNow.m !== null ? ' ' + camNow.m + ' m' : '') + (camNow.inside ? ', inside' : '') : 'none (from BMW\'s route)'); })()],
                 ['Turn signals', st('turn signals') + (live.indicator !== 'off' ? ' (now ' + live.indicator + ')' : '')
                     + '   ·   Day / night: ' + (live.night === null ? st('day / night') + ', none received' : live.night ? 'night' : 'day')
                     + '   ·   Driver profile: ' + (live.profile || (st('driver profile') === 'subscribed' ? 'none read yet' : st('driver profile')))],

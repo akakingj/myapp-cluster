@@ -822,7 +822,9 @@ function startData(ctx, opts) {
             // HUD's, AK Cluster Info's)
             if (!d.demo) {
                 npZone.step(Date.now(), d.speed);
-                o.roadSigns = (npZone.on() ? ['no_passing'] : []).concat(roadTracker.current(Date.now()).map(RS.artOf)).slice(0, 2);
+                // a speed camera ahead first (Cluster Info's, from BMW's route: providers camera; Nov 28 2026)
+                const cam = providers.readings().camera;
+                o.roadSigns = (RS.CAMERAS[cam] ? [RS.CAMERAS[cam]] : []).concat(npZone.on() ? ['no_passing'] : [], roadTracker.current(Date.now()).map(RS.artOf)).slice(0, 2);
             }
             if (x.tsr) o.sliSign = one(x.tsr, 'presentClassLimitSpeed');
             if (x.sli) Object.assign(o, { sliRaw: x.sli.value, sliSymbol: x.sli.symbol, sliDist: x.sli.dist, sliTakeover: x.sli.takeover, sliAgeS: Math.round((Date.now() - x.at.sli) / 100) / 10 });

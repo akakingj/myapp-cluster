@@ -23,6 +23,7 @@ jobs:
       - run: node kit/tools/test_cluster_info_adas.js
       - run: node kit/tools/test_cluster_info_survey.js
       - run: node kit/tools/test_cluster_info_signs.js
+      - run: node kit/tools/test_cluster_info_cameras.js
       - run: node kit/tools/test_survey_fit.js
       - run: node kit/tools/test_cluster_info.js
       # the settings that follow the Car profile (akakingj/myapp-id7 apps/car_profile): its names and every value it gives

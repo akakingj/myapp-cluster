@@ -51,11 +51,14 @@ const EVENT_LIST = { iface: 'de.bmw.infotainment.navigation.guiding.GuidanceEven
 // next tick (a 2 s wait after it would outlast the turn); two in a row wait CALL_BACKOFF_MS; FAILS_RECONNECT in
 // a row drop the connection, made again after PROXY_RETRY_MS (a provider gone for good holds the shared queue)
 const QUERY_MS = 1000, PROXY_RETRY_MS = 30000, CALL_BACKOFF_MS = 2000, FAILS_RECONNECT = 5;
-/** The request: one view from the car's position (CCP), six events, turns, lanes, keep-left/right and destinations. */
+/**
+ * The request: one view from the car's position (CCP), eight events, turns, lanes, keep-left/right, destinations and
+ * speed cameras (1.14.0: nav.js camera(); two more events, so the cameras don't push the turn after next out).
+ */
 function eventQuery() {
     return { viewConfigs: [{
-        viewport: { startPoint: { anchorPoint: { standardReferencePoint: 'CCP' }, offsets: [] }, maxElementCount: 6, endPoints: [],
-            includedTypes: ['INCLUDE_ACTIVE_MANEUVERS', 'INCLUDE_LANE_GUIDINGS', 'INCLUDE_ALONG_MAIN_ROAD', 'INCLUDE_DESTINATIONS'] },
+        viewport: { startPoint: { anchorPoint: { standardReferencePoint: 'CCP' }, offsets: [] }, maxElementCount: 8, endPoints: [],
+            includedTypes: ['INCLUDE_ACTIVE_MANEUVERS', 'INCLUDE_LANE_GUIDINGS', 'INCLUDE_ALONG_MAIN_ROAD', 'INCLUDE_DESTINATIONS', 'INCLUDE_SPEED_CAMERA'] },
         options: [], minimumUpdateIntervalMs: 1000, segmentItemRasterLength: 100,
     }] };
 }

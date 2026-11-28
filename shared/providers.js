@@ -9,6 +9,7 @@
  *   values.soc.pct           the battery's charge (%)
  *   values.erange.km         the electric range (km)
  *   values.frange.km         the fuel range (km)
+ *   camera.type              a speed camera ahead (Cluster Info's camera.json: road_signs.js CAMERAS)
  */
 const fs = require('fs');
 const path = require('path');
@@ -104,6 +105,8 @@ function startProviders(log, opts) {
             erange: first((e) => e.values && e.values.erange && e.values.erange.km),
             frange: first((e) => e.values && e.values.frange && e.values.frange.km),
             battery: first((e) => e.values && e.values.battery && e.values.battery.c),
+            // the speed camera ahead Cluster Info shares (camera.json: road_signs.js CAMERAS), its type, or undefined
+            camera: (() => { for (const id of Object.keys(entries).sort()) { const c = entries[id].camera; if (c && typeof c.type === 'string') return c.type; } return undefined; })(),
         }),
         want,
         release,

@@ -42,6 +42,7 @@
  * Never throws: everything is caught. Street names never go to a log (their length only).
  */
 
+const RS = require('./road_signs');
 const STALE_MS = 3000;       // a turn or lanes older than this aren't shown
 const NEAR_M = 1000;         // "Near turns": under this ("1 km" is not yet; lanes always)
 
@@ -139,6 +140,26 @@ const SKIP = { pointOfInterest: 1, laneGuiding: 1, trafficEvent: 1, trafficFlowI
 /** detailedGeometry when it says something (not UNDEFINED / NONE / missing). */
 function geomOf(b) { return enumOf('ManeuverGeometry', b.detailedGeometry); }
 
+/*
+ * Speed cameras on the route (1.14.0, the owner: the HUD and the cluster show them, fixed or mobile): the union's
+ * speedCamera and speedSectionCamera (구간단속), skipped as turns above. Their one hint at the kind is the icon BMW's map
+ * draws (speedCameraInfo.cameraIcon / endCameraIcon: ResourceID { id, url }); road_signs.js cameraKind reads it, and
+ * the ids go to the logs, as no drive has shown them yet.
+ */
+function iconIds(b) {
+    const i = b && isObj(b.speedCameraInfo) ? b.speedCameraInfo : {};
+    return ['cameraIcon', 'endCameraIcon'].map((k) => i[k]).filter(isObj)
+        .map((r) => safeLog([str(r.id), str(r.url)].filter((x) => x).join(' ')).slice(0, 80)).filter((x) => x);
+}
+/** One route event as a speed camera: { cam: 'fixed' | 'mobile' | 'section', m, dtd, inside, avg, icons }, or null. */
+function decodeCamera(e) {
+    const u = unionOf(e);
+    if (!u || (u.kind !== 'speedCamera' && u.kind !== 'speedSectionCamera')) return null;
+    const b = u.body, icons = iconIds(b), dtd = Number(b.distanceToDestination), avg = Number(b.averageSpeed);
+    return { cam: RS.cameraKind(u.kind, icons), m: metres(distOf(b)), dtd: isFinite(dtd) && dtd >= 0 ? dtd : null,
+        inside: b.isInsideEvent === true, avg: u.kind === 'speedSectionCamera' && isFinite(avg) && avg > 0 && avg < 400 ? Math.round(avg) : null, icons: icons };
+}
+
 
 /**
  * One route event (an eventsInView item, or conclusiveDart.maneuver) as Redline's object, without t / src / lanes.
@@ -202,7 +223,7 @@ function decodeEvent(e) {
  * view (the turn isn't known; not the same as "no turns ahead").
  */
 function decodeEvents(reply) {
-    const out = { ok: false, error: null, events: [], raw: 0, uids: [] };
+    const out = { ok: false, error: null, events: [], raw: 0, uids: [], cameras: [] };
     if (!isObj(reply)) { out.error = 'no reply'; return out; }
     const err = reply.GuidanceEventListError;
     if (err !== undefined && err !== 'NO_ERROR' && err !== 0) { out.error = String(err); return out; }
@@ -210,13 +231,20 @@ function decodeEvents(reply) {
     const evs = v && Array.isArray(v.eventsInView) ? v.eventsInView : null;
     if (!evs) { out.error = 'no view'; return out; }
     out.ok = true; out.raw = evs.length;
-    evs.forEach((e) => {
-        const body = e && isObj(e.maneuver) ? e.maneuver : e, m = decodeEvent(body);
+    let ref = null;           // an event with its distance and its distance to the destination: where the car is
+    evs.forEach((e, i) => {
+        const body = e && isObj(e.maneuver) ? e.maneuver : e, c = decodeCamera(body);
+        if (c) { c.first = i === 0; out.cameras.push(c); }
+        const m = c ? null : decodeEvent(body);
+        if (!ref && (c || m)) { const d = c ? c.m : metres(m), t = c ? c.dtd : m.dtd; if (d !== null && t !== null) ref = t + d; }
         if (!m) return;
         // each event's uid (CarPlay numbers its turns 1, 2, 3...: an older turn has a smaller one), null without
         const u = unionOf(body), uid = u && u.body ? Number(u.body.uid) : NaN;
         out.events.push(m); out.uids.push(isFinite(uid) ? uid : null);
     });
+    // a camera with no distance of its own (the events after the first may have none): from the distances to the
+    // destination, the car's own known from another event's
+    out.cameras.forEach((c) => { if (c.m === null && ref !== null && c.dtd !== null && ref - c.dtd >= 0) c.m = Math.round(ref - c.dtd); });
     return out;
 }
 
@@ -365,6 +393,8 @@ function Tracker() {
     let lastTurnAt = -Infinity, lastDataAt = -Infinity, turnKey = '';
     // given way for this route; when the directions were last asked for (coming back on after a pause restarts the count)
     let gaveWay = false, lastViewAt = -Infinity, resumedAt = -Infinity;
+    // speed cameras: the event list's (cams) and BMW's own next one (dartCam)
+    let cams = [], camsAt = -Infinity, dartCam = null, dartCamAt = -Infinity;
     // the guides whose turns Redline has read this drive (CAR_PLAY, ANDROID_AUTO, BMW): never given way to again
     const readable = {};
     // a phone left named as the provider after its route was cancelled, on a car that sends the phones' "guiding"
@@ -391,7 +421,7 @@ function Tracker() {
     };
     /** Showing needs a route: once CarPlay / Android Auto / BMW said for certain, that; else the provider will do. */
     const routing = () => (route.sureSeen ? routeSure(route) : routingOf(route));
-    const reset = (now) => { turn = null; dart = null; lanes = null; turnKey = ''; route.resetAt = now; };
+    const reset = (now) => { turn = null; dart = null; lanes = null; turnKey = ''; cams = []; dartCam = null; route.resetAt = now; };
     const self = {
         /** A field of one of the sources (navlog.js's names): guidance / phone / carplay / androidauto; 'available'. */
         field(src, name, v, now) {
@@ -401,12 +431,12 @@ function Tracker() {
                 if (v !== false) return;
                 if (src === 'carplay') route.carplay = false;
                 else if (src === 'androidauto') route.aa = false;
-                else if (src === 'guidance') { route.state = null; route.provider = null; dart = null; }
+                else if (src === 'guidance') { route.state = null; route.provider = null; dart = null; dartCam = null; }
             } else if (src === 'guidance' && name === 'guidanceState') route.state = v;
             // by name or number (the catalog's ProjectedModeGuidingProvider); something else kept as it came
             else if (src === 'guidance' && name === 'guidingProvider') route.provider = v === null || v === undefined ? null : enumOf('ProjectedModeGuidingProvider', v) || String(v);
             else if (name === 'projectedGuidanceActive') route[src === 'carplay' ? 'carplay' : 'aa'] = v === true;
-            else if (name === 'conclusiveDart') { dart = decodeDart(v); dartAt = now; seen(dart, now); }
+            else if (name === 'conclusiveDart') { dart = decodeDart(v); dartAt = now; seen(dart, now); dartCam = isObj(v) && isObj(v.maneuver) ? decodeCamera(v.maneuver) : null; dartCamAt = now; }
             else if (name === 'currentLaneGuiding') { lanes = decodeLanes(v); lanesAt = now; }
             if (routeSure(route)) route.sureSeen = true;
             // the phone named as the provider says it isn't guiding (CarPlay can stay the provider after a cancel,
@@ -436,6 +466,7 @@ function Tracker() {
             const r = decodeEvents(reply);
             if (!r.ok) { lastErr = r.error; return r; }
             lastErr = null; lastDataAt = now;
+            cams = r.cameras; camsAt = now;
             turn = r.events[0] ? Object.assign({}, r.events[0], { then: staleThen(r.uids) ? null : thenOf(r.events[0], r.events[1]) }) : null; turnAt = now;
             seen(turn, now);
             return r;
@@ -487,6 +518,20 @@ function Tracker() {
             return { show: m, giveWay: false };
         },
         error: () => lastErr,
+        /**
+         * The speed camera to show now, or null: the nearest of the route's within CAM_M ahead (or the section the car
+         * is in), fresh (STALE_MS; BMW's own while its guidance is active). One with no distance known counts only as
+         * the first event (the nearest).
+         */
+        camera(now) {
+            if (!routing()) return null;
+            const list = (now - camsAt <= STALE_MS ? cams : []).slice();
+            if (dartCam && (now - dartCamAt <= STALE_MS || route.state === 'ACTIVE' || route.state === 2)) list.push(dartCam);
+            const near = list.filter((c) => c.inside || (c.m !== null ? c.m <= RS.CAM_M : c.first === true));
+            if (!near.length) return null;
+            near.sort((a, b) => (b.inside - a.inside) || ((a.m === null ? 0 : a.m) - (b.m === null ? 0 : b.m)));
+            return Object.assign({}, near[0]);
+        },
     };
     return self;
 }
@@ -497,7 +542,8 @@ function Tracker() {
  */
 function start(ctx, log, probe) {
     const T = Tracker();
-    let lastLine = '', lastGive = false;
+    let lastLine = '', lastGive = false, lastCam = 'none';
+    const camIcons = {};
     const note = (s) => { if (probe && probe.write) probe.write(s); };
     const tap = (src, name, v, askedAt) => {
         try {
@@ -528,7 +574,19 @@ function start(ctx, log, probe) {
             } catch (e) { return { show: null, giveWay: false }; }
         },
         routing: () => T.routing(),
+        /** The speed camera to show (Tracker.camera); each new one a line in the directions' log, each new icon in the app's. */
+        camera() {
+            try {
+                const c = T.camera(mono()), line = c ? c.cam + (c.inside ? ' inside' : '') + (c.avg ? ' avg ' + c.avg : '') + ' icons ' + (c.icons.join(', ') || 'none') : 'none';
+                if (line !== lastCam) {
+                    lastCam = line; note('camera: ' + line + (c && c.m !== null ? ' at ' + c.m + ' m' : ''));
+                    const k = c ? c.cam + ': ' + (c.icons.join(', ') || 'no icon') : '';
+                    if (c && !camIcons[k] && log) { camIcons[k] = true; log.info('speed camera: ' + k); }
+                }
+                return c;
+            } catch (e) { return null; }
+        },
     };
 }
 
-module.exports = { start, mono, BACK_MS, thenOf, THEN_M, straightOn, staleThen, SKIP, Tracker, decodeEvent, decodeEvents, decodeLanes, decodeDart, metres, describe, routingOf, STALE_MS, GIVE_WAY_MS };
+module.exports = { start, mono, decodeCamera, BACK_MS, thenOf, THEN_M, straightOn, staleThen, SKIP, Tracker, decodeEvent, decodeEvents, decodeLanes, decodeDart, metres, describe, routingOf, STALE_MS, GIVE_WAY_MS };
