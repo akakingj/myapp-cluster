@@ -401,6 +401,13 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.2 (Nov 28 2026): the camera's traffic lights looked for, read only, not shown - the G20's catalog has
+  de.bmw.environmentalmodel.TrafficLightRecognitionFrontCameraLegacy (event RecognitionTrafficLightCamera: UInt8s
+  trafficLightID 63, PositionX / Y / Z 255, Status, Arrow, IndicateDirection, Color, qualityRecognitionTrafficLight 15 -
+  the defaults: no traffic light), never subscribed before. The survey's new last group trafficLight (fitted to the
+  catalog: a car without it is not refused; 45 declared on the G20's); the Test log's --- traffic lights --- has each
+  change, the whole test (at most 300: HH:MM:SS km/h | id color status arrow dir x y z q, the figures as they come), and
+  the head-up display's TRAFFIC_LIGHT_ symbols (DisplayDataTypes.VSLISign) as "hud:" lines to compare.
 - Info 1.14.1, Layouts 0.70.1, Centre 0.16.16 (Nov 28 2026), from the owner's Test log of 16:30 (12 min in town, every
   road 50): (1) the Car profile's two new settings under Start on the cluster, Speed limit sign (signSpeedLimit) and No
   stopping signs (signNoStopping, off by default: NO_STANDING_ANYTIME was read 21 times of 45), followed by Layouts only

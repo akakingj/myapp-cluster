@@ -100,7 +100,18 @@ ok('at most 60, the groups\' order deciding: the last (the fast ones) go first',
     assert(r.dropped.filter((d) => d.why === 'over the 60 limit').length > 0);
     assert(!m.proxies['de.bmw.dass.GapVehicleAhead'], 'the fast ones over the limit');
     assert(m.proxies['de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl'], 'the first groups kept');
-    assert(F.plan(INFO.survey, catalog(many), {}).items.every((x, i, a) => !i || a[i - 1].group !== 'lanes' || x.group === 'lanes'));
+    assert(F.plan(INFO.survey, catalog(many), {}).items.every((x, i, a) => !i || a[i - 1].group !== 'lanes' || x.group === 'lanes' || x.group === 'trafficLight'));
+});
+ok('the camera\'s traffic lights (1.14.2, group trafficLight): declared where the catalog has the service, left out where not', () => {
+    const TL = 'de.bmw.environmentalmodel.TrafficLightRecognitionFrontCameraLegacy';
+    const withTl = (c) => { c.interfaces[TL] = { events: { RecognitionTrafficLightCamera: { eventId: 32769 } } }; c.instanceIDs[TL] = { 1: 1 }; };
+    const m = manifest(), r = F.fit(m, INFO.survey, catalog(withTl));
+    const it = r.declared.find((d) => d.iface === TL);
+    assert(it && it.member === 'RecognitionTrafficLightCamera' && it.kind === 'event' && it.group === 'trafficLight', JSON.stringify(it));
+    assert(m.proxies[TL]);
+    const m2 = manifest(), r2 = F.fit(m2, INFO.survey, catalog());
+    assert(!r2.declared.some((d) => d.iface === TL) && !m2.proxies[TL]);
+    assert.strictEqual(INFO.survey.groups[INFO.survey.groups.findIndex((x) => x.id === 'lanes') + 1].id, 'trafficLight');
 });
 ok('done twice (the installer\'s check, then the install): the same; no catalog: nothing added, the last ones taken out', () => {
     const m = manifest(), r1 = F.fit(m, INFO.survey, catalog()), once = JSON.stringify(m);

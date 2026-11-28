@@ -164,6 +164,28 @@ check('the Test log\'s recorder (research.js, 1.13.0): the sign services\' every
     assert.strictEqual(r.sections()[2][1], '(none yet)');
 });
 
+check('the Test log\'s traffic lights (1.14.2): the camera\'s every change, the head-up display\'s TRAFFIC_LIGHT_ symbols to compare', () => {
+    const { startResearch, lightLine } = require(path.join(APP, 'research.js'));
+    const r = startResearch({ kmh: () => 30 });
+    const TL = 'de.bmw.environmentalmodel.TrafficLightRecognitionFrontCameraLegacy';
+    const ev = (color, x) => ({ trafficLightID: 3, trafficLightPositionX: x, trafficLightPositionY: 2, trafficLightPositionZ: 5, trafficLightStatus: 1, trafficLightArrow: 15,
+        trafficLightIndicateDirection: 15, trafficLightColor: color, qualityRecognitionTrafficLight: 7 });
+    const at = (s) => Date.UTC(2026, 10, 28, 9, 0, s);
+    r.onValue(TL, 'RecognitionTrafficLightCamera', ev(1, 40), at(0));
+    r.onValue(TL, 'RecognitionTrafficLightCamera', ev(1, 40), at(1));          // the same: no line
+    r.onValue(TL, 'RecognitionTrafficLightCamera', ev(2, 38), at(2));
+    r.onHud({ xSpeedLimitAssist: { vSLISign: 'TRAFFIC_LIGHT_RED' } }, at(3));
+    r.onHud({ xSpeedLimitAssist: { vSLISign: 'TRAFFIC_LIGHT_RED' } }, at(4));
+    r.onHud({ xSpeedLimitAssist: { vSLISign: 'LDM_VSLI_NO_SYMBOL' } }, at(5));
+    const sec = r.sections().find((x) => x[0] === 'traffic lights')[1].split('\n');
+    assert.deepStrictEqual(sec.slice(1), ['09:00:00 30 km/h | 3 1 1 15 15 40 2 5 7', '09:00:02 30 km/h | 3 2 1 15 15 38 2 5 7',
+        '09:00:03 30 km/h | hud: xSpeedLimitAssist.vSLISign=TRAFFIC_LIGHT_RED', '09:00:05 30 km/h | hud: (none)']);
+    assert.strictEqual(lightLine({}), '- - - - - - - - -');
+    assert.ok(!/TrafficLight/.test(r.sections().find((x) => /every field/.test(x[0]))[1]), 'not among the sign services');
+    r.reset();
+    assert.ok(/\(none yet\)$/.test(r.sections().find((x) => x[0] === 'traffic lights')[1]));
+});
+
 check('pictures: South Korea\'s own signs - the types the camera read get theirs; another warning 위험 ("!")', () => {
     assert.strictEqual(S.artOf('DS_SPLIPPERY_ROAD'), 'slippery');
     assert.strictEqual(S.artOf('DS_TRAFFIC_JAM'), 'traffic_jam');
