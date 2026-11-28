@@ -388,6 +388,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   .displaySpeedLimitAndNoPassingRestriction.displayNoPassingRestriction (0 none, 1/3/5/7/8 no passing, 2/4/6 its repeal)
   with displayRemainingDistanceNoPassingRestriction, and DisplayDataServer2.functionalLibraryData.npiData (npiState,
   npiLabel KOREA / NPI_REPEAL_*) with vnpiDistance; not read yet (the Test log on a drive shows whether they come).
+  From the same catalog's sign types (79): an empty place of the camera event's 20 (SIGNAL_UNFILLED) is never a sign
+  (it matched traffic lights), STOPPING_RESTRICTION / NO_STANDING_ANYTIME get 주정차금지 (not the stop sign),
+  DS_BYCICLE_CROSSING the bicycle, DS_GIVE_WAY_ROUNDABOUT the roundabout. Still "!" for want of a Korean picture:
+  DS_ROAD_NARROW_*, DS_CROSS_ROAD*, DS_ROAD_FROM_*, DS_CONCAVE, DS_SNOW, DS_GRAVEL, DS_TWO_WAY_TRAFFIC,
+  DS_LOW_FLYING_AIRCRAFT. The TrafficSignRecognition event also has recognitionNoPassing, displayTextMessageNpi and
+  displaySpeedNPIDistance (raw UInt8s).
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
   가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -

@@ -40,6 +40,14 @@ check('the camera\'s value: its sign types, as many as numberSigns says', () => 
     [null, undefined, 3, 'nope', {}, { trafficSign: 5 }, { trafficSign: [{ type: 7 }] }].forEach((v) => assert.deepStrictEqual(S.parseSigns(v), []));
 });
 
+check('the car\'s catalog\'s types (G20, 2026-11-28): empty places none, STOPPING_RESTRICTION no stop sign, BMW\'s BYCICLE a bicycle', () => {
+    const RS = require('../../shared/road_signs.js');
+    assert.deepStrictEqual(S.parseSigns({ trafficSignRecognition: { numberSigns: 20 }, trafficSign: [{ type: 'DS_ROAD_WORKS' }, { type: 'SIGNAL_UNFILLED' }, { type: 'UNKNOWN' }] }), ['DS_ROAD_WORKS']);
+    const art = { STOP_SIGN: 'stop', STOPPING_RESTRICTION: 'no_stopping', NO_STANDING_ANYTIME: 'no_stopping', DS_BYCICLE_CROSSING: 'bicycle',
+        DS_GIVE_WAY_ROUNDABOUT: 'roundabout', GIVE_WAY: 'give_way', DS_TRAFFIC_LIGHT: 'traffic_lights', ROUNDABOUT_SIGN: 'roundabout' };
+    Object.keys(art).forEach((t) => assert.strictEqual(RS.artOf(t), art[t], t));
+    assert.ok(!RS.wanted('SIGNAL_UNFILLED') && !RS.wanted('WITHDRAWAL_NO_PASSING_SIGN') && !RS.wanted('GENERAL_WITHDRAWAL'));
+});
 check('drawn: the danger signs and give way; not the speed limit or no passing (the HUD shows those itself)', () => {
     ['DS_TRAFFIC_JAM', 'DS_SPLIPPERY_ROAD', 'DS_RIGHT_DOWNWARDS', 'DS_ANIMAL_CROSSING', 'DS_ANYTHING', 'GIVE_WAY'].forEach((t) => assert(S.wanted(t), t));
     ['SPEED_LIMIT', 'NO_PASSING_SIGN', 'END_OF_NO_PASSING', 'UNKNOWN'].forEach((t) => assert(!S.wanted(t), t));
