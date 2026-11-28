@@ -420,15 +420,19 @@ figure the limiter took. Up to 140 km/h; `--` before the first.
 
 **Warning signs** (0.69.0, every layout, with Settings > Speed limit sign On; first tried on KO 1 and KO 2): the warning signs the front camera
 reads (`de.bmw.environmentalmodel.SignRecognitionFrontCamera`'s TrafficSignRecognitionFrontCamera event, once a sign;
-declared the same way, only where the car's catalog has it) as South Korea's own yellow triangles (the government's
-designs, `sign_atlas.js` from `tools/make_sign_art.py`, 76 px high), each 10 s after the camera last read it, up to
-two (one on most roads): the first in the free place nearest the speed limit sign (KO 1 and KO 2: where it stood
-before, right of the speedometer; JDM 1: top right over the coolant and oil boxes; JDM 2: right of the tach's foot),
-the second mirrored across the middle, else beside the first in its row. Beside the map there may be no room (none
-then). KO 1's and KO 2's speed limit sign itself is in the speedometer's open foot,
-between its unit and its foot's reading (the owner's place; the needle never sweeps there), the smaller sign (76);
-beside the map, where the dials are smaller, where the other layouts put it. Each kept 12 px clear along its triangle of the layout, the sign, the KOMBI's lights and the driver camera's cowl
-over the top middle (layout_common.warnPlace; tools/test_sli.js). Give way, stop and the bans are AK Cluster Info's,
+declared the same way, only where the car's catalog has it) as South Korea's own yellow triangles, and no passing as
+its red-ringed sign (the government's designs, `sign_atlas.js` from `tools/make_sign_art.py`, 76 px high; the
+head-up display has its own no passing, the cluster the owner's picture; its end not), each 10 s after the camera
+last read it, up to two (one on most roads). They and the speed limit sign stand in one line, a row or a column
+(the owner's ask; layout_common.signGroup: the first place nearest the sign's home where the sign and two warning
+signs fit, 12 px clear, else 6 px - 20's column between its speedometer and the middle panel). Retro M's row is its
+own: the speed limit sign just above the gear window, the warning signs either side (the first on the right).
+KO 1's and KO 2's speed limit sign is in the speedometer's open foot, between its unit and its foot's reading (the
+owner's place; the needle never sweeps there), the smaller sign (76), their warning signs where it stood before,
+right of the speedometer, and mirrored by the tach; ID6 M has no room for a line: its warning sign at the middle
+panel's other foot, mirroring the speed limit sign's (one only). Beside the map they go where there is room (none
+there may be). Each kept clear along its outline of the layout, the sign, the KOMBI's lights and the driver camera's
+cowl over the top middle (tools/test_sli.js). Give way, stop and the other bans are AK Cluster Info's,
 on the head-up display; the speed limit and no passing the car's own. Shared with Info: `shared/road_signs.js`.
 A layout may name its own
 starting point and the pieces whose boxes are mostly empty (sliHome, sliSkip): JDM 1's sign stands just above TACH,

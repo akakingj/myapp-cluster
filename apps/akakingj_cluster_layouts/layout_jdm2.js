@@ -232,8 +232,6 @@ function column(o, my) {
 
 module.exports = {
     id: 'jdm2',
-    // the warning signs the camera reads (layout_common.warnPlace, 0.69.0): right of the tach's foot, under the gear (beside the sign only the glass's corner is free)
-    warnHome: { x: 1023, y: 580 },
     title: 'JDM 2',
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,

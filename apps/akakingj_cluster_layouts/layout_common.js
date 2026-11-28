@@ -934,14 +934,16 @@ function sliPieces(s) {
  * point up at most 1.2 h wide: kept clear along its outline, not its box.
  */
 const WARN_W = Math.round(WARN.h * 1.2);
-/* points along a sign's outline (its middle at x, y): a warning sign, a triangle point up */
+/* points along a sign's outline (its middle at x, y): a warning sign's triangle, point up, and a round sign's circle
+   (no passing), WARN.h across */
 function warnOutline(x, y) {
     const h = WARN.h, w = WARN_W, top = [x, y - h / 2], l = [x - w / 2, y + h / 2], r = [x + w / 2, y + h / 2], out = [];
     [[top, r], [r, l], [l, top]].forEach(([a, b]) => { for (let i = 0; i < 8; i++) out.push([a[0] + (b[0] - a[0]) * i / 8, a[1] + (b[1] - a[1]) * i / 8]); });
+    for (let i = 0; i < 16; i++) { const q = i * Math.PI / 8; out.push([x + h / 2 * Math.cos(q), y + h / 2 * Math.sin(q)]); }
     return out;
 }
-function warnFree(x, y, obs) {
-    const g = WARN.gap;
+function warnFree(x, y, obs, gap) {
+    const g = gap == null ? WARN.gap : gap;
     if (y + WARN.h / 2 > STRIP_Y - 4 || y - WARN.h / 2 < 0 || x - WARN_W / 2 < 0 || x + WARN_W / 2 > 1920) return false;
     return warnOutline(x, y).every(([px, py]) => {
         if (inCorner(px, py)) return false;
@@ -952,6 +954,26 @@ function warnFree(x, y, obs) {
         });
     });
 }
+/** The warning signs in a row with the speed limit sign (the owner: beside it, on along a line, across or down): of
+ * right, left, up and down from it, the way with the most of WARN.max free places in a row (WARN.gap apart);
+ * [] where none is free. */
+function warnRow(list, obs) {
+    const sign = list.find((p) => p.key === 'sliDisc');
+    if (!sign) return [];
+    const cx = sign.x + sign.w / 2, cy = sign.y + sign.h / 2, r = sign.w / 2, g = WARN.gap;
+    let best = [];
+    [[1, 0], [-1, 0], [0, -1], [0, 1]].forEach(([dx, dy]) => {
+        const out = [];
+        for (let i = 0; i < WARN.max; i++) {
+            const at = dx ? { x: Math.round(cx + dx * (r + g + WARN_W / 2 + i * (WARN_W + g))), y: Math.round(cy) }
+                : { x: Math.round(cx), y: Math.round(cy + dy * (r + g + WARN.h / 2 + i * (WARN.h + g))) };
+            if (!warnFree(at.x, at.y, obs)) break;
+            out.push(at);
+        }
+        if (out.length > best.length) best = out;
+    });
+    return best;
+}
 /** Where the warning signs go among the pieces in list (the speed limit sign's among them, or none): up to WARN.max
  * centres [{ x, y }], nearest opts.warnHome (a layout's own), else beside the limit sign (or home where there is none). */
 function warnPlace(list, opts) {
@@ -960,6 +982,20 @@ function warnPlace(list, opts) {
     const home = opts.warnHome || (sign ? { x: sign.x + sign.w / 2, y: sign.y + sign.h / 2 } : (opts.home || SLI_HOME));
     // (a layout's sliSkip aside: a sign is filled, over a tach's fine lines too - JDM 1's)
     const obs = sliObstacles(list, opts.map, null);
+    // (in a row with the speed limit sign where they fit - a layout without its own place)
+    if (!opts.warnHome) {
+        const row = warnRow(list, obs);
+        if (row.length === WARN.max) return row;
+        if (row.length) {
+            const first = row[0], box0 = { r: [first.x - WARN_W / 2, first.y - WARN.h / 2, WARN_W, WARN.h] };
+            const more = [];
+            for (let y = WARN.h / 2 + 4; y <= STRIP_Y - 4 - WARN.h / 2; y += 4) for (let x = WARN_W / 2 + 4; x <= 1916 - WARN_W / 2; x += 4) {
+                const d = (x - first.x) * (x - first.x) + (y - first.y) * (y - first.y);
+                if ((!more.length || d < more[0].d) && warnFree(x, y, obs.concat([box0]))) more[0] = { x, y, d };
+            }
+            return more.length ? [first, { x: more[0].x, y: more[0].y }] : [first];
+        }
+    }
     const nearest = (h, extra, row) => {
         let best = null;
         // (within 480 px of it: a sign further off is beside nothing)
@@ -980,6 +1016,46 @@ function warnPlace(list, opts) {
     const second = warnFree(mirror.x, mirror.y, obs.concat([box(first)])) ? mirror : nearest(first, [box(first)], true) || nearest(first, [box(first)]);
     return [{ x: first.x, y: first.y }].concat(second ? [{ x: second.x, y: second.y }] : []).slice(0, WARN.max);
 }
+/*
+ * The speed limit sign and the warning signs lined up as one (the owner, 2026-11-28: in a row or a column with the
+ * sign): of the places nearest home (a layout's signHome, else its sign's home), the first where the sign and two
+ * warning signs fit in a row - right of it, left of it, one each side - or a column - below, above, one each side
+ * (a layout's signDirs: 'h', 'v' or both), each clear as it would be alone. { sli: { x, y, r }, warns: [{ x, y }] }
+ * (the first warning sign next to the limit sign), or null where none fits (then each on its own, as before).
+ */
+const LINE_GAP = 2;
+function signGroup(list, opts) {
+    opts = opts || {};
+    // (WARN.gap first; then half of it, where that's all the room there is - 20's column between its speedometer and
+    // the middle panel)
+    return groupAt(list, opts, WARN.gap) || groupAt(list, opts, Math.round(WARN.gap / 2));
+}
+function groupAt(list, opts, gap) {
+    const obs = sliObstacles(list, opts.map, opts.skip), home = opts.groupHome || opts.home || SLI_HOME;
+    const dirs = opts.dirs || ['h', 'v'];
+    for (let k = 0; k < SLI_R.length; k++) {
+        const r = SLI_R[k], pts = sliPoints(r, home);
+        const dx1 = Math.ceil(r + gap + LINE_GAP + WARN_W / 2), dx2 = dx1 + WARN_W + gap + LINE_GAP;
+        const dy1 = Math.ceil(r + gap + LINE_GAP + WARN.h / 2), dy2 = dy1 + WARN.h + gap + LINE_GAP;
+        const ways = [];
+        if (dirs.indexOf('h') >= 0) ways.push([[dx1, 0], [dx2, 0]], [[-dx1, 0], [-dx2, 0]], [[dx1, 0], [-dx1, 0]]);
+        if (dirs.indexOf('v') >= 0) ways.push([[0, dy1], [0, dy2]], [[0, -dy1], [0, -dy2]], [[0, -dy1], [0, dy1]]);
+        for (let i = 0; i < pts.length; i++) {
+            const p = pts[i];
+            if (p.d > 640 * 640) break;     // (beside nothing further off)
+            if (!sliFree(p.x, p.y, r, obs)) continue;
+            for (let j = 0; j < ways.length; j++) {
+                const w = ways[j].map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy }));
+                const o1 = obs.concat([{ c: [p.x, p.y, r] }]);
+                if (!warnFree(w[0].x, w[0].y, o1, gap)) continue;
+                if (!warnFree(w[1].x, w[1].y, o1.concat([{ r: [w[0].x - WARN_W / 2, w[0].y - WARN.h / 2, WARN_W, WARN.h] }]), gap)) continue;
+                return { sli: { x: p.x, y: p.y, r }, warns: w };
+            }
+        }
+    }
+    return null;
+}
+
 let atlasImg = null;
 /** The signs' atlas as the cluster takes a texture: { w, h, px } (unpacked once). */
 function signAtlas() {
@@ -1005,5 +1081,5 @@ module.exports = {
     isNum, speedIn, speedUnit, tempIn, tempText, speedShown, speedText, rpmShown, scales, setScales, powerTop, torqueTop, boostTop, boostShare, boostTicks, snapBoost, BOOST_GAUGES, speedScale, rpmScale, shiftPoint, yellowAt, tempFrac, gearText, selectorLit, clock, modeText, text, flat,
     TRIP_OWN, tripShown, tripPlaces, tripRows, ECON_UNITS, econ, econNum, econText, econUnitOf, econFrac, tripText, tripTimeText, LOW_SOC, socLow, resolveReadouts, phevPick, AUTO_READOUT, STRIP_Y, strip, stripGauges, STRIP_DROP, electric, sportNow, PCT, POWER_UNIT, EBOOST_AT, powerPct, powerFrac, powerLabels, KW_ZERO, KW_FLOOR, REGEN_RGB, kwRange, kwFrac, kwDialScale, powerMeter, tachDyn, tachValue, tachRange, stripInfoA, stripInfoB, MAP, MAP_VIEW, STOCK_SPEED, aroundMap, overMap, cut, NOTCH, GEARBOX_HOLE, boxBezel, EDRIVE_HOLE, M_BOXES, M_HOLES, mCar, holes, TELLTALES, TURN_ARROWS, SIDE_LIGHTS, inCorner, distText, erangeText, outsideText, socText, kwText, reading, readingUp, bar, engineFocus, focus, pressUnitOf, pressNum, pressLabel, boostText, torqueText, torqueNum, torqueUnit, timingText, boostFrac, READOUTS, READOUT_SAMPLES, driveSample, fitText, placeOf, placeReadout, placeGauge, TEMP_TONES, HOT_KEY, hotAt, mainOff, toneOf, toned, CH, CH_RED, chRed, chOf, chFrac, chMarks, readout, powerNum, powerUnitText, GAUGES, gaugeOf,
     SLI_R, SLI_GAP, SLI_HOME, sliPlace, sliInFoot, sliPieces, sliFit, sliText, sliObstacles, sliFree,
-    WARN, WARN_W, warnPlace, warnPieces, warnFree, signAtlas,
+    WARN, WARN_W, warnPlace, warnRow, warnPieces, warnFree, signAtlas, signGroup,
 };

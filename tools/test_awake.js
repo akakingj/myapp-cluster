@@ -189,6 +189,10 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             const was2 = Date.now, later2 = Date.now() + 10001;
             Date.now = () => later2;
             try { assert.deepStrictEqual(D.data().roadSigns, [], '10 s on: gone'); } finally { Date.now = was2; }
+            /* no passing too (the head-up display has its own; the layouts the owner's picture), its end not */
+            cam(signs('NO_PASSING_SIGN'));
+            cam(signs('NO_PASSING_END'));
+            assert.deepStrictEqual(D.data().roadSigns, ['no_passing'], 'no passing; its end not');
         } finally { D.stop(); }
         /* the app asks the install for it, fitted to the car's catalog (kit/runtime/survey_fit.js) */
         assert.deepStrictEqual(spec.survey.groups.map((g) => [g.iface, g.events]), [['de.bmw.dass.TrafficSignRecognition', '^TrafficSignRecognition$'],

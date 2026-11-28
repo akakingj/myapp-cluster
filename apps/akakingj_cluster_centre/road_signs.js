@@ -37,13 +37,14 @@ function parseSigns(v) {
 const shownByHud = (t) => /SPEED_LIMIT|NO_PASSING|OVERTAK|(^|_)END(_|$)/.test(t);
 const wanted = (t) => !shownByHud(t) && (/^DS_/.test(t) || artOf(t) !== 'danger');
 
-/** The signs seen lately: add(types, t), current(t) -> the types to show, oldest first. */
-function makeTracker(showMs, max) {
-    showMs = showMs || SHOW_MS; max = max || 4;
+/** The signs seen lately: add(types, t), current(t) -> the types to show, oldest first; keep (wanted: the head-up
+ * display's) which types it takes. */
+function makeTracker(showMs, max, keep) {
+    showMs = showMs || SHOW_MS; max = max || 4; keep = keep || wanted;
     const seen = new Map();      // type -> { first, last }
     return {
         add(types, t) {
-            types.filter(wanted).forEach((ty) => {
+            types.filter(keep).forEach((ty) => {
                 const s = seen.get(ty);
                 if (s && t - s.last < showMs) s.last = t; else seen.set(ty, { first: t, last: t });
             });
@@ -59,7 +60,7 @@ function makeTracker(showMs, max) {
 const side = (l, r) => (t) => (/LEFT/.test(t) ? l : r);
 const ART_OF = [
     // regulatory and instruction signs first (NO_LEFT_TURN is no bend)
-    [/GIVE_WAY|YIELD/, 'give_way'], [/^STOP/, 'stop'], [/NO_ENTRY|DO_NOT_ENTER/, 'no_entry'],
+    [/NO_PASSING|OVERTAK/, 'no_passing'], [/GIVE_WAY|YIELD/, 'give_way'], [/^STOP/, 'stop'], [/NO_ENTRY|DO_NOT_ENTER/, 'no_entry'],
     [/U_TURN/, 'no_u_turn'], [/NO_.*LEFT|LEFT_TURN_PROHIB|TURN_LEFT_PROHIB/, 'no_left_turn'],
     [/NO_.*RIGHT|RIGHT_TURN_PROHIB|TURN_RIGHT_PROHIB/, 'no_right_turn'], [/NO_.*STRAIGHT|STRAIGHT_PROHIB/, 'no_straight'],
     [/NO_.*(STOPPING|WAITING|STANDING)/, 'no_stopping'], [/NO_.*PARK|PARKING_PROHIB/, 'no_parking'],

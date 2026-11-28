@@ -41,7 +41,10 @@ NAMES = ['slippery', 'traffic_jam', 'wild_animal', 'downhill', 'uphill', 'curve_
          # the regulatory and instruction signs (the camera's names for them not known yet: kept till the car's own
          # list of types says which it has - signs.js logs it)
          'slow', 'no_u_turn', 'no_left_turn', 'no_right_turn', 'no_straight', 'no_cars', 'no_parking', 'no_stopping',
-         'keep_distance_50m', 'one_way', 'unprotected_left']
+         'keep_distance_50m', 'one_way', 'unprotected_left',
+         # no passing: the car's head-up display shows it itself, but on the cluster AK Cluster Layouts covers BMW's own
+         # signs - so Layouts' atlas has it (the owner, 2026-11-28)
+         'no_passing']
 
 
 def box_from_overlay():

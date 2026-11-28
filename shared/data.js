@@ -323,7 +323,8 @@ function startData(ctx, opts) {
         .catch((e) => { status['speed limit sign'] = 'error: ' + e; });
     // the warning signs the front camera reads (road_signs.js; KO 1's and KO 2's, layout_common.warnPieces): its one
     // event, once a sign; declared at install only where the car's catalog has it (app.json "survey", like the sign)
-    const roadTracker = RS.makeTracker(RS.SHOW_MS, 4);
+    const cluster = (t) => /^DS_/.test(t) || (/NO_PASSING|OVERTAK/.test(t) && !/(^|_)END(_|$)/.test(t));
+    const roadTracker = RS.makeTracker(RS.SHOW_MS, 4, cluster);
     ctx.signals.watch(RS.CAM_IFACE, '1', {}, log)
         .then((sub) => {
             if (!sub || sub.error || !sub.proxy || !ctx.signals.on) { status['warning signs'] = 'not in this car' + (sub && sub.error ? ' (' + sub.error + ')' : ''); return null; }
@@ -816,8 +817,10 @@ function startData(ctx, opts) {
             else if (!d.demo && x.sli && Date.now() - (x.at.sli || 0) <= 10000) o.speedLimit = x.sliShown;
             o.sliSource = tsrOn ? 'sign' : x.sli ? 'head-up display' : 'none';
             // the warning signs shown now (each 10 s after the camera last read it), as the pictures' names, oldest first
-            // (the warning signs only, the yellow triangles: give way, stop and the bans are the HUD's - AK Cluster Info)
-            if (!d.demo) o.roadSigns = roadTracker.current(Date.now()).filter((t) => /^DS_/.test(t)).map(RS.artOf);
+            // (the warning signs, the yellow triangles, and no passing: the head-up display shows that one itself, but on
+            // the cluster the layouts cover BMW's own signs - the owner, 2026-11-28; give way, stop and the bans are the
+            // HUD's, AK Cluster Info's)
+            if (!d.demo) o.roadSigns = roadTracker.current(Date.now()).map(RS.artOf);
             if (x.tsr) o.sliSign = one(x.tsr, 'presentClassLimitSpeed');
             if (x.sli) Object.assign(o, { sliRaw: x.sli.value, sliSymbol: x.sli.symbol, sliDist: x.sli.dist, sliTakeover: x.sli.takeover, sliAgeS: Math.round((Date.now() - x.at.sli) / 100) / 10 });
             if (!d.demo && Date.now() - (x.at.cruiseSet || 0) < 10000) o.cruise = { on: x.cruiseSet > 0 && x.cruiseSet < 250, set: x.cruiseSet > 0 && x.cruiseSet < 250 ? x.cruiseSet : undefined };

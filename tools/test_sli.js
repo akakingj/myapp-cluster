@@ -55,12 +55,26 @@ LAYOUTS.forEach((L) => ['info', 'map', 'stock'].forEach((centre) => ['ice', 'phe
     {
         // (every layout, 0.69.0: two where there is room, one at least)
         assert(warn.length <= 2 && (mapForm || warn.length >= 1), what + ': ' + warn.length + ' warning signs');
-        const wobs = C.sliObstacles(ps.filter((p) => !/^warn\d$/.test(p.key)), mapForm ? (L.mapWindow || C.MAP_VIEW) : null, L.sliSkip);
+        // (the limit sign as drawn, round: its box's corners are empty)
+        const wobs = C.sliObstacles(others, mapForm ? (L.mapWindow || C.MAP_VIEW) : null, L.sliSkip).concat([{ c: [x, y, r] }]);
         warn.forEach((w, i) => {
             assert(w.kind === 'sign' && w.h === C.WARN.h && w.w === C.WARN_W && w.z >= 30, what + ': warn' + i + ' its kind and size');
-            assert(C.warnFree(w.x + w.w / 2, w.y + w.h / 2, wobs.concat(i ? [{ r: [warn[0].x, warn[0].y, warn[0].w, warn[0].h] }] : [])), what + ': warn' + i + ' clear at ' + w.x + ',' + w.y);
+            // (half WARN.gap where that's all the room: signGroup's second try, 20's column, Retro M's row)
+            assert(C.warnFree(w.x + w.w / 2, w.y + w.h / 2, wobs.concat(i ? [{ r: [warn[0].x, warn[0].y, warn[0].w, warn[0].h] }] : []), Math.round(C.WARN.gap / 2)), what + ': warn' + i + ' clear at ' + w.x + ',' + w.y);
             assert(w.x + w.w <= N.x || w.x >= N.x + N.w || w.y >= N.y + N.h, what + ': warn' + i + ' clear of the camera\'s cowl');
         });
+        // in one line with the speed limit sign, a row or a column (the owner, 2026-11-28): every layout with the full-size
+        // pieces but KO 1's and KO 2's (the sign in the speedometer) and ID6 M's (no room: the middle panel's other foot)
+        if (!mapForm && !L.sliAt && !L.warnHome) {
+            assert(warn.length === 2, what + ': two in line');
+            const cs = warn.map((w) => [w.x + w.w / 2, w.y + w.h / 2]).concat([[x, y]]);
+            assert(cs.every((c) => Math.abs(c[0] - x) <= 2) || cs.every((c) => Math.abs(c[1] - y) <= 2), what + ': in line with the sign ' + JSON.stringify(cs));
+        }
+        if (L.id === 'retro_m' && centre === 'info') {
+            // (Retro M: the limit sign over the gear window, the warning signs either side, just above it)
+            const g = others.find((p) => p.key === 'gearWin');
+            assert(x === g.x + g.w / 2 && y + r < g.y && g.y - (y + r) < 80, what + ': over the gear');
+        }
         if (warn.length) {
         const home = L.warnHome || { x, y };
         const near = Math.hypot(warn[0].x + warn[0].w / 2 - home.x, warn[0].y + warn[0].h / 2 - home.y);
@@ -89,6 +103,9 @@ assert.strictEqual(s[1].text, C.sliText);
     ['DS_SPLIPPERY_ROAD', 'DS_TRAFFIC_JAM', 'DS_ANIMAL_CROSSING', 'DS_RIGHT_DOWNWARDS', 'DS_ROAD_WORKS', 'DS_SPEED_BUMP', 'DS_CURVE_LEFT', 'DS_NEW_ONE']
         .forEach((t) => { const c = A.cells[RS.artOf(t)]; assert(c && c[3] === C.WARN.h && c[2] <= C.WARN_W && c[0] + c[2] <= A.w && c[1] + c[3] <= A.ah, t); });
     assert(!A.cells.give_way && !A.cells.no_entry, 'the warning signs only');
+    // (and no passing: the head-up display has its own, the layouts the owner's picture, 0.69.0)
+    ['NO_PASSING_SIGN', 'NO_OVERTAKING'].forEach((t) => assert.strictEqual(RS.artOf(t), 'no_passing', t));
+    assert(A.cells.no_passing && A.cells.no_passing[3] === C.WARN.h, 'no passing in the atlas');
     const tex = C.signAtlas();
     assert.strictEqual(tex.px.length, tex.w * tex.h * 4);
 }

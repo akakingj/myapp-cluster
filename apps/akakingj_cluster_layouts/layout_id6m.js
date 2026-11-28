@@ -109,6 +109,9 @@ function small(o, which, cx, cy, R) {
 
 module.exports = {
     id: 'id6m',
+    // (no room for the speed limit sign and the warning signs in one line, its dials, middle panel, side lights and
+    // small dials filling the glass: the warning signs at the middle panel's other foot, mirroring the limit sign's)
+    warnHome: { x: 1218, y: 590 },
     title: 'ID6 M',
     palette: (lookId) => PALETTES[lookId] || PALETTES.comfort,
     gearText: C.gearText,

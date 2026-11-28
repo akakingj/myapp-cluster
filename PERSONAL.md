@@ -356,6 +356,10 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   sign_atlas.js; layout_common.warnPlace/warnPieces; data.js d.roadSigns, the camera's event declared by the survey
   fit). The top middle is the driver camera's cowl (the owner reminded): NOTCH now kept clear by the speed limit sign
   too. shared/road_signs.js now holds the camera logic for Info and Layouts (Info takes it by name).
+  Then (the owner, same day): the speed limit sign and the warning signs in one line, a row or a column
+  (layout_common.signGroup, 12 px then 6 px clear), Retro M's row just above the gear (its signAt), ID6 M's one
+  warning sign at the middle panel's other foot (no room for a line), and no passing on the cluster as the owner's
+  picture (tools/sign_art/no_passing.png; data.js keeps DS_ types and no passing, not its end).
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
   가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -

@@ -155,6 +155,14 @@ const back = (key, x, y, w, h) => ({ key, kind: 'rmbg', x, y, w, h, params: { u_
 
 module.exports = {
     id: 'retro_m',
+    // the speed limit sign and the warning signs in a row just above the gear window (the owner's place, 0.69.0): the
+    // limit sign over the gear, the warning signs either side of it, the first on the right; the dials' rings 7 px off
+    // the triangles' feet (the free-place search's 12 px gap keeps them 140 px higher). With the map: as elsewhere.
+    signAt: (list, o, where) => {
+        if (where.map || !list.some((p) => p.key === 'gearWin')) return null;
+        const y = 262, r = C.SLI_R[C.SLI_R.length - 1], dx = 86;
+        return { sli: { x: 960, y, r }, warns: [{ x: 960 + dx, y }, { x: 960 - dx, y }] };
+    },
     title: 'Retro M',
     palette: () => Object.assign({}, PAL),
     gearText: C.gearText,

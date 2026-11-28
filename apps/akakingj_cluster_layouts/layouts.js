@@ -131,10 +131,15 @@ function withSign(L, o, list) {
     const where = { map: mapForm ? (L.mapWindow || C0.MAP_VIEW) : null, home: typeof L.sliHome === 'function' ? L.sliHome(o) : L.sliHome, skip: L.sliSkip };
     // (a layout's own place for it, sliAt: KO 1's and KO 2's inside the speedometer; else the free one nearest home)
     const own = typeof L.sliAt === 'function' ? L.sliAt(list, o) : null;
-    const at = own || C0.sliPlace(list, where);
+    // (with the warning signs the camera reads, 0.69.0: lined up with it, a row or a column, where they fit - a layout's
+    // signHome and signDirs; KO 1's and KO 2's sign in the speedometer, their warning signs where it stood)
+    // (or the layout's own places for them all, signAt: Retro M's row just above the gear)
+    const fixed = !own && L.warnSigns !== false && typeof L.signAt === 'function' ? L.signAt(list, o, where) : null;
+    const group = fixed || (own || L.warnSigns === false ? null : C0.signGroup(list, Object.assign({ groupHome: L.signHome, dirs: L.signDirs }, where)));
+    const at = own || (group && group.sli) || C0.sliPlace(list, where);
     const out = at ? list.concat(C0.sliPieces(at).map((p) => (p.key === 'sliNum' ? C0.sliFit(p, L.font || 'bold') : p))) : list;
-    // the warning signs the camera reads beside it (KO 1, KO 2: warnSigns; with the speed limit sign, its setting)
-    return L.warnSigns !== false ? out.concat(C0.warnPieces(C0.warnPlace(out, Object.assign({ warnHome: L.warnHome }, where)))) : out;
+    if (L.warnSigns === false) return out;
+    return out.concat(C0.warnPieces(group ? group.warns : C0.warnPlace(out, Object.assign({ warnHome: L.warnHome }, where))));
 }
 LAYOUTS.forEach((L) => {
     const own = L.pieces;
