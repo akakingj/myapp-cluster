@@ -249,6 +249,9 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(lg.lines.indexOf('catalog no passing 1: de.bmw.navigation.ADAS: noPassingProfile') >= 0);
         assert(lg.lines.indexOf('catalog no passing 2: de.bmw.navigation.EHorizon: horizonUpdate') >= 0);
         fs.unlinkSync(catFile);
+        // (kept for the Logs' codes: the app's log there is only its last lines)
+        const dl = sg.defLines();
+        assert(dl.indexOf('catalog no passing: 2 services') >= 0 && dl.some((l) => /^road signs: types 1: /.test(l)) && dl.some((l) => /^sign definitions: TrafficSignRecognition 1: /.test(l)));
         // no config: said once, nothing else
         const sg2 = S.startSigns({ signals: fakeSignals() }, lg, { kitDir: kitWith([CAM]), loadConfig: () => { throw new Error('no SOME/IP config'); } });
         await wait();

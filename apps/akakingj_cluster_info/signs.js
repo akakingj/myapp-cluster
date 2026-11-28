@@ -81,17 +81,21 @@ function startSigns(ctx, log, opts) {
     let mine = null;                 // the subscription: { proxy, available }
     const subscribed = {};           // member -> promise (on our proxy)
 
+    // (what readTypes, readDefs and readCatalogNp find, once: kept for the Logs' codes too - the app's log there is only
+    // its last 40 lines, 1.12.4)
+    const defLines = [];
+    const note = (m) => { log.info(m); if (defLines.length < 160) defLines.push(m); };
     // the car's list of types (its interface config; only where the camera is declared)
     let carTypes = null;
     function readTypes() {
         if (carTypes || !item) return;
         let cfg = null;
-        try { cfg = (opts.loadConfig || signals.loadConfig)(CAM_IFACE); } catch (e) { carTypes = []; log.info('road signs: the car\'s list of sign types not readable (' + e.message + ')'); readDefs(); return; }
+        try { cfg = (opts.loadConfig || signals.loadConfig)(CAM_IFACE); } catch (e) { carTypes = []; note('road signs: the car\'s list of sign types not readable (' + e.message + ')'); readDefs(); return; }
         carTypes = typeNames(cfg);
-        if (!carTypes.length) { log.info('road signs: no list of sign types in the camera\'s interface config'); readDefs(); return; }
+        if (!carTypes.length) { note('road signs: no list of sign types in the camera\'s interface config'); readDefs(); return; }
         const shown = carTypes.filter(wanted), noArt = shown.filter((t) => artOf(t) === 'danger' && !/^DS_DANGER|GENERAL|OTHER/.test(t));
-        log.info('road signs: this car\'s camera knows ' + carTypes.length + ' sign types, ' + shown.length + ' drawn (' + noArt.length + ' as "!")');
-        chunk(carTypes, 180).forEach((l, i) => log.info('road signs: types ' + (i + 1) + ': ' + l));
+        note('road signs: this car\'s camera knows ' + carTypes.length + ' sign types, ' + shown.length + ' drawn (' + noArt.length + ' as "!")');
+        chunk(carTypes, 180).forEach((l, i) => note('road signs: types ' + (i + 1) + ': ' + l));
         readDefs();
     }
     /* every name in the definitions of the sign services this install has (their interface configs, made at install from
@@ -104,10 +108,10 @@ function startSigns(ctx, log, opts) {
         DEF_IFACES.forEach((d) => {
             const iface = Array.isArray(d) ? d[0] : d, only = Array.isArray(d) ? d[1] : null, short = iface.split('.').pop();
             let cfg = null;
-            try { cfg = (opts.loadConfig || signals.loadConfig)(iface); } catch (e) { log.info('sign definitions: ' + short + ' not in this install (' + e.message + ')'); return; }
+            try { cfg = (opts.loadConfig || signals.loadConfig)(iface); } catch (e) { note('sign definitions: ' + short + ' not in this install (' + e.message + ')'); return; }
             const names = defNames(cfg).filter((n) => !only || only.test(n)), lines = chunk(names, 140);
-            log.info('sign definitions: ' + short + ', ' + names.length + ' names' + (lines.length > 40 ? ' (the first 40 lines)' : ''));
-            lines.slice(0, 40).forEach((l, i) => log.info('sign definitions: ' + short + ' ' + (i + 1) + ': ' + l));
+            note('sign definitions: ' + short + ', ' + names.length + ' names' + (lines.length > 40 ? ' (the first 40 lines)' : ''));
+            lines.slice(0, 40).forEach((l, i) => note('sign definitions: ' + short + ' ' + (i + 1) + ': ' + l));
         });
         readCatalogNp();
     }
@@ -117,7 +121,7 @@ function startSigns(ctx, log, opts) {
     function readCatalogNp() {
         const file = opts.catalog || process.env.SOMEIP_CATALOG || '/etc/oap/someip/someip-interfaces.json';
         let db = null;
-        try { db = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { log.info('catalog no passing: catalog not readable (' + (e.code || e.message) + ')'); return; }
+        try { db = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { note('catalog no passing: catalog not readable (' + (e.code || e.message) + ')'); return; }
         const ifs = (db && db.interfaces) || {}, RE = /no_?passing|overtak|npi|ueberhol|ehorizon|adasis|horizon|tunnel/i, out = [];
         Object.keys(ifs).sort().forEach((iface) => {
             const e = ifs[iface] || {}, names = [];
@@ -126,8 +130,8 @@ function startSigns(ctx, log, opts) {
             if (hit.length || RE.test(iface)) out.push(iface + ': ' + (hit.join(', ') || '(no members)'));
         });
         const lines = out.reduce((a, l) => a.concat(chunk(l.split(', '), 150)), []);
-        log.info('catalog no passing: ' + out.length + ' services' + (lines.length > 30 ? ' (the first 30 lines)' : ''));
-        lines.slice(0, 30).forEach((l, i) => log.info('catalog no passing ' + (i + 1) + ': ' + l));
+        note('catalog no passing: ' + out.length + ' services' + (lines.length > 30 ? ' (the first 30 lines)' : ''));
+        lines.slice(0, 30).forEach((l, i) => note('catalog no passing ' + (i + 1) + ': ' + l));
     }
 
     let item = null;
@@ -159,11 +163,11 @@ function startSigns(ctx, log, opts) {
     if (item && !opts.noSubscribe) {
         state = 'subscribing';
         Promise.resolve().then(() => signals.watch(CAM_IFACE, item.instance || '1', {}, log)).then((sub) => {
-            if (!sub || sub.error || !sub.proxy) { state = 'refused: ' + ((sub && sub.error) || 'no proxy'); log.warn('road signs: ' + state); return; }
+            if (!sub || sub.error || !sub.proxy) { state = 'refused: ' + ((sub && sub.error) || 'no proxy'); log.warn('road signs: ' + state); readDefs(); return; }
             mine = sub;
             return listen(CAM_EVENT, onSign).then(() => { state = 'subscribed'; log.info('road signs: the camera\'s signs subscribed'); readTypes(); });
-        }).catch((e) => { state = 'refused: ' + e; log.warn('road signs: ' + e); });
-    }
+        }).catch((e) => { state = 'refused: ' + e; log.warn('road signs: ' + e); readDefs(); });
+    } else if (!opts.noSubscribe) Promise.resolve().then(readDefs);     // (no camera here: the definitions all the same)
 
     /** The signals the survey uses: the camera's service through this subscription (one proxy), the rest as they are. */
     function signalsFor(base) {
@@ -187,6 +191,8 @@ function startSigns(ctx, log, opts) {
 
     return {
         current: () => tracker.current(now()),
+        /** The lines readTypes, readDefs and readCatalogNp wrote (for the Logs' codes). */
+        defLines: () => defLines.slice(),
         status: () => ({ state, seen, types: Object.assign({}, types), carTypes: carTypes ? carTypes.slice() : null,
             drawn: carTypes ? carTypes.filter(wanted).length : null, asDanger: carTypes ? carTypes.filter((t) => wanted(t) && artOf(t) === 'danger').length : null }),
         signalsFor,

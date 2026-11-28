@@ -361,6 +361,9 @@ mgu.run({
                 const mine = full ? survey.sections(0) : survey.fitted(sections, 15, logs.codeCount);
                 sections.splice(1, 0, ...mine);
             }
+            // (the sign services' definitions, the car's sign types and the catalog's no passing services, read once at the
+            // start: in the codes whatever else they hold - the app's log there is only its last lines, 1.12.4)
+            sections.push(['sign definitions', signs && signs.defLines ? (signs.defLines().join('\n') || '(none yet: the camera\'s signs not subscribed)') : 'road signs not started']);
             return logs.bundle(((ctx.spec && ctx.spec.title) || 'Cluster Info') + ' ' + ((ctx.spec && ctx.spec.version) || ''), sections);
         }
         const logPages = logs.pager(logBundle, dataDir, log, 'info');
