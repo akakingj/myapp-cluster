@@ -113,6 +113,21 @@ ok('the camera\'s traffic lights (1.14.2, group trafficLight): declared where th
     assert(!r2.declared.some((d) => d.iface === TL) && !m2.proxies[TL]);
     assert.strictEqual(INFO.survey.groups[INFO.survey.groups.findIndex((x) => x.id === 'lanes') + 1].id, 'trafficLight');
 });
+ok('the map\'s look ahead and RIC guidance (1.14.7, groups mapLinks, mapLinksLow, ricGuidance): their events where the catalog has them', () => {
+    const SD = 'de.bmw.infotainment.navigation.foresight.MapApiLinksSD', LOW = SD + 'Low', RIC = 'de.bmw.infotainment.remoteinstrumentcluster.RICServiceGuidance';
+    const add = (c) => {
+        c.interfaces[SD] = { events: { linksFrame: { eventId: 32774 }, sdMapMatchedPositionAndMPP: { eventId: 32776 } } }; c.instanceIDs[SD] = { 1: 1 };
+        c.interfaces[LOW] = { events: { linksFrame: { eventId: 32769 }, sdMapMatchedPositionAndMPP: { eventId: 32770 } } }; c.instanceIDs[LOW] = { 1: 1 };
+        c.interfaces[RIC] = { events: { ric_sendEvent: { eventId: 32770 } }, methods: { ric_setSomething: {} } }; c.instanceIDs[RIC] = { 1: 1 };
+    };
+    const m = manifest(), r = F.fit(m, INFO.survey, catalog(add));
+    const got = r.declared.filter((d) => [SD, LOW, RIC].indexOf(d.iface) >= 0).map((d) => d.iface.split('.').pop() + '.' + d.member + ' ' + d.kind).sort();
+    assert.deepStrictEqual(got, ['MapApiLinksSD.linksFrame event', 'MapApiLinksSD.sdMapMatchedPositionAndMPP event', 'MapApiLinksSDLow.linksFrame event',
+        'MapApiLinksSDLow.sdMapMatchedPositionAndMPP event', 'RICServiceGuidance.ric_sendEvent event']);
+    assert(!JSON.stringify(m.proxies[RIC] || {}).includes('ric_set'), 'never a method');
+    const m2 = manifest(), r2 = F.fit(m2, INFO.survey, catalog());
+    assert(!r2.declared.some((d) => [SD, LOW, RIC].indexOf(d.iface) >= 0));
+});
 ok('done twice (the installer\'s check, then the install): the same; no catalog: nothing added, the last ones taken out', () => {
     const m = manifest(), r1 = F.fit(m, INFO.survey, catalog()), once = JSON.stringify(m);
     const r2 = F.fit(m, INFO.survey, catalog(), r1);

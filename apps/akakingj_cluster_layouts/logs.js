@@ -176,7 +176,9 @@ function pager(bundleOf, dataDir, log, tag, btn) {
             if (file || extra) cv.text(extra || file, 40, 102, 14, extra ? t.warn : t.dim, { font: 'label', literal: true });
             const top = 112;
             view.codes.slice(first, first + PER).forEach((q, i) => {
-                const px = Math.max(3, Math.floor(Math.min(420, H - top - 23) / (q.size + 8)));
+                // (1.14.7) its number under it on the screen too: 22 below the code and 18 high (a last, smaller code drew
+                // it 2 px past the bottom)
+                const px = Math.max(3, Math.floor(Math.min(420, H - top - 40) / (q.size + 8)));
                 draw(cv, q, 40 + i * 520, top, px);
                 cv.text(String(first + i + 1) + ' / ' + n, 40 + i * 520 + Math.round((q.size + 8) * px / 2) - 20, top + (q.size + 8) * px + 22, 18, t.text, { font: 'bold', literal: true });
             });

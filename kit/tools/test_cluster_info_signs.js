@@ -193,6 +193,33 @@ check('the Test log\'s traffic lights (1.14.2): the camera\'s every change, the 
     assert.ok(/\(none yet\)$/.test(r.sections().find((x) => x[0] === 'traffic lights')[1]));
 });
 
+check('the Test log\'s map and guidance (1.14.7): MapApiLinksSD / SDLow\'s warnings - a speed camera with its link and offset -, where the car is matched, RIC guidance\'s events', () => {
+    const { startResearch } = require(path.join(APP, 'research.js'));
+    const r = startResearch({ kmh: () => 40 });
+    const SD = 'de.bmw.infotainment.navigation.foresight.MapApiLinksSD', LOW = 'de.bmw.infotainment.navigation.foresight.MapApiLinksSDLow', RIC = 'de.bmw.infotainment.remoteinstrumentcluster.RICServiceGuidance';
+    const at = (s) => Date.UTC(2026, 10, 28, 10, 0, s);
+    const pos = (link, off, status) => ({ timestamp: {}, eventDataQualifier: 'X', mapMatchingStatus: status || 'ON_ROAD', positionsAndMpp: { positions: [{ link_matched: link, offset: off, in_link_direction: true, probability: 90 }], mostProbablePath: [1, 0, 2], routeLinksCount: 0 } });
+    const frame = (warn) => ({ eventDataQualifier: 'X', links: [{ linkId: 111, length: 12000 }, { linkId: 222, length: 30000 }],
+        linkAttributes: { warningSignPool: warn, warningSignRefs: [{ first: 0, last: 0 }, { first: 1, last: 2 }], shapePointPool: new Array(500).fill({ x: 1, y: 2 }) } });
+    r.onValue(SD, 'sdMapMatchedPositionAndMPP', pos(222, 1000), at(0));
+    r.onValue(SD, 'sdMapMatchedPositionAndMPP', pos(222, 1500), at(1));           // the same status within 30 s: no line
+    r.onValue(SD, 'linksFrame', frame([{ type: 'SLOW_DOWN', offset: 500, directionAlongLink: 'FORWARD' }, { type: 85, offset: 3520, directionAlongLink: 'FORWARD' }, { type: 'VILLAGE_AHEAD', offset: 0, directionAlongLink: 'BOTH' }]), at(2));
+    r.onValue(SD, 'linksFrame', frame([{ type: 'SLOW_DOWN', offset: 500, directionAlongLink: 'FORWARD' }, { type: 85, offset: 3520, directionAlongLink: 'FORWARD' }, { type: 'VILLAGE_AHEAD', offset: 0, directionAlongLink: 'BOTH' }]), at(3));
+    r.onValue(LOW, 'sdMapMatchedPositionAndMPP', pos(111, 0, 'OFF_ROAD'), at(4));
+    r.onValue(RIC, 'ric_sendEvent', { handle: 1, eventID: 7, eventType: 'Event_ManeuverListEvent', eventData: { maneuverListEvent: { x: 1 } } }, at(5));
+    r.onValue(RIC, 'ric_sendEvent', { handle: 1, eventID: 7, eventType: 'Event_ManeuverListEvent', eventData: { maneuverListEvent: { x: 1 } } }, at(6));
+    const sec = r.sections().find((x) => /^map and guidance/.test(x[0]))[1].split('\n');
+    assert.strictEqual(sec[0], 'came: SD sdMapMatchedPositionAndMPP 2, SD linksFrame 2, SDLow sdMapMatchedPositionAndMPP 1, RIC ric_sendEvent 2; map matching OFF_ROAD');
+    assert.deepStrictEqual(sec.slice(1), [
+        '10:00:00 40 km/h | SD position: ON_ROAD link=222 off=10m fwd p=90 mpp=3 route=0',
+        '10:00:02 40 km/h | SD links: 2 links, 3 warnings (SLOW_DOWN 1, SPEED_CAMERA 1, VILLAGE_AHEAD 1); cameras: SPEED_CAMERA link#1 id=222 len=300m off=35.2m dir=FORWARD [same link as the car: 20.2m]',
+        '10:00:04 40 km/h | SDLow position: OFF_ROAD link=111 off=0m fwd p=90 mpp=3 route=0',
+        '10:00:05 40 km/h | RIC ric_sendEvent: handle=1 eventID=7 eventType=Event_ManeuverListEvent eventData.maneuverListEvent.x=1']);
+    assert.ok(!r.sections().some((x) => /every field/.test(x[0]) && /MapApiLinks|RICService/.test(x[1])), 'the frames not in every field');
+    r.reset();
+    assert.ok(/^came: nothing/.test(r.sections().find((x) => /^map and guidance/.test(x[0]))[1]));
+});
+
 check('pictures: South Korea\'s own signs - the types the camera read get theirs; another warning 위험 ("!")', () => {
     assert.strictEqual(S.artOf('DS_SPLIPPERY_ROAD'), 'slippery');
     assert.strictEqual(S.artOf('DS_TRAFFIC_JAM'), 'traffic_jam');

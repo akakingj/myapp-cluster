@@ -28,6 +28,18 @@
  * the figures as they come (what a colour's number means: a drive's log will tell; the catalog's defaults - id 63, place
  * 255, the rest 15 - are "no traffic light"), and, to compare, the head-up display's TRAFFIC_LIGHT_ symbols as "hud:".
  *
+ * (1.14.7) Speed cameras without BMW's route (the owner's QR log study, Nov 28 2026: wanted where the car's own
+ * navigation is not used - CarPlay, no destination): the map's look ahead, MapApiLinksSD and MapApiLinksSDLow (survey
+ * groups mapLinks, mapLinksLow; events only, read only), and RICServiceGuidance's ric_sendEvent (ricGuidance). Section
+ * "map and guidance": a header with how many of each came and the map matching's last status, then lines (the whole
+ * test, at most KEEP_SIGNS):
+ *   HH:MM:SS km/h | SD links: 42 links, 7 warnings (SLOW_DOWN 3, 85 1, ...); cameras: SPEED_CAMERA link#3 id=... len=120m
+ *     off=35.2m dir=FORWARD [same link as the car: 20.1 m ahead]          (when the warnings or the cameras change)
+ *   HH:MM:SS km/h | SD position: ON_ROAD link=... off=12.3m fwd mpp=9 route=0       (on a status change, else every 30 s)
+ *   HH:MM:SS km/h | RIC: <the event's fields, 300 letters>                           (each change)
+ * Warning 85 SPEED_CAMERA, 86 TRAFFIC_ENFORCEMENT_CAMERA (MapApiLinkTypes.Warning); offsets in cm (LengthInCm) as the
+ * catalog says, shown in m - not yet seen on a drive. Only the members named here are read: the frames are large.
+ *
  *   const r = startResearch({ kmh: () => speed })
  *   r.onValue(iface, member, v, t)   r.onHud(v, t)   r.reset()   r.sections() -> [[title, text], ...]
  */
@@ -38,6 +50,42 @@ const HUD2 = /DisplayDataServer2/;
 const KEEP = 30, KEEP_NP = 80, KEEP_SIGNS = 300;
 const CAM = /SignRecognitionFrontCamera$/;
 const TL = /TrafficLightRecognitionFrontCamera/;
+const MAPSD = /navigation\.foresight\.MapApiLinksSD(Low)?$/, RIC = /remoteinstrumentcluster\.RICServiceGuidance/;
+const WARN_NAMES = { 85: 'SPEED_CAMERA', 86: 'TRAFFIC_ENFORCEMENT_CAMERA' };
+const camWarn = (t) => t === 85 || t === 86 || /CAMERA|ENFORCE/i.test(String(t));
+/** A member by name, at most d levels down (the frames' members as the catalog names them; wrappers allowed). */
+function pick(o, key, d) {
+    if (!o || typeof o !== 'object' || d < 0) return undefined;
+    if (Object.prototype.hasOwnProperty.call(o, key)) return o[key];
+    for (const k of Object.keys(o)) { const v = o[k]; if (v && typeof v === 'object' && !Array.isArray(v)) { const r = pick(v, key, d - 1); if (r !== undefined) return r; } }
+    return undefined;
+}
+const list = (x) => (Array.isArray(x) ? x : x && typeof x === 'object' ? Object.keys(x).map((k) => x[k]) : []);
+const cm = (n) => (typeof n === 'number' && isFinite(n) ? String(Math.round(n / 10) / 10) + 'm' : '?');
+/** A linksFrame's warnings: { key, text } (key: what to log on a change of). */
+function linksText(v, car) {
+    const la = pick(v, 'linkAttributes', 2) || {}, pool = list(la.warningSignPool), refs = list(la.warningSignRefs), links = list(pick(v, 'links', 2));
+    const types = {};
+    pool.forEach((w) => { const t = w && w.type !== undefined ? (WARN_NAMES[w.type] || w.type) : '?'; types[t] = (types[t] || 0) + 1; });
+    const cams = [];
+    pool.forEach((w, i) => {
+        if (!w || !camWarn(w.type)) return;
+        let li = -1;
+        refs.forEach((r, j) => { if (r && typeof r.first === 'number' && r.first <= i && i <= r.last) li = j; });
+        const L = links[li], id = L && L.linkId !== undefined ? String(L.linkId) : null;
+        let c = (WARN_NAMES[w.type] || w.type) + ' link#' + li + (id ? ' id=' + id + ' len=' + cm(L.length) : '') + ' off=' + cm(w.offset) + ' dir=' + w.directionAlongLink;
+        if (car && id && car.link === id && typeof car.off === 'number' && typeof w.offset === 'number') c += ' [same link as the car: ' + cm(w.offset - car.off) + (car.fwd === false ? ', the car against the link' : '') + ']';
+        cams.push(c);
+    });
+    const ty = Object.keys(types).map((k) => k + ' ' + types[k]).join(', ');
+    return { key: ty + '|' + cams.map((c) => c.replace(/ \[same link.*$/, '')).join(';'), text: links.length + ' links, ' + pool.length + ' warnings' + (ty ? ' (' + ty + ')' : '') + '; cameras: ' + (cams.join('; ') || 'none') };
+}
+/** sdMapMatchedPositionAndMPP: the status and where the car is matched. */
+function positionOf(v) {
+    const pm = pick(v, 'positionsAndMpp', 2) || {}, p0 = list(pm.positions)[0] || {};
+    return { status: pick(v, 'mapMatchingStatus', 2), link: p0.link_matched !== undefined ? String(p0.link_matched) : null, off: p0.offset, fwd: p0.in_link_direction,
+        prob: p0.probability, mpp: list(pm.mostProbablePath).length, route: pm.routeLinksCount };
+}
 const TL_KEYS = ['trafficLightID', 'trafficLightColor', 'trafficLightStatus', 'trafficLightArrow', 'trafficLightIndicateDirection',
     'trafficLightPositionX', 'trafficLightPositionY', 'trafficLightPositionZ', 'qualityRecognitionTrafficLight'];
 /** The traffic light event's figures in the line's order (id color status arrow dir x y z q), '-' for one missing. */
@@ -60,6 +108,10 @@ function signsLine(v) {
 function startResearch(opts) {
     opts = opts || {};
     const kmh = () => { try { const v = opts.kmh && opts.kmh(); return typeof v === 'number' && isFinite(v) ? Math.round(v) : null; } catch (e) { return null; } };
+    // (1.14.7) the map's look ahead and RIC guidance
+    const mapN = {}, mapLast = {};
+    let mapLines = [], carAt = null, posAt = -Infinity, posKey = '';
+    const mapPush = (t, text) => { if (mapLines.length >= KEEP_SIGNS) return; const k = kmh(); mapLines.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + text); };
     let last = {}, hudNpLast = null, sign = {}, hud = [], np = [], npLast = {}, cam = [], lights = [], lightLast = null, hudLightLast = null;
     const lightPush = (t, text) => { if (lights.length >= KEEP_SIGNS) return; const k = kmh(); lights.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + text); };
     const stamp = (t) => new Date(t).toISOString().slice(11, 19);
@@ -67,6 +119,25 @@ function startResearch(opts) {
         .map((l, i) => (i ? '  ' : stamp(c.at) + ' ' + (c.kmh === null ? '?' : c.kmh) + ' km/h ' + (c.what ? c.what + ': ' : '')) + l)), []);
     return {
         onValue(iface, member, v, t) {
+            if (MAPSD.test(iface) || RIC.test(iface)) {
+                const src = RIC.test(iface) ? 'RIC' : /Low$/.test(iface) ? 'SDLow' : 'SD', what = src + ' ' + member;
+                mapN[what] = (mapN[what] || 0) + 1;
+                if (src === 'RIC') {
+                    const f = RS.fields(v).join(' ').slice(0, 300);
+                    if (mapLast[what] !== f) { mapLast[what] = f; mapPush(t, 'RIC ' + member + ': ' + f); }
+                } else if (member === 'sdMapMatchedPositionAndMPP') {
+                    const p = positionOf(v), now = t || Date.now(), k = src + '|' + p.status;
+                    carAt = p;
+                    if (k !== posKey || now - posAt >= 30000) {
+                        posKey = k; posAt = now;
+                        mapPush(t, src + ' position: ' + p.status + ' link=' + p.link + ' off=' + cm(p.off) + (p.fwd === false ? ' back' : p.fwd === true ? ' fwd' : '') + ' p=' + p.prob + ' mpp=' + p.mpp + ' route=' + p.route);
+                    }
+                } else if (member === 'linksFrame') {
+                    const l = linksText(v, carAt);
+                    if (mapLast[what] !== l.key) { mapLast[what] = l.key; mapPush(t, src + ' links: ' + l.text); }
+                }
+                return;
+            }
             if (TL.test(iface)) {
                 const l = lightLine(v);
                 if (l !== lightLast) { lightLast = l; lightPush(t, l); }
@@ -109,7 +180,8 @@ function startResearch(opts) {
             hud.push({ at: t || Date.now(), kmh: kmh(), what: '', f: np });
             if (hud.length > KEEP) hud.shift();
         },
-        reset() { last = {}; hudNpLast = null; sign = {}; hud = []; np = []; npLast = {}; cam = []; lights = []; lightLast = null; hudLightLast = null; },
+        reset() { mapLines = []; Object.keys(mapN).forEach((k) => delete mapN[k]); Object.keys(mapLast).forEach((k) => delete mapLast[k]); carAt = null; posAt = -Infinity; posKey = '';
+            last = {}; hudNpLast = null; sign = {}; hud = []; np = []; npLast = {}; cam = []; lights = []; lightLast = null; hudLightLast = null; },
         sections: () => [
             ['no passing fields as they changed (TrafficSignDisplayControl, TrafficSignRecognition, the camera, DisplayDataServer2; the last ' + KEEP_NP + ')',
                 np.length ? linesOf(np).join('\n') : '(none yet)'],
@@ -118,10 +190,12 @@ function startResearch(opts) {
             ['sign services, every field as it changed (the last ' + KEEP + ' of each)',
                 Object.keys(sign).length ? linesOf([].concat(...Object.keys(sign).map((k) => sign[k])).sort((a, b) => a.at - b.at)).join('\n') : '(none yet)'],
             ['head-up display data, its no passing fields as they changed (the last ' + KEEP + ')', hud.length ? linesOf(hud).join('\n') : '(none yet)'],
+            ['map and guidance (speed cameras without BMW\'s route)', 'came: ' + (Object.keys(mapN).map((k) => k + ' ' + mapN[k]).join(', ') || 'nothing (MapApiLinksSD, MapApiLinksSDLow, RICServiceGuidance)')
+                + (carAt ? '; map matching ' + carAt.status : '') + '\n' + (mapLines.length ? mapLines.join('\n') : '(none yet)')],
             ['traffic lights', '(id color status arrow dir x y z q, each change; hud: the head-up display\'s symbol; the whole test, at most ' + KEEP_SIGNS + ')\n'
                 + (lights.length ? lights.join('\n') : '(none yet)')],
         ],
     };
 }
 
-module.exports = { startResearch, SIGN_IFACE, signsLine, lightLine, KEEP_SIGNS };
+module.exports = { startResearch, SIGN_IFACE, signsLine, lightLine, linksText, positionOf, KEEP_SIGNS };

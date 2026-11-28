@@ -401,6 +401,20 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Layouts 0.70.4, Centre 0.16.19 (and Info 1.14.7): the Logs' code pages - a code's number under it was drawn 2 px past
+  the screen's bottom when the last code was smaller (a lower QR version, bigger modules): the codes sized so their
+  number always fits (shared/logs.js).
+- Info 1.14.7 (Nov 28 2026): speed cameras without BMW's route looked for (the owner's QR log study: wanted with
+  CarPlay and no destination, not BMW's map). The Test log's survey reads, events only, the map's look ahead -
+  de.bmw.infotainment.navigation.foresight.MapApiLinksSD and MapApiLinksSDLow (linksFrame: the links ahead and their
+  attributes, warningSignPool with MapApiLinkTypes.Warning 85 SPEED_CAMERA / 86 TRAFFIC_ENFORCEMENT_CAMERA at an offset
+  in cm along a link; sdMapMatchedPositionAndMPP: the map matching's status, the car's link and offset, the most
+  probable path) - and RICServiceGuidance's ric_sendEvent (groups mapLinks, mapLinksLow, ricGuidance; 50 declared on the
+  G20's catalog). GuidanceEventList's viewsChanged left out: the directions ask that service already. No method called.
+  Section "map and guidance": how many of each came, the last matching status, and lines on a change (the warnings and
+  the cameras on the links, with the link, its length, the offset and the direction, and how far ahead when the camera
+  is on the car's own link; the position on a status change or every 30 s; RIC's events). Not shown anywhere yet: the
+  drives to compare (BMW map hidden and no destination; CarPlay TMAP; BMW map shown, no destination; BMW route).
 - Info 1.14.6, Layouts 0.70.3, Centre 0.16.18 (Nov 28 2026; Layouts and Centre: shared/road_signs.js parseSignsAt's
   new fields only, nothing they show): the camera signs' lines keep every field the camera gives for a sign, its meaning
   known or not - with 1.14.5 the camera's events left "every field", so the height (location.z), every position flag

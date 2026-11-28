@@ -51,7 +51,9 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   `side road: NO_ENTRY x=58 y=-28`, and every camera event of the test, at most 300 lines, each sign's type, value,
   place, metres ahead and aside; 1.14.2: and the front camera's traffic lights where the car's catalog has them -
   TrafficLightRecognitionFrontCameraLegacy, its every change as figures, with the head-up display's traffic light
-  symbol to compare: looked for only, not shown). The car's own list of the camera's sign
+  symbol to compare: looked for only, not shown; 1.14.7: and the map's look ahead - MapApiLinksSD / MapApiLinksSDLow,
+  their speed camera warnings and where the car is matched - and RIC guidance's events, to see whether speed cameras
+  come without BMW's route: the Test log's "map and guidance"). The car's own list of the camera's sign
   types (read from the app's interface config for the camera, made at install from the car's catalog) is logged
   once, whole, and counted on the app's page (types, drawn, as "!"): which pictures this car can ever show. As high as BMW's own limit sign (a round sign as big, a triangle as tall). Shown when the camera reads it, for 10 s; a
   sign read after it takes its place (1.12.3: the owner's; one event's several together, in a row), at most three (1.13.0, the owner's), as many as fit on the glass. (1.12.3 - 1.14.4 also logged the sign services' definitions and the catalog's no passing services once a start: no more since 1.14.5); signs that would reach
