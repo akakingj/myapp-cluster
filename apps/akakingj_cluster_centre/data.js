@@ -323,8 +323,8 @@ function startData(ctx, opts) {
         .catch((e) => { status['speed limit sign'] = 'error: ' + e; });
     // the warning signs the front camera reads (road_signs.js; KO 1's and KO 2's, layout_common.warnPieces): its one
     // event, once a sign; declared at install only where the car's catalog has it (app.json "survey", like the sign)
-    // (the warnings, DS_ types: each read shown 10 s, a new one in its place; no passing: till its zone ends, npZone)
-    const roadTracker = RS.makeTracker(RS.SHOW_MS, 2, (t) => /^DS_/.test(t)), npZone = RS.makeZone(RS.NP_KM);
+    // (the signs the HUD shows, RS.wanted: each read shown 10 s, a new one in its place; no passing: till its zone ends, npZone)
+    const roadTracker = RS.makeTracker(RS.SHOW_MS, 2, RS.wanted), npZone = RS.makeZone(RS.NP_KM);   // (Nov 28 2026: the HUD's signs, the owner - give way, stop, ... too; RS.KNOWN)
     ctx.signals.watch(RS.CAM_IFACE, '1', {}, log)
         .then((sub) => {
             if (!sub || sub.error || !sub.proxy || !ctx.signals.on) { status['warning signs'] = 'not in this car' + (sub && sub.error ? ' (' + sub.error + ')' : ''); return null; }

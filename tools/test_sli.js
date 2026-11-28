@@ -109,7 +109,8 @@ assert.strictEqual(s[1].text, C.sliText);
     assert.strictEqual(A.h, C.WARN.h, 'sign_atlas.js made for WARN.h: tools/make_sign_art.py');
     ['DS_SPLIPPERY_ROAD', 'DS_TRAFFIC_JAM', 'DS_ANIMAL_CROSSING', 'DS_RIGHT_DOWNWARDS', 'DS_ROAD_WORKS', 'DS_SPEED_BUMP', 'DS_CURVE_LEFT', 'DS_NEW_ONE']
         .forEach((t) => { const c = A.cells[RS.artOf(t)]; assert(c && c[3] === C.WARN.h && c[2] <= C.WARN_W && c[0] + c[2] <= A.w && c[1] + c[3] <= A.ah, t); });
-    assert(!A.cells.give_way && !A.cells.no_entry, 'the warning signs only');
+    // (Nov 28 2026) the signs the head-up display shows: give way, stop, no entry, no cars and no stopping too
+    ['GIVE_WAY', 'STOP_SIGN', 'NO_ENTRY', 'VEHICLES_PROHIBITED', 'NO_STANDING_ANYTIME'].forEach((t) => { assert(RS.wanted(t), t); const c = A.cells[RS.artOf(t)]; assert(c && c[3] === C.WARN.h && c[2] <= C.WARN_W, t); });
     // (and no passing: the head-up display has its own, the layouts the owner's picture, 0.69.0)
     ['NO_PASSING_SIGN', 'NO_OVERTAKING'].forEach((t) => assert.strictEqual(RS.artOf(t), 'no_passing', t));
     assert(A.cells.no_passing && A.cells.no_passing[3] === C.WARN.h, 'no passing in the atlas');

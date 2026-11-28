@@ -409,6 +409,9 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   sign_atlas.js (230 -> 158 KB, 190 -> 165 KB). The Logs / Test log code page: its lines below the title bar (the
   first was cut), the file's path shortened on a line of its own. Layouts' trip setting reworded: "Trip distance fix:
   times the trip passed 65,535 km (usually 0)", unit "times" (Korean 트립 거리 보정: 65,535 km를 넘은 횟수 (보통 0), 번).
+  And Layouts (KO 1, KO 2 and the layouts with sign spots) shows the signs the HUD does (the owner: "the HUD's signs on
+  Layouts and ID8 too"): give way, stop, no entry, no cars and no stopping as well as the warnings (data.js roadTracker
+  takes RS.wanted; the atlas has them, make_sign_art.py REGULATORY emptied). ID8 0.29.6 the same.
 - Info 1.12.1, Layouts 0.68.2, Centre 0.16.8 (Nov 27 2026): the Engine setting's M car choice reads just "M" in Korean (was
   가솔린, M 차량; the owner's ask), as in the Car profile and ID8. The translation changed, so all three up.
 - Info 1.12.0, Layouts 0.68.1, Centre 0.16.7 (Nov 27 2026): the road signs the front camera reads on the HUD (signs.js) -

@@ -186,12 +186,14 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             cam(signs('DS_ANIMAL_CROSSING', 'SPEED_LIMIT'));
             assert.deepStrictEqual(D.data().roadSigns, ['wild_animal'], 'the warning; the limit not');
             cam(signs('GIVE_WAY'));
-            assert.deepStrictEqual(D.data().roadSigns, ['wild_animal'], 'give way: not the cluster\'s, nothing changed');
+            assert.deepStrictEqual(D.data().roadSigns, ['give_way'], 'give way: shown as on the head-up display (the owner, Nov 28), in its place');
+            cam(signs('MANDATORY_PASSING_RIGHT', 'SPEED_LIMIT'));
+            assert.deepStrictEqual(D.data().roadSigns, ['give_way'], 'an instruction sign or the speed limit: not shown, nothing replaced');
             cam(signs('DS_SPLIPPERY_ROAD'));
             assert.deepStrictEqual(D.data().roadSigns, ['slippery'], 'a new one in its place');
             cam(signs('DS_TRAFFIC_JAM', 'DS_ANIMAL_CROSSING'));
             assert.deepStrictEqual(D.data().roadSigns, ['traffic_jam', 'wild_animal'], 'one event\'s two');
-            assert.ok(/^warning signs \(front camera\): DS_TRAFFIC_JAM, DS_ANIMAL_CROSSING, [\d.]+ s ago; seen DS_ANIMAL_CROSSING 2, SPEED_LIMIT 1, GIVE_WAY 1, DS_SPLIPPERY_ROAD 1, DS_TRAFFIC_JAM 1; no passing off$/.test(D.sliLog(5).split('\n')[2]), D.sliLog(5).split('\n')[2]);
+            assert.ok(/^warning signs \(front camera\): DS_TRAFFIC_JAM, DS_ANIMAL_CROSSING, [\d.]+ s ago; seen DS_ANIMAL_CROSSING 2, SPEED_LIMIT 2, GIVE_WAY 1, MANDATORY_PASSING_RIGHT 1, DS_SPLIPPERY_ROAD 1, DS_TRAFFIC_JAM 1; no passing off$/.test(D.sliLog(5).split('\n')[2]), D.sliLog(5).split('\n')[2]);
             const was2 = Date.now, later2 = Date.now() + 10001;
             Date.now = () => later2;
             try { assert.deepStrictEqual(D.data().roadSigns, [], '10 s on: gone'); } finally { Date.now = was2; }

@@ -58,8 +58,9 @@ def box_from_overlay():
 
 
 # not in Layouts' atlas: the cluster shows the warning signs only (the yellow triangles)
-REGULATORY = {'give_way', 'stop', 'no_entry', 'slow', 'no_u_turn', 'no_left_turn', 'no_right_turn', 'no_straight', 'no_cars',
-              'no_parking', 'no_stopping', 'keep_distance_50m', 'one_way', 'unprotected_left'}
+# (Nov 28 2026: Layouts shows the signs the HUD does - give way, stop, no entry, no cars, no stopping too, the owner -
+# so its atlas has them all; this set is left empty, kept for a picture the cluster should not have)
+REGULATORY = set()
 
 
 def warn_h():
