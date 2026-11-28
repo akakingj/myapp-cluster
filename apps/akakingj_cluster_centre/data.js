@@ -185,8 +185,9 @@ function one(v, key, depth) {
  * limit recognised, kept until another one is - 60 shown until an 80 is recognised, then 80 - whatever the cruise
  * control does. AK Cluster Info's log of Nov 27 2026 (a drive with the cruise control off): vSLISpeedValue x 5 is the
  * limit the car knows of (16: 80, 20: 100); a new one is first announced - vSLISymbol LDM_VZA_VSLI_SPEED_LIMIT,
- * vSLIDistance counting down 1.3 km ... 250 m, vSLISpeedValue already the new figure - and counts once it is reached
- * (vSLIDistance OFF, or the symbol gone). 0 or nothing: the one shown kept. Up to 140 km/h (28): a 30 (150) seen once on
+ * vSLIDistanceValues counting down (LDM_VSLI_DIST_650_M ... _250_M), vSLISpeedValue already the new figure - and counts once
+ * it is reached (LDM_VSLI_DIST_OFF, or the symbol gone; Nov 28 2026: the car's name is vSLIDistanceValues - read as
+ * under a shorter name till then, never there, so an announced limit counted at once). 0 or nothing: the one shown kept. Up to 140 km/h (28): a 30 (150) seen once on
  * a motorway (Nov 24) is no road's. '--' till the first one, and 10 s after the head-up display's data stops. (0.64.1 -
  * 0.66.2 showed it only with the limiter or the cruise control on and ldmAdditionalSign TAKEOVER_SET: '--' otherwise.)
  * A curve's or junction's speed (vSLISymbol LDM_VZA_VSLI_COURSE, the log of 16:35, Nov 27: a 10 = 50 at 500 m ... OFF on a
@@ -198,8 +199,8 @@ function one(v, key, depth) {
 function sliRawOf(v) {
     const x = one(v, 'xSpeedLimitAssist'), acc = one(v, 'activeCruiseControl');
     if (!x && !acc) return null;
-    return { value: x ? x.vSLISpeedValue : undefined, symbol: x ? x.vSLISymbol : undefined, dist: x ? x.vSLIDistance : undefined,
-        takeover: x ? x.ldmAdditionalSign : undefined, extra: x ? x.vSLIAdditionalSign : undefined, limiter: one(v, 'statusLimiter'),
+    return { value: x ? x.vSLISpeedValue : undefined, symbol: x ? x.vSLISymbol : undefined, dist: x ? x.vSLIDistanceValues : undefined,
+        vza: x ? x.statusVZA : undefined, takeover: x ? x.ldmAdditionalSign : undefined, extra: x ? x.vSLIAdditionalSign : undefined, limiter: one(v, 'statusLimiter'),
         acc: acc ? acc.symbolACC : undefined, cruise: one(v, 'cruiseCtrlSpeedHUD'), pia: one(v, 'pia') };
 }
 const SLI_MAX = 28;
@@ -220,6 +221,25 @@ const SLI_COURSE = 'LDM_VZA_VSLI_COURSE', SLI_LIMIT = 'LDM_VZA_VSLI_SPEED_LIMIT'
 function tsrStep(prev, v) {
     const n = one(v, 'presentClassLimitSpeed');
     return isNum(n) && n >= 1 && n <= SLI_MAX ? n * 5 : prev;
+}
+/*
+ * Where the limit shown comes from (Nov 28 2026, the owner's drive: the sign's event said 50 all along, the head-up
+ * display's vSLISpeedValue 12 = 60 with statusVZA STATUS_INACTIVE - a wrong 60 whenever the sign was silent 10 s):
+ *   'sign'             the sign's event within TSR_ON_MS
+ *   'sign (kept)'      its last figure, TSR_KEEP_MS after the last one; then nothing ('--')
+ *   'head-up display'  only on a car whose sign never came (no such service) and whose Speed Limit Assist is not
+ *                      STATUS_INACTIVE, its data within TSR_ON_MS
+ *   'none'
+ * AK Cluster ID8's vehicle.js limitSource is the same rule.
+ */
+const TSR_ON_MS = 10000, TSR_KEEP_MS = 60000;
+function limitSource(x, now) {
+    if (x.tsr) {
+        const age = now - (x.at.tsr || 0);
+        return age <= TSR_ON_MS ? 'sign' : age <= TSR_KEEP_MS && x.tsrShown !== undefined ? 'sign (kept)' : 'none';
+    }
+    if (x.sli && now - (x.at.sli || 0) <= TSR_ON_MS && x.sli.vza !== 'STATUS_INACTIVE') return 'head-up display';
+    return 'none';
 }
 function sliStep(prev, r, mem) {
     if (!r || !isNum(r.value) || r.value < 1 || r.value > SLI_MAX) return prev;
@@ -324,15 +344,21 @@ function startData(ctx, opts) {
     // the warning signs the front camera reads (road_signs.js; KO 1's and KO 2's, layout_common.warnPieces): its one
     // event, once a sign; declared at install only where the car's catalog has it (app.json "survey", like the sign)
     // (the signs the HUD shows, RS.wanted: each read shown 10 s, a new one in its place; no passing: till its zone ends, npZone)
-    const roadTracker = RS.makeTracker(RS.SHOW_MS, 2, RS.wanted), npZone = RS.makeZone(RS.NP_KM);   // (Nov 28 2026: the HUD's signs, the owner - give way, stop, ... too; RS.KNOWN)
+    // (Nov 28 2026: Settings > No stopping signs, Layouts' - the Car profile's signNoStopping -, off by default; an app
+    // without it, Centre, as before)
+    const signOpts = () => { const s = setting('noStoppingSigns'); return s === undefined ? undefined : { noStopping: s === 'on' || s === true }; };
+    const roadTracker = RS.makeTracker(RS.SHOW_MS, 2, RS.wanted, signOpts), npZone = RS.makeZone(RS.NP_KM);   // (Nov 28 2026: the HUD's signs, the owner - give way, stop, ... too; RS.KNOWN)
     ctx.signals.watch(RS.CAM_IFACE, '1', {}, log)
         .then((sub) => {
             if (!sub || sub.error || !sub.proxy || !ctx.signals.on) { status['warning signs'] = 'not in this car' + (sub && sub.error ? ' (' + sub.error + ')' : ''); return null; }
             return ctx.signals.on(sub.proxy, RS.CAM_EVENT, (v) => {
-                const list = RS.parseSigns(v), t = Date.now();
+                // (Nov 28 2026) a side road's signs (more than RS.SIDE_M aside: across a junction, a side street's
+                // mouth) left out; a no passing zone's end is taken wherever it stands
+                const all = RS.parseSignsAt(v), own = RS.ownRoad(all), list = own.types, t = Date.now();
                 x.cam = list; x.at.cam = t;
+                if (own.side.length) { x.side = own.side.map(RS.sideLine).join(', '); x.at.side = t; }
                 list.forEach((ty) => { if (!x.camSeen) x.camSeen = {}; if (!x.camSeen[ty]) log.info('warning signs: the camera read ' + ty + (RS.wanted(ty) ? ' (' + RS.artOf(ty) + ')' : ' (not drawn: the car shows it)')); x.camSeen[ty] = (x.camSeen[ty] || 0) + 1; });
-                roadTracker.add(list, t); npZone.add(list, t);
+                roadTracker.add(list, t); npZone.add(list.concat(all.map((s) => s.type).filter((ty) => RS.npEnd(ty) && list.indexOf(ty) < 0)), t);
             }, log).then(() => { status['warning signs'] = 'subscribed'; });
         })
         .catch((e) => { status['warning signs'] = 'error: ' + e; });
@@ -812,10 +838,10 @@ function startData(ctx, opts) {
             // the cruise control: on with a set speed (the head-up display's), off at 0
             /* the last limit recognised (sliStep), while the head-up display's data comes (10 s); '--' otherwise. And for
              * the Logs' data now, what it goes by */
-            const tsrOn = !!x.tsr && Date.now() - (x.at.tsr || 0) <= 10000;
-            if (!d.demo && tsrOn) o.speedLimit = x.tsrShown;
-            else if (!d.demo && x.sli && Date.now() - (x.at.sli || 0) <= 10000) o.speedLimit = x.sliShown;
-            o.sliSource = tsrOn ? 'sign' : x.sli ? 'head-up display' : 'none';
+            const src = limitSource(x, Date.now());
+            if (!d.demo && (src === 'sign' || src === 'sign (kept)')) o.speedLimit = x.tsrShown;
+            else if (!d.demo && src === 'head-up display') o.speedLimit = x.sliShown;
+            o.sliSource = src;
             // the warning signs shown now (each 10 s after the camera last read it), as the pictures' names, oldest first
             // (the warning signs, the yellow triangles, and no passing: the head-up display shows that one itself, but on
             // the cluster the layouts cover BMW's own signs - the owner, 2026-11-28; give way, stop and the bans are the
@@ -878,4 +904,4 @@ function demo(d) {
     };
 }
 
-module.exports = { startData, DME_KEYS, FAST_KEYS, entries, modeOf, rangesOf, FES_MODES, sliStep, sliRawOf, sliAhead, tsrStep };
+module.exports = { startData, DME_KEYS, FAST_KEYS, entries, modeOf, rangesOf, FES_MODES, sliStep, sliRawOf, sliAhead, tsrStep, limitSource, TSR_KEEP_MS };

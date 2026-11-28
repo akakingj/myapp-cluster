@@ -2,7 +2,7 @@
   "id": "akakingj_cluster_layouts",
   "title": "AK Cluster Layouts",
   "description": "Your own layout on the whole instrument cluster (round dials, gear, temperatures), drawn by the cluster itself",
-  "version": "0.70.0",
+  "version": "0.70.1",
   "startType": "autostart",
   "vendor": "custom",
   "loggingId": "AKCL",
@@ -459,7 +459,34 @@
           "On"
         ]
       ],
-      "section": "Display"
+      "section": "Display",
+      "profile": "signSpeedLimit",
+      "profileMap": {
+        "on": "on",
+        "off": "off"
+      }
+    },
+    {
+      "key": "noStoppingSigns",
+      "label": "No stopping signs",
+      "type": "choice",
+      "default": "off",
+      "options": [
+        [
+          "off",
+          "Off"
+        ],
+        [
+          "on",
+          "On"
+        ]
+      ],
+      "section": "Display",
+      "profile": "signNoStopping",
+      "profileMap": {
+        "on": "on",
+        "off": "off"
+      }
     },
     {
       "key": "sweep",

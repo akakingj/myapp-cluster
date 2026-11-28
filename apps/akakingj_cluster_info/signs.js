@@ -32,7 +32,7 @@ try { fit = require('./kit/survey_fit'); } catch (e) { /* an older kit */ }
 /* ---------- drawing: South Korea's own signs (sign_art.js, tools/make_sign_art.py) ---------- */
 const zlib = require('zlib');
 const RS = require('./road_signs');
-const { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, wanted, makeTracker, artOf, typeNames, defNames, chunk } = RS;
+const { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, parseSignsAt, ownRoad, sideLine, wanted, makeTracker, artOf, typeNames, defNames, chunk } = RS;
 /* the services whose definitions go to the log once (1.12.3, parked: where no passing's end may be) */
 const DEF_IFACES = ['de.bmw.dass.TrafficSignRecognition', CAM_IFACE, 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl',
     // (the head-up display's data, which shows BMW's own no passing: its names about signs, passing and lanes only - the
@@ -75,7 +75,7 @@ function startSigns(ctx, log, opts) {
     const signals = opts.signals || ctx.signals;
     const kitDir = opts.kitDir || path.join(__dirname, 'kit');
     const tracker = makeTracker(opts.showMs, opts.max || MAX_SIGNS);
-    let state = 'not declared', seen = 0;
+    let state = 'not declared', seen = 0, sideSeen = 0;
     const types = {};                // each type seen, how many times (for the page and the log)
     const listeners = {};            // member -> [fn] (this and the survey)
     let mine = null;                 // the subscription: { proxy, available }
@@ -142,8 +142,10 @@ function startSigns(ctx, log, opts) {
     } catch (e) { state = e.code === 'ENOENT' ? 'no survey list (built without the car\'s catalog)' : 'survey list not readable: ' + (e.code || e.message); }
 
     function onSign(v) {
-        const t = now(), list = parseSigns(v);
+        // (1.14.1) a side road's signs (across a junction, a side street's mouth: more than SIDE_M aside) left off
+        const t = now(), own = ownRoad(parseSignsAt(v)), list = own.types;
         seen++;
+        own.side.forEach((s) => { sideSeen++; if (sideSeen <= 20) log.info('road signs: side road: ' + sideLine(s)); });
         list.forEach((ty) => {
             if (!types[ty]) log.info('road signs: the camera read ' + ty + (wanted(ty) ? '' : ' (not drawn: the HUD shows it itself)'));
             types[ty] = (types[ty] || 0) + 1;
@@ -193,7 +195,7 @@ function startSigns(ctx, log, opts) {
         current: () => tracker.current(now()),
         /** The lines readTypes, readDefs and readCatalogNp wrote (for the Logs' codes). */
         defLines: () => defLines.slice(),
-        status: () => ({ state, seen, types: Object.assign({}, types), carTypes: carTypes ? carTypes.slice() : null,
+        status: () => ({ state, seen, side: sideSeen, types: Object.assign({}, types), carTypes: carTypes ? carTypes.slice() : null,
             drawn: carTypes ? carTypes.filter(wanted).length : null, asDanger: carTypes ? carTypes.filter((t) => wanted(t) && artOf(t) === 'danger').length : null }),
         signalsFor,
         _onSign: onSign,

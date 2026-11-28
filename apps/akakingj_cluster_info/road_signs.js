@@ -17,6 +17,17 @@ const SHOW_MS = 10000;
 
 /** The sign types in one of the camera's values: ['GIVE_WAY', ...] (as many as numberSigns says, if it says). */
 function parseSigns(v) {
+    return parseSignsAt(v).map((s) => s.type);
+}
+/*
+ * The same with where each sign stands (Nov 28 2026, the owner's drive): [{ type, value, x, y, valid, pos, sup }] -
+ * location.x metres ahead, y metres to the side (+ left, - right), valid when location.locationInvalidFlags is 0; pos
+ * 'left' / 'right' / 'overhead' (position.*), sup the first supplemental type. Signs on the car's own road stood at y
+ * -7.6 ... +2.2 m (overhead or the right verge), the central reserve's at +9.3; a side road's no entry at x 58, y -28.1.
+ */
+const SIDE_M = 12;
+const num = (n) => (typeof n === 'number' && isFinite(n) ? n : null);
+function parseSignsAt(v) {
     if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return []; } }
     if (!v || typeof v !== 'object') return [];
     const find = (o, key, d) => {
@@ -29,11 +40,26 @@ function parseSigns(v) {
     if (!Array.isArray(list)) list = list && typeof list === 'object' ? Object.keys(list).map((k) => list[k]) : [];
     const n = find(v, 'numberSigns', 0);
     if (typeof n === 'number' && n >= 0) list = list.slice(0, n);
-    return list.map((s) => (s && typeof s === 'object' ? s.type : undefined))
-        .filter((t) => typeof t === 'string' && t).map((t) => t.toUpperCase())
+    return list.filter((s) => s && typeof s === 'object' && typeof s.type === 'string' && s.type)
+        .map((s) => {
+            const l = s.location && typeof s.location === 'object' ? s.location : {}, p = s.position && typeof s.position === 'object' ? s.position : {};
+            return { type: s.type.toUpperCase(), value: s.value, x: num(l.x), y: num(l.y), valid: l.locationInvalidFlags === 0 && num(l.y) !== null,
+                pos: p.overhead === true ? 'overhead' : p.left === true ? 'left' : p.right === true ? 'right' : null,
+                sup: typeof s.firstSupplementalType === 'string' ? s.firstSupplementalType : null };
+        })
         // (the event's 20 places: an empty one is SIGNAL_UNFILLED, the car's catalog; never a sign)
-        .filter((t) => !/^(SIGNAL_UNFILLED|UNKNOWN|INITIALIZATION_STATUS_UNKNOWN)$/.test(t));
+        .filter((s) => !/^(SIGNAL_UNFILLED|UNKNOWN|INITIALIZATION_STATUS_UNKNOWN)$/.test(s.type));
 }
+/** A sign by a side road (across a junction, at a side street's mouth): its place known and more than SIDE_M aside. */
+const sideRoad = (s) => !!s && s.valid === true && Math.abs(s.y) > SIDE_M;
+/** The types of the signs on the car's own road, and those left out as a side road's (for the logs). */
+function ownRoad(signs) {
+    const near = [], side = [];
+    signs.forEach((s) => (sideRoad(s) ? side : near).push(s));
+    return { types: near.map((s) => s.type), side: side };
+}
+/** One line of a side road's sign for a log: "NO_ENTRY x=58 y=-28". */
+const sideLine = (s) => s.type + ' x=' + Math.round(s.x) + ' y=' + Math.round(s.y);
 
 /** Whether a type is drawn: the danger signs and give way (the HUD shows the speed limit and no passing itself). */
 const shownByHud = (t) => /SPEED_LIMIT|NO_PASSING|OVERTAK|(^|_)END(_|$)/.test(t);
@@ -126,7 +152,13 @@ const KNOWN = {
     SIGNAL_UNFILLED: [null, false],
 };
 const known = (t) => (Object.prototype.hasOwnProperty.call(KNOWN, t) ? KNOWN[t] : null);
-const wanted = (t) => { if (CAMERAS[t]) return true; const k = known(t); return k ? k[1] : !shownByHud(t) && (/^DS_/.test(t) || artOf(t) !== 'danger'); };
+/* opts (AK Cluster Layouts' and ID8's settings; none: as before, AK Cluster Info and Centre): { noStopping: false } leaves
+   out the no stopping signs (NO_STANDING_ANYTIME, STOPPING_RESTRICTION: read every half minute in town, the owner) */
+const wanted = (t, opts) => {
+    if (CAMERAS[t]) return true;
+    if (opts && opts.noStopping === false && artOf(t) === 'no_stopping') return false;
+    const k = known(t); return k ? k[1] : !shownByHud(t) && (/^DS_/.test(t) || artOf(t) !== 'danger');
+};
 
 /*
  * Speed cameras (Nov 28 2026, the owner: on the HUD and the cluster, fixed or mobile). Not the front camera's: BMW's
@@ -156,17 +188,20 @@ function cameraType(entry) {
  * its place): add(types, t) - the types keep (wanted: the head-up display's) takes from one of the camera's events
  * become the ones shown, in place of those before (one event may carry two); current(t) -> them, at most max, while
  * showMs has not passed since. */
-function makeTracker(showMs, max, keep) {
+function makeTracker(showMs, max, keep, opts) {
     showMs = showMs || SHOW_MS; max = max || 4; keep = keep || wanted;
+    // opts: keep's options (wanted's { noStopping }), or a function giving them now (a setting changed: taken at once)
+    const o = () => (typeof opts === 'function' ? opts() : opts);
     let cur = [], at = -Infinity;
     return {
         add(types, t) {
-            const f = Array.from(new Set(types.filter(keep)));
+            const op = o(), f = Array.from(new Set(types.filter((x) => keep(x, op))));
             if (f.length) { cur = f; at = t; }
         },
         current(t) {
             if (t - at >= showMs) { cur = []; return []; }
-            return cur.slice(0, max);
+            const op = o();
+            return (op ? cur.filter((x) => keep(x, op)) : cur).slice(0, max);
         },
     };
 }
@@ -299,4 +334,4 @@ function chunk(list, n) {
     return out;
 }
 
-module.exports = { CAMERAS, CAM_TYPE, CAM_M, cameraKind, cameraType, CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, KNOWN, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, NP_FIELD, defNames, artOf, ART_OF, typeNames, chunk };
+module.exports = { SIDE_M, parseSignsAt, sideRoad, ownRoad, sideLine, CAMERAS, CAM_TYPE, CAM_M, cameraKind, cameraType, CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, KNOWN, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, NP_FIELD, defNames, artOf, ART_OF, typeNames, chunk };

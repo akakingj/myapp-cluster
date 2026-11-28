@@ -117,4 +117,14 @@ assert.strictEqual(s[1].text, C.sliText);
     const tex = C.signAtlas();
     assert.strictEqual(tex.px.length, tex.w * tex.h * 4);
 }
+{
+    // (Nov 28 2026) the car's own name for the distance to an announced limit: vSLIDistanceValues - while it counts down
+    // (650 m), the limit shown stays; reached (OFF), it counts
+    const { sliRawOf, sliStep, sliAhead } = require(path.join(__dirname, '..', 'shared', 'data.js'));
+    const r = sliRawOf({ xSpeedLimitAssist: { vSLISpeedValue: 16, vSLISymbol: 'LDM_VZA_VSLI_SPEED_LIMIT', vSLIDistanceValues: 'LDM_VSLI_DIST_650_M', statusVZA: 'STATUS_INACTIVE' } });
+    assert.deepStrictEqual([r.dist, r.vza, sliAhead(r), sliStep(50, r, {})], ['LDM_VSLI_DIST_650_M', 'STATUS_INACTIVE', true, 50]);
+    const off = sliRawOf({ xSpeedLimitAssist: { vSLISpeedValue: 16, vSLISymbol: 'LDM_VZA_VSLI_SPEED_LIMIT', vSLIDistanceValues: 'LDM_VSLI_DIST_OFF' } });
+    assert.strictEqual(sliStep(50, off, {}), 80);
+    n++;
+}
 console.log('test_sli: ' + n + ' cases ok');

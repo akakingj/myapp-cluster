@@ -401,6 +401,21 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.1, Layouts 0.70.1, Centre 0.16.16 (Nov 28 2026), from the owner's Test log of 16:30 (12 min in town, every
+  road 50): (1) the Car profile's two new settings under Start on the cluster, Speed limit sign (signSpeedLimit) and No
+  stopping signs (signNoStopping, off by default: NO_STANDING_ANYTIME was read 21 times of 45), followed by Layouts only
+  (sliSign, and a new noStoppingSigns, off; ID8 0.30.1 the same) - Info and Centre have neither (road_signs.js wanted /
+  makeTracker take { noStopping } only when given). (2) A side road's signs left off: the camera's event has each sign's
+  place (location.x ahead, y aside, + left; locationInvalidFlags 0 valid) - the car's own road's at y -7.6 ... +2.2, the
+  central reserve's +9.3, a side street's no entry at x 58, y -28.1 - so one more than SIDE_M = 12 m aside, its place
+  valid, is not shown (Info's HUD, Layouts, ID8; parseSignsAt, ownRoad; a no passing end taken wherever it stands); the
+  Test log marks it "side road: NO_ENTRY x=58 y=-28". (3) The speed limit never the head-up display's on this car: its
+  vSLISpeedValue said 12 (60) with statusVZA STATUS_INACTIVE the whole drive while the sign said 50. Now (data.js
+  limitSource): the sign's event within 10 s; its last figure kept 60 s after, "sign (kept)"; then --; the head-up
+  display's only on a car whose sign never came and whose Speed Limit Assist is not STATUS_INACTIVE. (4) The distance
+  to an announced limit is vSLIDistanceValues (LDM_VSLI_DIST_650_M ... OFF), not the name read before (never there):
+  sliAhead works now. (5) The Test log keeps every camera event of the test, at most 300 lines (time, speed | type value
+  place x y supplemental; ...), the changes of every field (the last 30) as before.
 - Info 1.14.0, Layouts 0.70.0, Centre 0.16.15 (Nov 28 2026): speed cameras (the owner: "if it can see speed cameras,
   show fixed or mobile, on Info, Layouts and ID8"). Not the front camera's: BMW's navigation lists them among a route's
   events (GuidanceEventList queryContent, now asked with INCLUDE_SPEED_CAMERA and 8 events; Guidance.conclusiveDart),

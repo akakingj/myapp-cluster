@@ -48,6 +48,34 @@ check('the car\'s catalog\'s types (G20, 2026-11-28): empty places none, STOPPIN
     Object.keys(art).forEach((t) => assert.strictEqual(RS.artOf(t), art[t], t));
     assert.ok(!RS.wanted('SIGNAL_UNFILLED') && !RS.wanted('WITHDRAWAL_NO_PASSING_SIGN') && !RS.wanted('GENERAL_WITHDRAWAL'));
 });
+check('a side road\'s signs (more than 12 m aside: the owner\'s drive of Nov 28 2026) left off; no stopping only where an app says so', () => {
+    const RS = require('../../shared/road_signs.js');
+    const at = (type, x, y, flags) => ({ type, value: type === 'SPEED_LIMIT' ? 50 : 0, location: { x, y, z: 2, locationInvalidFlags: flags === undefined ? 0 : flags } });
+    const ev = (...s) => ({ trafficSignRecognition: { numberSigns: s.length }, trafficSign: s });
+    const p = RS.parseSignsAt(ev(at('NO_ENTRY', 58, -28.1), at('SPEED_LIMIT', 40, -7.6), at('GIVE_WAY', 20, -2.9), at('MANDATORY_PASSING_RIGHT', 30, 9.3), at('NO_ENTRY', 30, -30, 3), { type: 'DS_CHILDREN' }));
+    assert.deepStrictEqual(p.map(RS.sideRoad), [true, false, false, false, false, false], 'x 58 y -28.1: a side road; -7.6, -2.9, +9.3, invalid, none: not');
+    assert.deepStrictEqual(RS.ownRoad(p).types, ['SPEED_LIMIT', 'GIVE_WAY', 'MANDATORY_PASSING_RIGHT', 'NO_ENTRY', 'DS_CHILDREN']);
+    assert.strictEqual(RS.SIDE_M, 12);
+    // Info's HUD: the side road's no entry not drawn, the camera's event otherwise as before
+    let t = 1000;
+    const sg = S.startSigns({ signals: {} }, { info() {}, warn() {} }, { noSubscribe: true, kitDir: '/nonexistent', now: () => t });
+    sg._onSign(ev(at('NO_ENTRY', 58, -28.1)));
+    assert.deepStrictEqual(sg.current(), []);
+    assert.strictEqual(sg.status().side, 1);
+    sg._onSign(ev(at('GIVE_WAY', 20, -2.9)));
+    assert.deepStrictEqual(sg.current(), ['GIVE_WAY']);
+    // no stopping: the trackers of Info and Centre (no options) as before; { noStopping: false } leaves it out, at once
+    assert.ok(RS.wanted('NO_STANDING_ANYTIME') && RS.wanted('STOPPING_RESTRICTION'));
+    assert.ok(!RS.wanted('NO_STANDING_ANYTIME', { noStopping: false }) && RS.wanted('NO_STANDING_ANYTIME', { noStopping: true }));
+    let on = false;
+    const tr = RS.makeTracker(10000, 2, RS.wanted, () => ({ noStopping: on }));
+    tr.add(['NO_STANDING_ANYTIME'], 0);
+    assert.deepStrictEqual(tr.current(1), []);
+    on = true; tr.add(['NO_STANDING_ANYTIME', 'GIVE_WAY'], 2);
+    assert.deepStrictEqual(tr.current(3), ['NO_STANDING_ANYTIME', 'GIVE_WAY']);
+    on = false;
+    assert.deepStrictEqual(tr.current(4), ['GIVE_WAY'], 'turned off: gone at once');
+});
 check('drawn: the danger signs and give way; not the speed limit or no passing (the HUD shows those itself)', () => {
     ['DS_TRAFFIC_JAM', 'DS_SPLIPPERY_ROAD', 'DS_RIGHT_DOWNWARDS', 'DS_ANIMAL_CROSSING', 'DS_ANYTHING', 'GIVE_WAY'].forEach((t) => assert(S.wanted(t), t));
     ['SPEED_LIMIT', 'NO_PASSING_SIGN', 'END_OF_NO_PASSING', 'UNKNOWN'].forEach((t) => assert(!S.wanted(t), t));
@@ -100,10 +128,10 @@ check('the Test log\'s recorder (research.js, 1.13.0): the sign services\' every
     r.onHud({ xSpeedLimitAssist: { vSLISpeedValue: 18 }, xNoPassing: { vNPIDistance: 500 } }, Date.UTC(2026, 10, 28, 4, 0, 5));
     r.onHud({ xSpeedLimitAssist: { vSLISpeedValue: 18 }, xNoPassing: { vNPIDistance: 0 } }, Date.UTC(2026, 10, 28, 4, 0, 7));
     let sec = r.sections();
-    assert.deepStrictEqual(sec[1][1].split('\n'), ['04:00:00 50 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=16',
+    assert.deepStrictEqual(sec[2][1].split('\n'), ['04:00:00 50 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=16',
         '04:00:02 60 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=18']);
-    assert.strictEqual(sec[2][1], 'xSpeedLimitAssist.vSLISpeedValue, xNoPassing.vNPIDistance');
-    assert.deepStrictEqual(sec[3][1].split('\n'), ['04:00:03 60 km/h xNoPassing.vNPIDistance=500', '04:00:07 60 km/h xNoPassing.vNPIDistance=0']);
+    assert.strictEqual(sec[3][1], 'xSpeedLimitAssist.vSLISpeedValue, xNoPassing.vNPIDistance');
+    assert.deepStrictEqual(sec[4][1].split('\n'), ['04:00:03 60 km/h xNoPassing.vNPIDistance=500', '04:00:07 60 km/h xNoPassing.vNPIDistance=0']);
     /* (1.13.2) no passing's fields on their own: BMW's own state (TrafficSignDisplayControl) and the head-up display's
        NPI (DisplayDataServer2, its no passing fields only), not pushed out by the camera's many events */
     const TDC = 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl', D2 = 'de.bmw.infotainment.displaydata.DisplayDataServer2';
@@ -118,11 +146,22 @@ check('the Test log\'s recorder (research.js, 1.13.0): the sign services\' every
         '04:01:00 60 km/h TrafficSignDisplayControl.displaySpeedLimitAndNoPassingRestriction: displayNoPassingRestriction=UEBERHOLVERBOT_PKW, displayRemainingDistanceNoPassingRestriction=800',
         '04:01:01 60 km/h DisplayDataServer2.functionalLibraryData: npiData.npiState=DISPLAY, npiData.npiLabel=KOREA, vnpiDistance=VNPI_DIST_800_M',
         '04:01:09 60 km/h TrafficSignDisplayControl.displaySpeedLimitAndNoPassingRestriction: displayNoPassingRestriction=KEIN_UEBERHOLVERBOT_ERKANNT, displayRemainingDistanceNoPassingRestriction=0']);
-    assert.ok(!/speedHUD|DisplayDataServer2/.test(sec[1][1]), 'the head-up display\'s whole data is not kept');
-    assert.ok(/TrafficSignDisplayControl/.test(sec[1][1]) && /TrafficSignRecognition\.TrafficSignRecognition/.test(sec[1][1]), 'each service\'s changes kept apart: not pushed out by the camera\'s');
+    assert.ok(!/speedHUD|DisplayDataServer2/.test(sec[2][1]), 'the head-up display\'s whole data is not kept');
+    assert.ok(/TrafficSignDisplayControl/.test(sec[2][1]) && /TrafficSignRecognition\.TrafficSignRecognition/.test(sec[2][1]), 'each service\'s changes kept apart: not pushed out by the camera\'s');
+    // (1.14.1) the camera's every event, the whole test (the 100 above, each its own line), where each sign stands
+    assert.strictEqual(sec[1][1].split('\n').length, 100);
+    assert.strictEqual(sec[1][1].split('\n')[0], '04:01:03 60 km/h | DS_ROAD_WORKS 0 - - - -');
+    const { signsLine, KEEP_SIGNS } = require(path.join(APP, 'research.js'));
+    const loc = (type, x, y, f, pos) => ({ type, value: type === 'SPEED_LIMIT' ? 50 : 0, firstSupplementalType: 'NONE', location: { x, y, z: 2, locationInvalidFlags: f || 0 }, position: { left: pos === 'left', right: pos === 'right', overhead: pos === 'overhead' } });
+    assert.strictEqual(signsLine({ trafficSignRecognition: { numberSigns: 3 }, trafficSign: [loc('NO_ENTRY', 58.04, -28.1, 0, 'right'), loc('SPEED_LIMIT', 40, -7.6, 0, 'overhead'), loc('GIVE_WAY', 20, -2.94, 2, 'right')] }),
+        'side road: NO_ENTRY x=58 y=-28; SPEED_LIMIT 50 overhead 40 -7.6 NONE; GIVE_WAY 0 right - - NONE');
+    for (let i = 0; i < 400; i++) r.onValue('de.bmw.environmentalmodel.SignRecognitionFrontCamera', 'TrafficSignRecognitionFrontCamera', { trafficSign: [{ type: 'DS_CHILDREN' }] }, at(20));
+    assert.strictEqual(r.sections()[1][1].split('\n').length, KEEP_SIGNS, 'at most KEEP_SIGNS: the first kept');
+    assert.ok(/DS_ROAD_WORKS/.test(r.sections()[1][1].split('\n')[0]));
     r.reset();
     assert.strictEqual(r.sections()[0][1], '(none yet)');
     assert.strictEqual(r.sections()[1][1], '(none yet)');
+    assert.strictEqual(r.sections()[2][1], '(none yet)');
 });
 
 check('pictures: South Korea\'s own signs - the types the camera read get theirs; another warning 위험 ("!")', () => {

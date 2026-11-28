@@ -428,7 +428,12 @@ first, until its zone ends: an end sign read by the camera, or 3 km driven since
 signal not known yet: the Logs' --- sli --- keeps every field of the TrafficSignRecognition event as it changes, to
 find it). A speed camera ahead comes first (0.70.0, the owner's: 단속중 fixed, 이동식 단속중 mobile, 구간 단속 section): the one
 AK Cluster Info reads from BMW's route and shares (camera.json in /dev/shm/cluster-info), so only with Cluster Info
-running and a route on; fixed or mobile by BMW's icon for it, not yet seen on a drive. Up to two (0.69.1, the owner's). They and the speed limit sign stand in one line, a row (the speed
+running and a route on; fixed or mobile by BMW's icon for it, not yet seen on a drive. A sign more than 12 m to the side
+(its place as the camera gives it: a side road's) is left off, and no stopping signs only with Settings > No stopping
+signs On (0.70.1, off at first: read every half minute in town); Speed limit sign and No stopping signs follow the Car
+profile's settings of the same names. The limit: the sign's event, its last figure kept 60 s when it falls silent,
+then --; the head-up display's only on a car without the sign whose Speed Limit Assist is on (on the owner's it said a
+wrong 60). Up to two (0.69.1, the owner's). They and the speed limit sign stand in one line, a row (the speed
 limit sign leftmost) or a column (the speed limit sign at the foot), the owner's ask. Where the owner chose the
 places (a layout's signAt, layout_common.fixedGroup, each 6 px clear, else the search): Retro M a row under the M
 stripes below the gear; ID7 M a row across the middle under the speed; JDM 1 a row just over its left box, its right edge between the second and third sign (its cup of

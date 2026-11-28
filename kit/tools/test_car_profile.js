@@ -46,17 +46,19 @@ const PROFILE_VALUES = {
     powerUnit: ['hp', 'ps', 'kw'], skin: ['classic', 'idrive7'], theme: ['m_red', 'ice'], layout: ['full', 'standard'], renderer: ['auto', 'software'],
     demo: ['auto', 'on', 'off'], clock: ['12', '24'], eFullKm: [30, 50, 100],
     speedMax: ['260', '330'], boostMax: [0, 15, 20, 45], clusterStart: ['layouts', 'id8', 'none'],
+    // (Nov 28 2026: the AK clusters' speed limit sign, and the no stopping signs among the camera's)
+    signSpeedLimit: ['on', 'off'], signNoStopping: ['on', 'off'],
     // (the engine's most power and torque, kW and Nm: the Car profile 1.13.0's Power / Torque gauge up to)
     powerMax: [135, 215, 375], torqueMax: [300, 420, 650],
 };
 // what each app follows (app.json "profile")
 const FOLLOWS = {
-    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', eFullKm: 'eFullKm' , econUnit: 'fuelUnit', redLight: 'lightRed', yellowLight: 'lightStart', speedMax: 'speedMax', boostMax: 'boostMax', autoStart: 'clusterStart', powerMax: 'powerMax', torqueMax: 'torqueMax' },
+    layouts: { vehicle: 'engine', redline: 'redline', rpmMax: 'rpmScale', shiftAt: 'shiftAt', gScale: 'gMax', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', eFullKm: 'eFullKm' , econUnit: 'fuelUnit', redLight: 'lightRed', yellowLight: 'lightStart', speedMax: 'speedMax', boostMax: 'boostMax', autoStart: 'clusterStart', powerMax: 'powerMax', torqueMax: 'torqueMax', sliSign: 'signSpeedLimit', noStoppingSigns: 'signNoStopping' },
     centre: { vehicle: 'engine', redline: 'redline', shiftAt: 'shiftAt', coldGuard: 'coldGuard', coldLimit: 'coldLimit', warmTarget: 'warmOil', shiftFrom: 'lightStart', oilHigh: 'hotOil', coolantHigh: 'hotCoolant', gearboxHigh: 'hotGearbox', speedUnit: 'speedUnit', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', powerUnit: 'powerUnit', skin: 'skin', demo: 'demo', clock: 'clock', eFullKm: 'eFullKm', boostMax: 'boostMax' },
     info: { warmOil: 'warmOil', hotOil: 'hotOil', hotCoolant: 'hotCoolant', hotGearbox: 'hotGearbox', tempUnit: 'tempUnit', torqueUnit: 'torqueUnit', pressUnit: 'pressUnit', skin: 'skin', theme: 'theme', layout: 'layout', renderer: 'renderer', demo: 'demo' },
 };
 const MINE = { vehicle: 'petrol', skin: 'idrive7', theme: 'm_tricolour', layout: 'standard', renderer: 'software', demo: 'on', clock: '24', eFullKm: 40, speedUnit: 'mph', tempUnit: 'f', torqueUnit: 'nm', pressUnit: 'bar', powerUnit: 'kw', redline: 7000, rpmMax: 8000, shiftAt: 6500, _reset_shiftAt: 1, gScale: '1', coldGuard: 'off', coldLimit: 3500, warmOil: 90, warmTarget: 90, shiftFrom: 3000,
-    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, speedMax: '330', boostMax: 30, autoStart: 'on', powerMax: 0, torqueMax: 0 };
+    hotOil: 135, hotCoolant: 115, hotGearbox: 120, oilHigh: 135, coolantHigh: 115, gearboxHigh: 120, econUnit: 'kml', redLight: 6500, yellowLight: 4500, speedMax: '330', boostMax: 30, autoStart: 'on', powerMax: 0, torqueMax: 0, sliSign: 'on', noStoppingSigns: 'on' };
 
 const cases = {
     'Electric range when full: kept in km, shown in miles with mph (the Car profile\'s speed unit too)'() {
@@ -95,6 +97,22 @@ const cases = {
         const s = settingsIn('layouts', { autoStart: 'on' });
         assert.deepStrictEqual([s.get('autoStart'), s.held('autoStart')], ['on', false]);
         clear();
+    },
+    'Car profile > Speed limit sign and No stopping signs: Layouts\' follow them, Info and Centre have neither (Nov 28 2026)'() {
+        clear();
+        [['on', 'on'], ['off', 'off']].forEach(([prof, want]) => {
+            writeProfile({ signSpeedLimit: prof, signNoStopping: prof });
+            const L = settingsIn('layouts', { sliSign: prof === 'on' ? 'off' : 'on', noStoppingSigns: prof === 'on' ? 'off' : 'on' });
+            assert.deepStrictEqual([L.get('sliSign'), L.get('noStoppingSigns'), L.held('sliSign'), L.held('noStoppingSigns')], [want, want, true, true], prof);
+            ['info', 'centre'].forEach((app) => {
+                const S = settingsIn(app, {});
+                assert.deepStrictEqual([S.get('sliSign'), S.get('noStoppingSigns')], [undefined, undefined], app);
+                assert.ok(!schemaOf(app).some((x) => x.profile === 'signSpeedLimit' || x.profile === 'signNoStopping'), app);
+            });
+        });
+        clear();
+        const L = settingsIn('layouts', {});
+        assert.deepStrictEqual([L.get('sliSign'), L.get('noStoppingSigns'), L.held('noStoppingSigns')], ['off', 'off', false], 'no profile: the app\'s own (no stopping off at first)');
     },
     'each app follows the names it says, a known name of the Car profile each'() {
         Object.keys(FOLLOWS).forEach((app) => {

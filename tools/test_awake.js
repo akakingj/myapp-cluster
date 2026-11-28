@@ -96,8 +96,9 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             // the speed limit sign as the car's own cluster: the last limit recognised, kept till another, cruise control
             // or not - AK Cluster Info's log of Nov 27 2026 (cruise control off): an 80 announced from 600 m, counted
             // once reached; then a 100 from 1.3 km
-            const row = (value, symbol, dist, takeover) => ({ xSpeedLimitAssist: { vSLISymbol: symbol, vSLIDistance: dist, ldmAdditionalSign: takeover || 'NO_TAKEOVER_OFFER',
-                vSLISpeedValue: value, statusVZA: 'STATUS_INACTIVE' }, activeCruiseControl: { symbolACC: 'LDM_CAR_OFF' }, statusLimiter: 'STATUS_INACTIVE', cruiseCtrlSpeedHUD: 65535 });
+            // (a car without the sign event, its Speed Limit Assist on: the head-up display's figures are the only ones, Nov 28 2026)
+            const row = (value, symbol, dist, takeover) => ({ xSpeedLimitAssist: { vSLISymbol: symbol, vSLIDistanceValues: dist, ldmAdditionalSign: takeover || 'NO_TAKEOVER_OFFER',
+                vSLISpeedValue: value, statusVZA: 'STATUS_ACTIVE' }, activeCruiseControl: { symbolACC: 'LDM_CAR_OFF' }, statusLimiter: 'STATUS_INACTIVE', cruiseCtrlSpeedHUD: 65535 });
             const SL = 'LDM_VZA_VSLI_SPEED_LIMIT', NO = 'LDM_VZA_VSLI_NO_SYMBOL';
             assert.strictEqual(D.data().speedLimit, undefined, 'no limit read yet');
             handlers.functionalLibraryData(row(16, SL, 'LDM_VSLI_DIST_600_M'));
@@ -171,10 +172,26 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
             sign(tsr(22));
             assert.strictEqual(D.data().speedLimit, 110);
             assert.ok(/^sign \(TrafficSignRecognition\): presentClassLimitSpeed 22, [\d.]+ s ago, shown 110$/.test(D.sliLog(5).split('\n')[0]));
-            /* the sign silent for 10 s: the head-up display's again */
-            const was = Date.now, later = Date.now() + 10001;
-            Date.now = () => later;
-            try { assert.strictEqual(D.data().sliSource, 'head-up display'); } finally { Date.now = was; }
+            /* the sign silent (Nov 28 2026, the owner's drive: the head-up display said 60 with Speed Limit Assist
+               STATUS_INACTIVE on a 50 road): its last figure kept 60 s, then --; never the head-up display's 60 */
+            handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISpeedValue: 12, vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', vSLIDistanceValues: 'LDM_VSLI_DIST_OFF', statusVZA: 'STATUS_INACTIVE' } });
+            sign(tsr(10));
+            assert.deepStrictEqual([D.data().speedLimit, D.data().sliSource], [50, 'sign']);
+            const was = Date.now, t0 = Date.now();
+            try {
+                Date.now = () => t0 + 10001;
+                handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISpeedValue: 12, vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', vSLIDistanceValues: 'LDM_VSLI_DIST_OFF', statusVZA: 'STATUS_INACTIVE' } });
+                assert.deepStrictEqual([D.data().speedLimit, D.data().sliSource], [50, 'sign (kept)'], '10 s silent: 50 kept, not 60');
+                Date.now = () => t0 + 59000;
+                assert.strictEqual(D.data().speedLimit, 50, 'still kept at 59 s');
+                Date.now = () => t0 + 60001;
+                handlers.functionalLibraryData({ xSpeedLimitAssist: { vSLISpeedValue: 12, vSLISymbol: 'LDM_VZA_VSLI_NO_SYMBOL', vSLIDistanceValues: 'LDM_VSLI_DIST_OFF', statusVZA: 'STATUS_ACTIVE' } });
+                assert.deepStrictEqual([D.data().speedLimit, D.data().sliSource], [undefined, 'none'], 'over 60 s: --, the head-up display\'s never on a car with the sign');
+            } finally { Date.now = was; }
+            const { limitSource } = require(path.join(__dirname, '..', 'shared', 'data'));
+            const now = 1e6, hud = (vza) => ({ at: { sli: now - 1000 }, sli: { vza } });
+            assert.strictEqual(limitSource(hud('STATUS_ACTIVE'), now), 'head-up display', 'no sign service, Speed Limit Assist on');
+            assert.strictEqual(limitSource(hud('STATUS_INACTIVE'), now), 'none', 'no sign service, Speed Limit Assist off');
             assert.deepStrictEqual([tsrStep(undefined, tsr(0)), tsrStep(60, tsr(0)), tsrStep(60, {}), tsrStep(undefined, tsr(29))], [undefined, 60, 60, undefined]);
             /* the warning signs the front camera reads (0.69.0, KO 1 and KO 2): its event, the warnings only, as pictures' names */
             const cam = events['de.bmw.environmentalmodel.SignRecognitionFrontCamera.TrafficSignRecognitionFrontCamera'];
@@ -220,6 +237,37 @@ const check = async (name, fn) => { await fn(); ok++; console.log('ok   ' + name
         assert.deepStrictEqual(spec.survey.groups.map((g) => [g.iface, g.events]), [['de.bmw.dass.TrafficSignRecognition', '^TrafficSignRecognition$'],
             ['de.bmw.environmentalmodel.SignRecognitionFrontCamera', '^TrafficSignRecognitionFrontCamera$']]);
         assert.ok(!spec.signals['de.bmw.dass.TrafficSignRecognition'], 'never in "signals": a car without it would refuse the app');
+    });
+
+    await check('Layouts\' signs (Nov 28 2026): no stopping only with Settings > No stopping signs on (the Car profile\'s signNoStopping), a side road\'s left off', async () => {
+        const events = {}, log = { info() {}, warn() {}, debug() {} }, set = { noStoppingSigns: 'off' };
+        const spec = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'apps', 'akakingj_cluster_layouts', 'app.json'), 'utf8'));
+        const ctx = { log, spec, settings: { get: (k) => set[k] },
+            signals: {
+                watch: (iface) => Promise.resolve(iface === 'de.bmw.environmentalmodel.SignRecognitionFrontCamera' ? { proxy: { iface } } : {}),
+                on: (p, name, fn) => { events[p.iface + '.' + name] = fn; return Promise.resolve(); },
+                proxy: () => Promise.reject(new Error('no link (test)')),
+            } };
+        const { startData } = require(path.join(__dirname, '..', 'shared', 'data'));
+        const D = startData(ctx, { dir: DIR });
+        try {
+            for (let i = 0; i < 40; i++) await new Promise((r) => setImmediate(r));
+            const cam = events['de.bmw.environmentalmodel.SignRecognitionFrontCamera.TrafficSignRecognitionFrontCamera'];
+            const at = (type, x, y) => ({ type, value: 0, location: { x, y, z: 2, locationInvalidFlags: 0 } });
+            const ev = (...s) => ({ trafficSignRecognition: { numberSigns: s.length }, trafficSign: s });
+            cam(ev(at('NO_STANDING_ANYTIME', 15, -5)));
+            assert.deepStrictEqual(D.data().roadSigns, [], 'off: no stopping not shown');
+            set.noStoppingSigns = 'on';
+            cam(ev(at('NO_STANDING_ANYTIME', 15, -5)));
+            assert.deepStrictEqual(D.data().roadSigns, ['no_stopping'], 'on: shown');
+            set.noStoppingSigns = 'off';
+            assert.deepStrictEqual(D.data().roadSigns, [], 'turned off: gone at once');
+            cam(ev(at('NO_ENTRY', 58, -28.1), at('GIVE_WAY', 20, -2.9)));
+            assert.deepStrictEqual(D.data().roadSigns, ['give_way'], 'the side road\'s no entry left off');
+            set.noStoppingSigns = undefined;     // (Centre: no such setting - as before)
+            cam(ev(at('NO_STANDING_ANYTIME', 15, -5)));
+            assert.deepStrictEqual(D.data().roadSigns, ['no_stopping']);
+        } finally { D.stop(); }
     });
 
     console.log(ok + ' passed');
