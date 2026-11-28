@@ -426,7 +426,7 @@ head-up display has its own no passing, the cluster the owner's picture; its end
 last read it, up to two (one on most roads). They and the speed limit sign stand in one line, a row (the speed
 limit sign leftmost) or a column (the speed limit sign at the foot), the owner's ask. Where the owner chose the
 places (a layout's signAt, layout_common.fixedGroup, each 6 px clear, else the search): Retro M a row under the M
-stripes below the gear; ID7 M a row across the middle under the speed; JDM 1 a row just over its left box (its cup of
+stripes below the gear; ID7 M a row across the middle under the speed; JDM 1 a row just over its left box, its right edge between the second and third sign (its cup of
 water moved over the right box, the coolant and oil); Old M and ID6 M a row under the middle display (with the sign on, the display a little higher and
 shorter); Track a column left of the speed (the speed a little narrower, the time and temperature lower); Simple a
 row under the speed (the middle trip line under it); JDM 2 a column between the tach and the disc and coolant gauge

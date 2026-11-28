@@ -288,10 +288,10 @@ function scaled(list) {
 module.exports = {
     id: 'arc_tach',
     title: 'JDM 1',
-    // the speed limit sign and the warning signs in a row over the left box, just above it (the owner's places,
-    // 0.69.0), the speed limit sign leftmost, clear of the KOMBI's light at the glass's edge; the cup of water over
-    // the right box for them (CUP)
-    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 244, y: 230 }, [{ x: 340, y: 230 }, { x: 443, y: 230 }])),
+    // the speed limit sign and the warning signs in a row just above the left box (the owner's places, 0.69.0): the
+    // speed limit sign and the first warning sign left of the box's right edge (x 452), the second right of it, the
+    // edge in the middle of the 12 px between them; the cup of water over the right box for them (CUP)
+    signAt: (list, o, where) => (where.map ? null : C.fixedGroup(list, where, { x: 305, y: 230 }, [{ x: 401, y: 230 }, { x: 504, y: 230 }])),
     // Settings > Speed limit sign: with the readings in the centre, just above TACH, inside the tach's curve (the owner,
     // 2026-11-26) - the tach's pieces' boxes take in all of that hollow (sliSkip: it keeps clear of the bar and the
     // lines as drawn, checked with tools/preview.js); with the map, by BMW's own place as in the other layouts
