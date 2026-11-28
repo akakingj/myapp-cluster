@@ -308,12 +308,18 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         const l = layer();
         assert(l && l.visible && l.opacity > 0, JSON.stringify(l));
         assert(l.x >= 373 + 6, 'clear of "km/h" (x ~373)');
-        assert(l.y < 388 && l.y + l.h > 388, 'in the speed\'s row (middle y ~388)');
         assert(l.x + l.w <= HUD_SEEN.x + HUD_SEEN.w, 'the row ends on the glass');
+        // 1.13.0: all of it above y 386, the lowest this app's panel showed whole (a triangle was cut at ~390,
+        // HUD photo 2026-11-28); the first row on that line, its sign by BMW's speed (its digits y ~359..411)
+        assert(l.y + l.h <= 386, 'the layer ends at y ' + (l.y + l.h) + ', past 386: its bottom cut on the HUD');
+        assert(l.y >= HUD_SEEN.y, 'and starts on the glass');
+        const a = ov.roadSigns().at[0];
+        assert(a.y + a.h <= 386 && a.y + a.h > 359, 'the first row by BMW\'s speed: ' + JSON.stringify(a));
         assert.strictEqual(l.px, 1);
         ov._signsTick(); assert.strictEqual(l.px, 1);
         list = ['DS_ANIMAL_CROSSING', 'GIVE_WAY']; ov._signsTick(); assert.strictEqual(l.px, 2);
-        assert.deepStrictEqual(ov.roadSigns(), { shown: true, types: ['DS_ANIMAL_CROSSING', 'GIVE_WAY'] });
+        { const o = ov.roadSigns(); assert.deepStrictEqual([o.shown, o.types], [true, ['DS_ANIMAL_CROSSING', 'GIVE_WAY']]);
+          assert.strictEqual(o.at[0].y, o.at[1].y, 'in one row, the first left'); assert(o.at[0].x < o.at[1].x); }
         // as many as fit on the glass: four triangles at the limit sign's size, not five
         list = ['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E']; ov._signsTick();
         assert.deepStrictEqual(ov.roadSigns().types, ['DS_A', 'DS_B', 'DS_C', 'DS_D']);
@@ -338,8 +344,12 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         settings.v.show = 'map'; ov._read(); await wait(50); ov._tick && ov._tick(); await wait(30);
         assert(ov.shown(), 'the panel is up');
         list = ['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E']; t += 10; ov._signsTick();
-        const o = ov.roadSigns();
-        assert(o.types.length < 4, JSON.stringify(o));
+        const o = ov.roadSigns(), b = ov._hudBadge();
+        assert(o.types.length >= 2, 'two signs shown, with the panel up: ' + JSON.stringify(o));
+        assert.deepStrictEqual(o.types, ['DS_A', 'DS_B', 'DS_C', 'DS_D', 'DS_E'].slice(0, o.types.length), 'the first of the list first');
+        o.at.forEach((r) => assert(r.y >= HUD_SEEN.y && r.y + r.h <= 386 && r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w, JSON.stringify(r)));
+        assert(o.at.some((r) => r.y < o.at[0].y), 'what reaches the panel goes in the row above: ' + JSON.stringify(o.at));
+        assert(b, 'the panel on the HUD'); o.at.forEach((r) => assert(!(r.x < b.x + b.w && r.x + r.w > b.x && r.y < b.y + b.h && r.y + r.h > b.y), 'over the panel: ' + JSON.stringify([r, b])));
         settings.v.show = 'off'; fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'hud' })); ov._read(); await wait(50); ov._tick && ov._tick();
         t += 10; ov._signsTick();
         assert.strictEqual(ov.roadSigns().types.length, 4, 'all that fit on the glass with the panel gone');

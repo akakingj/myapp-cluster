@@ -76,14 +76,19 @@ const BLINK_ON_MS = 335, BLINK_OFF_MS = 303, BLINK_LEAD_MS = 40;
 // the directions on the HUD (nav_view.js, 173 x 132 on the glass, 149 x 114 over a Waze map there): see navRect
 const NAV_RIGHT = 672, NAV_BOTTOM = 356, NAV_GAP = 4;
 const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit sign at the bottom left (Redline's hud.js)
-// the road signs the camera reads (signs.js, 1.12.0): right of BMW's own speed readout, in its row, as high as its
+// the road signs the camera reads (signs.js, 1.12.0): right of BMW's own speed readout, in its row (1.13.0: raised, below), as high as its
 // limit sign (60: a round sign 60 across, a triangle 60 tall and 69 wide), in a row to the right, as many as fit on
 // the glass: four triangles, 6 apart, from x 380 (7 past "km/h") to 674 (the glass a G20 shows ends at 676). Measured on the owner's G20 HUD photo (2026-11-27) with this app's panel
 // (RPM, KGM, BOOST: its text x 474..651, y 306..339) and lane change sign (x 200..234, y 104..148) as the yardstick
 // (0.85 scene px a photo px): BMW's "km/h" ends at x ~373, its digits' row is y ~359..411 (middle ~388), its limit
 // sign ~60 across. (Below HUD_SEEN's 356: BMW's own speed is drawn there, so a G20 shows it.)
-const SIGNS = { x: 380, cy: 388, h: 60, wmax: 70, gap: 6 };
+// 1.13.0: the row's bottom at y 384, not the speed row's middle 388 (signs from y 357 to 419 then): on a HUD
+// photo with a Waze map (2026-11-28) a triangle showed only its top half, cut at y ~390, while this app's panel,
+// its bottom at 386 there, showed whole. So the signs end where the panel can: the row shares the panel's line,
+// and a sign that would reach the panel goes in a second row above the first, from the same x.
+const SIGNS = { x: 380, bottom: 384, h: 60, wmax: 70, gap: 6, rows: 2 };
 const SIGNS_W = HUD_SEEN.x + HUD_SEEN.w - SIGNS.x, SIGNS_H = SIGNS.h + 2;
+const SIGNS_LH = SIGNS.rows * SIGNS_H + (SIGNS.rows - 1) * SIGNS.gap, SIGNS_TOP = SIGNS.bottom - SIGNS_LH;   // the layer
 const SIGNS_MS = 250;
 const NAV_MS = 200;               // the directions looked at this often (a turn's distance counts down every second)
 const ARROW_TICK_MS = 25;        // (the flash edges within 25 ms of the cluster's)
@@ -741,45 +746,54 @@ function startOverlay(ctx, lv, opts) {
     const lcwTimer = si(lcwTick, ARROW_TICK_MS);
 
     /* ---------- the road signs the camera reads (lv.roadSigns(): ['GIVE_WAY', ...], signs.js) ----------
-     * One layer, the row's width; drawn again only when the signs change. Signs that would reach the panel or the
-     * directions (a wide Waze map puts the panel low) are left off the row's end. */
-    let signRef = 0, signKey = '', signShown = false, signOp = 1, signCv = null;
+     * One layer, two rows high; drawn again only when the signs change. The first row is on the bottom line (the
+     * panel's), right of BMW's speed; a sign that would reach the panel or the directions or leave the glass starts
+     * the row above; what fits in neither is left off. */
+    let signRef = 0, signKey = '', signShown = false, signOp = 1, signCv = null, signTypes = [], signRects = [];
     const signsOn = () => settings.get('roadSigns') !== 'off' && typeof lv.roadSigns === 'function' && !hudTaken();
-    /** How many signs fit on the glass, before the panel or the directions. */
-    function signsRoom(list) {
+    /** Where the signs go on the HUD: [{ t, x, y }] (their top left), the first of the list first, as many as fit. */
+    function signsPlace(list) {
         const keep = [];
         if (visible && hudBadge) keep.push(hudBadge);
         if (navShown && navAt && navCv) { const [x, y] = navAt.split(',').map(Number); keep.push({ x, y, w: navCv.w, h: navCv.h }); }
-        const top = SIGNS.cy - Math.round(SIGNS_H / 2);
-        let k = 0, x = SIGNS.x;
-        for (; k < list.length; k++) {
-            const r = { x, y: top, w: SG.signWidth(list[k]), h: SIGNS_H };
-            if (r.x + r.w > HUD_SEEN.x + HUD_SEEN.w) break;
-            if (keep.some((b) => r.x < b.x + b.w + 4 && r.x + r.w + 4 > b.x && r.y < b.y + b.h + 4 && r.y + r.h + 4 > b.y)) break;
-            x += r.w + SIGNS.gap;
+        const free = (r) => r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w && r.y >= HUD_SEEN.y &&
+            !keep.some((b) => r.x < b.x + b.w + 4 && r.x + r.w + 4 > b.x && r.y < b.y + b.h + 4 && r.y + r.h + 4 > b.y);
+        const out = [];
+        let row = 0, x = SIGNS.x;
+        for (const t of list.slice(0, SG.MAX_SIGNS || 4)) {
+            const w = SG.signWidth(t);
+            let r;
+            while (row < SIGNS.rows) {
+                r = { x, y: SIGNS.bottom - SIGNS_H - row * (SIGNS_H + SIGNS.gap), w, h: SIGNS_H };
+                if (free(r)) break;
+                row++; x = SIGNS.x;              // the row above, from its start (the panel can cover a row's start too)
+            }
+            if (row >= SIGNS.rows) break;
+            out.push({ t, x: r.x, y: r.y });
+            x += w + SIGNS.gap;
         }
-        return k;
+        return out;
     }
     function hideSigns() {
         if (cr && signRef && signShown) cr.set(signRef, { visible: false, opacity: 0 });
         signShown = false;
     }
     function signsTick() {
-        let list = signsOn() ? (lv.roadSigns() || []) : [];
-        list = list.slice(0, signsRoom(list));
-        if (!list.length) { hideSigns(); return; }
+        const at = signsOn() ? signsPlace(lv.roadSigns() || []) : [];
+        if (!at.length) { hideSigns(); return; }
         if (!client()) return;
         if (!signRef) {
-            signRef = cr.image({ target: 'hud', klass: 'overlay', z: 12, x: SIGNS.x, y: SIGNS.cy - Math.round(SIGNS_H / 2), w: SIGNS_W, h: SIGNS_H,
-                iw: SIGNS_W, ih: SIGNS_H, visible: false, opacity: 0 }) || 0;
+            signRef = cr.image({ target: 'hud', klass: 'overlay', z: 12, x: SIGNS.x, y: SIGNS_TOP, w: SIGNS_W, h: SIGNS_LH,
+                iw: SIGNS_W, ih: SIGNS_LH, visible: false, opacity: 0 }) || 0;
             if (!signRef) { warnOnce('the renderer refused the road signs layer'); return; }
-            signCv = new Canvas(SIGNS_W, SIGNS_H); signKey = '';
+            signCv = new Canvas(SIGNS_W, SIGNS_LH); signKey = '';
         }
-        const key = list.join(',');
+        const key = at.map((p) => p.t + '@' + p.x + ',' + p.y).join(' ');
         if (key !== signKey) {
-            SG.drawSigns(signCv, list, SIGNS.gap);
+            signCv.clear([0, 0, 0, 0]);
+            at.forEach((p) => SG.drawSign(signCv, p.t, p.x - SIGNS.x, p.y - SIGNS_TOP + SIGNS_H / 2));
             cr.pixels(signRef, null, Buffer.from(signCv.d.buffer, signCv.d.byteOffset, signCv.d.length));
-            signKey = key;
+            signKey = key; signTypes = at.map((p) => p.t); signRects = at.map((p) => ({ t: p.t, x: p.x, y: p.y, w: SG.signWidth(p.t), h: SIGNS_H }));
         }
         const op = hudOpacity();
         if (!signShown || op !== signOp) { cr.set(signRef, { visible: true, opacity: op }); signShown = true; signOp = op; }
@@ -809,8 +823,9 @@ function startOverlay(ctx, lv, opts) {
         /** Whether directions can show now: the panel on the HUD, the HUD not another app's (main.js asks for turns only then). */
         navCan: () => !!(visible && hudBadge && !hudTaken()),
         /** The road signs on the HUD now: { shown, types }. */
-        roadSigns: () => ({ shown: signShown, types: signShown ? signKey.split(',') : [] }),
+        roadSigns: () => ({ shown: signShown, types: signShown ? signTypes.slice() : [], at: signShown ? signRects.map((r) => Object.assign({}, r)) : [] }),
         _signsTick: signsTick,
+        _hudBadge: () => hudBadge,
         _navTick: navTick,
         _arrowTick: arrowTick, _lcwTick: lcwTick, lcw: () => ({ shown: Object.assign({}, lcwShown), refs: Object.assign({}, lcwRefs) }),
         _tick: tick, _read: readStatus,

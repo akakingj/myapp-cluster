@@ -32,7 +32,8 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   BDC answers D347 shows on the app's page (Lane change warning: mirror lamps, or the BDC has no D347).
 - **Road signs on the HUD** (1.12.0, Settings > Road signs on the HUD: on, sample signs, off; on by default): the signs
   the front camera reads, other than the speed limit and no passing (the HUD shows those itself), right of BMW's
-  speed in its row, as South Korea's own signs (the government's designs, cut out
+  speed, ending where this app's panel does (1.13.0: a triangle in the speed's middle had its bottom cut off on a
+  HUD with a Waze map), a sign that would reach the panel or the directions going in a second row above, as South Korea's own signs (the government's designs, cut out
   along their red or blue edge: `sign_art.js`, `tools/make_sign_art.py`; 39 of them - slippery road, traffic
   queues, wild animals, steep hills, bends, road works, crossings, bumps, ..., give way, stop, no entry, the turn
   and parking bans, one way; a warning with none of its own gets 위험, "!"). The car's own list of the camera's sign
