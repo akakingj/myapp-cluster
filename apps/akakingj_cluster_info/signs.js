@@ -34,7 +34,10 @@ const zlib = require('zlib');
 const RS = require('./road_signs');
 const { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, wanted, makeTracker, artOf, typeNames, defNames, chunk } = RS;
 /* the services whose definitions go to the log once (1.12.3, parked: where no passing's end may be) */
-const DEF_IFACES = ['de.bmw.dass.TrafficSignRecognition', CAM_IFACE, 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl'];
+const DEF_IFACES = ['de.bmw.dass.TrafficSignRecognition', CAM_IFACE, 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl',
+    // (the head-up display's data, which shows BMW's own no passing: its names about signs, passing and lanes only - the
+    // whole is long)
+    ['de.bmw.infotainment.displaydataserver.DisplayDataServer', /pass|overtak|npi|ueberhol|tunnel|lane|restrict|sli|vza|sign|limit/i]];
 const MAX_SIGNS = 4;
 const ART = require('./sign_art');
 const pics = {};
@@ -98,11 +101,11 @@ function startSigns(ctx, log, opts) {
     function readDefs() {
         if (defsRead) return;
         defsRead = true;
-        DEF_IFACES.forEach((iface) => {
-            const short = iface.split('.').pop();
+        DEF_IFACES.forEach((d) => {
+            const iface = Array.isArray(d) ? d[0] : d, only = Array.isArray(d) ? d[1] : null, short = iface.split('.').pop();
             let cfg = null;
             try { cfg = (opts.loadConfig || signals.loadConfig)(iface); } catch (e) { log.info('sign definitions: ' + short + ' not in this install (' + e.message + ')'); return; }
-            const names = defNames(cfg), lines = chunk(names, 140);
+            const names = defNames(cfg).filter((n) => !only || only.test(n)), lines = chunk(names, 140);
             log.info('sign definitions: ' + short + ', ' + names.length + ' names' + (lines.length > 40 ? ' (the first 40 lines)' : ''));
             lines.slice(0, 40).forEach((l, i) => log.info('sign definitions: ' + short + ' ' + (i + 1) + ': ' + l));
         });

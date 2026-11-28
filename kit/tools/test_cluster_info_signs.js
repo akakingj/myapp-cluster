@@ -236,7 +236,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(typeLines.length > 1 && typeLines.every((l) => l.length <= 200), 'chunked: ' + typeLines.map((l) => l.length));
         const back = typeLines.map((l) => l.replace(/^road signs: types \d+: /, '')).join(', ').split(', ');
         assert.deepStrictEqual(back, st.carTypes, 'the whole list, in order');
-        assert.deepStrictEqual(asked, [S.CAM_IFACE, 'de.bmw.dass.TrafficSignRecognition', S.CAM_IFACE, 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl']);
+        assert.deepStrictEqual(asked, [S.CAM_IFACE, 'de.bmw.dass.TrafficSignRecognition', S.CAM_IFACE, 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl', 'de.bmw.infotainment.displaydataserver.DisplayDataServer']);
         assert(lg.lines.indexOf('sign definitions: TrafficSignRecognition, 15 names') >= 0, lg.lines.filter((l) => /definitions/.test(l)).join(' | '));
         assert(/presentNoPassing.*NO_PASSING_ACTIVE/.test(lg.lines.filter((l) => /^sign definitions: TrafficSignRecognition \d+: /.test(l)).join(' ')), 'its fields and their values');
         assert(lg.lines.some((l) => /^sign definitions: TrafficSignDisplayControl not in this install \(not declared\)$/.test(l)));
