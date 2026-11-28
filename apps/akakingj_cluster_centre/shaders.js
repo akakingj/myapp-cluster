@@ -2428,4 +2428,122 @@ uniform vec2 u_size;
 varying vec2 v_uv;
 void main() { gl_FragColor = rmPanel(v_uv * u_size + u_origin); }`;
 
-module.exports = { HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SIGN_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, MDASH_FS, MTACH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, RMDIAL_FS, RMBG_FS, JDM_FS_MODES, MROUND_FS_MODES };
+/*
+ * ADAS_FS - the ADAS layout's road (layout_adas.js), after the wide night-road clusters of new cars: u_part 0 is the
+ * scene down to the car's strip - a night sky with a few stars, the horizon's glow, low hills, the ground's faint
+ * grid and the road ahead in perspective (three lanes, ours lit in the look's accent, the lane dashes going by with
+ * the distance driven, u_run); u_part 1 is our car from behind on its own small layer (a body, glass, a light bar
+ * and the accent's rings under it), so only its few pixels pay for it. Cheap per pixel: no loops but the rings'.
+ * u_road: the horizon's y in the layer, the vanishing point's x, our lane's half width at the layer's foot, 0.
+ */
+const ADAS_FS = `#version 100
+${HIGHP}${COMMON}
+uniform vec2 u_size;
+uniform float u_part;
+uniform highp float u_run;
+uniform vec4 u_road;
+uniform vec3 u_sky;
+uniform vec3 u_horizon;
+uniform vec3 u_ground;
+uniform vec3 u_line;
+uniform vec3 u_accent;
+uniform vec3 u_body;
+varying vec2 v_uv;
+float hash(vec2 q) { return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453); }
+float lineA(float d, float w) { return clamp(w - abs(d) + 0.5, 0.0, 1.0); }
+float rbox(vec2 q, vec2 b, float r) { vec2 k = abs(q) - b + r; return length(max(k, 0.0)) + min(max(k.x, k.y), 0.0) - r; }
+vec4 scene(vec2 p) {
+    float W = u_size.x, H = u_size.y, yh = u_road.x, cx = u_road.y;
+    /* the hills' line: a little above the horizon, two slow waves */
+    float hill = yh - 14.0 - 10.0 * sin(p.x * 0.0041 + 0.7) - 7.0 * sin(p.x * 0.0113 + 2.1) - 4.0 * sin(p.x * 0.031);
+    if (p.y < hill) {
+        float k = clamp(p.y / yh, 0.0, 1.0);
+        vec3 c = mix(vec3(0.004, 0.006, 0.012), u_sky, k * k);
+        /* the horizon's glow, strongest in the middle */
+        float g = exp(-(yh - p.y) / 46.0) * (0.55 + 0.45 * exp(-pow((p.x - cx) / (W * 0.33), 2.0)));
+        c = mix(c, u_horizon, clamp(g, 0.0, 1.0) * 0.85);
+        /* a few stars, high up */
+        vec2 cell = floor(p / 9.0), fp = p - cell * 9.0 - 4.5;
+        float st = step(0.9975, hash(cell)) * (1.0 - k) * (0.3 + 0.7 * hash(cell + 7.0));
+        c += vec3(st * exp(-dot(fp, fp) * 0.9));
+        return vec4(c, 1.0);
+    }
+    float t = clamp((p.y - yh) / (H - yh), 0.0, 1.0);
+    /* below the hills, above the road's start: the far land, dark with the glow on its rim */
+    vec3 land = mix(u_ground * 1.6, u_ground, clamp((p.y - hill) / 40.0, 0.0, 1.0));
+    land = mix(land, u_horizon, exp(-abs(p.y - hill) / 2.5) * 0.35);
+    if (p.y <= yh) return vec4(land, 1.0);
+    float hw = max(t, 0.0001) * u_road.z, dx = p.x - cx, ax = abs(dx);
+    float z = 1.0 / max(t, 0.02), xm = 14.0 * (z - 1.0);
+    float fade = smoothstep(0.0, 0.18, t);
+    float aa = 0.6 / max(hw, 0.3);
+    vec4 acc = vec4(land, 1.0);
+    /* the ground's grid: lines across every 10 m going by, and along the road's direction */
+    float across = abs(fract((xm + u_run) / 10.0) - 0.5) * 2.0;
+    float gx = abs(fract(dx / (hw * 0.9) + 0.5) - 0.5) * hw * 0.9 * 2.0;
+    float grid = max(1.0 - smoothstep(0.0, 1.2 + 0.02 * z, (1.0 - across) * 10.0 * t * 6.0), lineA(gx, 0.6 + 0.6 * t)) * 0.10 * fade;
+    acc = over(acc, u_line * 0.6, grid);
+    /* the road: five lanes, ours in the middle */
+    float road = 1.0 - smoothstep(5.0 * hw - 1.0, 5.0 * hw + 1.0, ax);
+    acc = over(acc, vec3(0.045, 0.05, 0.06) + u_sky * 0.12, road * (0.55 + 0.4 * t));
+    /* ours lit: the accent from its foot fading to the distance */
+    float ego = 1.0 - smoothstep(hw - 1.0, hw + 1.0, ax);
+    acc = over(acc, u_accent, ego * (0.10 + 0.34 * t * t) * fade);
+    /* the lines: the road's edges solid, the lanes' dashed (3 m in 9 m), ours glowing in the accent */
+    float w = 0.7 + 3.2 * t;
+    float run = fract((xm + u_run) / 9.0);
+    float dash = smoothstep(0.0, 0.04, run) * (1.0 - smoothstep(0.33, 0.37, run));
+    acc = over(acc, u_line, lineA(ax - 5.0 * hw, w) * 0.7 * fade);
+    acc = over(acc, u_line, lineA(ax - 3.0 * hw, w) * dash * 0.8 * fade);
+    acc = over(acc, u_accent, exp(-abs(ax - hw) / (2.0 + 9.0 * t)) * 0.55 * fade);
+    acc = over(acc, mix(u_accent, vec3(1.0), 0.35), lineA(ax - hw, w * 0.8) * fade);
+    return acc;
+}
+vec4 car(vec2 p) {
+    float W = u_size.x, H = u_size.y, cx = W * 0.5, bw = W * 0.37, x = p.x - cx, ax = abs(x);
+    vec4 acc = vec4(0.0);
+    /* the rings under it, the accent's, flat on the road */
+    vec2 e = (p - vec2(cx, H * 0.88)) / vec2(W * 0.5, H * 0.15);
+    float r = length(e), rings = 0.0;
+    for (int i = 0; i < 3; i++) { float ri = 0.55 + float(i) * 0.2; rings += lineA((r - ri) * H * 0.15, 1.1) * (0.75 - float(i) * 0.22); }
+    acc = over(acc, u_accent, clamp(rings, 0.0, 1.0) * (1.0 - smoothstep(0.92, 1.0, r)));
+    acc = over(acc, u_accent, exp(-r * r * 2.5) * 0.4);
+    /* its shadow and tyres */
+    vec2 sh = (p - vec2(cx, H * 0.9)) / vec2(bw * 1.1, H * 0.05);
+    acc = over(acc, vec3(0.0), exp(-dot(sh, sh)) * 0.85);
+    float tyre = rbox(vec2(ax - bw * 0.80, p.y - H * 0.84), vec2(bw * 0.13, H * 0.07), 5.0);
+    acc = over(acc, vec3(0.015), clamp(0.5 - tyre, 0.0, 1.0));
+    /* the body: wide and low, its shoulders rounded, lit from above */
+    float top = H * 0.48, foot = H * 0.86;
+    float sw = bw * mix(0.86, 1.0, smoothstep(top, top + H * 0.12, p.y));
+    float body = max(rbox(vec2(x, p.y - (top + foot) * 0.5), vec2(sw, (foot - top) * 0.5), H * 0.09), 0.0 - 1e3);
+    float lit = clamp((p.y - top) / (foot - top), 0.0, 1.0);
+    vec3 bc = u_body * (1.05 - 0.55 * lit) * (0.7 + 0.3 * (1.0 - pow(ax / bw, 4.0)));
+    acc = over(acc, bc, clamp(0.5 - body, 0.0, 1.0));
+    /* the roof and its glass: a dome narrower at the top */
+    float rt = H * 0.18, f = clamp((p.y - rt) / (top + 6.0 - rt), 0.0, 1.0);
+    float rw = mix(bw * 0.50, bw * 0.80, sqrt(f));
+    float roof = max(ax - rw, rt - p.y + 0.0);
+    roof = max(roof, p.y - top - 6.0);
+    acc = over(acc, u_body * 0.95, clamp(0.5 - roof + 0.0, 0.0, 1.0) * smoothstep(rt - 1.0, rt + 4.0, p.y));
+    float gw = rw - 7.0, gl = max(max(ax - gw, rt + 7.0 - p.y), p.y - top + 2.0);
+    vec3 glass = mix(vec3(0.02, 0.025, 0.035), u_sky * 0.5 + vec3(0.05), (1.0 - f) * 0.7);
+    glass += vec3(0.08) * smoothstep(0.0, 6.0, 6.0 - abs(x + rw * 0.35 - (p.y - rt) * 0.6)) * 0.5;
+    acc = over(acc, glass, clamp(0.5 - gl, 0.0, 1.0));
+    /* the light bar right across its back, the lamps' glow on the road */
+    float ly = H * 0.57;
+    float bar = rbox(vec2(x, p.y - ly), vec2(sw * 0.97, H * 0.018), H * 0.018);
+    acc = over(acc, vec3(1.0, 0.18, 0.14), clamp(0.5 - bar, 0.0, 1.0));
+    vec2 gq = vec2(x / (bw * 1.1), (p.y - ly) / (H * 0.06));
+    acc = over(acc, vec3(1.0, 0.1, 0.06), exp(-dot(gq, gq)) * 0.3);
+    /* the dark diffuser at its foot */
+    float dif = rbox(vec2(x, p.y - H * 0.80), vec2(bw * 0.62, H * 0.035), 4.0);
+    acc = over(acc, vec3(0.02), clamp(0.5 - dif, 0.0, 1.0) * 0.85);
+    return acc;
+}
+void main() {
+    vec2 p = v_uv * u_size;
+    gl_FragColor = u_part < 0.5 ? scene(p) : car(p);
+}`;
+
+module.exports = { ADAS_FS, HIGHP, COMMON, GLYPH, FLAT_FS, PANEL_FS, DIAL_FS, BAND_FS, TEXT_FS, BG_FS, ICON_FS, SIGN_FS, SPARK_FS, CAR_FS, LEDS_FS, FLAG_FS, EAGLE_FS, FIREWORKS_FS, ROAD_FS, MDASH_FS, MTACH_FS, LICON_FS, E9X_FS, MBAR_FS, JDM_FS, MROUND_FS, ACLOCK_FS, RING_FS, RTACH_FS, RBOX_FS, RSEG_FS, CUP_FS, WAKABA_FS, RMDIAL_FS, RMBG_FS, JDM_FS_MODES, MROUND_FS_MODES };

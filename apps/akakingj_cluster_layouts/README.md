@@ -3,8 +3,8 @@
 *Part of [iDrive 7 cluster apps](../../README.md), with Cluster Info and [Cluster Centre](../akakingj_cluster_centre/README.md).*
 
 Custom layouts for the whole instrument cluster of a BMW with iDrive 7 (MGU), **drawn by the cluster
-itself**. Fifteen layouts, in the page's order: 90's, 20's, Retro M, Old M, ID6 M, ID7 M (after
-bimmer-lab's M), JDM 1, JDM 2, GM, Track, Pulse, Simple, GT3 (after bimmer-lab's), KO 1 and KO 2, each in comfort,
+itself**. Sixteen layouts, in the page's order: 90's, 20's, Retro M, Old M, ID6 M, ID7 M (after
+bimmer-lab's M), JDM 1, JDM 2, GM, Track, Pulse, Simple, ADAS, GT3 (after bimmer-lab's), KO 1 and KO 2, each in comfort,
 sport and efficient colours (following the selector's S / M programme, or chosen; Retro M has one set of colours), each
 with three centres: the **readings**, **Waze** or the **stock** centre content.
 
@@ -330,6 +330,18 @@ the gear turn red with it, the cold-engine guard aside. Pulse's colours, after t
 centre, Pulse's arrangement.
 
 ![Simple](../../docs/simple.png)
+
+### ADAS
+
+The cluster as one wide night road, after the driving-assistant views of new cars, with no gauges: the road ahead
+fills the screen down to the car's own strip - a night sky, the horizon's glow, low hills, the ground's faint grid, five
+lanes with ours lit in the look's colour (blue, red in sport, green in efficient) and the lane dashes going by with the
+distance driven - our car from behind at its foot with the colour's rings under it, the speed in large figures on the
+left and the engine speed on the right (red from the red zone, OFF with the engine off). The first step of an ADAS
+theme: the road is straight and empty for now; the cars round us, its bends and the turn and lane guidance come once
+the driving assistant's readings have been recorded on the car. With Waze or the stock centre, Pulse's arrangement.
+
+![ADAS](../../docs/adas.png)
 
 ### GT3
 

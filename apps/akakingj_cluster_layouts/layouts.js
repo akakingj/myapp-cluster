@@ -3,7 +3,7 @@
  * layouts.js - the layouts this app offers, by id. A layout is one file, layout_<id>.js, next to this one
  * (the build ships only top-level .js files); list it here and in app.json's "layout" setting (README.md).
  */
-const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_retro_m'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_simple'), require('./layout_gt3'), require('./layout_ko1'), require('./layout_ko2')];
+const LAYOUTS = [require('./layout_retro'), require('./layout_analog_sport'), require('./layout_retro_m'), require('./layout_classic'), require('./layout_id6m'), require('./layout_m'), require('./layout_arc_tach'), require('./layout_jdm2'), require('./layout_twin_cowl'), require('./layout_track'), require('./layout_pulse'), require('./layout_simple'), require('./layout_adas'), require('./layout_gt3'), require('./layout_ko1'), require('./layout_ko2')];
 const C0 = require('./layout_common');
 /** A readout put in the time's or the outside temperature's place, two side by side: made to hold its widest
  * figures ('TRANS 140°') with a gap to the other (layout_common.fitText). */
@@ -226,6 +226,8 @@ const SLOTS = {
     // (Pulse's pieces with the map or the stock centre: its main readout there)
     simple: { infoMain: (o) => o.centre === 'map' || o.centre === 'stock' },
     gt3: {}, m: {},
+    // (Pulse's pieces with the map or the stock centre, as Simple's)
+    adas: { infoMain: (o) => o.centre === 'map' || o.centre === 'stock' },
     classic: Object.assign({ infoMain: ENGINE, infoLow: ENGINE, centreView: (o) => !MAPFORM(o) }, DIALS),
     // (no readouts beside its dials; with the map, readouts 1 and 2 above it over the car's strip)
     // (0.41.0: the display between the dials, as 20's)
