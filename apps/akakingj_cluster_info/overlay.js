@@ -82,13 +82,15 @@ const BMW_SPEED = { x: 116, y: 320, w: 236, h: 48 };   // BMW's speed and limit 
 // (RPM, KGM, BOOST: its text x 474..651, y 306..339) and lane change sign (x 200..234, y 104..148) as the yardstick
 // (0.85 scene px a photo px): BMW's "km/h" ends at x ~373, its digits' row is y ~359..411 (middle ~388), its limit
 // sign ~60 across. (Below HUD_SEEN's 356: BMW's own speed is drawn there, so a G20 shows it.)
-// 1.13.0: the row's bottom at y 384, not the speed row's middle 388 (signs from y 357 to 419 then): on a HUD
-// photo with a Waze map (2026-11-28) a triangle showed only its top half, cut at y ~390, while this app's panel,
-// its bottom at 386 there, showed whole. So the signs end where the panel can: the row shares the panel's line,
-// and a sign that would reach the panel goes in a second row above the first, from the same x.
-const SIGNS = { x: 380, bottom: 384, h: 60, wmax: 70, gap: 6, rows: 2 };
+// 1.13.0: the lowest sign's bottom at y 384, not the speed row's middle 388 (signs from y 357 to 419 then): on a HUD
+// photo (2026-11-28) a triangle showed only its top part, while this app's panel, its bottom at 386 there, showed
+// whole. So the signs end where the panel can, beside it: each sign right of the one before, or where that is
+// taken (the panel, the directions, the glass's end) the lowest free place at x 380 above, as high as just under
+// the turn signal arrows and lane change signs. With the panel to the glass (RPM, KGM, BOOST: x 464..672) two
+// signs stand one above the other left of it; a wider panel (the kW too, from x 405) puts them above the panel.
+const SIGNS = { x: 380, bottom: 384, h: 60, wmax: 70, gap: 6 };
 const SIGNS_W = HUD_SEEN.x + HUD_SEEN.w - SIGNS.x, SIGNS_H = SIGNS.h + 2;
-const SIGNS_LH = SIGNS.rows * SIGNS_H + (SIGNS.rows - 1) * SIGNS.gap, SIGNS_TOP = SIGNS.bottom - SIGNS_LH;   // the layer
+const SIGNS_TOP = LCW.y + LCW.h + 4, SIGNS_LH = SIGNS.bottom - SIGNS_TOP;   // the layer: under the lamps to the bottom
 const SIGNS_MS = 250;
 const NAV_MS = 200;               // the directions looked at this often (a turn's distance counts down every second)
 const ARROW_TICK_MS = 25;        // (the flash edges within 25 ms of the cluster's)
@@ -746,9 +748,8 @@ function startOverlay(ctx, lv, opts) {
     const lcwTimer = si(lcwTick, ARROW_TICK_MS);
 
     /* ---------- the road signs the camera reads (lv.roadSigns(): ['GIVE_WAY', ...], signs.js) ----------
-     * One layer, two rows high; drawn again only when the signs change. The first row is on the bottom line (the
-     * panel's), right of BMW's speed; a sign that would reach the panel or the directions or leave the glass starts
-     * the row above; what fits in neither is left off. */
+     * One layer, from under the turn signal arrows to the bottom line; drawn again only when the signs or their places
+     * change. Placed by signsPlace (SIGNS above); what finds no room is left off. */
     let signRef = 0, signKey = '', signShown = false, signOp = 1, signCv = null, signTypes = [], signRects = [];
     const signsOn = () => settings.get('roadSigns') !== 'off' && typeof lv.roadSigns === 'function' && !hudTaken();
     /** Where the signs go on the HUD: [{ t, x, y }] (their top left), the first of the list first, as many as fit. */
@@ -756,23 +757,25 @@ function startOverlay(ctx, lv, opts) {
         const keep = [];
         if (visible && hudBadge) keep.push(hudBadge);
         if (navShown && navAt && navCv) { const [x, y] = navAt.split(',').map(Number); keep.push({ x, y, w: navCv.w, h: navCv.h }); }
-        const free = (r) => r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w && r.y >= HUD_SEEN.y &&
+        const sh = sigShift();    // (the arrows and lane change signs, moved down by a panel in their band)
+        keep.push({ x: LCW.left, y: LCW.y + sh, w: LCW.right + LCW.w - LCW.left, h: LCW.h });
+        const free = (r) => r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w && r.y >= SIGNS_TOP &&
             !keep.some((b) => r.x < b.x + b.w + 4 && r.x + r.w + 4 > b.x && r.y < b.y + b.h + 4 && r.y + r.h + 4 > b.y);
         const out = [];
-        let row = 0, x = SIGNS.x;
         for (const t of list.slice(0, SG.MAX_SIGNS || 4)) {
-            const w = SG.signWidth(t);
-            let r;
-            while (row < SIGNS.rows) {
-                r = { x, y: SIGNS.bottom - SIGNS_H - row * (SIGNS_H + SIGNS.gap), w, h: SIGNS_H };
-                if (free(r)) break;
-                row++; x = SIGNS.x;              // the row above, from its start (the panel can cover a row's start too)
+            const w = SG.signWidth(t), last = out[out.length - 1];
+            let r = last ? { x: last.x + last.w + SIGNS.gap, y: last.y, w, h: SIGNS_H } : null;
+            if (!r || !free(r)) {
+                r = null;
+                for (let y = SIGNS.bottom - SIGNS_H; y >= SIGNS_TOP; y -= 2) {
+                    const c = { x: SIGNS.x, y, w, h: SIGNS_H };
+                    if (free(c)) { r = c; break; }
+                }
             }
-            if (row >= SIGNS.rows) break;
-            out.push({ t, x: r.x, y: r.y });
-            x += w + SIGNS.gap;
+            if (!r) break;
+            out.push(r); keep.push(r);
         }
-        return out;
+        return out.map((r, i) => ({ t: list[i], x: r.x, y: r.y }));
     }
     function hideSigns() {
         if (cr && signRef && signShown) cr.set(signRef, { visible: false, opacity: 0 });

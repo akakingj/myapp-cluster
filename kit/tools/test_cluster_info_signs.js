@@ -355,6 +355,34 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert.strictEqual(ov.roadSigns().types.length, 4, 'all that fit on the glass with the panel gone');
     });
 
+    await acheck('no map on the HUD, the panel (three values, with the kW and without) and the directions on: the signs on neither, nor on the turn signals', async () => {
+        const st = path.join(dir, 'status.json');
+        for (const kw of [null, 12]) {    // the panel to the glass without the kW (x 464..672) and with it (x 405..673)
+        lv.power = () => (kw === null ? null : { kw, text: String(kw), col: theme.text });
+        lv.extras = () => [{ label: 'RPM', text: '2100', col: theme.text }, { label: 'KGM', text: '25', col: theme.text }, { label: 'BOOST', text: '0.8', col: theme.text }];
+        lv.nav = () => ({ kind: 'turn', dir: 'RIGHT', dist: '350', unit: 'm', road: 'Example Road' });
+        fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'cluster' }));
+        settings.v.show = 'hud'; ov._read(); await wait(50); ov._tick && ov._tick(); await wait(30); ov._navTick();
+        const b = ov._hudBadge(), na = ov.nav().at.split(',').map(Number), n = [...FakeCR.last.layers.values()].find((l) => l.target === 'hud' && l.x === na[0] && l.y === na[1] && l.visible);
+        assert(b && n, 'the panel and the directions up: ' + JSON.stringify([b, n]));
+        const over = (r, k) => r.x < k.x + k.w && r.x + r.w > k.x && r.y < k.y + k.h && r.y + r.h > k.y;
+        const lamps = [{ x: 200, y: 104, w: 400, h: 44 }];    // the turn signal arrows and the lane change signs (y 104..148)
+        for (const l of [['DS_A'], ['DS_A', 'GIVE_WAY'], ['DS_A', 'DS_B', 'DS_C', 'DS_D']]) {
+            list = l; t += 10; ov._signsTick();
+            const o = ov.roadSigns();
+            assert(o.types.length >= Math.min(2, l.length), 'two at least: ' + JSON.stringify(o));
+            o.at.forEach((r) => {
+                assert(!over(r, b), 'on the panel: ' + JSON.stringify([r, b]));
+                assert(!over(r, n), 'on the directions: ' + JSON.stringify([r, n]));
+                assert(!lamps.some((k) => over(r, k)), 'on the turn signals: ' + JSON.stringify(r));
+                assert(r.y + r.h <= 386 && r.y >= HUD_SEEN.y, JSON.stringify(r));
+            });
+            o.at.forEach((r, i) => o.at.slice(i + 1).forEach((q) => assert(!over(r, q), 'one on another: ' + JSON.stringify([r, q]))));
+        }
+        }
+        lv.nav = undefined; lv.extras = () => []; lv.power = () => null; settings.v.show = 'off'; ov._read(); await wait(50); ov._tick && ov._tick();
+    });
+
     ov.stop();
     console.log(ok + ' passed');
     process.exit(0);
