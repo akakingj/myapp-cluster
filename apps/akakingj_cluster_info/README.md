@@ -54,7 +54,7 @@ A small panel of live values over the Waze map in the instrument cluster or on t
   symbol to compare: looked for only, not shown). The car's own list of the camera's sign
   types (read from the app's interface config for the camera, made at install from the car's catalog) is logged
   once, whole, and counted on the app's page (types, drawn, as "!"): which pictures this car can ever show. As high as BMW's own limit sign (a round sign as big, a triangle as tall). Shown when the camera reads it, for 10 s; a
-  sign read after it takes its place (1.12.3: the owner's; one event's several together, in a row), at most three (1.13.0, the owner's), as many as fit on the glass. Once, at the start, every name in the definitions of the sign services this install has (TrafficSignRecognition, the camera's, TrafficSignDisplayControl, and of the head-up display's data the names about signs, passing and lanes: `sign definitions:` lines; and the car's whole catalog's services and members named for no passing or the map's look ahead: `catalog no passing` lines, 1.12.4; all of them in the Test log, sign definitions, parked - what tells no passing's end, 1.12.3); signs that would reach
+  sign read after it takes its place (1.12.3: the owner's; one event's several together, in a row), at most three (1.13.0, the owner's), as many as fit on the glass. (1.12.3 - 1.14.4 also logged the sign services' definitions and the catalog's no passing services once a start: no more since 1.14.5); signs that would reach
   the panel (a wide Waze map puts it low) are left off. From the camera's sign event
   (de.bmw.environmentalmodel.SignRecognitionFrontCamera, TrafficSignRecognitionFrontCamera: once a sign, found by the
   signal survey), declared only where the car's catalog has it, read only; the survey reads it through the same
@@ -96,8 +96,9 @@ A small panel of live values over the Waze map in the instrument cluster or on t
     displayNoPassingRestriction and its remaining distance, TrafficSignRecognition's recognitionNoPassing,
     displayTextMessageNpi and displaySpeedNPIDistance, and DisplayDataServer2's npiData and vnpiDistance (the
     head-up display's own NPI; read for this alone); each sign service's changes kept apart (the last 30 each);
-  - the sign definitions read once at the start (`signs.js`): the camera's sign types, the sign services' definitions
-    and the catalog's services and members named for no passing or the map's look ahead.
+  - (1.14.5) no longer the sign definitions, the catalog's lines, the HUD data's field names or the camera's every
+    field (a line an event in the camera signs instead): the owner's car's catalog is known whole, and they were most
+    of the codes (some 72 on Nov 28, now about 15).
   The page shows the checks under way: the time, what came, the HUD data's speed limit.
 - **Its page** shows the panel as it is now, larger, and whether each source works (turn signals, day / night,
   driver profile, the apps providing, the cluster renderer, the Waze map, the directions).

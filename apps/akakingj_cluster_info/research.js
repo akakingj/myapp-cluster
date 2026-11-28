@@ -57,7 +57,7 @@ function signsLine(v) {
 function startResearch(opts) {
     opts = opts || {};
     const kmh = () => { try { const v = opts.kmh && opts.kmh(); return typeof v === 'number' && isFinite(v) ? Math.round(v) : null; } catch (e) { return null; } };
-    let last = {}, hudNpLast = null, hudKeys = [], sign = {}, hud = [], np = [], npLast = {}, cam = [], lights = [], lightLast = null, hudLightLast = null;
+    let last = {}, hudNpLast = null, sign = {}, hud = [], np = [], npLast = {}, cam = [], lights = [], lightLast = null, hudLightLast = null;
     const lightPush = (t, text) => { if (lights.length >= KEEP_SIGNS) return; const k = kmh(); lights.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + text); };
     const stamp = (t) => new Date(t).toISOString().slice(11, 19);
     const linesOf = (list) => list.reduce((out, c) => out.concat(RS.chunk(c.f.split(' '), 150)
@@ -85,6 +85,9 @@ function startResearch(opts) {
                 const k = kmh();
                 cam.push(stamp(t || Date.now()) + ' ' + (k === null ? '?' : k) + ' km/h | ' + signsLine(v));
             }
+            // (1.14.5) the camera's own: in the camera signs above, a line an event (its 20 places' every field were most of
+            // the Test log: 37 of its codes)
+            if (CAM.test(iface)) return;
             const f = all.join(' ') || '(empty)';
             if (last[what] === f) return;
             last[what] = f;
@@ -97,7 +100,6 @@ function startResearch(opts) {
             // the head-up display's traffic light symbols (DisplayDataTypes.VSLISign TRAFFIC_LIGHT_...), to compare
             const tl = all.filter((f) => /=["']?TRAFFIC_LIGHT_/.test(f)).join(' ');
             if (tl !== (hudLightLast || '')) { if (tl || hudLightLast) lightPush(t, 'hud: ' + (tl || '(none)')); hudLightLast = tl; }
-            hudKeys = Array.from(new Set(all.map((f) => f.split('=')[0].split('.').slice(0, 2).join('.'))));
             const np = all.filter((f) => RS.NP_FIELD.test(f.split('=')[0])).join(' ') || '(none)';
             if (np === hudNpLast) return;
             hudNpLast = np;
@@ -112,7 +114,6 @@ function startResearch(opts) {
                 cam.length ? cam.join('\n') : '(none yet)'],
             ['sign services, every field as it changed (the last ' + KEEP + ' of each)',
                 Object.keys(sign).length ? linesOf([].concat(...Object.keys(sign).map((k) => sign[k])).sort((a, b) => a.at - b.at)).join('\n') : '(none yet)'],
-            ['head-up display data, its fields', hudKeys.length ? RS.chunk(hudKeys, 150).join('\n') : '(none yet)'],
             ['head-up display data, its no passing fields as they changed (the last ' + KEEP + ')', hud.length ? linesOf(hud).join('\n') : '(none yet)'],
             ['traffic lights', '(id color status arrow dir x y z q, each change; hud: the head-up display\'s symbol; the whole test, at most ' + KEEP_SIGNS + ')\n'
                 + (lights.length ? lights.join('\n') : '(none yet)')],

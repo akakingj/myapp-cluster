@@ -401,6 +401,12 @@ the car, then moved to `main` (in the fork they were `personal-kr` / `personal-k
   displaySpeedNPIDistance, DisplayDataServer2 npiData / vnpiDistance (a new survey group, hud2: fitted on the G20's
   catalog it is declared, 44 members in all); each sign service's changes apart (30 each), so the camera's many
   events no longer push the others out. The 3 km fallback stays till a drive's log shows which field ends it.
+- Info 1.14.5 (Nov 28 2026): the Test log without what the car's catalog already told (the owner: 53 codes, the catalog
+  checked): no sign definitions (the camera's types, the sign services' definitions, the catalog's no passing services:
+  signs.js reads only the camera's own config, to count its types; the catalog file not read at all), no survey
+  catalog (sign/assist), no HUD data field names, the driving assistant check without its catalog lists (the file keeps
+  them), and the camera's events no longer among "every field as it changed" (a line each in camera signs). From the
+  Nov 28 log: about 72 codes' worth down to some 15.
 - Info 1.14.4 (Nov 28 2026): the road signs on the HUD go with the panel - Show the panel Off ([Show on the HUD] off)
   hides them too, as it did the turn signals and the lane change warning (the owner turned Info off and the signs still
   came on the HUD). Speed cameras are still read for Layouts and ID8 then (camera.json).

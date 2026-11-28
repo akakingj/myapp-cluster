@@ -130,8 +130,9 @@ check('the Test log\'s recorder (research.js, 1.13.0): the sign services\' every
     let sec = r.sections();
     assert.deepStrictEqual(sec[2][1].split('\n'), ['04:00:00 50 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=16',
         '04:00:02 60 km/h TrafficSignRecognition.TrafficSignRecognition: presentClassLimitSpeed=18']);
-    assert.strictEqual(sec[3][1], 'xSpeedLimitAssist.vSLISpeedValue, xNoPassing.vNPIDistance');
-    assert.deepStrictEqual(sec[4][1].split('\n'), ['04:00:03 60 km/h xNoPassing.vNPIDistance=500', '04:00:07 60 km/h xNoPassing.vNPIDistance=0']);
+    // (1.14.5: the HUD data's field names no more - known)
+    assert.ok(!r.sections().some((x) => /its fields$/.test(x[0])));
+    assert.deepStrictEqual(sec[3][1].split('\n'), ['04:00:03 60 km/h xNoPassing.vNPIDistance=500', '04:00:07 60 km/h xNoPassing.vNPIDistance=0']);
     /* (1.13.2) no passing's fields on their own: BMW's own state (TrafficSignDisplayControl) and the head-up display's
        NPI (DisplayDataServer2, its no passing fields only), not pushed out by the camera's many events */
     const TDC = 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl', D2 = 'de.bmw.infotainment.displaydata.DisplayDataServer2';
@@ -148,6 +149,7 @@ check('the Test log\'s recorder (research.js, 1.13.0): the sign services\' every
         '04:01:09 60 km/h TrafficSignDisplayControl.displaySpeedLimitAndNoPassingRestriction: displayNoPassingRestriction=KEIN_UEBERHOLVERBOT_ERKANNT, displayRemainingDistanceNoPassingRestriction=0']);
     assert.ok(!/speedHUD|DisplayDataServer2/.test(sec[2][1]), 'the head-up display\'s whole data is not kept');
     assert.ok(/TrafficSignDisplayControl/.test(sec[2][1]) && /TrafficSignRecognition\.TrafficSignRecognition/.test(sec[2][1]), 'each service\'s changes kept apart: not pushed out by the camera\'s');
+    assert.ok(!/SignRecognitionFrontCamera\./.test(sec[2][1]), '(1.14.5) the camera\'s events not here: a line each in the camera signs');
     // (1.14.1) the camera's every event, the whole test (the 100 above, each its own line), where each sign stands
     assert.strictEqual(sec[1][1].split('\n').length, 100);
     assert.strictEqual(sec[1][1].split('\n')[0], '04:01:03 60 km/h | DS_ROAD_WORKS 0 - - - -');
@@ -352,42 +354,19 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert.deepStrictEqual(S.typeNames({ a: { GIVE_WAY: 1, DS_Y: 2 } }), ['GIVE_WAY', 'DS_Y']);
         assert.deepStrictEqual(S.typeNames({ units: ['KM_H', 'MPH'] }), []);
         const sig = fakeSignals(), lg = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.push('WARN ' + m); } };
-        // (and the sign services' definitions, once: the camera's and TrafficSignRecognition's; TrafficSignDisplayControl
-        // not in this install)
-        const tsrCfg = { events: { TrafficSignRecognition: { type: 'struct', members: ['presentClassLimitSpeed', 'presentNoPassing'] } },
-            types: { E_NoPassing: { kind: 'enum', values: [{ name: 'NO_PASSING_INACTIVE' }, { name: 'NO_PASSING_ACTIVE' }] } } };
+        // (1.14.5) the car's types counted, one line; the types, the sign services' definitions and the catalog's no
+        // passing services no longer logged whole (known: the owner's car's catalog), nor the catalog read at all
         const asked = [];
-        const catFile = path.join(require('os').tmpdir(), 'np-catalog-' + process.pid + '.json');
-        fs.writeFileSync(catFile, JSON.stringify({ interfaces: { 'de.bmw.navigation.ADAS': { fields: { speedLimitProfileNavGraph2: {}, noPassingProfile: {} } },
-            'de.bmw.navigation.EHorizon': { events: { horizonUpdate: {} } }, 'de.bmw.infotainment.vehicle.CDS': { fields: { statusHandBrake: {} } } } }));
-        const sg = S.startSigns({ signals: sig }, lg, { kitDir: kitWith([CAM]), catalog: catFile, loadConfig: (i) => {
-            asked.push(i);
-            if (i === S.CAM_IFACE) return cfg;
-            if (i === 'de.bmw.dass.TrafficSignRecognition') return tsrCfg;
-            throw new Error('not declared');
-        } });
+        const sg = S.startSigns({ signals: sig }, lg, { kitDir: kitWith([CAM]), catalog: '/nonexistent/catalog.json', loadConfig: (i) => { asked.push(i); if (i === S.CAM_IFACE) return cfg; throw new Error('not declared'); } });
         await wait();
         const st = sg.status();
         assert.strictEqual(st.carTypes.length, 46);
         assert.strictEqual(st.drawn, 43, 'all but the limit, no passing and its end');
         assert.strictEqual(st.asDanger, 40, 'the 40 unknown DS_ ones (jam, stop, give way have their own)');
-        const typeLines = lg.lines.filter((l) => /^road signs: types \d+: /.test(l));
-        assert(typeLines.length > 1 && typeLines.every((l) => l.length <= 200), 'chunked: ' + typeLines.map((l) => l.length));
-        const back = typeLines.map((l) => l.replace(/^road signs: types \d+: /, '')).join(', ').split(', ');
-        assert.deepStrictEqual(back, st.carTypes, 'the whole list, in order');
-        assert.deepStrictEqual(asked, [S.CAM_IFACE, 'de.bmw.dass.TrafficSignRecognition', S.CAM_IFACE, 'de.bmw.dass.driverassistanceapplications.TrafficSignDisplayControl', 'de.bmw.infotainment.displaydataserver.DisplayDataServer']);
-        assert(lg.lines.indexOf('sign definitions: TrafficSignRecognition, 15 names') >= 0, lg.lines.filter((l) => /definitions/.test(l)).join(' | '));
-        assert(/presentNoPassing.*NO_PASSING_ACTIVE/.test(lg.lines.filter((l) => /^sign definitions: TrafficSignRecognition \d+: /.test(l)).join(' ')), 'its fields and their values');
-        assert(lg.lines.some((l) => /^sign definitions: TrafficSignDisplayControl not in this install \(not declared\)$/.test(l)));
-        assert(lg.lines.filter((l) => /^sign definitions: /.test(l)).every((l) => l.length <= 200));
-        // the catalog's services and members named for no passing or the map's look ahead (here: none readable)
-        assert(lg.lines.indexOf('catalog no passing: 2 services') >= 0, lg.lines.filter((l) => /catalog/.test(l)).join(' | '));
-        assert(lg.lines.indexOf('catalog no passing 1: de.bmw.navigation.ADAS: noPassingProfile') >= 0);
-        assert(lg.lines.indexOf('catalog no passing 2: de.bmw.navigation.EHorizon: horizonUpdate') >= 0);
-        fs.unlinkSync(catFile);
-        // (kept for the Logs' codes: the app's log there is only its last lines)
-        const dl = sg.defLines();
-        assert(dl.indexOf('catalog no passing: 2 services') >= 0 && dl.some((l) => /^road signs: types 1: /.test(l)) && dl.some((l) => /^sign definitions: TrafficSignRecognition 1: /.test(l)));
+        assert.deepStrictEqual(asked, [S.CAM_IFACE], 'only the camera\'s own config');
+        assert(lg.lines.some((l) => /^road signs: this car's camera knows 46 sign types, 43 drawn/.test(l)));
+        assert(!lg.lines.some((l) => /^road signs: types \d|^sign definitions|^catalog no passing/.test(l)), lg.lines.join(' | '));
+        assert.strictEqual(sg.defLines, undefined);
         // no config: said once, nothing else
         const sg2 = S.startSigns({ signals: fakeSignals() }, lg, { kitDir: kitWith([CAM]), loadConfig: () => { throw new Error('no SOME/IP config'); } });
         await wait();

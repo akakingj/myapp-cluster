@@ -23,7 +23,7 @@ const IND = require('./indicators');
 const { startBlindSpot } = require('./blindspot');
 const { startHvSoc } = require('./hvsoc');
 const { ReadOnlyDiag } = require('./kit/readonly-diag');
-const { startAdasProbe, brakeLine } = require('./adas_probe');
+const { startAdasProbe } = require('./adas_probe');
 const { startSurvey, hudNow } = require('./survey');
 const { startResearch } = require('./research');
 const { startSigns, SAMPLE: SIGN_SAMPLE } = require('./signs');
@@ -386,11 +386,10 @@ mgu.run({
             const n = (short, long) => (full ? long : short), st = adas ? adas.status() : null, rec = survey && survey.last();
             const sections = [
                 ['page', statusLines().map(([k, v]) => k + ': ' + v).join('\n')],
-                ['sign definitions', signs && signs.defLines ? (signs.defLines().join('\n') || '(none yet: the camera\'s signs not subscribed)') : 'road signs not started'],
             ].concat(research.sections(), [
                 ['speed limit (HUD data), last changes', st ? st.sli.changes.map((c) => new Date(c.at).toISOString().slice(11, 19) + ' ' + c.line).join('\n') : ''],
-                ['driving assistant check', st ? JSON.stringify(full ? st : { sources: st.sources, hud: st.hud, catalog: st.catalog && { total: st.catalog.total, found: (st.catalog.list || []).length, error: st.catalog.error,
-                    signServices: st.catalog.signServices, signs: (st.catalog.signs || []).slice(0, 30).map(brakeLine), signsTotal: (st.catalog.signs || []).length } }) : 'not started'],
+                // (1.14.5: the catalog's lists left out - the owner's car's catalog is known whole now; in the file as before)
+                ['driving assistant check', st ? JSON.stringify(full ? st : { sources: st.sources, hud: st.hud }) : 'not started'],
                 ['driving assistant log', logs.tail(path.join(dataDir, 'cluster-info-adas.log'), n(20, 3000))],
             ]);
             if (rec) sections.splice(2, 0, ...(full ? survey.sections(0) : survey.fitted(sections, 15, logs.codeCount)));

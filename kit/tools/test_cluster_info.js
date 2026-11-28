@@ -108,7 +108,9 @@ const check = (name, fn) => { fn(); ok++; console.log('ok   ' + name); };
             const f = fs.readdirSync(path.join(tmp, 'exports')).filter((x) => /^cluster-logs-info-test-/.test(x));
             assert.strictEqual(f.length, 1);
             const txt = fs.readFileSync(path.join(tmp, 'exports', f[0]), 'utf8');
-            assert(/--- sign definitions ---/.test(txt) && /--- driving assistant check ---/.test(txt) && /--- head-up display data, its fields ---/.test(txt), txt.slice(0, 400));
+            assert(/--- driving assistant check ---/.test(txt) && /--- camera signs, every event/.test(txt) && /--- traffic lights ---/.test(txt), txt.slice(0, 400));
+            // (1.14.5) what the owner's car's catalog already told, no more: the definitions, the catalog's lines, the HUD data's names
+            ['--- sign definitions ---', '--- catalog (sign/assist) ---', '--- head-up display data, its fields ---'].forEach((h) => assert(txt.indexOf(h) < 0, h));
         }
         placed.forEach((p) => assert(p.y + p.size <= p.h, p.str.slice(0, 40) + ' at ' + p.y + ' + ' + p.size + ' of ' + p.h));
     });

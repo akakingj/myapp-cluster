@@ -30,7 +30,6 @@ let fit = null;
 try { fit = require('./kit/survey_fit'); } catch (e) { /* an older kit: no survey */ }
 
 const MAX_MS = 30 * 60 * 1000, SERVICE_MS = 20000, QUIET_MS = 3 * 60 * 1000, FAST_N = 5, CHANGES = 150;
-const CATALOG = process.env.SOMEIP_CATALOG || '/etc/oap/someip/someip-interfaces.json';
 /* the keys that look like figures, first in a value's text */
 const FIGURE_RE = /speed|limit|value|class|sign|type/i;
 
@@ -158,8 +157,7 @@ function startSurvey(ctx, log, opts) {
         run = { at: t, items: declared.map(itemOf), subs: [], changes: [], settings: [], catalog: [], kmhAtStart: h.kmh };
         say('started: ' + declared.length + ' members');
         // the catalog's sign and driving assistant services, once, to the record (and the log)
-        try { run.catalog = fit ? fit.catalogLines(JSON.parse(fs.readFileSync(opts.catalog || CATALOG, 'utf8')), readRequest()) : []; }
-        catch (e) { run.catalog = ['(catalog not readable: ' + (e.code || e.message) + ')']; }
+        // (1.14.5: no longer - the owner's car's catalog is known whole; it took the Test log's codes)
         const byIface = {};
         run.items.forEach((i) => { (byIface[i.iface] || (byIface[i.iface] = [])).push(i); });
         const mine = run;
@@ -175,10 +173,6 @@ function startSurvey(ctx, log, opts) {
         run.timer = setInterval(tick, 1000);
         if (run.timer.unref) run.timer.unref();
         return null;
-    }
-
-    function readRequest() {
-        try { return JSON.parse(fs.readFileSync(path.join(kitDir, fit.REQUEST), 'utf8')); } catch (e) { return { groups: [] }; }
     }
 
     /** Each second: the fast ones and the settings let go once done; the end at 30 min. */
@@ -265,7 +259,6 @@ function startSurvey(ctx, log, opts) {
             ['survey summary', summary.join('\n')],
             ['sign changes', changes.length ? changes.join('\n') : '(none)'],
             ['settings read', rec.settings.length ? rec.settings.join('\n') : '(none)'],
-            ['catalog (sign/assist)', rec.catalog.length ? rec.catalog.map((l) => l.slice(0, L.cat)).join('\n') : '(none)'],
         ];
     }
     function text(rec, level) {
