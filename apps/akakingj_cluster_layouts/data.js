@@ -310,10 +310,21 @@ function startData(ctx, opts) {
             /* what the head-up display has of Speed Limit Assist (sliRawOf), and the limit shown after it (sliStep) */
             const r = sliRawOf(v);
             if (r) { x.sli = r; x.at.sli = Date.now(); x.sliShown = sliStep(x.sliShown, r, x.sliMem || (x.sliMem = {})); sliSeen(r); }
+            /* (for the Logs: its fields' names, and each change of those that may be about no passing - the head-up
+               display shows BMW's own, with its distance from the car's map, 2026-11-28) */
+            const all = RS.fields(v);
+            hudKeys = Array.from(new Set(all.map((f) => f.split('=')[0].split('.').slice(0, 2).join('.'))));
+            const np = all.filter((f) => RS.NP_FIELD.test(f.split('=')[0])).join(' ');
+            if (np !== hudNpLast) {
+                hudNpLast = np;
+                const sp = car.data ? car.data().speed : null;
+                hudNpChanges.push({ at: Date.now(), speed: isNum(sp) ? Math.round(sp) : null, f: np || '(none)' });
+                if (hudNpChanges.length > 12) hudNpChanges.shift();
+            }
         },
     }, 'cruise control and speed limit (head-up display)', { pollMs: 2000 });
-    let tsrLast = '';
-    const tsrChanges = [];
+    let tsrLast = '', hudNpLast = null, hudKeys = [];
+    const tsrChanges = [], hudNpChanges = [];
     // the speed limit sign itself (tsrStep): only where the install declared it; a car without it says so in the status
     ctx.signals.watch('de.bmw.dass.TrafficSignRecognition', '1', {}, log)
         .then((sub) => {
@@ -861,6 +872,11 @@ function startData(ctx, opts) {
                 // in lines the Logs' codes keep whole)
                 'TrafficSignRecognition changes: ' + (tsrChanges.length ? tsrChanges.length : 'none yet')]
                 .concat(...tsrChanges.map((c) => RS.chunk(c.f.split(' '), 150).map((l, i) => (i ? '  ' : new Date(c.at).toISOString().slice(11, 19) + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h: ') + l)))
+                // (the head-up display's data: its fields' names, and each change of those about passing, tunnels, lane
+                // changes, restrictions)
+                .concat(['head-up display fields: ' + (hudKeys.length || 'none yet')], RS.chunk(hudKeys, 150).map((l) => '  ' + l),
+                    ['head-up display no passing changes: ' + (hudNpChanges.length || 'none yet')])
+                .concat(...hudNpChanges.map((c) => RS.chunk(c.f.split(' '), 150).map((l, i) => (i ? '  ' : new Date(c.at).toISOString().slice(11, 19) + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h: ') + l)))
                 .concat(sliChanges.slice(-(last || 20)).map((c) => new Date(c.at).toISOString() + ' at ' + (c.speed === null ? '?' : c.speed) + ' km/h  shown ' + (c.shown || '--') + '  ' + JSON.stringify(c.raw))).join('\n');
         },
         /** fn() on each new reading (the car's speed and rpm samples, every changed reading). */

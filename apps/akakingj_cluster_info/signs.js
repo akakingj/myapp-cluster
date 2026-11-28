@@ -109,6 +109,25 @@ function startSigns(ctx, log, opts) {
             log.info('sign definitions: ' + short + ', ' + names.length + ' names' + (lines.length > 40 ? ' (the first 40 lines)' : ''));
             lines.slice(0, 40).forEach((l, i) => log.info('sign definitions: ' + short + ' ' + (i + 1) + ': ' + l));
         });
+        readCatalogNp();
+    }
+    /* the car's whole service catalog (/etc/oap/someip/someip-interfaces.json; read only): every service named for no
+       passing or the map's look ahead, and every member so named - BMW's own no passing sign comes with its distance
+       from the car's map (the owner, 2026-11-28), so it may be a navigation service's; at most 30 lines */
+    function readCatalogNp() {
+        const file = opts.catalog || process.env.SOMEIP_CATALOG || '/etc/oap/someip/someip-interfaces.json';
+        let db = null;
+        try { db = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { log.info('catalog no passing: catalog not readable (' + (e.code || e.message) + ')'); return; }
+        const ifs = (db && db.interfaces) || {}, RE = /no_?passing|overtak|npi|ueberhol|ehorizon|adasis|horizon|tunnel/i, out = [];
+        Object.keys(ifs).sort().forEach((iface) => {
+            const e = ifs[iface] || {}, names = [];
+            Object.keys(e).forEach((k) => { const v = e[k]; if (v && typeof v === 'object' && !Array.isArray(v)) names.push(...Object.keys(v)); });
+            const hit = RE.test(iface) ? names : names.filter((n) => RE.test(n));
+            if (hit.length || RE.test(iface)) out.push(iface + ': ' + (hit.join(', ') || '(no members)'));
+        });
+        const lines = out.reduce((a, l) => a.concat(chunk(l.split(', '), 150)), []);
+        log.info('catalog no passing: ' + out.length + ' services' + (lines.length > 30 ? ' (the first 30 lines)' : ''));
+        lines.slice(0, 30).forEach((l, i) => log.info('catalog no passing ' + (i + 1) + ': ' + l));
     }
 
     let item = null;

@@ -86,6 +86,9 @@ function makeZone(maxKm) {
         km: () => km,
     };
 }
+/** A field's name that may be about no passing (the head-up display's data: BMW's own no passing sign there, and its
+ * distance from the car's map - the owner, 2026-11-28). */
+const NP_FIELD = /pass|overtak|npi|ueberhol|tunnel|lanechange|lane_change|restrict/i;
 /** Every field of a value as ['a.b=v', ...] (arrays: each element; a counter's or a time's left out: they change with
  * every event), for the Logs (what TrafficSignRecognition carries). */
 function fields(v) {
@@ -176,4 +179,4 @@ function chunk(list, n) {
     return out;
 }
 
-module.exports = { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, defNames, artOf, ART_OF, typeNames, chunk };
+module.exports = { CAM_IFACE, CAM_EVENT, SHOW_MS, parseSigns, shownByHud, wanted, makeTracker, NP_KM, npStart, npEnd, makeZone, fields, NP_FIELD, defNames, artOf, ART_OF, typeNames, chunk };

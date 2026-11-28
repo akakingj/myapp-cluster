@@ -221,7 +221,10 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         const tsrCfg = { events: { TrafficSignRecognition: { type: 'struct', members: ['presentClassLimitSpeed', 'presentNoPassing'] } },
             types: { E_NoPassing: { kind: 'enum', values: [{ name: 'NO_PASSING_INACTIVE' }, { name: 'NO_PASSING_ACTIVE' }] } } };
         const asked = [];
-        const sg = S.startSigns({ signals: sig }, lg, { kitDir: kitWith([CAM]), loadConfig: (i) => {
+        const catFile = path.join(require('os').tmpdir(), 'np-catalog-' + process.pid + '.json');
+        fs.writeFileSync(catFile, JSON.stringify({ interfaces: { 'de.bmw.navigation.ADAS': { fields: { speedLimitProfileNavGraph2: {}, noPassingProfile: {} } },
+            'de.bmw.navigation.EHorizon': { events: { horizonUpdate: {} } }, 'de.bmw.infotainment.vehicle.CDS': { fields: { statusHandBrake: {} } } } }));
+        const sg = S.startSigns({ signals: sig }, lg, { kitDir: kitWith([CAM]), catalog: catFile, loadConfig: (i) => {
             asked.push(i);
             if (i === S.CAM_IFACE) return cfg;
             if (i === 'de.bmw.dass.TrafficSignRecognition') return tsrCfg;
@@ -241,6 +244,11 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         assert(/presentNoPassing.*NO_PASSING_ACTIVE/.test(lg.lines.filter((l) => /^sign definitions: TrafficSignRecognition \d+: /.test(l)).join(' ')), 'its fields and their values');
         assert(lg.lines.some((l) => /^sign definitions: TrafficSignDisplayControl not in this install \(not declared\)$/.test(l)));
         assert(lg.lines.filter((l) => /^sign definitions: /.test(l)).every((l) => l.length <= 200));
+        // the catalog's services and members named for no passing or the map's look ahead (here: none readable)
+        assert(lg.lines.indexOf('catalog no passing: 2 services') >= 0, lg.lines.filter((l) => /catalog/.test(l)).join(' | '));
+        assert(lg.lines.indexOf('catalog no passing 1: de.bmw.navigation.ADAS: noPassingProfile') >= 0);
+        assert(lg.lines.indexOf('catalog no passing 2: de.bmw.navigation.EHorizon: horizonUpdate') >= 0);
+        fs.unlinkSync(catFile);
         // no config: said once, nothing else
         const sg2 = S.startSigns({ signals: fakeSignals() }, lg, { kitDir: kitWith([CAM]), loadConfig: () => { throw new Error('no SOME/IP config'); } });
         await wait();
