@@ -411,7 +411,8 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
     }
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'signs-hud-'));
     const claims = path.join(dir, 'mgu-hud'); fs.mkdirSync(claims);
-    const settings = { v: { show: 'off', roadSigns: 'on' }, get(k) { return this.v[k]; } };
+    // (the panel on the HUD, with nothing of its own to show here: the signs alone)
+    const settings = { v: { show: 'hud', roadSigns: 'on' }, get(k) { return this.v[k]; } };
     let list = [], t = Date.now();
     const lv = { power: () => null, limits: () => ({ outMax: 100, inMax: 60 }), keepFast: () => {}, indicator: () => 'off', night: () => false, extras: () => [], roadSigns: () => list };
     const ov = startOverlay({ settings, log, theme: () => theme }, lv, { statusPath: path.join(dir, 'status.json'), ClusterRender: FakeCR, now: () => t, setInterval: () => 0, clearInterval: () => {}, hudClaims: claims });
@@ -448,6 +449,9 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         list = ['GIVE_WAY']; ov._signsTick(); assert.strictEqual(layer().visible, true);
         settings.v.roadSigns = 'off'; ov._signsTick(); assert.strictEqual(layer().visible, false);
         settings.v.roadSigns = 'on'; ov._signsTick(); assert.strictEqual(layer().visible, true);
+        // (1.14.4, the owner: Info turned off - Show the panel Off, [Show on the HUD] off - and the signs still came)
+        settings.v.show = 'off'; ov._signsTick(); assert.strictEqual(layer().visible, false, 'the panel off: no signs either');
+        settings.v.show = 'hud'; ov._signsTick(); assert.strictEqual(layer().visible, true);
         fs.writeFileSync(path.join(claims, 'redline'), JSON.stringify({ held: true })); t += 2000; ov._signsTick();
         assert.strictEqual(layer().visible, false);
         fs.unlinkSync(path.join(claims, 'redline')); t += 2000; ov._signsTick();
@@ -467,7 +471,7 @@ const log = { lines: [], info(m) { this.lines.push(m); }, warn(m) { this.lines.p
         o.at.forEach((r) => assert(r.y >= HUD_SEEN.y && r.y + r.h <= 382 && r.x + r.w <= HUD_SEEN.x + HUD_SEEN.w, JSON.stringify(r)));
         assert(o.at.some((r) => r.y < o.at[0].y), 'what reaches the panel goes in the row above: ' + JSON.stringify(o.at));
         assert(b, 'the panel on the HUD'); o.at.forEach((r) => assert(!(r.x < b.x + b.w && r.x + r.w > b.x && r.y < b.y + b.h && r.y + r.h > b.y), 'over the panel: ' + JSON.stringify([r, b])));
-        settings.v.show = 'off'; fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'hud' })); ov._read(); await wait(50); ov._tick && ov._tick();
+        fs.writeFileSync(st, JSON.stringify({ state: 'waiting', target: 'hud' })); ov._read();    // (the map gone: the panel with it) await wait(50); ov._tick && ov._tick();
         t += 10; ov._signsTick();
         assert.strictEqual(ov.roadSigns().types.length, 3, 'three, with the panel gone');
     });

@@ -753,7 +753,9 @@ function startOverlay(ctx, lv, opts) {
      * One layer, from under the turn signal arrows to the bottom line; drawn again only when the signs or their places
      * change. Placed by signsPlace (SIGNS above); what finds no room is left off. */
     let signRef = 0, signKey = '', signShown = false, signOp = 1, signCv = null, signTypes = [], signRects = [];
-    const signsOn = () => settings.get('roadSigns') !== 'off' && typeof lv.roadSigns === 'function' && !hudTaken();
+    // (1.14.4) with the panel off (Settings > Show the panel, [Show on the HUD]) as the turn signals and the lane change
+    // warning: the owner turned it off and the signs still came on the HUD
+    const signsOn = () => settings.get('roadSigns') !== 'off' && settings.get('show') !== 'off' && typeof lv.roadSigns === 'function' && !hudTaken();
     /** Where the signs go on the HUD: [{ t, x, y }] (their top left), the first of the list first, as many as fit. */
     function signsPlace(list) {
         const keep = [];
